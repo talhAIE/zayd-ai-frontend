@@ -68,6 +68,18 @@ const LearningModes: React.FC = () => {
     );
   }
 
+  if (schoolCategory === "saudi") {
+    filteredModes = modes.filter(
+      (mode) => mode.title === "Reading Mode" || mode.title === "Role Play Mode" || mode.title === "Listening Mode"
+    );
+  }
+
+  if (schoolCategory === "american") {
+    filteredModes = modes.filter(
+      (mode) => mode.title === "Chat Mode" || mode.title === "Photo Mode"
+    );
+  }
+
   // const [isQueationnaireOpen, setIsQuestionnaireOpen] = React.useState(true);
 
   const handleStartButton = (route: string) => {
