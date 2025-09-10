@@ -16,6 +16,7 @@ import StudentDashboard from "@/pages/student/dashboard"
 
 // Teacher Pages
 import TeacherDashboard from '@/pages/teacher/dashboard';
+import StudentProfile from "@/pages/teacher/student-profile";
 
 // Auth Pages
 import { AuthLayout } from '@/components/layouts/auth-layout';
@@ -76,6 +77,14 @@ const AppRoutes = () => {
         element={
           <StudentLayout>
             <TeacherDashboard />
+          </StudentLayout>
+        }
+      />
+      <Route
+        path="/teacher/student-profile"
+        element={
+          <StudentLayout>
+            <StudentProfile />
           </StudentLayout>
         }
       />

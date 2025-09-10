@@ -262,12 +262,9 @@ const students = [
 
 export default function TeacherDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
   const [sectionFilter, setSectionFilter] = useState("all");
   const [performanceFilter, setPerformanceFilter] = useState("all");
   const [rankingFilter, setRankingFilter] = useState("all");
-  const [levelFilter, setLevelFilter] = useState("all");
-  const [activityFilter, setActivityFilter] = useState("all");
   const [sortBy, setSortBy] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 8;
@@ -277,8 +274,6 @@ export default function TeacherDashboard() {
     const matchesSearch =
       student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" || student.status === statusFilter;
     const matchesSection =
       sectionFilter === "all" || student.section === sectionFilter;
     const matchesPerformance =
@@ -288,19 +283,12 @@ export default function TeacherDashboard() {
       (rankingFilter === "top" && student.ranking === 1) ||
       (rankingFilter === "average" && student.ranking === 2) ||
       (rankingFilter === "low" && student.ranking === 3);
-    const matchesLevel =
-      levelFilter === "all" || student.level === Number(levelFilter);
-    const matchesActivity =
-      activityFilter === "all" || student.activity === activityFilter;
 
     return (
       matchesSearch &&
-      matchesStatus &&
       matchesSection &&
       matchesPerformance &&
-      matchesRanking &&
-      matchesLevel &&
-      matchesActivity
+      matchesRanking
     );
   });
 
@@ -328,12 +316,9 @@ export default function TeacherDashboard() {
     setCurrentPage(1);
   }, [
     searchTerm,
-    statusFilter,
     sectionFilter,
     performanceFilter,
     rankingFilter,
-    levelFilter,
-    activityFilter,
     sortBy,
   ]);
 
@@ -369,10 +354,6 @@ export default function TeacherDashboard() {
     }
   };
 
-  const applyFilters = () => {
-    // this isn't functional yet
-  };
-
   return (
     <div>
       {/* Filters and Search */}
@@ -380,30 +361,43 @@ export default function TeacherDashboard() {
         <div className="flex justify-between items-center w-full flex-wrap gap-4">
           {/* Filter Buttons */}
           <div className="flex gap-2 flex-wrap w-full sm:w-auto">
-            <Button
-              variant={statusFilter === "all" ? "default" : "outline"}
-              onClick={() => setStatusFilter("all")}
+            <Select value={sectionFilter} onValueChange={setSectionFilter}>
+              <SelectTrigger className="flex-1 min-w-[140px]">
+                <SelectValue placeholder="Topics" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Topics</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="incompleted">Incompleted</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={performanceFilter}
+              onValueChange={setPerformanceFilter}
             >
-              All
-            </Button>
-            <Button
-              variant={statusFilter === "suspended" ? "default" : "outline"}
-              onClick={() => setStatusFilter("suspended")}
-            >
-              Suspended
-            </Button>
-            <Button
-              variant={statusFilter === "inactive" ? "default" : "outline"}
-              onClick={() => setStatusFilter("inactive")}
-            >
-              Inactive
-            </Button>
-            <Button
-              variant={statusFilter === "active" ? "default" : "outline"}
-              onClick={() => setStatusFilter("active")}
-            >
-              Active
-            </Button>
+              <SelectTrigger className="flex-1 min-w-[140px]">
+                <SelectValue placeholder="Class" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Class</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="low">Low</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={rankingFilter} onValueChange={setRankingFilter}>
+              <SelectTrigger className="flex-1 min-w-[140px]">
+                <SelectValue placeholder="Grade" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Grade</SelectItem>
+                <SelectItem value="top">Top</SelectItem>
+                <SelectItem value="average">Average</SelectItem>
+                <SelectItem value="low">Low</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Search and Sort */}
@@ -429,80 +423,6 @@ export default function TeacherDashboard() {
               </SelectContent>
             </Select>
           </div>
-        </div>
-
-        {/* Filters */}
-        <div className="flex flex-wrap items-start gap-2 w-full">
-          <div className="flex flex-wrap gap-2 flex-1">
-            <Select value={sectionFilter} onValueChange={setSectionFilter}>
-              <SelectTrigger className="flex-1 min-w-[140px]">
-                <SelectValue placeholder="All Sections" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Sections</SelectItem>
-                <SelectItem value="A">Section A</SelectItem>
-                <SelectItem value="B">Section B</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={performanceFilter}
-              onValueChange={setPerformanceFilter}
-            >
-              <SelectTrigger className="flex-1 min-w-[140px]">
-                <SelectValue placeholder="Performance" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Performance</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="low">Low</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={rankingFilter} onValueChange={setRankingFilter}>
-              <SelectTrigger className="flex-1 min-w-[140px]">
-                <SelectValue placeholder="Ranking" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Rankings</SelectItem>
-                <SelectItem value="top">Top</SelectItem>
-                <SelectItem value="average">Average</SelectItem>
-                <SelectItem value="low">Low</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={levelFilter} onValueChange={setLevelFilter}>
-              <SelectTrigger className="flex-1 min-w-[140px]">
-                <SelectValue placeholder="Level" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Levels</SelectItem>
-                <SelectItem value="1">Level 1</SelectItem>
-                <SelectItem value="2">Level 2</SelectItem>
-                <SelectItem value="3">Level 3</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={activityFilter} onValueChange={setActivityFilter}>
-              <SelectTrigger className="flex-1 min-w-[140px]">
-                <SelectValue placeholder="Activity" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Activity</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Apply Filter Button */}
-          <Button
-            className="bg-[#F1F3FF] text-primary hover:bg-primary hover:text-white hover:shadow-md transition-colors w-full sm:w-auto"
-            onClick={applyFilters}
-          >
-            Apply Filter
-          </Button>
         </div>
       </div>
 
