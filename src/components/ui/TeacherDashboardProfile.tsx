@@ -27,10 +27,10 @@ const TeacherDashboardProfile = (user: any) => {
             </h3>
           </div>
           <div className="space-y-3">
-            {/* GRADE Box */}
+            {/* Grade Box */}
             <div className="flex items-center justify-between rounded-full p-3 border border-gray-200">
-              <span className="font-medium text-sm uppercase text-[#6250E9]">
-                GRADE
+              <span className="font-medium text-sm text-[#6250E9]">
+                Grade
               </span>
               <div className="bg-gradient-to-r from-purple-100 to-blue-100 rounded-full px-4 py-1">
                 <span className="font-medium text-sm bg-gradient-to-r from-[#6250E9] to-[#69BDFF] bg-clip-text text-transparent">
@@ -39,10 +39,10 @@ const TeacherDashboardProfile = (user: any) => {
               </div>
             </div>
 
-            {/* LEVEL Box */}
+            {/* Level Box */}
             <div className="flex items-center justify-between rounded-full p-3 border border-gray-200">
-              <span className="font-medium text-sm uppercase text-[#6250E9]">
-                LEVEL
+              <span className="font-medium text-sm text-[#6250E9]">
+                Level
               </span>
               <div className="bg-gradient-to-r from-purple-100 to-blue-100 rounded-full px-4 py-1">
                 <span className="font-medium text-sm bg-gradient-to-r from-[#6250E9] to-[#69BDFF] bg-clip-text text-transparent">

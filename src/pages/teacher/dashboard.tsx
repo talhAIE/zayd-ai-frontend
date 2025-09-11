@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,7 +22,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import StudentReportModal from "@/components/ui/StudentReportModal";
 
 const students = [
   {
@@ -261,14 +261,13 @@ const students = [
 ];
 
 export default function TeacherDashboard() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [sectionFilter, setSectionFilter] = useState("all");
   const [performanceFilter, setPerformanceFilter] = useState("all");
   const [rankingFilter, setRankingFilter] = useState("all");
   const [sortBy, setSortBy] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const pageSize = 8;
 
   // Filter students based on search term and filters
@@ -315,14 +314,8 @@ export default function TeacherDashboard() {
     setCurrentPage(1);
   }, [searchTerm, sectionFilter, performanceFilter, rankingFilter, sortBy]);
 
-  const handleViewProfile = (student: any) => {
-    setSelectedStudent(student);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedStudent(null);
+  const handleViewProfile = () => {
+    navigate("/teacher/student-profile");
   };
 
   const getStatusBadge = (status: string) => {
@@ -490,7 +483,7 @@ export default function TeacherDashboard() {
                         <Button
                           className="bg-[#F1F3FF] text-primary hover:bg-primary hover:text-white hover:shadow-md transition-colors"
                           size="sm"
-                          onClick={() => handleViewProfile(student)}
+                          onClick={handleViewProfile}
                         >
                           View Profile
                         </Button>
@@ -558,7 +551,7 @@ export default function TeacherDashboard() {
                   <Button
                     className="bg-[#F1F3FF] text-primary hover:bg-primary hover:text-white hover:shadow-md transition-colors mt-2"
                     size="sm"
-                    onClick={() => handleViewProfile(student)}
+                    onClick={handleViewProfile}
                   >
                     View Profile
                   </Button>
@@ -611,12 +604,6 @@ export default function TeacherDashboard() {
           </div>
         </CardContent>
       </Card>
-
-      <StudentReportModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        student={selectedStudent}
-      />
     </div>
   );
 }

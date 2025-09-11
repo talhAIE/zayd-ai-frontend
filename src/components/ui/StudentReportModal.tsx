@@ -10,23 +10,6 @@ import { User } from "lucide-react";
 interface StudentReportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  student?: {
-    id: string;
-    name: string;
-    email: string;
-    avatar?: string;
-    grade?: string;
-    schoolName?: string;
-    totalPoints?: number;
-    totalUsage?: string;
-    models?: Array<{
-      name: string;
-      completeTopics: string;
-      incompleteTopics: string;
-    }>;
-    certifications?: string[];
-    rewards?: string[];
-  };
 }
 
 const defaultStudentData = {
@@ -67,47 +50,8 @@ const defaultStudentData = {
 export default function StudentReportModal({
   isOpen,
   onClose,
-  student,
 }: StudentReportModalProps) {
-  // Enhanced student data with dummy data for missing fields
-  const enhancedStudentData = {
-    ...defaultStudentData,
-    ...student,
-    // Ensure all required fields have data
-    grade: student?.grade || "Grade 10",
-    schoolName: student?.schoolName || "Al-Noor International School",
-    totalPoints: student?.totalPoints || 450,
-    totalUsage: student?.totalUsage || "180 Mins",
-    models: student?.models || [
-      {
-        name: "ROLEPLAY MODE",
-        completeTopics: "25 min",
-        incompleteTopics: "80%",
-      },
-      {
-        name: "READING MODE",
-        completeTopics: "30 min",
-        incompleteTopics: "85%",
-      },
-      {
-        name: "CHAT MODE",
-        completeTopics: "20 min",
-        incompleteTopics: "75%",
-      },
-    ],
-    certifications: student?.certifications || [
-      "Best Attendance Award",
-      "Academic Excellence Certificate",
-      "Leadership Recognition",
-    ],
-    rewards: student?.rewards || [
-      "Gold Star Achievement",
-      "Perfect Attendance Badge",
-      "Top Performer Award",
-    ],
-  };
-
-  const studentData = enhancedStudentData;
+  const studentData = defaultStudentData;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -171,7 +115,7 @@ export default function StudentReportModal({
                     TOTAL POINTS
                   </p>
                   <div className="gradientBg rounded-xl px-4 py-2">
-                    <p className="text-2xl font-bold bg-gradient-to-r from-[#6A5ACD] to-[#87CEEB] bg-clip-text text-transparent">
+                    <p className="text-lg font-bold bg-gradient-to-r from-[#6A5ACD] to-[#87CEEB] bg-clip-text text-transparent">
                       {studentData.totalPoints}
                     </p>
                   </div>
@@ -185,7 +129,7 @@ export default function StudentReportModal({
                     TOTAL USAGE
                   </p>
                   <div className="gradientBg rounded-xl px-4 py-2">
-                    <p className="text-2xl font-bold bg-gradient-to-r from-[#6A5ACD] to-[#87CEEB] bg-clip-text text-transparent">
+                    <p className="text-lg font-bold bg-gradient-to-r from-[#6A5ACD] to-[#87CEEB] bg-clip-text text-transparent">
                       {studentData.totalUsage}
                     </p>
                   </div>
