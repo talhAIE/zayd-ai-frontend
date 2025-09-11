@@ -20,8 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowUpRight } from "lucide-react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import StudentReportModal from "@/components/ui/StudentReportModal";
 
 const students = [
   {
@@ -267,6 +267,8 @@ export default function TeacherDashboard() {
   const [rankingFilter, setRankingFilter] = useState("all");
   const [sortBy, setSortBy] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const pageSize = 8;
 
   // Filter students based on search term and filters
@@ -285,10 +287,7 @@ export default function TeacherDashboard() {
       (rankingFilter === "low" && student.ranking === 3);
 
     return (
-      matchesSearch &&
-      matchesSection &&
-      matchesPerformance &&
-      matchesRanking
+      matchesSearch && matchesSection && matchesPerformance && matchesRanking
     );
   });
 
@@ -314,13 +313,17 @@ export default function TeacherDashboard() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [
-    searchTerm,
-    sectionFilter,
-    performanceFilter,
-    rankingFilter,
-    sortBy,
-  ]);
+  }, [searchTerm, sectionFilter, performanceFilter, rankingFilter, sortBy]);
+
+  const handleViewProfile = (student: any) => {
+    setSelectedStudent(student);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedStudent(null);
+  };
 
   const getStatusBadge = (status: string) => {
     const baseClass =
@@ -441,7 +444,7 @@ export default function TeacherDashboard() {
                   <TableHead className="text-center">Level</TableHead>
                   <TableHead className="text-center">Ranking</TableHead>
                   <TableHead className="text-center">Account Status</TableHead>
-                  <TableHead className="!pl-8 text-center">Action</TableHead>
+                  <TableHead className="!pl-8 text-center">Profile</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -461,15 +464,6 @@ export default function TeacherDashboard() {
                           </Avatar>
                           <div>
                             <div className="font-medium">{student.name}</div>
-                            <div className="text-sm text-[var(--font-light2)]">
-                              <a
-                                href={`/profile/${student.id}`}
-                                className="text-blue-500 flex items-center gap-1"
-                              >
-                                View Profile{" "}
-                                <ArrowUpRight className="w-4 h-4 text-blue-500" />
-                              </a>
-                            </div>
                           </div>
                         </div>
                       </TableCell>
@@ -496,8 +490,9 @@ export default function TeacherDashboard() {
                         <Button
                           className="bg-[#F1F3FF] text-primary hover:bg-primary hover:text-white hover:shadow-md transition-colors"
                           size="sm"
+                          onClick={() => handleViewProfile(student)}
                         >
-                          Assign Task
+                          View Profile
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -538,15 +533,6 @@ export default function TeacherDashboard() {
                     </Avatar>
                     <div>
                       <div className="font-medium">{student.name}</div>
-                      <div className="text-sm text-[var(--font-light2)]">
-                        <a
-                          href={`/profile/${student.id}`}
-                          className="text-blue-500 flex items-center gap-1"
-                        >
-                          View Profile{" "}
-                          <ArrowUpRight className="w-4 h-4 text-blue-500" />
-                        </a>
-                      </div>
                     </div>
                   </div>
                   <div className="text-sm">
@@ -572,8 +558,9 @@ export default function TeacherDashboard() {
                   <Button
                     className="bg-[#F1F3FF] text-primary hover:bg-primary hover:text-white hover:shadow-md transition-colors mt-2"
                     size="sm"
+                    onClick={() => handleViewProfile(student)}
                   >
-                    Assign Task
+                    View Profile
                   </Button>
                 </div>
               ))
@@ -624,6 +611,12 @@ export default function TeacherDashboard() {
           </div>
         </CardContent>
       </Card>
+
+      <StudentReportModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        student={selectedStudent}
+      />
     </div>
   );
 }
