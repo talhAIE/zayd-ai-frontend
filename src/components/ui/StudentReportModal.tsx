@@ -6,57 +6,57 @@ import {
 } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { User } from "lucide-react";
+import { StudentProfileData } from "@/services/teacherService";
+import { Button } from "@/components/ui/button";
 
 interface StudentReportModalProps {
   isOpen: boolean;
   onClose: () => void;
+  studentData?: StudentProfileData | null;
 }
-
-const defaultStudentData = {
-  id: "1",
-  name: "Ali Hassan",
-  email: "ali.hassan@example.com",
-  avatar:
-    "https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-  grade: "Grade 10",
-  schoolName: "Al-Noor International School",
-  totalPoints: 400,
-  totalUsage: "120 Mins",
-  models: [
-    {
-      name: "ROLEPLAY MODE",
-      completeTopics: "20 min",
-      incompleteTopics: "75%",
-    },
-    { name: "READING MODE", completeTopics: "20 min", incompleteTopics: "75%" },
-    {
-      name: "ROLEPLAY MODE",
-      completeTopics: "20 min",
-      incompleteTopics: "75%",
-    },
-  ],
-  certifications: [
-    "Best Attendance Award",
-    "Best Attendance Award",
-    "Best Attendance Award",
-  ],
-  rewards: [
-    "Best Attendance Award",
-    "Academic Excellence Award",
-    "Most Improved Student",
-  ],
-};
 
 export default function StudentReportModal({
   isOpen,
   onClose,
+  studentData,
 }: StudentReportModalProps) {
-  const studentData = defaultStudentData;
+  if (!studentData) {
+    return null;
+  }
+
+  const data = studentData;
+
+  const totalUsageMinutes = Math.round(data.usage / 60);
+  const totalUsageDisplay = `${totalUsageMinutes} Mins`;
+
+  const modelsData = [
+    {
+      name: "LISTENING MODE",
+      completeTopics: `${data.topicsCompletedPerMode["listening-mode"]} topics`,
+      incompleteTopics: "0%", // Set to 0 as the backend isn't ready
+    },
+    {
+      name: "ROLEPLAY MODE",
+      completeTopics: `${data.topicsCompletedPerMode["roleplay-mode"]} topics`,
+      incompleteTopics: "0%",
+    },
+    {
+      name: "DEBATE MODE",
+      completeTopics: `${data.topicsCompletedPerMode["debate-mode"]} topics`,
+      incompleteTopics: "0%",
+    },
+    {
+      name: "READING MODE",
+      completeTopics: `${data.topicsCompletedPerMode["reading-mode"]} topics`,
+      incompleteTopics: "0%",
+    },
+  ];
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+        <Button className="absolute right-4 top-4 me-8">Download Report</Button>
+        <DialogHeader className="mt-16">
           <DialogTitle className="text-2xl font-bold text-center mb-2">
             Student Report
           </DialogTitle>
@@ -77,7 +77,7 @@ export default function StudentReportModal({
                   </div>
                   <div>
                     <p className="text-sm opacity-90">Student Name</p>
-                    <p className="text-xl font-bold">{studentData.name}</p>
+                    <p className="text-xl font-bold">{data.studentName}</p>
                   </div>
                 </div>
               </CardContent>
@@ -88,7 +88,7 @@ export default function StudentReportModal({
               <CardContent className="p-4">
                 <div className="flex flex-col items-center justify-center h-full text-center">
                   <p className="text-sm text-gray-600 mb-1">Grade</p>
-                  <p className="text-lg font-semibold">{studentData.grade}</p>
+                  <p className="text-lg font-semibold">Grade {data.grade}</p>
                 </div>
               </CardContent>
             </Card>
@@ -98,9 +98,7 @@ export default function StudentReportModal({
               <CardContent className="p-4">
                 <div className="flex flex-col items-center justify-center h-full text-center">
                   <p className="text-sm text-gray-600 mb-1">School Name</p>
-                  <p className="text-lg font-semibold">
-                    {studentData.schoolName}
-                  </p>
+                  <p className="text-lg font-semibold">{data.schoolName}</p>
                 </div>
               </CardContent>
             </Card>
@@ -116,7 +114,7 @@ export default function StudentReportModal({
                   </p>
                   <div className="gradientBg rounded-xl px-4 py-2">
                     <p className="text-lg font-bold bg-gradient-to-r from-[#6A5ACD] to-[#87CEEB] bg-clip-text text-transparent">
-                      {studentData.totalPoints}
+                      {data.totalPoints}
                     </p>
                   </div>
                 </div>
@@ -130,7 +128,7 @@ export default function StudentReportModal({
                   </p>
                   <div className="gradientBg rounded-xl px-4 py-2">
                     <p className="text-lg font-bold bg-gradient-to-r from-[#6A5ACD] to-[#87CEEB] bg-clip-text text-transparent">
-                      {studentData.totalUsage}
+                      {totalUsageDisplay}
                     </p>
                   </div>
                 </div>
@@ -157,7 +155,7 @@ export default function StudentReportModal({
                     </tr>
                   </thead>
                   <tbody>
-                    {studentData.models?.map((model, index) => (
+                    {modelsData?.map((model, index) => (
                       <tr key={index} className="border-b">
                         <td className="py-3 px-4 font-medium">{model.name}</td>
                         <td className="py-3 px-4 text-center">
@@ -186,9 +184,9 @@ export default function StudentReportModal({
                 </h3>
                 <hr />
                 <div className="space-y-3 mt-6">
-                  {studentData.certifications?.map((cert, index) => (
+                  {data.achievements?.map((achievement, index) => (
                     <div key={index} className="flex items-center gap-3">
-                      <div className="w-6 h-6rounded-full flex items-center justify-center">
+                      <div className="w-6 h-6 rounded-full flex items-center justify-center">
                         <svg
                           width="22"
                           height="22"
@@ -223,7 +221,7 @@ export default function StudentReportModal({
                           />
                         </svg>
                       </div>
-                      <span className="text-sm">{cert}</span>
+                      <span className="text-sm">{achievement.name}</span>
                     </div>
                   ))}
                 </div>
@@ -238,7 +236,7 @@ export default function StudentReportModal({
                 </h3>
                 <hr />
                 <div className="space-y-3 mt-6">
-                  {studentData.rewards?.map((reward, index) => (
+                  {data.achievements?.map((achievement, index) => (
                     <div key={index} className="flex items-center gap-3">
                       <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
                         <svg
@@ -274,7 +272,7 @@ export default function StudentReportModal({
                           />
                         </svg>
                       </div>
-                      <span className="text-sm">{reward}</span>
+                      <span className="text-sm">{achievement.name}</span>
                     </div>
                   ))}
                 </div>

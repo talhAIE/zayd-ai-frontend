@@ -41,7 +41,7 @@ export const login = createAsyncThunk(
   'auth/login',
   async (credentials: LoginCredentials, { rejectWithValue }) => {
     try {
-      const response = await axios.post('https://tutorapp-cyfeg4ghe7gydbcy.uaenorth-01.azurewebsites.net/api/v1/auth/login', credentials);
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/v1/auth/login`, credentials);
       
       const data = response.data as AuthResponse;
       
@@ -77,7 +77,7 @@ export const addPhoneNumber = createAsyncThunk(
   async (credentials: PhoneNumberCredentials, { rejectWithValue }) => {
     try {
       const response = await axios.post(
-        'https://tutorapp-cyfeg4ghe7gydbcy.uaenorth-01.azurewebsites.net/api/v1/auth/add-phone',
+        `${import.meta.env.VITE_API_BASE_URL}/api/v1/auth/add-phone`,
         credentials
       );
       

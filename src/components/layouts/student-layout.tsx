@@ -59,6 +59,9 @@ export function StudentLayout({ children }: StudentLayoutProps) {
   const dispatch = useAppDispatch();
 
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
+  const { data: studentProfileData } = useAppSelector(
+    (state) => state.studentProfile
+  );
 
   const pathSegments = location.pathname.split("/").filter(Boolean);
   const lastSegment = pathSegments[pathSegments.length - 1] || "";
@@ -77,7 +80,12 @@ export function StudentLayout({ children }: StudentLayoutProps) {
       .join(" ");
   };
 
-  const formattedTitle = decodeAndFormatTitle(lastSegment).split(":")[0];
+  let formattedTitle;
+  if (location.pathname.startsWith("/teacher/student-profile/")) {
+    formattedTitle = "Student Profile";
+  } else {
+    formattedTitle = decodeAndFormatTitle(lastSegment).split(":")[0];
+  }
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -268,7 +276,7 @@ export function StudentLayout({ children }: StudentLayoutProps) {
               <ChevronDown className="w-4 h-4 ml-1" />
             </Button> */}
 
-            {location.pathname === "/teacher/student-profile" && (
+            {location.pathname.startsWith("/teacher/student-profile/") && (
               <Button onClick={handleViewReport}>View Report</Button>
             )}
 
@@ -293,6 +301,7 @@ export function StudentLayout({ children }: StudentLayoutProps) {
       <StudentReportModal
         isOpen={isReportModalOpen}
         onClose={handleCloseReportModal}
+        studentData={studentProfileData}
       />
     </div>
   );

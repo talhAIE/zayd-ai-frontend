@@ -1,28 +1,39 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const certificates = [
-  {
-    id: 1,
-    title: "Deep Learning Certificate",
-    issueDate: "Issue Jun 2025",
-    thumbnail: "https://via.placeholder.com/60x40/4F46E5/ffffff?text=이런이이",
-  },
-  {
-    id: 2,
-    title: "Deep Learning Certificate",
-    issueDate: "Issue Jun 2025",
-    thumbnail: "https://via.placeholder.com/60x40/000000/ffffff?text=지식채널e",
-  },
-  {
-    id: 3,
-    title: "Deep Learning Certificate",
-    issueDate: "Issue Jun 2025",
-    thumbnail: "https://via.placeholder.com/60x40/000000/ffffff?text=지식채널e",
-  },
-];
+interface CertificationsSectionProps {
+  achievements?: Array<{
+    id: string;
+    name: string;
+    description: string;
+    pointValue: number;
+    awardedAt: string;
+    iconUrl: string;
+    category: string;
+  }>;
+}
 
-export function CertificationsSection() {
+export function CertificationsSection({
+  achievements,
+}: CertificationsSectionProps) {
+  // Helper function to format date
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  // Group achievements by category
+  const achievementsByCategory =
+    achievements?.reduce((acc, achievement) => {
+      if (!acc[achievement.category]) {
+        acc[achievement.category] = [];
+      }
+      acc[achievement.category].push(achievement);
+      return acc;
+    }, {} as Record<string, typeof achievements>) || {};
   return (
     <Card className="w-full bg-white shadow-sm">
       <CardHeader className="pb-4">
@@ -34,29 +45,80 @@ export function CertificationsSection() {
 
           <TabsContent value="certifications" className="mt-4">
             <div className="space-y-3">
-              {certificates.map((cert) => (
-                <div
-                  key={cert.id}
-                  className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <img
-                    src={cert.thumbnail}
-                    className="w-15 h-10 rounded object-cover flex-shrink-0"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500">{cert.issueDate}</p>
-                    <p className="mt-3 text-sm font-bold text-gray-800 truncate">
-                      {cert.title}
-                    </p>
+              {achievements && achievements.length > 0 ? (
+                achievements.slice(0, 3).map((achievement) => (
+                  <div
+                    key={achievement.id}
+                    className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <img
+                      src={achievement.iconUrl}
+                      alt={achievement.name}
+                      className="w-15 h-10 rounded object-cover flex-shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-gray-500">
+                        Awarded {formatDate(achievement.awardedAt)}
+                      </p>
+                      <p className="mt-1 text-sm font-bold text-gray-800 truncate">
+                        {achievement.name}
+                      </p>
+                      <p className="text-xs text-gray-600 truncate">
+                        {achievement.description}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs font-bold text-blue-600">
+                        +{achievement.pointValue} pts
+                      </span>
+                    </div>
                   </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <p>No achievements yet</p>
                 </div>
-              ))}
+              )}
             </div>
           </TabsContent>
 
           <TabsContent value="rewards" className="mt-4">
-            <div className="text-center py-8 text-gray-500">
-              <p>No rewards yet</p>
+            <div className="space-y-3">
+              {achievements && achievements.length > 0 ? (
+                achievements.map((achievement) => (
+                  <div
+                    key={achievement.id}
+                    className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <img
+                      src={achievement.iconUrl}
+                      alt={achievement.name}
+                      className="w-12 h-12 rounded object-cover flex-shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-gray-800 truncate">
+                        {achievement.name}
+                      </p>
+                      <p className="text-xs text-gray-600 truncate">
+                        {achievement.description}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {achievement.category} •{" "}
+                        {formatDate(achievement.awardedAt)}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-sm font-bold text-blue-600">
+                        +{achievement.pointValue}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <p>No rewards yet</p>
+                </div>
+              )}
             </div>
           </TabsContent>
         </Tabs>

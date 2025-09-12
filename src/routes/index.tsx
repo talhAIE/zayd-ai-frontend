@@ -1,33 +1,33 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from "react-router-dom";
 // import { useAppSelector } from '@/redux/hooks';
 
 // Layouts
-import { PublicLayout } from '@/components/layouts/public-layout';
-import { StudentLayout } from '@/components/layouts/student-layout';
+import { PublicLayout } from "@/components/layouts/public-layout";
+import { StudentLayout } from "@/components/layouts/student-layout";
 
 // Public Pages
 // import HomePage from '@/pages/public/home';
-import AboutPage from '@/pages/public/about';
-import ContactPage from '@/pages/public/contact';
+import AboutPage from "@/pages/public/about";
+import ContactPage from "@/pages/public/contact";
 
 // Student Pages
-import LearningModes from '@/pages/student/learning-modes';
-import StudentDashboard from "@/pages/student/dashboard"
+import LearningModes from "@/pages/student/learning-modes";
+import StudentDashboard from "@/pages/student/dashboard";
 
 // Teacher Pages
-import TeacherDashboard from '@/pages/teacher/dashboard';
+import TeacherDashboard from "@/pages/teacher/dashboard";
 import StudentProfile from "@/pages/teacher/student-profile";
 
 // Auth Pages
-import { AuthLayout } from '@/components/layouts/auth-layout';
-import LoginPage from '@/pages/auth/login';
-import ChatModeTopics from '@/pages/student/topics/ChatModeTopics';
-import PhotoModeTopics from '@/pages/student/topics/PhotoModeTopics';
-import Leaderboard from '@/pages/student/Leaderboard';
-import Chat from '@/pages/student/ChatPage';
-import Rewards from '@/pages/student/Rewards';
-import ReadingModeTopics from '@/pages/student/topics/ReadingModeTopics';
-import RolePlayModeTopics from '@/pages/student/topics/RolePlayModeTopics';
+import { AuthLayout } from "@/components/layouts/auth-layout";
+import LoginPage from "@/pages/auth/login";
+import ChatModeTopics from "@/pages/student/topics/ChatModeTopics";
+import PhotoModeTopics from "@/pages/student/topics/PhotoModeTopics";
+import Leaderboard from "@/pages/student/Leaderboard";
+import Chat from "@/pages/student/ChatPage";
+import Rewards from "@/pages/student/Rewards";
+import ReadingModeTopics from "@/pages/student/topics/ReadingModeTopics";
+import RolePlayModeTopics from "@/pages/student/topics/RolePlayModeTopics";
 
 const AppRoutes = () => {
   // const { user } = useAppSelector((state) => state.auth);
@@ -81,7 +81,7 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/teacher/student-profile"
+        path="/teacher/student-profile/:studentId"
         element={
           <StudentLayout>
             <StudentProfile />

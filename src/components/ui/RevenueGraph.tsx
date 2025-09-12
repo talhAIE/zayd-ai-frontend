@@ -9,15 +9,14 @@ import {
   Tooltip,
 } from "recharts";
 
-const revenueData = [
-  { day: "Mon", hours: 5 },
-  { day: "Tue", hours: 8 },
-  { day: "Wed", hours: 12 },
-  { day: "Thu", hours: 18 },
-  { day: "Fri", hours: 33 },
-  { day: "Sat", hours: 28 },
-  { day: "Sun", hours: 22 },
-];
+const formatDateForDisplay = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+};
+
+const minutesToHours = (minutes: number) => {
+  return Math.round((minutes / 60) * 10) / 10; // Round to 1 decimal place
+};
 
 const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
@@ -48,19 +47,36 @@ const CustomDot = (props: any) => {
   return null;
 };
 
-export function RevenueGraph() {
+interface RevenueGraphProps {
+  usageData?: Array<{
+    date: string;
+    duration: number;
+  }>;
+}
+
+export function RevenueGraph({ usageData }: RevenueGraphProps) {
+  const chartData =
+    usageData?.map((item) => ({
+      day: formatDateForDisplay(item.date),
+      hours: minutesToHours(item.duration),
+      originalDate: item.date,
+    })) || [];
+
+  const totalUsage =
+    usageData?.reduce((sum, item) => sum + item.duration, 0) || 0;
+  const totalHours = minutesToHours(totalUsage);
   return (
     <Card className="w-full bg-white shadow-sm">
       <CardHeader className="pb-4">
         <CardTitle className="text-lg font-semibold text-gray-800">
-          Revenue graph : 2000$
+          Usage Graph: {totalHours.toFixed(1)}h Total
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4">
         <div className="h-64 md:h-80">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
-              data={revenueData}
+              data={chartData}
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />

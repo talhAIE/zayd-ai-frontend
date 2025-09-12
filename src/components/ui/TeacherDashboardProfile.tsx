@@ -2,7 +2,21 @@
 import { Card, CardContent } from "./card";
 import { Activity } from "lucide-react";
 
-const TeacherDashboardProfile = (user: any) => {
+interface TeacherDashboardProfileProps {
+  studentData?: {
+    studentName: string;
+    grade: string;
+    cefrLevel: string;
+    totalPoints: number;
+    currentStreak: number;
+    longestStreak: number;
+    totalLoginDays: number;
+  } | null;
+}
+
+const TeacherDashboardProfile = ({
+  studentData,
+}: TeacherDashboardProfileProps) => {
   return (
     <Card className="w-full md:max-w-lg my-4 md:my-0 bg-slate-50 ">
       <CardContent className="p-4">
@@ -23,30 +37,26 @@ const TeacherDashboardProfile = (user: any) => {
         <div className="pt-6">
           <div className="flex items-center justify-between mb-1">
             <h3 className="text-md font-bold">
-              {user?.user?.firstName + " " + user?.user?.lastName}
+              {studentData?.studentName || "Student Name"}
             </h3>
           </div>
           <div className="space-y-3">
             {/* Grade Box */}
             <div className="flex items-center justify-between rounded-full p-3 border border-gray-200">
-              <span className="font-medium text-sm text-[#6250E9]">
-                Grade
-              </span>
+              <span className="font-medium text-sm text-[#6250E9]">Grade</span>
               <div className="bg-gradient-to-r from-purple-100 to-blue-100 rounded-full px-4 py-1">
                 <span className="font-medium text-sm bg-gradient-to-r from-[#6250E9] to-[#69BDFF] bg-clip-text text-transparent">
-                  9
+                  {studentData?.grade || "N/A"}
                 </span>
               </div>
             </div>
 
             {/* Level Box */}
             <div className="flex items-center justify-between rounded-full p-3 border border-gray-200">
-              <span className="font-medium text-sm text-[#6250E9]">
-                Level
-              </span>
+              <span className="font-medium text-sm text-[#6250E9]">Level</span>
               <div className="bg-gradient-to-r from-purple-100 to-blue-100 rounded-full px-4 py-1">
                 <span className="font-medium text-sm bg-gradient-to-r from-[#6250E9] to-[#69BDFF] bg-clip-text text-transparent">
-                  5
+                  {studentData?.cefrLevel || "N/A"}
                 </span>
               </div>
             </div>
@@ -58,7 +68,7 @@ const TeacherDashboardProfile = (user: any) => {
               </span>
               <div className="bg-gradient-to-r from-purple-100 to-blue-100 rounded-full px-4 py-1">
                 <span className="font-medium text-sm bg-gradient-to-r from-[#6250E9] to-[#69BDFF] bg-clip-text text-transparent">
-                  9
+                  {studentData?.totalPoints || "N/A"}
                 </span>
               </div>
             </div>
@@ -86,7 +96,9 @@ const TeacherDashboardProfile = (user: any) => {
                     <div className="text-sm font-medium text-gray-700 mb-1">
                       Current
                     </div>
-                    <div className="text-2xl font-bold text-blue-600">20</div>
+                    <div className="text-2xl font-bold text-blue-600">
+                      {studentData?.currentStreak || 0}
+                    </div>
                   </div>
 
                   <div className="w-px h-12 bg-gray-300"></div>
@@ -95,7 +107,9 @@ const TeacherDashboardProfile = (user: any) => {
                     <div className="text-sm font-medium text-gray-700 mb-1">
                       Longest
                     </div>
-                    <div className="text-2xl font-bold text-blue-600">30</div>
+                    <div className="text-2xl font-bold text-blue-600">
+                      {studentData?.longestStreak || 0}
+                    </div>
                   </div>
 
                   <div className="w-px h-12 bg-gray-300"></div>
@@ -104,7 +118,9 @@ const TeacherDashboardProfile = (user: any) => {
                     <div className="text-sm font-medium text-gray-700 mb-1">
                       Total
                     </div>
-                    <div className="text-2xl font-bold text-blue-600">100</div>
+                    <div className="text-2xl font-bold text-blue-600">
+                      {studentData?.totalLoginDays || 0}
+                    </div>
                   </div>
                 </div>
               </div>
