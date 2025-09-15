@@ -38,12 +38,13 @@ export interface Achievement {
   category: string;
 }
 
-export interface TopicsCompletedPerMode {
-  "listening-mode": number;
-  "roleplay-mode": number;
-  "debate-mode": number;
-  "reading-mode": number;
+export interface TopicsByMode {
+  completed: number;
+  incomplete: number;
+  total: number;
 }
+
+export type TopicsCompletedPerMode = Record<string, TopicsByMode>;
 
 export interface StudentProfileData {
   id: string;
@@ -58,7 +59,7 @@ export interface StudentProfileData {
   totalLoginDays: number;
   usageGraphData: UsageGraphData[];
   achievements: Achievement[];
-  topicsCompletedPerMode: TopicsCompletedPerMode;
+  topicsByMode: TopicsCompletedPerMode;
 }
 
 export const fetchTeacherStudents = async (teacherId: string): Promise<TeacherDashboardData> => {

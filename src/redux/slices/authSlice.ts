@@ -47,7 +47,7 @@ export const login = createAsyncThunk(
       
       const userWithRole = {
         ...data.user,
-        role: 'student' as UserRole
+        role: data.user.role.toLowerCase() as UserRole
       };
       
       localStorage.setItem('AiTutorUser', JSON.stringify(userWithRole));
@@ -85,7 +85,7 @@ export const addPhoneNumber = createAsyncThunk(
       
       const userWithRole = {
         ...data.user,
-        role: 'student' as UserRole
+        role: data.user.role.toLowerCase() as UserRole
       };
       
       localStorage.setItem('AiTutorUser', JSON.stringify(userWithRole));

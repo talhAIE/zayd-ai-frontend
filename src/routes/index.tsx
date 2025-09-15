@@ -4,6 +4,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 // Layouts
 import { PublicLayout } from "@/components/layouts/public-layout";
 import { StudentLayout } from "@/components/layouts/student-layout";
+import { TeacherLayout } from "@/components/layouts/teacher-layout";
 
 // Public Pages
 // import HomePage from '@/pages/public/home';
@@ -73,19 +74,19 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/teacher"
+        path="/teacher/dashboard"
         element={
-          <StudentLayout>
+          <TeacherLayout>
             <TeacherDashboard />
-          </StudentLayout>
+          </TeacherLayout>
         }
       />
       <Route
         path="/teacher/student-profile/:studentId"
         element={
-          <StudentLayout>
+          <TeacherLayout>
             <StudentProfile />
-          </StudentLayout>
+          </TeacherLayout>
         }
       />
       <Route

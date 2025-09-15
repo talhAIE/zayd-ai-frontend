@@ -29,28 +29,24 @@ export default function StudentReportModal({
   const totalUsageMinutes = Math.round(data.usage / 60);
   const totalUsageDisplay = `${totalUsageMinutes} Mins`;
 
-  const modelsData = [
-    {
-      name: "LISTENING MODE",
-      completeTopics: `${data.topicsCompletedPerMode["listening-mode"]} topics`,
-      incompleteTopics: "0%", // Set to 0 as the backend isn't ready
-    },
-    {
-      name: "ROLEPLAY MODE",
-      completeTopics: `${data.topicsCompletedPerMode["roleplay-mode"]} topics`,
-      incompleteTopics: "0%",
-    },
-    {
-      name: "DEBATE MODE",
-      completeTopics: `${data.topicsCompletedPerMode["debate-mode"]} topics`,
-      incompleteTopics: "0%",
-    },
-    {
-      name: "READING MODE",
-      completeTopics: `${data.topicsCompletedPerMode["reading-mode"]} topics`,
-      incompleteTopics: "0%",
-    },
-  ];
+  // Helper function to format mode names
+  const formatModeName = (modeKey: string): string => {
+    return (
+      modeKey
+        .split("-")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ") + " MODE"
+    );
+  };
+
+  // Dynamically generate modelsData from topicsByMode
+  const modelsData = Object.entries(data.topicsByMode).map(
+    ([modeKey, modeData]) => ({
+      name: formatModeName(modeKey),
+      completeTopics: `${modeData.completed} topics`,
+      incompleteTopics: `${modeData.incomplete} topics`,
+    })
+  );
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
