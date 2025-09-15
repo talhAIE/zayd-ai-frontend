@@ -69,7 +69,6 @@ export interface TeacherDashboardFilters {
   sortOrder?: 'asc' | 'desc';
   minCompletedTopics?: number;
   maxCompletedTopics?: number;
-  searchTerm?: string;
 }
 
 
@@ -105,7 +104,6 @@ export const fetchTeacherStudents = async (
       if (filters.maxCompletedTopics !== undefined) {
         params.append('maxCompletedTopics', filters.maxCompletedTopics.toString());
       }
-      if (filters.searchTerm) params.append('searchTerm', filters.searchTerm);
     }
     
     const queryString = params.toString();

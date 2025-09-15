@@ -14,15 +14,31 @@ const formatDateForDisplay = (dateString: string) => {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 };
 
-const minutesToHours = (minutes: number) => {
-  return Math.round((minutes / 60) * 10) / 10;
+const getCurrentMonthMaxUsage = (
+  usageData: Array<{ date: string; duration: number }>
+) => {
+  const currentDate = new Date();
+  const currentMonth = currentDate.getMonth();
+  const currentYear = currentDate.getFullYear();
+
+  const currentMonthData = usageData.filter((item) => {
+    const itemDate = new Date(item.date);
+    return (
+      itemDate.getMonth() === currentMonth &&
+      itemDate.getFullYear() === currentYear
+    );
+  });
+
+  if (currentMonthData.length === 0) return 60;
+
+  return Math.max(...currentMonthData.map((item) => item.duration));
 };
 
 const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-white p-2 border border-gray-200 rounded shadow-lg">
-        <p className="text-sm font-medium">{`${payload[0].value}h`}</p>
+        <p className="text-sm font-medium">{`${payload[0].value}min`}</p>
       </div>
     );
   }
@@ -55,21 +71,23 @@ interface RevenueGraphProps {
 }
 
 export function RevenueGraph({ usageData }: RevenueGraphProps) {
+  const maxUsage = usageData ? getCurrentMonthMaxUsage(usageData) : 60;
+
   const chartData =
     usageData?.map((item) => ({
       day: formatDateForDisplay(item.date),
-      hours: minutesToHours(item.duration),
+      minutes: item.duration,
       originalDate: item.date,
     })) || [];
 
   const totalUsage =
     usageData?.reduce((sum, item) => sum + item.duration, 0) || 0;
-  const totalHours = minutesToHours(totalUsage);
+  const totalMinutes = totalUsage;
   return (
     <Card className="w-full bg-white shadow-sm">
       <CardHeader className="pb-4">
         <CardTitle className="text-lg font-semibold text-gray-800">
-          Usage Graph: {totalHours.toFixed(1)}h Total
+          Usage Graph: {totalMinutes}min Total
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4">
@@ -90,14 +108,13 @@ export function RevenueGraph({ usageData }: RevenueGraphProps) {
                 axisLine={false}
                 tickLine={false}
                 tick={{ fontSize: 12, fill: "#666" }}
-                domain={[0, 12]}
-                ticks={[0, 3, 6, 9, 12]}
-                tickFormatter={(value) => `${value}h`}
+                domain={[0, maxUsage]}
+                tickFormatter={(value) => `${value}min`}
               />
               <Tooltip content={<CustomTooltip />} />
               <Line
                 type="monotone"
-                dataKey="hours"
+                dataKey="minutes"
                 stroke="#3B82F6"
                 strokeWidth={3}
                 dot={<CustomDot />}

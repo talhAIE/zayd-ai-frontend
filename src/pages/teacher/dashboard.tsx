@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -100,15 +100,12 @@ export default function TeacherDashboard() {
     };
 
     if (gradeFilter !== "all") {
-      filters.grade = gradeFilter;
+      const numericGrade = gradeFilter.replace("Grade ", "");
+      filters.grade = numericGrade;
     }
 
     if (topicStatusFilter !== "all") {
       filters.topicStatus = topicStatusFilter as any;
-    }
-
-    if (debouncedSearchTerm.trim()) {
-      filters.searchTerm = debouncedSearchTerm.trim();
     }
 
     if (minCompletedTopics) {
@@ -147,7 +144,6 @@ export default function TeacherDashboard() {
       fetchData();
     }
   }, [
-    debouncedSearchTerm,
     gradeFilter,
     topicStatusFilter,
     sortBy,
@@ -156,24 +152,41 @@ export default function TeacherDashboard() {
     maxCompletedTopics,
   ]);
 
-  const transformedStudents = students.map((student) => ({
-    id: student.id,
-    name: student.studentName,
-    grade: student.grade,
-    cefrLevel: student.cefrLevel,
-    streak: student.currentStreak,
-    usage: student.usage,
-    totalPoints: student.totalPoints,
-    completedTopics: student.completedTopics,
-  }));
+  const transformedStudents = useMemo(() => {
+    return students.map((student) => ({
+      id: student.id,
+      name: student.studentName,
+      grade: student.grade,
+      cefrLevel: student.cefrLevel,
+      streak: student.currentStreak,
+      usage: student.usage,
+      totalPoints: student.totalPoints,
+      completedTopics: student.completedTopics,
+    }));
+  }, [students]);
 
-  const totalPages = Math.ceil(transformedStudents.length / pageSize);
-  const paginatedStudents = transformedStudents.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  const filteredStudents = useMemo(() => {
+    if (!debouncedSearchTerm.trim()) {
+      return transformedStudents;
+    }
 
-  // Reset to page 1 when filters change
+    const searchLower = debouncedSearchTerm.toLowerCase().trim();
+    return transformedStudents.filter((student) =>
+      student.name.toLowerCase().includes(searchLower)
+    );
+  }, [transformedStudents, debouncedSearchTerm]);
+
+  const totalPages = useMemo(() => {
+    return Math.ceil(filteredStudents.length / pageSize);
+  }, [filteredStudents.length, pageSize]);
+
+  const paginatedStudents = useMemo(() => {
+    return filteredStudents.slice(
+      (currentPage - 1) * pageSize,
+      currentPage * pageSize
+    );
+  }, [filteredStudents, currentPage, pageSize]);
+
   useEffect(() => {
     setCurrentPage(1);
   }, [
@@ -201,7 +214,7 @@ export default function TeacherDashboard() {
     setCurrentPage(1);
   };
 
-  const hasActiveFilters = () => {
+  const hasActiveFilters = useMemo(() => {
     return (
       searchTerm ||
       gradeFilter !== "all" ||
@@ -209,7 +222,13 @@ export default function TeacherDashboard() {
       minCompletedTopics ||
       maxCompletedTopics
     );
-  };
+  }, [
+    searchTerm,
+    gradeFilter,
+    topicStatusFilter,
+    minCompletedTopics,
+    maxCompletedTopics,
+  ]);
 
   if (isLoading) {
     return (
@@ -323,30 +342,11 @@ export default function TeacherDashboard() {
                 )}
               </SelectContent>
             </Select>
-
-            {/* Completed Topics Range */}
-            <div className="flex gap-1 items-center min-w-[200px]">
-              <Input
-                type="number"
-                placeholder="Min topics"
-                value={minCompletedTopics}
-                onChange={(e) => setMinCompletedTopics(e.target.value)}
-                className="w-20 text-xs"
-              />
-              <span className="text-xs text-gray-500">-</span>
-              <Input
-                type="number"
-                placeholder="Max topics"
-                value={maxCompletedTopics}
-                onChange={(e) => setMaxCompletedTopics(e.target.value)}
-                className="w-20 text-xs"
-              />
-            </div>
           </div>
 
           {/* Search and Sort */}
           <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
-            <div className="relative w-full sm:w-48">
+            <div className="relative w-full sm:w-56">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[var(--font-light2)]" />
               <Input
                 className="pl-9 w-full"
@@ -392,7 +392,7 @@ export default function TeacherDashboard() {
               onValueChange={setSortOrder}
               disabled={filterValuesLoading}
             >
-              <SelectTrigger className="w-full sm:w-[100px]">
+              <SelectTrigger className="w-full sm:w-[120px]">
                 <SelectValue
                   placeholder={filterValuesLoading ? "Loading..." : "Order"}
                 />
@@ -414,7 +414,7 @@ export default function TeacherDashboard() {
             </Select>
 
             {/* Clear Filters Button */}
-            {hasActiveFilters() && (
+            {hasActiveFilters && (
               <Button
                 variant="outline"
                 size="sm"
