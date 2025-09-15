@@ -5,9 +5,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
-import { User } from "lucide-react";
+import { User, Download } from "lucide-react";
 import { StudentProfileData } from "@/services/teacherService";
 import { Button } from "@/components/ui/button";
+import { useRef } from "react";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 interface StudentReportModalProps {
   isOpen: boolean;
@@ -20,6 +23,8 @@ export default function StudentReportModal({
   onClose,
   studentData,
 }: StudentReportModalProps) {
+  const reportRef = useRef<HTMLDivElement>(null);
+
   if (!studentData) {
     return null;
   }
@@ -29,7 +34,6 @@ export default function StudentReportModal({
   const totalUsageMinutes = Math.round(data.usage / 60);
   const totalUsageDisplay = `${totalUsageMinutes} Mins`;
 
-  // Helper function to format mode names
   const formatModeName = (modeKey: string): string => {
     return (
       modeKey
@@ -39,7 +43,6 @@ export default function StudentReportModal({
     );
   };
 
-  // Dynamically generate modelsData from topicsByMode
   const modelsData = Object.entries(data.topicsByMode).map(
     ([modeKey, modeData]) => ({
       name: formatModeName(modeKey),
@@ -48,10 +51,160 @@ export default function StudentReportModal({
     })
   );
 
+  const downloadReport = async () => {
+    if (!reportRef.current) return;
+
+    try {
+      // Add -mt-3 to specific divs only during PDF generation to avoid position issues on the pdf
+      const studentNameDiv = reportRef.current.querySelector(
+        ".bg-blue-600 .flex > div:last-child"
+      );
+
+      const allDivs = reportRef.current.querySelectorAll("div");
+      let gradeDiv: HTMLElement | null = null;
+      let schoolDiv: HTMLElement | null = null;
+
+      allDivs.forEach((div: Element) => {
+        const text = div.textContent || "";
+        if (text.includes("Grade") && text.includes("Grade ")) {
+          gradeDiv = div as HTMLElement;
+        }
+        if (text.includes("School Name") && !text.includes("Grade")) {
+          schoolDiv = div as HTMLElement;
+        }
+      });
+
+      const achievementSpans = reportRef.current.querySelectorAll(
+        ".space-y-3 > div.flex.items-center.gap-3 > span.text-sm"
+      );
+
+      const allPElements = reportRef.current.querySelectorAll("p");
+      let totalPointsP: Element | null = null;
+      let totalUsageP: Element | null = null;
+      let totalPointsValueP: Element | null = null;
+      let totalUsageValueP: Element | null = null;
+
+      allPElements.forEach((p: Element) => {
+        const text = p.textContent || "";
+        if (text.includes("TOTAL POINTS") && !text.includes("TOTAL USAGE")) {
+          totalPointsP = p;
+        }
+        if (text.includes("TOTAL USAGE") && !text.includes("TOTAL POINTS")) {
+          totalUsageP = p;
+        }
+        if (
+          text === data.totalPoints.toString() &&
+          p.classList.contains("text-lg") &&
+          p.classList.contains("font-bold") &&
+          p.classList.contains("text-blue-600")
+        ) {
+          totalPointsValueP = p;
+        }
+        if (
+          text === totalUsageDisplay &&
+          p.classList.contains("text-lg") &&
+          p.classList.contains("font-bold") &&
+          p.classList.contains("text-blue-600")
+        ) {
+          totalUsageValueP = p;
+        }
+      });
+
+      console.log("Found elements:", {
+        studentNameDiv,
+        gradeDiv,
+        schoolDiv,
+        achievementSpans: achievementSpans.length,
+        totalPointsP,
+        totalUsageP,
+        totalPointsValueP,
+        totalUsageValueP,
+      });
+
+      if (studentNameDiv) (studentNameDiv as HTMLElement).classList.add("-mt-3");
+      if (gradeDiv) (gradeDiv as HTMLElement).classList.add("-mt-3");
+      if (schoolDiv) (schoolDiv as HTMLElement).classList.add("-mt-3");
+
+      achievementSpans.forEach((span) => {
+        (span as HTMLElement).classList.add("-mt-3");
+      });
+      if (totalPointsP) (totalPointsP as HTMLElement).classList.add("-mt-3");
+      if (totalUsageP) (totalUsageP as HTMLElement).classList.add("-mt-3");
+      if (totalPointsValueP) (totalPointsValueP as HTMLElement).classList.add("-mt-3");
+      if (totalUsageValueP) (totalUsageValueP as HTMLElement).classList.add("-mt-3");
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      const canvas = await html2canvas(reportRef.current, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: "#ffffff",
+        width: reportRef.current.scrollWidth,
+        height: reportRef.current.scrollHeight,
+      });
+
+      // Remove -mt-3 after capture to avoid position issues on viewing the report
+      if (studentNameDiv) (studentNameDiv as HTMLElement).classList.remove("-mt-3");
+      if (gradeDiv) (gradeDiv as HTMLElement).classList.remove("-mt-3");
+      if (schoolDiv) (schoolDiv as HTMLElement).classList.remove("-mt-3");
+
+      achievementSpans.forEach((span) => {
+        (span as HTMLElement).classList.remove("-mt-3");
+      });
+
+      if (totalPointsP) (totalPointsP as HTMLElement).classList.remove("-mt-3");
+      if (totalUsageP) (totalUsageP as HTMLElement).classList.remove("-mt-3");
+      if (totalPointsValueP) (totalPointsValueP as HTMLElement).classList.remove("-mt-3");
+      if (totalUsageValueP) (totalUsageValueP as HTMLElement).classList.remove("-mt-3");
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const imgX = (pdfWidth - imgWidth * ratio) / 4;
+      const imgY = 0;
+
+      pdf.addImage(
+        imgData,
+        "PNG",
+        imgX,
+        imgY,
+        imgWidth * ratio,
+        imgHeight * ratio
+      );
+
+      const currentDate = new Date().toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      });
+      const filename = `${data.studentName.replace(
+        /\s+/g,
+        "_"
+      )}_Report_${currentDate.replace(/\//g, "-")}.pdf`;
+
+      pdf.save(filename);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      alert("Failed to generate PDF. Please try again.");
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-        <Button className="absolute right-4 top-4 me-8">Download Report</Button>
+        <Button
+          className="absolute right-4 top-4 me-8"
+          onClick={downloadReport}
+        >
+          <Download className="w-4 h-4 mr-2" />
+          Download Report
+        </Button>
         <DialogHeader className="mt-16">
           <DialogTitle className="text-2xl font-bold text-center mb-2">
             Student Report
@@ -61,7 +214,7 @@ export default function StudentReportModal({
           </p>
         </DialogHeader>
 
-        <div className="space-y-6 bg-[#F8F9FD] p-6 rounded-2xl">
+        <div ref={reportRef} className="space-y-6 bg-[#F8F9FD] p-6 rounded-2xl">
           {/* Student Information Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Student Name Card - Blue background */}
@@ -105,11 +258,11 @@ export default function StudentReportModal({
             <Card className="bg-white border-0">
               <CardContent className="p-3">
                 <div className="flex items-center justify-between h-full">
-                  <p className="text-sm font-medium text-[#6A5ACD]">
+                  <p className="text-sm font-medium text-blue-600">
                     TOTAL POINTS
                   </p>
-                  <div className="gradientBg rounded-xl px-4 py-2">
-                    <p className="text-lg font-bold bg-gradient-to-r from-[#6A5ACD] to-[#87CEEB] bg-clip-text text-transparent">
+                  <div className="bg-gray-100 rounded-xl px-4 py-2">
+                    <p className="text-lg font-bold text-blue-600">
                       {data.totalPoints}
                     </p>
                   </div>
@@ -119,11 +272,11 @@ export default function StudentReportModal({
             <Card>
               <CardContent className="p-3">
                 <div className="flex items-center justify-between h-full">
-                  <p className="text-sm font-medium text-[#6A5ACD]">
+                  <p className="text-sm font-medium text-blue-600">
                     TOTAL USAGE
                   </p>
-                  <div className="gradientBg rounded-xl px-4 py-2">
-                    <p className="text-lg font-bold bg-gradient-to-r from-[#6A5ACD] to-[#87CEEB] bg-clip-text text-transparent">
+                  <div className="bg-gray-100 rounded-xl px-4 py-2">
+                    <p className="text-lg font-bold text-blue-600">
                       {totalUsageDisplay}
                     </p>
                   </div>
@@ -139,13 +292,13 @@ export default function StudentReportModal({
                 <table className="w-full">
                   <thead>
                     <tr className="border-b">
-                      <th className="text-left py-3 px-4 font-semibold bg-gradient-to-r from-[#6250E9] to-[#69BDFF] bg-clip-text text-transparent">
+                      <th className="text-left py-3 px-4 font-semibold text-blue-600">
                         MODELS
                       </th>
-                      <th className="text-center py-3 px-4 font-semibold bg-gradient-to-r from-[#6250E9] to-[#69BDFF] bg-clip-text text-transparent">
+                      <th className="text-center py-3 px-4 font-semibold text-blue-600">
                         COMPLETE TOPICS
                       </th>
-                      <th className="text-center py-3 px-4 font-semibold bg-gradient-to-r from-[#6250E9] to-[#69BDFF] bg-clip-text text-transparent">
+                      <th className="text-center py-3 px-4 font-semibold text-blue-600">
                         INCOMPLETE TOPICS
                       </th>
                     </tr>
@@ -158,7 +311,7 @@ export default function StudentReportModal({
                           {model.completeTopics}
                         </td>
                         <td className="py-3 px-4 text-center">
-                          <span className="text-blue-600 font-semibold bg-gradient-to-r from-[#6250E9] to-[#69BDFF] bg-clip-text text-transparent">
+                          <span className="font-semibold text-blue-600">
                             {model.incompleteTopics}
                           </span>
                         </td>
@@ -175,7 +328,7 @@ export default function StudentReportModal({
             {/* Certifications */}
             <Card>
               <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-2 flex items-center gap-2 bg-gradient-to-r from-[#6250E9] to-[#69BDFF] bg-clip-text text-transparent">
+                <h3 className="text-lg font-semibold mb-2 flex items-center gap-2 text-blue-600">
                   CERTIFICATION
                 </h3>
                 <hr />
@@ -227,7 +380,7 @@ export default function StudentReportModal({
             {/* Rewards */}
             <Card>
               <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 bg-gradient-to-r from-[#6250E9] to-[#69BDFF] bg-clip-text text-transparent">
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-blue-600">
                   REWARDS
                 </h3>
                 <hr />

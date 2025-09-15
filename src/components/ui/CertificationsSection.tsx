@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface CertificationsSectionProps {
@@ -25,15 +25,6 @@ export function CertificationsSection({
     });
   };
 
-  // Group achievements by category
-  const achievementsByCategory =
-    achievements?.reduce((acc, achievement) => {
-      if (!acc[achievement.category]) {
-        acc[achievement.category] = [];
-      }
-      acc[achievement.category].push(achievement);
-      return acc;
-    }, {} as Record<string, typeof achievements>) || {};
   return (
     <Card className="w-full bg-white shadow-sm">
       <CardHeader className="pb-4">
@@ -44,7 +35,7 @@ export function CertificationsSection({
           </TabsList>
 
           <TabsContent value="certifications" className="mt-4">
-            <div className="space-y-3">
+            <div className="space-y-3 max-h-80 overflow-y-auto">
               {achievements && achievements.length > 0 ? (
                 achievements.slice(0, 3).map((achievement) => (
                   <div
@@ -67,11 +58,6 @@ export function CertificationsSection({
                         {achievement.description}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <span className="text-xs font-bold text-blue-600">
-                        +{achievement.pointValue} pts
-                      </span>
-                    </div>
                   </div>
                 ))
               ) : (
@@ -83,7 +69,7 @@ export function CertificationsSection({
           </TabsContent>
 
           <TabsContent value="rewards" className="mt-4">
-            <div className="space-y-3">
+            <div className="space-y-3 max-h-80 overflow-y-auto">
               {achievements && achievements.length > 0 ? (
                 achievements.map((achievement) => (
                   <div
@@ -107,11 +93,6 @@ export function CertificationsSection({
                         {formatDate(achievement.awardedAt)}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <span className="text-sm font-bold text-blue-600">
-                        +{achievement.pointValue}
-                      </span>
-                    </div>
                   </div>
                 ))
               ) : (
@@ -123,14 +104,6 @@ export function CertificationsSection({
           </TabsContent>
         </Tabs>
       </CardHeader>
-
-      <CardContent className="pt-0">
-        <div className="w-full gradientBg border-0 shadow-none rounded-full text-white cursor-pointer py-2 px-4 text-center transition-transform duration-150 active:scale-95">
-          <span className="font-medium text-sm bg-gradient-to-r from-[#6250E9] to-[#69BDFF] bg-clip-text text-transparent">
-            View All
-          </span>
-        </div>
-      </CardContent>
     </Card>
   );
 }
