@@ -32,7 +32,8 @@ export function RoleplayModeCards({ topicsData }: RoleplayModeCardsProps) {
         name: formatModeName(modeKey),
         key: modeKey,
         color: "#2DE000",
-        count: modeData.completed,
+        completed: modeData.completed,
+        incomplete: modeData.incomplete,
       }))
     : [];
 
@@ -96,27 +97,38 @@ export function RoleplayModeCards({ topicsData }: RoleplayModeCardsProps) {
 
       <div
         ref={scrollContainerRef}
-        className="flex gap-4 overflow-x-auto scrollbar-hide px-12"
+        className="flex gap-4 overflow-x-auto scrollbar-hide"
         onScroll={checkScrollPosition}
         onLoad={checkScrollPosition}
       >
         {learningModes.map((mode, index) => (
           <Card
             key={index}
-            className="bg-white border border-gray-200 hover:shadow-md transition-shadow flex-shrink-0 w-72"
+            className="bg-white border border-gray-200 hover:shadow-md transition-shadow flex-shrink-0"
           >
             <CardContent className="p-2">
               <div className="text-center">
                 <h3 className="text-md font-bold text-gray-800 mt-2">
                   {mode.name}
                 </h3>
-                <div className="p-4 flex items-center justify-center">
-                  <div className="text-lg bg-[#F8F9FD] px-6 py-4 rounded-lg">
-                    <span className="text-[#2DE000] font-bold">
-                      {mode.count || 0}
-                    </span>
-                    <br />
-                    <span className="text-sm">Completed</span>
+                <div className="flex">
+                  <div className="p-4 flex items-center justify-center">
+                    <div className="text-lg bg-[#F8F9FD] px-6 py-4 rounded-lg">
+                      <span className="text-[#2DE000] font-bold">
+                        {mode.completed || 0}
+                      </span>
+                      <br />
+                      <span className="text-sm">Completed</span>
+                    </div>
+                  </div>
+                  <div className="p-4 flex items-center justify-center">
+                    <div className="text-lg bg-[#F8F9FD] px-6 py-4 rounded-lg">
+                      <span className="text-[#FF6B6B] font-bold">
+                        {mode.incomplete || 0}
+                      </span>
+                      <br />
+                      <span className="text-sm">Incomplete</span>
+                    </div>
                   </div>
                 </div>
               </div>
