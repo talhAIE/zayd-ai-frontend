@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, Loader2, Eye } from "lucide-react";
+import { Search, Loader2, Eye, X } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -30,22 +30,38 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { fetchTeacherData } from "@/redux/slices/teacherSlice";
+import {
+  fetchTeacherData,
+  fetchTeacherFilterValues,
+} from "@/redux/slices/teacherSlice";
+import { useDebounce } from "@/hooks/useDebounce";
+import { TeacherDashboardFilters } from "@/services/teacherService";
 
 export default function TeacherDashboard() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { students, isLoading, error } = useAppSelector(
-    (state) => state.teacher
-  );
+  const {
+    students,
+    isLoading,
+    error,
+    filterValues,
+    filterValuesLoading,
+    filterValuesError,
+  } = useAppSelector((state) => state.teacher);
 
+  // Local state for form inputs
   const [searchTerm, setSearchTerm] = useState("");
-  const [sectionFilter, setSectionFilter] = useState("all");
-  const [performanceFilter, setPerformanceFilter] = useState("all");
-  const [rankingFilter, setRankingFilter] = useState("all");
-  const [sortBy, setSortBy] = useState("");
+  const [gradeFilter, setGradeFilter] = useState("all");
+  const [topicStatusFilter, setTopicStatusFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("points");
+  const [sortOrder, setSortOrder] = useState("desc");
+  const [minCompletedTopics, setMinCompletedTopics] = useState("");
+  const [maxCompletedTopics, setMaxCompletedTopics] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 8;
+
+  // Debounced search term to avoid excessive API calls
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   const [visibleColumns, setVisibleColumns] = useState({
     name: true,
@@ -77,11 +93,68 @@ export default function TeacherDashboard() {
   const parsedUser = JSON.parse(myUser || "{}");
   const teacherId = parsedUser?.id;
 
+  const buildFilters = (): TeacherDashboardFilters => {
+    const filters: TeacherDashboardFilters = {
+      sortBy: sortBy as any,
+      sortOrder: sortOrder as any,
+    };
+
+    if (gradeFilter !== "all") {
+      filters.grade = gradeFilter;
+    }
+
+    if (topicStatusFilter !== "all") {
+      filters.topicStatus = topicStatusFilter as any;
+    }
+
+    if (debouncedSearchTerm.trim()) {
+      filters.searchTerm = debouncedSearchTerm.trim();
+    }
+
+    if (minCompletedTopics) {
+      const min = parseInt(minCompletedTopics);
+      if (!isNaN(min)) {
+        filters.minCompletedTopics = min;
+      }
+    }
+
+    if (maxCompletedTopics) {
+      const max = parseInt(maxCompletedTopics);
+      if (!isNaN(max)) {
+        filters.maxCompletedTopics = max;
+      }
+    }
+
+    return filters;
+  };
+
+  const fetchData = () => {
+    if (teacherId) {
+      const filters = buildFilters();
+      dispatch(fetchTeacherData({ teacherId, filters }));
+    }
+  };
+
   useEffect(() => {
     if (teacherId) {
-      dispatch(fetchTeacherData(teacherId));
+      fetchData();
+      dispatch(fetchTeacherFilterValues(teacherId));
     }
   }, [teacherId, dispatch]);
+
+  useEffect(() => {
+    if (teacherId) {
+      fetchData();
+    }
+  }, [
+    debouncedSearchTerm,
+    gradeFilter,
+    topicStatusFilter,
+    sortBy,
+    sortOrder,
+    minCompletedTopics,
+    maxCompletedTopics,
+  ]);
 
   const transformedStudents = students.map((student) => ({
     id: student.id,
@@ -94,56 +167,48 @@ export default function TeacherDashboard() {
     completedTopics: student.completedTopics,
   }));
 
-  const studentsData = transformedStudents;
-
-  const filteredStudents = studentsData.filter((student) => {
-    const matchesSearch = student.name
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchesSection =
-      sectionFilter === "all" || student.grade === sectionFilter;
-    const matchesPerformance =
-      performanceFilter === "all" ||
-      (performanceFilter === "high" && student.totalPoints > 500) ||
-      (performanceFilter === "medium" &&
-        student.totalPoints > 200 &&
-        student.totalPoints <= 500) ||
-      (performanceFilter === "low" && student.totalPoints <= 200);
-    const matchesRanking =
-      rankingFilter === "all" || student.cefrLevel === rankingFilter;
-
-    return (
-      matchesSearch && matchesSection && matchesPerformance && matchesRanking
-    );
-  });
-
-  const sortedStudents = [...filteredStudents].sort((a, b) => {
-    switch (sortBy) {
-      case "name":
-        return a.name.localeCompare(b.name);
-      case "points":
-        return b.totalPoints - a.totalPoints;
-      case "streak":
-        return b.streak - a.streak;
-      case "usage":
-        return b.usage - a.usage;
-      default:
-        return 0;
-    }
-  });
-
-  const totalPages = Math.ceil(sortedStudents.length / pageSize);
-  const paginatedStudents = sortedStudents.slice(
+  const totalPages = Math.ceil(transformedStudents.length / pageSize);
+  const paginatedStudents = transformedStudents.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
 
+  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, sectionFilter, performanceFilter, rankingFilter, sortBy]);
+  }, [
+    debouncedSearchTerm,
+    gradeFilter,
+    topicStatusFilter,
+    sortBy,
+    sortOrder,
+    minCompletedTopics,
+    maxCompletedTopics,
+  ]);
 
   const handleViewProfile = (studentId: string) => {
     navigate(`/teacher/student-profile/${studentId}`);
+  };
+
+  const handleClearFilters = () => {
+    setSearchTerm("");
+    setGradeFilter("all");
+    setTopicStatusFilter("all");
+    setSortBy("points");
+    setSortOrder("desc");
+    setMinCompletedTopics("");
+    setMaxCompletedTopics("");
+    setCurrentPage(1);
+  };
+
+  const hasActiveFilters = () => {
+    return (
+      searchTerm ||
+      gradeFilter !== "all" ||
+      topicStatusFilter !== "all" ||
+      minCompletedTopics ||
+      maxCompletedTopics
+    );
   };
 
   if (isLoading) {
@@ -165,10 +230,7 @@ export default function TeacherDashboard() {
             <p className="text-red-600 mb-4">
               Error loading students data: {error}
             </p>
-            <Button
-              onClick={() => teacherId && dispatch(fetchTeacherData(teacherId))}
-              variant="outline"
-            >
+            <Button onClick={() => teacherId && fetchData()} variant="outline">
               Retry
             </Button>
           </CardContent>
@@ -181,50 +243,105 @@ export default function TeacherDashboard() {
     <div>
       <div className="flex flex-wrap items-center gap-4 mb-6">
         <div className="flex justify-between items-center w-full flex-wrap gap-4">
+          {/* Filter Values Error */}
+          {filterValuesError && (
+            <div className="w-full mb-2 flex items-center justify-between">
+              <p className="text-sm text-orange-600">
+                Warning: Filter options could not be loaded. Using default
+                values.
+              </p>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() =>
+                  teacherId && dispatch(fetchTeacherFilterValues(teacherId))
+                }
+                className="ml-2"
+              >
+                Retry
+              </Button>
+            </div>
+          )}
+
           {/* Filter Buttons */}
           <div className="flex gap-2 flex-wrap w-full sm:w-auto">
-            <Select value={sectionFilter} onValueChange={setSectionFilter}>
+            <Select
+              value={gradeFilter}
+              onValueChange={setGradeFilter}
+              disabled={filterValuesLoading}
+            >
               <SelectTrigger className="flex-1 min-w-[140px]">
-                <SelectValue placeholder="Grade" />
+                <SelectValue
+                  placeholder={filterValuesLoading ? "Loading..." : "Grade"}
+                />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Grades</SelectItem>
-                <SelectItem value="9">Grade 9</SelectItem>
-                <SelectItem value="10">Grade 10</SelectItem>
-                <SelectItem value="11">Grade 11</SelectItem>
-                <SelectItem value="12">Grade 12</SelectItem>
+                {filterValues?.grades?.length ? (
+                  filterValues.grades.map((grade) => (
+                    <SelectItem key={grade} value={`Grade ${grade}`}>
+                      Grade {grade}
+                    </SelectItem>
+                  ))
+                ) : (
+                  // Fallback options if filter values are not loaded
+                  <>
+                    <SelectItem value="Grade 9">Grade 9</SelectItem>
+                    <SelectItem value="Grade 10">Grade 10</SelectItem>
+                    <SelectItem value="Grade 11">Grade 11</SelectItem>
+                    <SelectItem value="Grade 12">Grade 12</SelectItem>
+                  </>
+                )}
               </SelectContent>
             </Select>
 
             <Select
-              value={performanceFilter}
-              onValueChange={setPerformanceFilter}
+              value={topicStatusFilter}
+              onValueChange={setTopicStatusFilter}
+              disabled={filterValuesLoading}
             >
               <SelectTrigger className="flex-1 min-w-[140px]">
-                <SelectValue placeholder="Performance" />
+                <SelectValue
+                  placeholder={
+                    filterValuesLoading ? "Loading..." : "Topic Status"
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Performance</SelectItem>
-                <SelectItem value="high">High (500+ pts)</SelectItem>
-                <SelectItem value="medium">Medium (200-500 pts)</SelectItem>
-                <SelectItem value="low">Low (0-200 pts)</SelectItem>
+                {filterValues?.topicStatusOptions?.length ? (
+                  filterValues.topicStatusOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <>
+                    <SelectItem value="all">All Topics</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="incomplete">Incomplete</SelectItem>
+                  </>
+                )}
               </SelectContent>
             </Select>
 
-            <Select value={rankingFilter} onValueChange={setRankingFilter}>
-              <SelectTrigger className="flex-1 min-w-[140px]">
-                <SelectValue placeholder="CEFR Level" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Levels</SelectItem>
-                <SelectItem value="A1">A1</SelectItem>
-                <SelectItem value="A2">A2</SelectItem>
-                <SelectItem value="B1">B1</SelectItem>
-                <SelectItem value="B2">B2</SelectItem>
-                <SelectItem value="C1">C1</SelectItem>
-                <SelectItem value="C2">C2</SelectItem>
-              </SelectContent>
-            </Select>
+            {/* Completed Topics Range */}
+            <div className="flex gap-1 items-center min-w-[200px]">
+              <Input
+                type="number"
+                placeholder="Min topics"
+                value={minCompletedTopics}
+                onChange={(e) => setMinCompletedTopics(e.target.value)}
+                className="w-20 text-xs"
+              />
+              <span className="text-xs text-gray-500">-</span>
+              <Input
+                type="number"
+                placeholder="Max topics"
+                value={maxCompletedTopics}
+                onChange={(e) => setMaxCompletedTopics(e.target.value)}
+                className="w-20 text-xs"
+              />
+            </div>
           </div>
 
           {/* Search and Sort */}
@@ -239,17 +356,75 @@ export default function TeacherDashboard() {
               />
             </div>
 
-            <Select value={sortBy} onValueChange={setSortBy}>
+            <Select
+              value={sortBy}
+              onValueChange={setSortBy}
+              disabled={filterValuesLoading}
+            >
               <SelectTrigger className="w-full sm:w-[140px]">
-                <SelectValue placeholder="Sort by" />
+                <SelectValue
+                  placeholder={filterValuesLoading ? "Loading..." : "Sort by"}
+                />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="name">Name</SelectItem>
-                <SelectItem value="points">Total Points</SelectItem>
-                <SelectItem value="streak">Streak</SelectItem>
-                <SelectItem value="usage">Usage</SelectItem>
+                {filterValues?.sortByOptions?.length ? (
+                  filterValues.sortByOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <>
+                    <SelectItem value="name">Name</SelectItem>
+                    <SelectItem value="points">Total Points</SelectItem>
+                    <SelectItem value="streak">Streak</SelectItem>
+                    <SelectItem value="usage">Usage</SelectItem>
+                    <SelectItem value="completedTopics">
+                      Completed Topics
+                    </SelectItem>
+                  </>
+                )}
               </SelectContent>
             </Select>
+
+            <Select
+              value={sortOrder}
+              onValueChange={setSortOrder}
+              disabled={filterValuesLoading}
+            >
+              <SelectTrigger className="w-full sm:w-[100px]">
+                <SelectValue
+                  placeholder={filterValuesLoading ? "Loading..." : "Order"}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {filterValues?.sortOrderOptions?.length ? (
+                  filterValues.sortOrderOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <>
+                    <SelectItem value="asc">Ascending</SelectItem>
+                    <SelectItem value="desc">Descending</SelectItem>
+                  </>
+                )}
+              </SelectContent>
+            </Select>
+
+            {/* Clear Filters Button */}
+            {hasActiveFilters() && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleClearFilters}
+                className="w-full sm:w-auto"
+              >
+                <X className="h-4 w-4 mr-2" />
+                Clear
+              </Button>
+            )}
 
             {/* Column Visibility Dropdown */}
             <DropdownMenu>

@@ -104,7 +104,7 @@ export function RoleplayModeCards({ topicsData }: RoleplayModeCardsProps) {
         {learningModes.map((mode, index) => (
           <Card
             key={index}
-            className="bg-white border border-gray-200 hover:shadow-md transition-shadow flex-shrink-0"
+            className="bg-white border border-gray-200 transition-shadow flex-shrink-0"
           >
             <CardContent className="p-2">
               <div className="text-center">

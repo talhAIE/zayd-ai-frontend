@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import TeacherDashboardProfile from "@/components/ui/TeacherDashboardProfile";
-import { RevenueGraph } from "@/components/ui/RevenueGraph";
+import { RevenueGraph } from "@/components/ui/UsageGraph";
 import { RoleplayModeCards } from "@/components/ui/RoleplayModeCards";
 import { CertificationsSection } from "@/components/ui/CertificationsSection";
 import { Skeleton } from "@/components/ui/skeleton";

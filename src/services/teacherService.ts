@@ -62,9 +62,56 @@ export interface StudentProfileData {
   topicsByMode: TopicsCompletedPerMode;
 }
 
-export const fetchTeacherStudents = async (teacherId: string): Promise<TeacherDashboardData> => {
+export interface TeacherDashboardFilters {
+  grade?: string;
+  topicStatus?: 'completed' | 'incomplete' | 'all';
+  sortBy?: 'points' | 'streak' | 'usage' | 'name' | 'completedTopics';
+  sortOrder?: 'asc' | 'desc';
+  minCompletedTopics?: number;
+  maxCompletedTopics?: number;
+  searchTerm?: string;
+}
+
+
+export interface FilterOption {
+  value: string;
+  label: string;
+}
+
+export interface TeacherDashboardFilterValues {
+  grades: string[];
+  topicStatusOptions: FilterOption[];
+  sortByOptions: FilterOption[];
+  sortOrderOptions: FilterOption[];
+}
+
+export const fetchTeacherStudents = async (
+  teacherId: string, 
+  filters?: TeacherDashboardFilters
+): Promise<TeacherDashboardData> => {
   try {
-    const response = await apiClient.get(`/teacher-dashboard/${teacherId}`);
+    const params = new URLSearchParams();
+    
+    if (filters) {
+      if (filters.grade) params.append('grade', filters.grade);
+      if (filters.topicStatus && filters.topicStatus !== 'all') {
+        params.append('topicStatus', filters.topicStatus);
+      }
+      if (filters.sortBy) params.append('sortBy', filters.sortBy);
+      if (filters.sortOrder) params.append('sortOrder', filters.sortOrder);
+      if (filters.minCompletedTopics !== undefined) {
+        params.append('minCompletedTopics', filters.minCompletedTopics.toString());
+      }
+      if (filters.maxCompletedTopics !== undefined) {
+        params.append('maxCompletedTopics', filters.maxCompletedTopics.toString());
+      }
+      if (filters.searchTerm) params.append('searchTerm', filters.searchTerm);
+    }
+    
+    const queryString = params.toString();
+    const url = `/teacher-dashboard/${teacherId}${queryString ? `?${queryString}` : ''}`;
+    
+    const response = await apiClient.get(url);
     
     if (response.data.status && response.data.data) {
       return response.data.data as TeacherDashboardData;
@@ -93,5 +140,25 @@ export const fetchStudentProfile = async (teacherId: string, studentId: string):
       throw new Error(error.response.data.message || 'Failed to fetch student profile');
     }
     throw new Error(error.message || 'Failed to fetch student profile');
+  }
+};
+
+
+export const fetchTeacherDashboardFilters = async (
+  teacherId: string
+): Promise<TeacherDashboardFilterValues> => {
+  try {
+    const response = await apiClient.get(`/teacher-dashboard/${teacherId}/filters`);
+    
+    if (response.data.status && response.data.data) {
+      return response.data.data as TeacherDashboardFilterValues;
+    } else {
+      throw new Error('Invalid response format');
+    }
+  } catch (error: any) {
+    if (error.response && error.response.data) {
+      throw new Error(error.response.data.message || 'Failed to fetch teacher dashboard filters');
+    }
+    throw new Error(error.message || 'Failed to fetch teacher dashboard filters');
   }
 };

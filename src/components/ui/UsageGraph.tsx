@@ -15,7 +15,7 @@ const formatDateForDisplay = (dateString: string) => {
 };
 
 const minutesToHours = (minutes: number) => {
-  return Math.round((minutes / 60) * 10) / 10; // Round to 1 decimal place
+  return Math.round((minutes / 60) * 10) / 10;
 };
 
 const CustomTooltip = ({ active, payload }: any) => {
@@ -90,8 +90,8 @@ export function RevenueGraph({ usageData }: RevenueGraphProps) {
                 axisLine={false}
                 tickLine={false}
                 tick={{ fontSize: 12, fill: "#666" }}
-                domain={[0, 40]}
-                ticks={[0, 10, 20, 30, 40]}
+                domain={[0, 12]}
+                ticks={[0, 3, 6, 9, 12]}
                 tickFormatter={(value) => `${value}h`}
               />
               <Tooltip content={<CustomTooltip />} />
