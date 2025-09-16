@@ -4,6 +4,15 @@
 @tailwind components;
 @tailwind utilities;
 
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 :root {
   --font-light: #fff;
   --font-dark: #0F153E;
@@ -35,7 +44,7 @@
   --input: 0 0% 89.8%;
   --ring: 217 93% 48%;
   --radius: 0.5rem;
-  
+
 }
 
 .dark {
@@ -64,6 +73,7 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;

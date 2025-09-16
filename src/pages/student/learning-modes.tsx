@@ -7,6 +7,8 @@ import debateModeAvatar from "@/assets/svgs/debateModeAvatar.svg";
 import roleplayModeAvatar from "@/assets/svgs/roleplayModeAvatar.svg";
 import listeningModeAvatar from "@/assets/svgs/listening-mode.png";
 import ReadingModeAvatar from "@/assets/svgs/reading-mode.png";
+import listeningModeAvatar from "@/assets/svgs/listening-mode.png";
+import ReadingModeAvatar from "@/assets/svgs/reading-mode.png";
 // import QuestionnaireModal from "@/components/ui/QuestionaireModal";
 
 const modes = [
@@ -26,6 +28,7 @@ const modes = [
     title: "Reading Mode",
     description: "Let's read through fun stories and practice saying words with the AI.",
     image: ReadingModeAvatar,
+    image: ReadingModeAvatar,
     route: "/student/learning-modes/reading-mode",
   },
   {
@@ -33,6 +36,18 @@ const modes = [
     description: "Jump into exciting adventures and play fun roles with the AI.",
     image: roleplayModeAvatar,
     route: "/student/learning-modes/roleplay-mode",
+  },
+  {
+    title: "Listening Mode",
+    description: "Listen to stories and practice saying words with the AI.",
+    image: listeningModeAvatar,
+    route: "/student/learning-modes/listening-mode",
+  },
+  {
+    title: "Debate Mode",
+    description: "Practice debating skills and critical thinking with the AI.",
+    image: debateModeAvatar,
+    route: "/student/learning-modes/debate-mode",
   },
   {
     title: "Listening Mode",
@@ -59,6 +74,24 @@ const LearningModes: React.FC = () => {
   if (schoolCategory === "government") {
     filteredModes = modes.filter(
       (mode) => mode.title === "Reading Mode" || mode.title === "Role Play Mode" || mode.title === "Listening Mode" || mode.title === "Debate Mode"
+    );
+  }
+
+  if (schoolCategory === "trial") {
+    filteredModes = modes.filter(
+      (mode) => mode.title === "Reading Mode" || mode.title === "Role Play Mode" || mode.title === "Listening Mode"
+    );
+  }
+
+  if (schoolCategory === "saudi") {
+    filteredModes = modes.filter(
+      (mode) => mode.title === "Reading Mode" || mode.title === "Role Play Mode" || mode.title === "Listening Mode"
+    );
+  }
+
+  if (schoolCategory === "american") {
+    filteredModes = modes.filter(
+      (mode) => mode.title === "Chat Mode" || mode.title === "Photo Mode"
     );
   }
 

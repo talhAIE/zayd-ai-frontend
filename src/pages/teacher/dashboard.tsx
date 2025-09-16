@@ -1,354 +1,912 @@
-import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '@/redux/hooks';
-import { fetchCourses, fetchAssignments } from '@/redux/slices/coursesSlice';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
-  BookOpen,
-  Users,
-  FileText,
-  ChevronRight,
-  Plus,
-  Clipboard,
-  Bell,
-} from 'lucide-react';
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Search, Loader2, Eye, X, Download } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import {
+  fetchTeacherData,
+  fetchTeacherFilterValues,
+} from "@/redux/slices/teacherSlice";
+import { useDebounce } from "@/hooks/useDebounce";
+import {
+  TeacherDashboardFilters,
+  downloadIndividualStudentReport,
+} from "@/services/teacherService";
+import { generateStudentReportPDF } from "@/utils/pdfGenerator";
+import { toast } from "sonner";
 
 export default function TeacherDashboard() {
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { user } = useAppSelector((state) => state.auth);
-  const { courses, assignments, loading } = useAppSelector((state) => state.courses);
+  const {
+    students,
+    isLoading,
+    error,
+    filterValues,
+    filterValuesLoading,
+    filterValuesError,
+  } = useAppSelector((state) => state.teacher);
+
+  // Local state for form inputs
+  const [searchTerm, setSearchTerm] = useState("");
+  const [gradeFilter, setGradeFilter] = useState("all");
+  const [topicStatusFilter, setTopicStatusFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("points");
+  const [sortOrder, setSortOrder] = useState("desc");
+  const [minCompletedTopics, setMinCompletedTopics] = useState("");
+  const [maxCompletedTopics, setMaxCompletedTopics] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 8;
+
+  // Debounced search term to avoid excessive API calls
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  const [visibleColumns, setVisibleColumns] = useState({
+    name: true,
+    grade: true,
+    cefrLevel: true,
+    streak: true,
+    usage: true,
+    totalPoints: true,
+    completedTopics: true,
+  });
+
+  const [selectedStudents, setSelectedStudents] = useState<Set<string>>(
+    new Set()
+  );
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadingStudent, setDownloadingStudent] = useState<string | null>(
+    null
+  );
+
+  const columnOptions = [
+    { key: "grade", label: "Grade" },
+    { key: "cefrLevel", label: "CEFR Level" },
+    { key: "streak", label: "Streak" },
+    { key: "usage", label: "Usage" },
+    { key: "totalPoints", label: "Total Points" },
+    { key: "completedTopics", label: "Completed Topics" },
+  ];
+
+  const toggleColumn = (columnKey: string) => {
+    setVisibleColumns((prev) => ({
+      ...prev,
+      [columnKey]: !prev[columnKey as keyof typeof prev],
+    }));
+  };
+
+  const toggleStudentSelection = (studentId: string) => {
+    setSelectedStudents((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(studentId)) {
+        newSet.delete(studentId);
+      } else {
+        newSet.add(studentId);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedStudents.size === paginatedStudents.length) {
+      setSelectedStudents(new Set());
+    } else {
+      setSelectedStudents(
+        new Set(paginatedStudents.map((student) => student.id))
+      );
+    }
+  };
+
+  const handleBulkDownload = async () => {
+    if (selectedStudents.size === 0) {
+      toast.error("Please select at least one student to download reports");
+      return;
+    }
+
+    setIsDownloading(true);
+    try {
+      const studentIds = Array.from(selectedStudents);
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const studentId of studentIds) {
+        try {
+          const student = transformedStudents.find((s) => s.id === studentId);
+          if (!student) {
+            console.warn(
+              `Student with ID ${studentId} not found in current data`
+            );
+            errorCount++;
+            continue;
+          }
+
+          setDownloadingStudent(student.name);
+
+          const studentData = await downloadIndividualStudentReport(
+            teacherId,
+            studentId
+          );
+
+          await generateStudentReportPDF(studentData);
+          successCount++;
+
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        } catch (error) {
+          console.error(
+            `Error downloading report for student ${studentId}:`,
+            error
+          );
+          errorCount++;
+        } finally {
+          setDownloadingStudent(null);
+        }
+      }
+
+      if (successCount > 0) {
+        toast.success(`Successfully downloaded ${successCount} report(s)`);
+      }
+      if (errorCount > 0) {
+        toast.error(`Failed to download ${errorCount} report(s)`);
+      }
+    } catch (error: any) {
+      console.error("Bulk download error:", error);
+      toast.error(error.message || "Failed to download reports");
+    } finally {
+      setIsDownloading(false);
+      setDownloadingStudent(null);
+    }
+  };
+
+  const myUser = localStorage.getItem("AiTutorUser");
+  const parsedUser = JSON.parse(myUser || "{}");
+  const teacherId = parsedUser?.id;
+
+  const buildFilters = (): TeacherDashboardFilters => {
+    const filters: TeacherDashboardFilters = {
+      sortBy: sortBy as any,
+      sortOrder: sortOrder as any,
+    };
+
+    if (gradeFilter !== "all") {
+      const numericGrade = gradeFilter.replace("Grade ", "");
+      filters.grade = numericGrade;
+    }
+
+    if (topicStatusFilter !== "all") {
+      filters.topicStatus = topicStatusFilter as any;
+    }
+
+    if (minCompletedTopics) {
+      const min = parseInt(minCompletedTopics);
+      if (!isNaN(min)) {
+        filters.minCompletedTopics = min;
+      }
+    }
+
+    if (maxCompletedTopics) {
+      const max = parseInt(maxCompletedTopics);
+      if (!isNaN(max)) {
+        filters.maxCompletedTopics = max;
+      }
+    }
+
+    return filters;
+  };
+
+  const fetchData = () => {
+    if (teacherId) {
+      const filters = buildFilters();
+      dispatch(fetchTeacherData({ teacherId, filters }));
+    }
+  };
 
   useEffect(() => {
-    dispatch(fetchCourses());
-    dispatch(fetchAssignments());
-  }, [dispatch]);
+    if (teacherId) {
+      fetchData();
+      dispatch(fetchTeacherFilterValues(teacherId));
+    }
+  }, [teacherId, dispatch]);
 
-  // Generate some dummy stats for the teacher
-  const totalStudents = courses.reduce((sum, course) => sum + (course.students || 0), 0);
-  const pendingReviews = 7; // Mock data
-  const averageRating = 4.8; // Mock data
+  useEffect(() => {
+    if (teacherId) {
+      fetchData();
+    }
+  }, [
+    gradeFilter,
+    topicStatusFilter,
+    sortBy,
+    sortOrder,
+    minCompletedTopics,
+    maxCompletedTopics,
+  ]);
 
-  // Format date to be more readable
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    }).format(date);
+  const transformedStudents = useMemo(() => {
+    return students.map((student) => ({
+      id: student.id,
+      name: student.studentName,
+      grade: student.grade,
+      cefrLevel: student.cefrLevel,
+      streak: student.currentStreak,
+      usage: student.usage,
+      totalPoints: student.totalPoints,
+      completedTopics: student.completedTopics,
+    }));
+  }, [students]);
+
+  const filteredStudents = useMemo(() => {
+    if (!debouncedSearchTerm.trim()) {
+      return transformedStudents;
+    }
+
+    const searchLower = debouncedSearchTerm.toLowerCase().trim();
+    return transformedStudents.filter((student) =>
+      student.name.toLowerCase().includes(searchLower)
+    );
+  }, [transformedStudents, debouncedSearchTerm]);
+
+  const totalPages = useMemo(() => {
+    return Math.ceil(filteredStudents.length / pageSize);
+  }, [filteredStudents.length, pageSize]);
+
+  const paginatedStudents = useMemo(() => {
+    return filteredStudents.slice(
+      (currentPage - 1) * pageSize,
+      currentPage * pageSize
+    );
+  }, [filteredStudents, currentPage, pageSize]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+    setSelectedStudents(new Set());
+  }, [
+    debouncedSearchTerm,
+    gradeFilter,
+    topicStatusFilter,
+    sortBy,
+    sortOrder,
+    minCompletedTopics,
+    maxCompletedTopics,
+  ]);
+
+  const handleViewProfile = (studentId: string) => {
+    navigate(`/teacher/student-profile/${studentId}`);
   };
+
+  const handleClearFilters = () => {
+    setSearchTerm("");
+    setGradeFilter("all");
+    setTopicStatusFilter("all");
+    setSortBy("points");
+    setSortOrder("desc");
+    setMinCompletedTopics("");
+    setMaxCompletedTopics("");
+    setCurrentPage(1);
+    setSelectedStudents(new Set());
+  };
+
+  const hasActiveFilters = useMemo(() => {
+    return (
+      searchTerm ||
+      gradeFilter !== "all" ||
+      topicStatusFilter !== "all" ||
+      minCompletedTopics ||
+      maxCompletedTopics
+    );
+  }, [
+    searchTerm,
+    gradeFilter,
+    topicStatusFilter,
+    minCompletedTopics,
+    maxCompletedTopics,
+  ]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex items-center gap-2">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Loading students data...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Card className="p-6">
+          <CardContent className="text-center">
+            <p className="text-red-600 mb-4">
+              Error loading students data: {error}
+            </p>
+            <Button onClick={() => teacherId && fetchData()} variant="outline">
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div>
-      {/* Welcome Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-[var(--font-dark)]">
-          Welcome back, {user?.username?.split(' ')[0] || 'Teacher'}
-        </h1>
-        <p className="text-[var(--font-light2)]">
-          Here's an overview of your courses and teaching metrics.
-        </p>
-      </div>
-
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[var(--font-light2)] text-sm">Active Courses</p>
-                <h3 className="text-3xl font-bold text-[var(--font-dark)]">
-                  {courses.length}
-                </h3>
-              </div>
-              <div className="rounded-full w-12 h-12 flex items-center justify-center bg-[var(--primarybg)]/10">
-                <BookOpen className="h-6 w-6 text-[var(--primarybg)]" />
-              </div>
+      <div className="flex flex-wrap items-center gap-4 mb-6">
+        <div className="flex justify-between items-center w-full flex-wrap gap-4">
+          {/* Filter Values Error */}
+          {filterValuesError && (
+            <div className="w-full mb-2 flex items-center justify-between">
+              <p className="text-sm text-orange-600">
+                Warning: Filter options could not be loaded. Using default
+                values.
+              </p>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() =>
+                  teacherId && dispatch(fetchTeacherFilterValues(teacherId))
+                }
+                className="ml-2"
+              >
+                Retry
+              </Button>
             </div>
-          </CardContent>
-        </Card>
+          )}
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[var(--font-light2)] text-sm">Total Students</p>
-                <h3 className="text-3xl font-bold text-[var(--font-dark)]">
-                  {totalStudents}
-                </h3>
-              </div>
-              <div className="rounded-full w-12 h-12 flex items-center justify-center bg-[var(--primarybg)]/10">
-                <Users className="h-6 w-6 text-[var(--primarybg)]" />
-              </div>
+          {/* Filter Buttons */}
+          <div className="flex gap-2 flex-wrap w-full sm:w-auto">
+            <Select
+              value={gradeFilter}
+              onValueChange={setGradeFilter}
+              disabled={filterValuesLoading}
+            >
+              <SelectTrigger className="flex-1 min-w-[140px]">
+                <SelectValue
+                  placeholder={filterValuesLoading ? "Loading..." : "Grade"}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Grades</SelectItem>
+                {filterValues?.grades?.length ? (
+                  filterValues.grades.map((grade) => (
+                    <SelectItem key={grade} value={`Grade ${grade}`}>
+                      Grade {grade}
+                    </SelectItem>
+                  ))
+                ) : (
+                  // Fallback options if filter values are not loaded
+                  <>
+                    <SelectItem value="Grade 9">Grade 9</SelectItem>
+                    <SelectItem value="Grade 10">Grade 10</SelectItem>
+                    <SelectItem value="Grade 11">Grade 11</SelectItem>
+                    <SelectItem value="Grade 12">Grade 12</SelectItem>
+                  </>
+                )}
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={topicStatusFilter}
+              onValueChange={setTopicStatusFilter}
+              disabled={filterValuesLoading}
+            >
+              <SelectTrigger className="flex-1 min-w-[140px]">
+                <SelectValue
+                  placeholder={
+                    filterValuesLoading ? "Loading..." : "Topic Status"
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {filterValues?.topicStatusOptions?.length ? (
+                  filterValues.topicStatusOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <>
+                    <SelectItem value="all">All Topics</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="incomplete">Incomplete</SelectItem>
+                  </>
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Search and Sort */}
+          <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
+            <div className="relative w-full sm:w-56">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[var(--font-light2)]" />
+              <Input
+                className="pl-9 w-full"
+                placeholder="Search by student name"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
-          </CardContent>
-        </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[var(--font-light2)] text-sm">Pending Reviews</p>
-                <h3 className="text-3xl font-bold text-[var(--font-dark)]">
-                  {pendingReviews}
-                </h3>
-              </div>
-              <div className="rounded-full w-12 h-12 flex items-center justify-center bg-[var(--primarybg)]/10">
-                <Clipboard className="h-6 w-6 text-[var(--primarybg)]" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            <Select
+              value={sortBy}
+              onValueChange={setSortBy}
+              disabled={filterValuesLoading}
+            >
+              <SelectTrigger className="w-full sm:w-[140px]">
+                <SelectValue
+                  placeholder={filterValuesLoading ? "Loading..." : "Sort by"}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {filterValues?.sortByOptions?.length ? (
+                  filterValues.sortByOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <>
+                    <SelectItem value="name">Name</SelectItem>
+                    <SelectItem value="points">Total Points</SelectItem>
+                    <SelectItem value="streak">Streak</SelectItem>
+                    <SelectItem value="usage">Usage</SelectItem>
+                    <SelectItem value="completedTopics">
+                      Completed Topics
+                    </SelectItem>
+                  </>
+                )}
+              </SelectContent>
+            </Select>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[var(--font-light2)] text-sm">Instructor Rating</p>
-                <h3 className="text-3xl font-bold text-[var(--font-dark)]">
-                  {averageRating}
-                </h3>
-              </div>
-              <div className="rounded-full w-12 h-12 flex items-center justify-center bg-[var(--primarybg)]/10">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-[var(--primarybg)]"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
+            <Select
+              value={sortOrder}
+              onValueChange={setSortOrder}
+              disabled={filterValuesLoading}
+            >
+              <SelectTrigger className="w-full sm:w-[120px]">
+                <SelectValue
+                  placeholder={filterValuesLoading ? "Loading..." : "Order"}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {filterValues?.sortOrderOptions?.length ? (
+                  filterValues.sortOrderOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <>
+                    <SelectItem value="asc">Ascending</SelectItem>
+                    <SelectItem value="desc">Descending</SelectItem>
+                  </>
+                )}
+              </SelectContent>
+            </Select>
+
+            {/* Clear Filters Button */}
+            {hasActiveFilters && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleClearFilters}
+                className="w-full sm:w-auto"
+              >
+                <X className="h-4 w-4 mr-2" />
+                Clear
+              </Button>
+            )}
+
+            {/* Column Visibility Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full sm:w-auto"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"
-                  />
-                </svg>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+                  <Eye className="h-4 w-4 mr-2" />
+                  Columns
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                {columnOptions.map((column) => (
+                  <DropdownMenuItem
+                    key={column.key}
+                    className="flex items-center space-x-2 cursor-pointer"
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      toggleColumn(column.key);
+                    }}
+                  >
+                    <Checkbox
+                      checked={
+                        visibleColumns[
+                          column.key as keyof typeof visibleColumns
+                        ]
+                      }
+                      onChange={() => toggleColumn(column.key)}
+                    />
+                    <span>{column.label}</span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-      {/* Courses and Notifications */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Courses */}
-        <div className="lg:col-span-2">
-          <Card className="h-full">
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-xl font-bold">Your Courses</CardTitle>
-                <div className="flex gap-2">
-                  <Link to="/teacher/courses">
-                    <Button variant="ghost" size="sm" className="gap-1">
-                      View all <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                  <Link to="/teacher/courses/new">
-                    <Button size="sm" className="gap-1 bg-[var(--primarybg)] hover:bg-[var(--primarybg)]/90">
-                      <Plus className="h-4 w-4" /> New Course
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="flex justify-center p-6">
-                  <div className="animate-pulse text-[var(--font-light2)]">Loading courses...</div>
-                </div>
-              ) : courses.length > 0 ? (
-                <div className="space-y-6">
-                  {courses.slice(0, 3).map((course) => (
-                    <div key={course.id} className="flex space-x-4">
-                      <img
-                        src={course.thumbnail}
-                        alt={course.title}
-                        className="w-20 h-20 object-cover rounded-md"
-                      />
-                      <div className="flex-1">
-                        <div className="flex justify-between items-start">
-                          <h3 className="font-semibold text-[var(--font-dark)]">
-                            {course.title}
-                          </h3>
-                          <Badge variant="outline">{course.students} Students</Badge>
-                        </div>
-                        <p className="text-sm text-[var(--font-light2)] mb-2">
-                          {course.description.substring(0, 80)}...
-                        </p>
-                        <div className="flex justify-end">
-                          <Link to={`/teacher/courses/${course.id}`}>
-                            <Button size="sm" variant="outline">
-                              Manage Course
-                            </Button>
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+            <Button
+              onClick={handleBulkDownload}
+              disabled={selectedStudents.size === 0 || isDownloading}
+              className="w-full sm:w-auto"
+              size="sm"
+            >
+              {isDownloading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  {downloadingStudent
+                    ? `Downloading ${downloadingStudent}...`
+                    : "Downloading..."}
+                </>
               ) : (
-                <div className="text-center py-8">
-                  <p className="text-[var(--font-light2)] mb-4">
-                    You haven't created any courses yet.
-                  </p>
-                  <Link to="/teacher/courses/new">
-                    <Button className="bg-[var(--primarybg)] hover:bg-[var(--primarybg)]/90">
-                      Create Your First Course
-                    </Button>
-                  </Link>
-                </div>
+                <>
+                  <Download className="h-4 w-4 mr-2" />
+                  Download Bulk Reports ({selectedStudents.size})
+                </>
               )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Notifications & To-Do */}
-        <div>
-          <Card className="h-full">
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-xl font-bold">Recent Activity</CardTitle>
-                <Button variant="ghost" size="sm" className="gap-1">
-                  <Bell className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="border-l-4 border-blue-500 pl-4 py-1">
-                  <div className="font-medium">New student enrolled</div>
-                  <div className="text-sm text-[var(--font-light2)]">
-                    Sarah Johnson joined "Web Development Masterclass"
-                  </div>
-                  <div className="text-xs text-[var(--font-light2)]">2 hours ago</div>
-                </div>
-                
-                <div className="border-l-4 border-green-500 pl-4 py-1">
-                  <div className="font-medium">Assignment submissions</div>
-                  <div className="text-sm text-[var(--font-light2)]">
-                    5 new submissions for "JavaScript Basics Quiz"
-                  </div>
-                  <div className="text-xs text-[var(--font-light2)]">Yesterday</div>
-                </div>
-                
-                <div className="border-l-4 border-yellow-500 pl-4 py-1">
-                  <div className="font-medium">Course feedback</div>
-                  <div className="text-sm text-[var(--font-light2)]">
-                    New review for "Advanced Data Structures"
-                  </div>
-                  <div className="text-xs text-[var(--font-light2)]">2 days ago</div>
-                </div>
-                
-                <div className="border-l-4 border-purple-500 pl-4 py-1">
-                  <div className="font-medium">Course milestone</div>
-                  <div className="text-sm text-[var(--font-light2)]">
-                    "Introduction to Programming" reached 30 students
-                  </div>
-                  <div className="text-xs text-[var(--font-light2)]">3 days ago</div>
-                </div>
-              </div>
-
-              <div className="mt-6 pt-6 border-t">
-                <h3 className="font-semibold mb-3">To-Do List</h3>
-                <div className="space-y-2">
-                  <div className="flex items-center">
-                    <input 
-                      type="checkbox" 
-                      className="w-4 h-4 mr-2 rounded border-gray-300"
-                    />
-                    <span className="text-sm">Review 5 pending assignments</span>
-                  </div>
-                  <div className="flex items-center">
-                    <input 
-                      type="checkbox" 
-                      className="w-4 h-4 mr-2 rounded border-gray-300"
-                    />
-                    <span className="text-sm">Update course materials for Week 3</span>
-                  </div>
-                  <div className="flex items-center">
-                    <input 
-                      type="checkbox" 
-                      className="w-4 h-4 mr-2 rounded border-gray-300"
-                    />
-                    <span className="text-sm">Respond to student questions (3)</span>
-                  </div>
-                  <div className="flex items-center">
-                    <input 
-                      type="checkbox" 
-                      className="w-4 h-4 mr-2 rounded border-gray-300"
-                    />
-                    <span className="text-sm">Create new assignment for Data Structures</span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Recent Assignments */}
-      <div className="mt-8">
-        <Card>
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle className="text-xl font-bold">Recent Assignments</CardTitle>
-              <Link to="/teacher/assignments">
-                <Button variant="ghost" size="sm" className="gap-1">
-                  View all <ChevronRight className="h-4 w-4" />
+      {/* Students Table */}
+      <Card>
+        <CardContent>
+          {/* Responsive Table */}
+          <div className="hidden sm:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-12 px-6 py-4">
+                    <Checkbox
+                      checked={
+                        paginatedStudents.length > 0 &&
+                        selectedStudents.size === paginatedStudents.length
+                      }
+                      onCheckedChange={toggleSelectAll}
+                      aria-label="Select all students"
+                    />
+                  </TableHead>
+                  {visibleColumns.name && (
+                    <TableHead className="px-6 py-4">Student Name</TableHead>
+                  )}
+                  {visibleColumns.grade && (
+                    <TableHead className="text-center px-6 py-4">
+                      Grade
+                    </TableHead>
+                  )}
+                  {visibleColumns.cefrLevel && (
+                    <TableHead className="text-center px-6 py-4">
+                      CEFR Level
+                    </TableHead>
+                  )}
+                  {visibleColumns.streak && (
+                    <TableHead className="text-center px-6 py-4">
+                      Streak
+                    </TableHead>
+                  )}
+                  {visibleColumns.usage && (
+                    <TableHead className="text-center px-6 py-4">
+                      Usage
+                    </TableHead>
+                  )}
+                  {visibleColumns.totalPoints && (
+                    <TableHead className="text-center px-6 py-4">
+                      Total Points
+                    </TableHead>
+                  )}
+                  {visibleColumns.completedTopics && (
+                    <TableHead className="text-center px-6 py-4">
+                      Completed Topics
+                    </TableHead>
+                  )}
+                  <TableHead className="text-center px-6 py-4">
+                    Profile
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedStudents.length > 0 ? (
+                  paginatedStudents.map((student) => (
+                    <TableRow className="h-24" key={student.id}>
+                      <TableCell className="w-12 px-6 py-4">
+                        <Checkbox
+                          checked={selectedStudents.has(student.id)}
+                          onCheckedChange={() =>
+                            toggleStudentSelection(student.id)
+                          }
+                          aria-label={`Select ${student.name}`}
+                        />
+                      </TableCell>
+                      {visibleColumns.name && (
+                        <TableCell className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <Avatar>
+                              <AvatarImage
+                                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${student.id}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`}
+                                alt={student.name}
+                              />
+                              <AvatarFallback>
+                                {student.name.charAt(0)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <div className="font-medium">{student.name}</div>
+                            </div>
+                          </div>
+                        </TableCell>
+                      )}
+                      {visibleColumns.grade && (
+                        <TableCell className="text-center px-6 py-4">
+                          <div className="flex items-center justify-center">
+                            <span className="font-medium">{student.grade}</span>
+                          </div>
+                        </TableCell>
+                      )}
+                      {visibleColumns.cefrLevel && (
+                        <TableCell className="text-center px-6 py-4">
+                          <div className="flex items-center justify-center">
+                            <Badge variant="outline" className="font-medium">
+                              {student.cefrLevel}
+                            </Badge>
+                          </div>
+                        </TableCell>
+                      )}
+                      {visibleColumns.streak && (
+                        <TableCell className="text-center px-6 py-4">
+                          <div className="flex items-center justify-center">
+                            <span className="font-bold text-orange-600">
+                              {student.streak}
+                            </span>
+                            <span className="text-xs text-gray-500 ml-1">
+                              days
+                            </span>
+                          </div>
+                        </TableCell>
+                      )}
+                      {visibleColumns.usage && (
+                        <TableCell className="text-center px-6 py-4">
+                          <div className="flex items-center justify-center">
+                            <span className="font-medium">
+                              {student.usage.toLocaleString()}
+                            </span>
+                          </div>
+                        </TableCell>
+                      )}
+                      {visibleColumns.totalPoints && (
+                        <TableCell className="text-center px-6 py-4">
+                          <div className="flex items-center justify-center">
+                            <span className="font-bold text-blue-600">
+                              {student.totalPoints}
+                            </span>
+                            <span className="text-xs text-gray-500 ml-1">
+                              pts
+                            </span>
+                          </div>
+                        </TableCell>
+                      )}
+                      {visibleColumns.completedTopics && (
+                        <TableCell className="text-center px-6 py-4">
+                          <div className="flex items-center justify-center">
+                            <span className="font-bold text-green-600">
+                              {student.completedTopics}
+                            </span>
+                            <span className="text-xs text-gray-500 ml-1">
+                              topics
+                            </span>
+                          </div>
+                        </TableCell>
+                      )}
+                      <TableCell className="text-center px-6 py-4">
+                        <div className="flex items-center justify-center">
+                          <Button
+                            className="bg-[#F1F3FF] text-primary hover:bg-primary hover:text-white hover:shadow-md transition-colors"
+                            size="sm"
+                            onClick={() => handleViewProfile(student.id)}
+                          >
+                            View Profile
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={
+                        Object.values(visibleColumns).filter(Boolean).length + 2
+                      }
+                      className="text-center py-6"
+                    >
+                      <p className="text-[var(--font-light2)] mb-2">
+                        No students found matching your criteria.
+                      </p>
+                      {searchTerm && (
+                        <Button
+                          onClick={() => setSearchTerm("")}
+                          variant="outline"
+                        >
+                          Clear Search
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Card Layout for Mobile */}
+          <div className="block sm:hidden">
+            {paginatedStudents.length > 0 && (
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-sm text-gray-600">
+                  {selectedStudents.size} of {paginatedStudents.length} selected
+                </span>
+                <Button variant="outline" size="sm" onClick={toggleSelectAll}>
+                  {selectedStudents.size === paginatedStudents.length
+                    ? "Deselect All"
+                    : "Select All"}
                 </Button>
-              </Link>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="flex justify-center p-6">
-                <div className="animate-pulse text-[var(--font-light2)]">Loading assignments...</div>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left pb-3 font-medium text-[var(--font-light2)]">Assignment</th>
-                      <th className="text-left pb-3 font-medium text-[var(--font-light2)]">Course</th>
-                      <th className="text-left pb-3 font-medium text-[var(--font-light2)]">Due Date</th>
-                      <th className="text-left pb-3 font-medium text-[var(--font-light2)]">Submissions</th>
-                      <th className="text-right pb-3 font-medium text-[var(--font-light2)]">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {assignments.slice(0, 5).map((assignment) => {
-                      const course = courses.find((c) => c.id === assignment.courseId);
-                      return (
-                        <tr key={assignment.id} className="border-b">
-                          <td className="py-3">
-                            <div className="font-medium">{assignment.title}</div>
-                          </td>
-                          <td className="py-3">
-                            <div className="text-sm">{course?.title || 'Unknown Course'}</div>
-                          </td>
-                          <td className="py-3">
-                            <div className="text-sm">{formatDate(assignment.dueDate)}</div>
-                          </td>
-                          <td className="py-3">
-                            <Badge variant="outline">7/{course?.students || 0}</Badge>
-                          </td>
-                          <td className="py-3 text-right">
-                            <Button size="sm" variant="ghost">
-                              <FileText className="h-4 w-4 mr-2" /> View
-                            </Button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
               </div>
             )}
-          </CardContent>
-        </Card>
-      </div>
+            {paginatedStudents.length > 0 ? (
+              paginatedStudents.map((student) => (
+                <div
+                  key={student.id}
+                  className="border rounded-lg p-4 mt-4 mb-4 shadow-sm"
+                >
+                  <div className="flex items-center gap-3 mb-2">
+                    <Checkbox
+                      checked={selectedStudents.has(student.id)}
+                      onCheckedChange={() => toggleStudentSelection(student.id)}
+                      aria-label={`Select ${student.name}`}
+                    />
+                    <Avatar>
+                      <AvatarImage
+                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${student.id}`}
+                        alt={student.name}
+                      />
+                      <AvatarFallback>{student.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="font-medium">{student.name}</div>
+                    </div>
+                  </div>
+                  <div className="text-sm">
+                    {visibleColumns.grade && (
+                      <p>
+                        <strong>Grade:</strong> {student.grade}
+                      </p>
+                    )}
+                    {visibleColumns.cefrLevel && (
+                      <p>
+                        <strong>CEFR Level:</strong>{" "}
+                        <Badge variant="outline" className="ml-1">
+                          {student.cefrLevel}
+                        </Badge>
+                      </p>
+                    )}
+                    {visibleColumns.streak && (
+                      <p>
+                        <strong>Streak:</strong>{" "}
+                        <span className="font-bold text-orange-600">
+                          {student.streak} days
+                        </span>
+                      </p>
+                    )}
+                    {visibleColumns.usage && (
+                      <p>
+                        <strong>Usage:</strong> {student.usage.toLocaleString()}
+                      </p>
+                    )}
+                    {visibleColumns.totalPoints && (
+                      <p>
+                        <strong>Total Points:</strong>{" "}
+                        <span className="font-bold text-blue-600">
+                          {student.totalPoints} pts
+                        </span>
+                      </p>
+                    )}
+                    {visibleColumns.completedTopics && (
+                      <p>
+                        <strong>Completed Topics:</strong>{" "}
+                        <span className="font-bold text-green-600">
+                          {student.completedTopics} topics
+                        </span>
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    className="bg-[#F1F3FF] text-primary hover:bg-primary hover:text-white hover:shadow-md transition-colors mt-2"
+                    size="sm"
+                    onClick={() => handleViewProfile(student.id)}
+                  >
+                    View Profile
+                  </Button>
+                </div>
+              ))
+            ) : (
+              <p className="text-center text-[var(--font-light2)]">
+                No students found matching your criteria.
+              </p>
+            )}
+          </div>
+
+          {/* Pagination Controls */}
+          <div className="flex flex-wrap justify-between items-center mt-4 gap-2">
+            <span className="text-sm text-muted-foreground">
+              Page {currentPage} of {totalPages}
+            </span>
+            <div className="flex gap-2 items-center">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              {/* Page numbers */}
+              {Array.from({ length: totalPages }, (_, i) => (
+                <Button
+                  key={i + 1}
+                  variant={currentPage === i + 1 ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={currentPage === i + 1 ? "font-bold" : ""}
+                >
+                  {i + 1}
+                </Button>
+              ))}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
+                disabled={currentPage === totalPages}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

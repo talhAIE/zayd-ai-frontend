@@ -1,18 +1,23 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from "react-router-dom";
 // import { useAppSelector } from '@/redux/hooks';
 
 // Layouts
-import { PublicLayout } from '@/components/layouts/public-layout';
-import { StudentLayout } from '@/components/layouts/student-layout';
+import { PublicLayout } from "@/components/layouts/public-layout";
+import { StudentLayout } from "@/components/layouts/student-layout";
+import { TeacherLayout } from "@/components/layouts/teacher-layout";
 
 // Public Pages
 // import HomePage from '@/pages/public/home';
-import AboutPage from '@/pages/public/about';
-import ContactPage from '@/pages/public/contact';
+import AboutPage from "@/pages/public/about";
+import ContactPage from "@/pages/public/contact";
 
 // Student Pages
-import LearningModes from '@/pages/student/learning-modes';
-import StudentDashboard from "@/pages/student/dashboard"
+import LearningModes from "@/pages/student/learning-modes";
+import StudentDashboard from "@/pages/student/dashboard";
+
+// Teacher Pages
+import TeacherDashboard from "@/pages/teacher/dashboard";
+import StudentProfile from "@/pages/teacher/student-profile";
 
 // Auth Pages
 import { AuthLayout } from '@/components/layouts/auth-layout';
@@ -69,6 +74,22 @@ const AppRoutes = () => {
           <PublicLayout>
             <ContactPage />
           </PublicLayout>
+        }
+      />
+      <Route
+        path="/teacher/dashboard"
+        element={
+          <TeacherLayout>
+            <TeacherDashboard />
+          </TeacherLayout>
+        }
+      />
+      <Route
+        path="/teacher/student-profile/:studentId"
+        element={
+          <TeacherLayout>
+            <StudentProfile />
+          </TeacherLayout>
         }
       />
       <Route
