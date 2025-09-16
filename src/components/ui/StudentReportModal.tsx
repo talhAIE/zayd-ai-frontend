@@ -205,7 +205,7 @@ export default function StudentReportModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full mx-1 sm:mx-0">
         <Button
-          className="absolute right-2 sm:right-4 top-2 sm:top-4 me-2 sm:me-8 text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2"
+          className="absolute left-2 sm:left-1/2 sm:-translate-x-1/2 top-2 sm:top-4 text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2"
           onClick={downloadReport}
         >
           <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />

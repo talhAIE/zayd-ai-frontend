@@ -77,7 +77,7 @@ export function RoleplayModeCards({ topicsData }: RoleplayModeCardsProps) {
         <Button
           variant="outline"
           size="icon"
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg hover:bg-gray-50"
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-4 bg-white shadow-lg hover:bg-gray-50"
           onClick={scrollLeft}
         >
           <ChevronLeft className="h-4 w-4" />
@@ -88,7 +88,7 @@ export function RoleplayModeCards({ topicsData }: RoleplayModeCardsProps) {
         <Button
           variant="outline"
           size="icon"
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg hover:bg-gray-50"
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-4 bg-white shadow-lg hover:bg-gray-50"
           onClick={scrollRight}
         >
           <ChevronRight className="h-4 w-4" />

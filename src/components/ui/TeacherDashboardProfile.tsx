@@ -18,12 +18,12 @@ const TeacherDashboardProfile = ({
   studentData,
 }: TeacherDashboardProfileProps) => {
   return (
-    <Card className="w-full md:max-w-lg my-4 md:my-0 bg-slate-50 ">
-      <CardContent className="p-4">
-        <div className="flex justify-between items-start mb-4 rounded-3xl gradientBg ">
-          <div className="flex items-center">
-            <div className="relative p-12 ">
-              <div className="absolute top-8 left-4 w-24 h-24 rounded-lg overflow-hidden">
+    <Card className="w-full max-w-xs xs:max-w-sm sm:max-w-md md:max-w-lg my-4 md:my-0 bg-slate-50">
+      <CardContent className="p-2 xs:p-3 sm:p-4">
+        <div className="flex justify-center items-center mb-3 xs:mb-4 rounded-3xl gradientBg">
+          <div className="flex items-center justify-center">
+            <div className="relative p-6 xs:p-8 sm:p-12">
+              <div className="w-12 h-12 xs:w-16 xs:h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-lg overflow-hidden">
                 <img
                   src="https://www.gravatar.com/avatar/?d=mp"
                   alt="Profile"
@@ -34,53 +34,57 @@ const TeacherDashboardProfile = ({
           </div>
         </div>
 
-        <div className="pt-6">
-          <div className="flex items-center justify-between mb-1">
-            <h3 className="text-md font-bold">
+        <div className="pt-3 xs:pt-4 sm:pt-6">
+          <div className="flex items-center justify-center mb-2 xs:mb-3 sm:mb-4">
+            <h3 className="text-xs xs:text-sm sm:text-md font-bold text-center truncate max-w-full px-2">
               {studentData?.studentName || "Student Name"}
             </h3>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-1.5 xs:space-y-2 sm:space-y-3">
             {/* Grade Box */}
-            <div className="flex items-center justify-between rounded-full p-3 border border-gray-200">
-              <span className="font-medium text-sm text-[#6250E9]">Grade</span>
-              <div className="bg-gradient-to-r from-purple-100 to-blue-100 rounded-full px-4 py-1">
-                <span className="font-medium text-sm bg-gradient-to-r from-[#6250E9] to-[#69BDFF] bg-clip-text text-transparent">
+            <div className="flex items-center justify-between rounded-full p-1.5 xs:p-2 sm:p-3 border border-gray-200">
+              <span className="font-medium text-xs text-[#6250E9] truncate">
+                Grade
+              </span>
+              <div className="bg-gradient-to-r from-purple-100 to-blue-100 rounded-full px-2 xs:px-3 sm:px-4 py-1">
+                <span className="font-medium text-xs bg-gradient-to-r from-[#6250E9] to-[#69BDFF] bg-clip-text text-transparent">
                   {studentData?.grade || "N/A"}
                 </span>
               </div>
             </div>
 
             {/* Level Box */}
-            <div className="flex items-center justify-between rounded-full p-3 border border-gray-200">
-              <span className="font-medium text-sm text-[#6250E9]">Level</span>
-              <div className="bg-gradient-to-r from-purple-100 to-blue-100 rounded-full px-4 py-1">
-                <span className="font-medium text-sm bg-gradient-to-r from-[#6250E9] to-[#69BDFF] bg-clip-text text-transparent">
+            <div className="flex items-center justify-between rounded-full p-1.5 xs:p-2 sm:p-3 border border-gray-200">
+              <span className="font-medium text-xs text-[#6250E9] truncate">
+                Level
+              </span>
+              <div className="bg-gradient-to-r from-purple-100 to-blue-100 rounded-full px-2 xs:px-3 sm:px-4 py-1">
+                <span className="font-medium text-xs bg-gradient-to-r from-[#6250E9] to-[#69BDFF] bg-clip-text text-transparent">
                   {studentData?.cefrLevel || "N/A"}
                 </span>
               </div>
             </div>
 
             {/* Total Points Box */}
-            <div className="flex items-center justify-between rounded-full p-3 border border-gray-200">
-              <span className="font-medium text-sm text-[#6250E9]">
+            <div className="flex items-center justify-between rounded-full p-1.5 xs:p-2 sm:p-3 border border-gray-200">
+              <span className="font-medium text-xs text-[#6250E9] truncate">
                 Total Points
               </span>
-              <div className="bg-gradient-to-r from-purple-100 to-blue-100 rounded-full px-4 py-1">
-                <span className="font-medium text-sm bg-gradient-to-r from-[#6250E9] to-[#69BDFF] bg-clip-text text-transparent">
+              <div className="bg-gradient-to-r from-purple-100 to-blue-100 rounded-full px-2 xs:px-3 sm:px-4 py-1">
+                <span className="font-medium text-xs bg-gradient-to-r from-[#6250E9] to-[#69BDFF] bg-clip-text text-transparent">
                   {studentData?.totalPoints || "N/A"}
                 </span>
               </div>
             </div>
 
-            <div className="relative bg-[#065FF014] rounded-2xl p-6 border border-gray-200">
-              <div className="absolute top-4 left-4 w-14 h-14 bg-white rounded-2xl flex items-center justify-center">
-                <Activity className="w-8 h-8 text-[#065FF0]" />
+            <div className="relative bg-[#065FF014] rounded-2xl p-3 xs:p-4 sm:p-6 border border-gray-200">
+              <div className="absolute top-2 left-2 xs:top-3 xs:left-3 sm:top-4 sm:left-4 w-8 h-8 xs:w-10 xs:h-10 sm:w-14 sm:h-14 bg-white rounded-2xl flex items-center justify-center">
+                <Activity className="w-4 h-4 xs:w-5 xs:h-5 sm:w-8 sm:h-8 text-[#065FF0]" />
               </div>
 
-              <div className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center">
+              <div className="absolute top-2 right-2 xs:top-3 xs:right-3 sm:top-4 sm:right-4 w-6 h-6 xs:w-8 xs:h-8 sm:w-10 sm:h-10 flex items-center justify-center">
                 <svg
-                  className="w-8 h-8 text-blue-500"
+                  className="w-4 h-4 xs:w-5 xs:h-5 sm:w-8 sm:h-8 text-blue-500"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -90,35 +94,35 @@ const TeacherDashboardProfile = ({
                 </svg>
               </div>
 
-              <div className="flex items-center justify-center mt-16">
-                <div className="flex items-center space-x-4">
-                  <div className="text-center">
-                    <div className="text-sm font-medium text-gray-700 mb-1">
+              <div className="flex items-center justify-center mt-10 xs:mt-12 sm:mt-16">
+                <div className="flex items-center space-x-1 xs:space-x-2 sm:space-x-4">
+                  <div className="text-center min-w-0 flex-1">
+                    <div className="text-xs font-medium text-gray-700 mb-1">
                       Current
                     </div>
-                    <div className="text-2xl font-bold text-blue-600">
+                    <div className="text-sm xs:text-lg sm:text-2xl font-bold text-blue-600">
                       {studentData?.currentStreak || 0}
                     </div>
                   </div>
 
-                  <div className="w-px h-12 bg-gray-300"></div>
+                  <div className="w-px h-6 xs:h-8 sm:h-12 bg-gray-300"></div>
 
-                  <div className="text-center">
-                    <div className="text-sm font-medium text-gray-700 mb-1">
+                  <div className="text-center min-w-0 flex-1">
+                    <div className="text-xs font-medium text-gray-700 mb-1">
                       Longest
                     </div>
-                    <div className="text-2xl font-bold text-blue-600">
+                    <div className="text-sm xs:text-lg sm:text-2xl font-bold text-blue-600">
                       {studentData?.longestStreak || 0}
                     </div>
                   </div>
 
-                  <div className="w-px h-12 bg-gray-300"></div>
+                  <div className="w-px h-6 xs:h-8 sm:h-12 bg-gray-300"></div>
 
-                  <div className="text-center">
-                    <div className="text-sm font-medium text-gray-700 mb-1">
+                  <div className="text-center min-w-0 flex-1">
+                    <div className="text-xs font-medium text-gray-700 mb-1">
                       Total
                     </div>
-                    <div className="text-2xl font-bold text-blue-600">
+                    <div className="text-sm xs:text-lg sm:text-2xl font-bold text-blue-600">
                       {studentData?.totalLoginDays || 0}
                     </div>
                   </div>

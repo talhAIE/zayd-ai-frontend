@@ -30,8 +30,18 @@ export function CertificationsSection({
       <CardHeader className="pb-4">
         <Tabs defaultValue="certifications" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="certifications">Certifications</TabsTrigger>
-            <TabsTrigger value="rewards">Rewards</TabsTrigger>
+            <TabsTrigger
+              value="certifications"
+              className="text-xs sm:text-sm truncate"
+            >
+              Certifications
+            </TabsTrigger>
+            <TabsTrigger
+              value="rewards"
+              className="text-xs sm:text-sm truncate"
+            >
+              Rewards
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="certifications" className="mt-4">
@@ -40,21 +50,21 @@ export function CertificationsSection({
                 achievements.slice(0, 3).map((achievement) => (
                   <div
                     key={achievement.id}
-                    className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="flex items-start space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     <img
                       src={achievement.iconUrl}
                       alt={achievement.name}
-                      className="w-15 h-10 rounded object-cover flex-shrink-0"
+                      className="w-12 h-12 rounded object-cover flex-shrink-0"
                     />
                     <div className="flex-1 min-w-0">
                       <p className="text-xs text-gray-500">
                         Awarded {formatDate(achievement.awardedAt)}
                       </p>
-                      <p className="mt-1 text-sm font-bold text-gray-800 truncate">
+                      <p className="mt-1 text-sm font-bold text-gray-800 break-words">
                         {achievement.name}
                       </p>
-                      <p className="text-xs text-gray-600 truncate">
+                      <p className="text-xs text-gray-600 break-words leading-relaxed">
                         {achievement.description}
                       </p>
                     </div>
@@ -74,7 +84,7 @@ export function CertificationsSection({
                 achievements.map((achievement) => (
                   <div
                     key={achievement.id}
-                    className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="flex items-start space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     <img
                       src={achievement.iconUrl}
@@ -82,10 +92,10 @@ export function CertificationsSection({
                       className="w-12 h-12 rounded object-cover flex-shrink-0"
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-gray-800 truncate">
+                      <p className="text-sm font-bold text-gray-800 break-words">
                         {achievement.name}
                       </p>
-                      <p className="text-xs text-gray-600 truncate">
+                      <p className="text-xs text-gray-600 break-words leading-relaxed">
                         {achievement.description}
                       </p>
                       <p className="text-xs text-gray-500">

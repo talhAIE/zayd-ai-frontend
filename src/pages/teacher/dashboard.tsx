@@ -773,7 +773,7 @@ export default function TeacherDashboard() {
           {/* Card Layout for Mobile */}
           <div className="block sm:hidden">
             {paginatedStudents.length > 0 && (
-              <div className="flex justify-between items-center mb-4">
+              <div className="flex justify-between items-center mt-4 mb-4">
                 <span className="text-sm text-gray-600">
                   {selectedStudents.size} of {paginatedStudents.length} selected
                 </span>
