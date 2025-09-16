@@ -205,6 +205,10 @@ export function TeacherLayout({ children }: TeacherLayoutProps) {
             {formattedTitle}
           </h1>
 
+          {location.pathname.startsWith("/teacher/student-profile") && (
+            <Button onClick={handleViewReport}>View Report</Button>
+          )}
+
           <Button
             onClick={handleLogout}
             size="sm"
@@ -255,7 +259,7 @@ export function TeacherLayout({ children }: TeacherLayoutProps) {
               <ChevronDown className="w-4 h-4 ml-1" />
             </Button> */}
 
-            {location.pathname.startsWith("/teacher/student-profile/") && (
+            {location.pathname.startsWith("/teacher/student-profile") && (
               <Button onClick={handleViewReport}>View Report</Button>
             )}
 

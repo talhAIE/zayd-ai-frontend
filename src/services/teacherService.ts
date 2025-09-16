@@ -160,3 +160,49 @@ export const fetchTeacherDashboardFilters = async (
     throw new Error(error.message || 'Failed to fetch teacher dashboard filters');
   }
 };
+
+export const downloadBulkStudentReports = async (
+  teacherId: string,
+  studentIds?: string[]
+): Promise<Blob> => {
+  try {
+    const params = new URLSearchParams();
+    if (studentIds && studentIds.length > 0) {
+      params.append('studentIds', studentIds.join(','));
+    }
+    
+    const queryString = params.toString();
+    const url = `/teacher-dashboard/${teacherId}/students/bulk-report${queryString ? `?${queryString}` : ''}`;
+    
+    const response = await apiClient.get(url, {
+      responseType: 'blob',
+    });
+    
+    return response.data;
+  } catch (error: any) {
+    if (error.response && error.response.data) {
+      throw new Error(error.response.data.message || 'Failed to download bulk reports');
+    }
+    throw new Error(error.message || 'Failed to download bulk reports');
+  }
+};
+
+export const downloadIndividualStudentReport = async (
+  teacherId: string,
+  studentId: string
+): Promise<StudentProfileData> => {
+  try {
+    const response = await apiClient.get(`/teacher-dashboard/${teacherId}/student/${studentId}`);
+    
+    if (response.data.status && response.data.data) {
+      return response.data.data as StudentProfileData;
+    } else {
+      throw new Error('Invalid response format');
+    }
+  } catch (error: any) {
+    if (error.response && error.response.data) {
+      throw new Error(error.response.data.message || 'Failed to fetch student profile');
+    }
+    throw new Error(error.message || 'Failed to fetch student profile');
+  }
+};

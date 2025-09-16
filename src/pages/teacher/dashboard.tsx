@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, Loader2, Eye, X } from "lucide-react";
+import { Search, Loader2, Eye, X, Download } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -35,7 +35,12 @@ import {
   fetchTeacherFilterValues,
 } from "@/redux/slices/teacherSlice";
 import { useDebounce } from "@/hooks/useDebounce";
-import { TeacherDashboardFilters } from "@/services/teacherService";
+import {
+  TeacherDashboardFilters,
+  downloadIndividualStudentReport,
+} from "@/services/teacherService";
+import { generateStudentReportPDF } from "@/utils/pdfGenerator";
+import { toast } from "sonner";
 
 export default function TeacherDashboard() {
   const navigate = useNavigate();
@@ -73,6 +78,14 @@ export default function TeacherDashboard() {
     completedTopics: true,
   });
 
+  const [selectedStudents, setSelectedStudents] = useState<Set<string>>(
+    new Set()
+  );
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadingStudent, setDownloadingStudent] = useState<string | null>(
+    null
+  );
+
   const columnOptions = [
     { key: "grade", label: "Grade" },
     { key: "cefrLevel", label: "CEFR Level" },
@@ -87,6 +100,88 @@ export default function TeacherDashboard() {
       ...prev,
       [columnKey]: !prev[columnKey as keyof typeof prev],
     }));
+  };
+
+  const toggleStudentSelection = (studentId: string) => {
+    setSelectedStudents((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(studentId)) {
+        newSet.delete(studentId);
+      } else {
+        newSet.add(studentId);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedStudents.size === paginatedStudents.length) {
+      setSelectedStudents(new Set());
+    } else {
+      setSelectedStudents(
+        new Set(paginatedStudents.map((student) => student.id))
+      );
+    }
+  };
+
+  const handleBulkDownload = async () => {
+    if (selectedStudents.size === 0) {
+      toast.error("Please select at least one student to download reports");
+      return;
+    }
+
+    setIsDownloading(true);
+    try {
+      const studentIds = Array.from(selectedStudents);
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const studentId of studentIds) {
+        try {
+          const student = transformedStudents.find((s) => s.id === studentId);
+          if (!student) {
+            console.warn(
+              `Student with ID ${studentId} not found in current data`
+            );
+            errorCount++;
+            continue;
+          }
+
+          setDownloadingStudent(student.name);
+
+          const studentData = await downloadIndividualStudentReport(
+            teacherId,
+            studentId
+          );
+
+          await generateStudentReportPDF(studentData);
+          successCount++;
+
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        } catch (error) {
+          console.error(
+            `Error downloading report for student ${studentId}:`,
+            error
+          );
+          errorCount++;
+        } finally {
+          setDownloadingStudent(null);
+        }
+      }
+
+      if (successCount > 0) {
+        toast.success(`Successfully downloaded ${successCount} report(s)`);
+      }
+      if (errorCount > 0) {
+        toast.error(`Failed to download ${errorCount} report(s)`);
+      }
+    } catch (error: any) {
+      console.error("Bulk download error:", error);
+      toast.error(error.message || "Failed to download reports");
+    } finally {
+      setIsDownloading(false);
+      setDownloadingStudent(null);
+    }
   };
 
   const myUser = localStorage.getItem("AiTutorUser");
@@ -189,6 +284,7 @@ export default function TeacherDashboard() {
 
   useEffect(() => {
     setCurrentPage(1);
+    setSelectedStudents(new Set());
   }, [
     debouncedSearchTerm,
     gradeFilter,
@@ -212,6 +308,7 @@ export default function TeacherDashboard() {
     setMinCompletedTopics("");
     setMaxCompletedTopics("");
     setCurrentPage(1);
+    setSelectedStudents(new Set());
   };
 
   const hasActiveFilters = useMemo(() => {
@@ -461,6 +558,27 @@ export default function TeacherDashboard() {
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
+
+            <Button
+              onClick={handleBulkDownload}
+              disabled={selectedStudents.size === 0 || isDownloading}
+              className="w-full sm:w-auto"
+              size="sm"
+            >
+              {isDownloading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  {downloadingStudent
+                    ? `Downloading ${downloadingStudent}...`
+                    : "Downloading..."}
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4 mr-2" />
+                  Download Bulk Reports ({selectedStudents.size})
+                </>
+              )}
+            </Button>
           </div>
         </div>
       </div>
@@ -473,6 +591,16 @@ export default function TeacherDashboard() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-12 px-6 py-4">
+                    <Checkbox
+                      checked={
+                        paginatedStudents.length > 0 &&
+                        selectedStudents.size === paginatedStudents.length
+                      }
+                      onCheckedChange={toggleSelectAll}
+                      aria-label="Select all students"
+                    />
+                  </TableHead>
                   {visibleColumns.name && (
                     <TableHead className="px-6 py-4">Student Name</TableHead>
                   )}
@@ -515,6 +643,15 @@ export default function TeacherDashboard() {
                 {paginatedStudents.length > 0 ? (
                   paginatedStudents.map((student) => (
                     <TableRow className="h-24" key={student.id}>
+                      <TableCell className="w-12 px-6 py-4">
+                        <Checkbox
+                          checked={selectedStudents.has(student.id)}
+                          onCheckedChange={() =>
+                            toggleStudentSelection(student.id)
+                          }
+                          aria-label={`Select ${student.name}`}
+                        />
+                      </TableCell>
                       {visibleColumns.name && (
                         <TableCell className="px-6 py-4">
                           <div className="flex items-center gap-3">
@@ -611,7 +748,7 @@ export default function TeacherDashboard() {
                   <TableRow>
                     <TableCell
                       colSpan={
-                        Object.values(visibleColumns).filter(Boolean).length + 1
+                        Object.values(visibleColumns).filter(Boolean).length + 2
                       }
                       className="text-center py-6"
                     >
@@ -635,6 +772,18 @@ export default function TeacherDashboard() {
 
           {/* Card Layout for Mobile */}
           <div className="block sm:hidden">
+            {paginatedStudents.length > 0 && (
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-sm text-gray-600">
+                  {selectedStudents.size} of {paginatedStudents.length} selected
+                </span>
+                <Button variant="outline" size="sm" onClick={toggleSelectAll}>
+                  {selectedStudents.size === paginatedStudents.length
+                    ? "Deselect All"
+                    : "Select All"}
+                </Button>
+              </div>
+            )}
             {paginatedStudents.length > 0 ? (
               paginatedStudents.map((student) => (
                 <div
@@ -642,6 +791,11 @@ export default function TeacherDashboard() {
                   className="border rounded-lg p-4 mt-4 mb-4 shadow-sm"
                 >
                   <div className="flex items-center gap-3 mb-2">
+                    <Checkbox
+                      checked={selectedStudents.has(student.id)}
+                      onCheckedChange={() => toggleStudentSelection(student.id)}
+                      aria-label={`Select ${student.name}`}
+                    />
                     <Avatar>
                       <AvatarImage
                         src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${student.id}`}
