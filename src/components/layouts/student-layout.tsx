@@ -105,9 +105,9 @@ export function StudentLayout({ children }: StudentLayoutProps) {
     navigate("/login");
   };
 
-  const handleViewReport = () => {
-    setIsReportModalOpen(true);
-  };
+  // const handleViewReport = () => {
+  //   setIsReportModalOpen(true);
+  // };
 
   const handleCloseReportModal = () => {
     setIsReportModalOpen(false);

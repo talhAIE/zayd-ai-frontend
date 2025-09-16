@@ -7,8 +7,6 @@ import debateModeAvatar from "@/assets/svgs/debateModeAvatar.svg";
 import roleplayModeAvatar from "@/assets/svgs/roleplayModeAvatar.svg";
 import listeningModeAvatar from "@/assets/svgs/listening-mode.png";
 import ReadingModeAvatar from "@/assets/svgs/reading-mode.png";
-import listeningModeAvatar from "@/assets/svgs/listening-mode.png";
-import ReadingModeAvatar from "@/assets/svgs/reading-mode.png";
 // import QuestionnaireModal from "@/components/ui/QuestionaireModal";
 
 const modes = [
@@ -27,7 +25,6 @@ const modes = [
   {
     title: "Reading Mode",
     description: "Let's read through fun stories and practice saying words with the AI.",
-    image: ReadingModeAvatar,
     image: ReadingModeAvatar,
     route: "/student/learning-modes/reading-mode",
   },
