@@ -83,7 +83,10 @@ export const addPhoneNumber = createAsyncThunk(
       
       const data = response.data as AuthResponse;
       
+      const existingUserData = JSON.parse(localStorage.getItem('AiTutorUser') || '{}');
+      
       const userWithRole = {
+        ...existingUserData, 
         ...data.user,
         role: data.user.role.toLowerCase() as UserRole
       };

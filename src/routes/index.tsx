@@ -20,15 +20,18 @@ import TeacherDashboard from "@/pages/teacher/dashboard";
 import StudentProfile from "@/pages/teacher/student-profile";
 
 // Auth Pages
-import { AuthLayout } from "@/components/layouts/auth-layout";
-import LoginPage from "@/pages/auth/login";
-import ChatModeTopics from "@/pages/student/topics/ChatModeTopics";
-import PhotoModeTopics from "@/pages/student/topics/PhotoModeTopics";
-import Leaderboard from "@/pages/student/Leaderboard";
-import Chat from "@/pages/student/ChatPage";
-import Rewards from "@/pages/student/Rewards";
-import ReadingModeTopics from "@/pages/student/topics/ReadingModeTopics";
-import RolePlayModeTopics from "@/pages/student/topics/RolePlayModeTopics";
+import { AuthLayout } from '@/components/layouts/auth-layout';
+import LoginPage from '@/pages/auth/login';
+import ChatModeTopics from '@/pages/student/topics/ChatModeTopics';
+import PhotoModeTopics from '@/pages/student/topics/PhotoModeTopics';
+import DebateModeTopics from '@/pages/student/topics/DebateModeTopics';
+import Leaderboard from '@/pages/student/Leaderboard';
+import Chat from '@/pages/student/ChatPage';
+import Rewards from '@/pages/student/Rewards';
+import ReadingModeTopics from '@/pages/student/topics/ReadingModeTopics';
+import RolePlayModeTopics from '@/pages/student/topics/RolePlayModeTopics';
+import ListeningModeTopics from '@/pages/student/topics/ListeningModeTopics';
+
 
 const AppRoutes = () => {
   // const { user } = useAppSelector((state) => state.auth);
@@ -195,6 +198,26 @@ const AppRoutes = () => {
           <StudentRoute>
             <StudentLayout>
               <RolePlayModeTopics />
+            </StudentLayout>
+          </StudentRoute>
+        }
+      />
+      <Route
+        path="/student/learning-modes/listening-mode"
+        element={
+          <StudentRoute>
+            <StudentLayout>
+              <ListeningModeTopics />
+            </StudentLayout>
+          </StudentRoute>
+        }
+      />
+      <Route
+        path="/student/learning-modes/debate-mode"
+        element={
+          <StudentRoute>
+            <StudentLayout>
+              <DebateModeTopics />
             </StudentLayout>
           </StudentRoute>
         }

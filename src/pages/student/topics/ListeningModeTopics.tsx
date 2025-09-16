@@ -4,19 +4,24 @@ import { toast } from "sonner";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { fetchTopics } from "@/redux/slices/topicsSlice";
 import { Calendar, Lock } from "lucide-react";
+// import { logout } from '@/redux/slices/authSlice';
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const RolePlayModeTopics = () => {
+const ChatModeTopics = () => {
+  // const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
-  const { topics, isLoading, error } = useAppSelector((state) => state.topics);
-  const { user } = useAppSelector((state) => state.auth);
+  const { topics, isLoading, error } = useAppSelector(
+    (state: any) => state.topics
+  );
+  const { user } = useAppSelector((state: any) => state.auth);
 
   useEffect(() => {
     if (user?.id) {
-      dispatch(fetchTopics({ userId: user.id, topicMode: "roleplay-mode" }));
+      console.log("Fetching chat mode topics for user:", user.id);
+      dispatch(fetchTopics({ userId: user.id, topicMode: "listening-mode" }));
     }
   }, [dispatch, user]);
 
@@ -146,7 +151,7 @@ const RolePlayModeTopics = () => {
           )}
         </div>
 
-        <CardContent className="flex-grow p-4">
+        <CardContent className=" flex-grow p-4">
           <h3 className="font-medium text-base">{topic.topicName}</h3>
         </CardContent>
 
@@ -163,7 +168,7 @@ const RolePlayModeTopics = () => {
           <Link
             to={`/student/learning-mode/${topic?.id}/${encodeURIComponent(
               topic.topicName
-            )}?mode=roleplay-mode`}
+            )}?mode=listening-mode`}
             className={locked ? "pointer-events-none" : ""}
           >
             <Button size="sm" disabled={locked}>
@@ -310,10 +315,9 @@ const RolePlayModeTopics = () => {
               {sortedTopics.length > 0 ? (
                 sortedTopics.map((topic: any) => {
                   const locked = isTopicLocked(topic);
-                  const unlockCountdown =
-                    locked && topic.unlocksAt
-                      ? getUnlockCountdown(topic.unlocksAt)
-                      : null;
+                  const unlockCountdown = locked
+                    ? getUnlockCountdown(topic.unlocksAt)
+                    : null;
 
                   return (
                     <Card
@@ -338,7 +342,7 @@ const RolePlayModeTopics = () => {
                         )}
                       </div>
 
-                      <CardContent className="flex-grow p-4">
+                      <CardContent className=" flex-grow p-4">
                         <h3 className="font-medium text-base">
                           {topic.topicName}
                         </h3>
@@ -359,7 +363,7 @@ const RolePlayModeTopics = () => {
                             topic?.id
                           }/${encodeURIComponent(
                             topic.topicName
-                          )}?mode=roleplay-mode`}
+                          )}?mode=listening-mode`}
                           className={locked ? "pointer-events-none" : ""}
                         >
                           <Button size="sm" disabled={locked}>
@@ -383,4 +387,4 @@ const RolePlayModeTopics = () => {
   );
 };
 
-export default RolePlayModeTopics;
+export default ChatModeTopics;

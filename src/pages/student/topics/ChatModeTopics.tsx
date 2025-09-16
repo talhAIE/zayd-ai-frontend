@@ -20,6 +20,8 @@ const ChatModeTopics = () => {
   const { topics, isLoading, error } = useAppSelector((state:any) => state.topics);
   const { user } = useAppSelector((state:any) => state.auth);
 
+  console.log("topics", topics);
+
   useEffect(() => {
     if (user?.id) {
       console.log('Fetching chat mode topics for user:', user.id);
@@ -152,18 +154,28 @@ const ChatModeTopics = () => {
                 </CardContent>
 
 
-                   <CardFooter className='flex justify-end'>
-                      <Link to={`/student/learning-mode/${topic?.id}/${topic.topicName}?mode=chat-mode`} className={locked ? 'pointer-events-none' : ''}>
-
-
-                    <Button
-                      size="sm"
-                      disabled={locked}
-                    >
-                      Start
-                    </Button>
-                  </Link>
-                  </CardFooter>
+                   <CardFooter className="flex items-center justify-between">
+                     {topic.isCompleted ? (
+                       <span className="inline-flex items-center rounded-md bg-green-100 px-3 py-2 text-xs font-medium text-green-800">
+                         Completed
+                       </span>
+                     ) : (
+                       <span className="inline-flex items-center rounded-md bg-gray-100 px-3 py-2 text-xs font-medium text-gray-500">
+                         Incomplete
+                       </span>
+                     )}
+                     <Link
+                       to={`/student/learning-mode/${topic?.id}/${encodeURIComponent(topic.topicName)}?mode=chat-mode`}
+                       className={locked ? 'pointer-events-none' : ''}
+                     >
+                       <Button
+                         size="sm"
+                         disabled={locked}
+                       >
+                         Start
+                       </Button>
+                     </Link>
+                   </CardFooter>
               </Card>
             )})
           ) : (

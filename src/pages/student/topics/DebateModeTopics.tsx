@@ -12,15 +12,16 @@ import {
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const PhotoModeTopics = () => {
+const DebateModeTopics = () => {
   const dispatch = useAppDispatch();
 
-  const { topics, isLoading, error } = useAppSelector((state) => state.topics);
-  const { user } = useAppSelector((state) => state.auth);
+  const { topics, isLoading, error } = useAppSelector((state:any) => state.topics);
+  const { user } = useAppSelector((state:any) => state.auth);
 
   useEffect(() => {
     if (user?.id) {
-      dispatch(fetchTopics({ userId: user.id, topicMode: 'photo-mode' }));
+      console.log('Fetching debate mode topics for user:', user.id);
+      dispatch(fetchTopics({ userId: user.id, topicMode: 'debate-mode' }));
     }
   }, [dispatch, user]);
 
@@ -80,29 +81,6 @@ const PhotoModeTopics = () => {
 
   return (
     <div className="mx-auto px-4 py-6">
-      {/* <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => navigate(-1)}
-            className="mr-2"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-          <h1 className="text-2xl font-bold">Chat Modes</h1>
-        </div>
-        
-        <Button 
-          variant="outline" 
-          size="icon"
-          onClick={handleLogout}
-          className="rounded-full"
-        >
-          <LogOut className="h-5 w-5" />
-        </Button>
-      </div> */}
-
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map((item) => (
@@ -125,8 +103,7 @@ const PhotoModeTopics = () => {
           {sortedTopics.length > 0 ? (
             sortedTopics.map((topic: any) => {
               const locked = isTopicLocked(topic);
-              const unlockCountdown = locked && topic.unlocksAt ? getUnlockCountdown(topic.unlocksAt) : null;
-
+              const unlockCountdown = locked ? getUnlockCountdown(topic.unlocksAt) : null;
               return (
                 <Card key={topic.id} className="overflow-hidden flex flex-col">
                   <div className="aspect-video w-full relative overflow-hidden">
@@ -146,11 +123,9 @@ const PhotoModeTopics = () => {
                       </div>
                     )}
                   </div>
-
-                  <CardContent className="flex-grow p-4">
+                  <CardContent className=" flex-grow p-4">
                     <h3 className="font-medium text-base">{topic.topicName}</h3>
                   </CardContent>
-
                   <CardFooter className="flex items-center justify-between">
                     {topic.isCompleted ? (
                       <span className="inline-flex items-center rounded-md bg-green-100 px-3 py-2 text-xs font-medium text-green-800">
@@ -164,7 +139,7 @@ const PhotoModeTopics = () => {
                     <Link
                       to={`/student/learning-mode/${
                         topic?.id
-                      }/${encodeURIComponent(topic.topicName)}?mode=photo-mode`}
+                      }/${encodeURIComponent(topic.topicName)}?mode=debate-mode`}
                       className={locked ? "pointer-events-none" : ""}
                     >
                       <Button size="sm" disabled={locked}>
@@ -186,4 +161,4 @@ const PhotoModeTopics = () => {
   );
 };
 
-export default PhotoModeTopics;
+export default DebateModeTopics;

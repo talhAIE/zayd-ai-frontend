@@ -1,16 +1,12 @@
-import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { toast } from 'sonner';
-import { useAppDispatch, useAppSelector } from '@/redux/hooks';
-import { fetchTopics } from '@/redux/slices/topicsSlice';
-import { Lock } from 'lucide-react';
-import {
-  Card,
-  CardContent,
-  CardFooter,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useEffect } from "react";
+import { Link } from "react-router-dom";
+import { toast } from "sonner";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { fetchTopics } from "@/redux/slices/topicsSlice";
+import { Calendar, Lock } from "lucide-react";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const ReadingModeTopics = () => {
   const dispatch = useAppDispatch();
@@ -20,7 +16,7 @@ const ReadingModeTopics = () => {
 
   useEffect(() => {
     if (user?.id) {
-      dispatch(fetchTopics({ userId: user.id, topicMode: 'reading-mode' }));
+      dispatch(fetchTopics({ userId: user.id, topicMode: "reading-mode" }));
     }
   }, [dispatch, user]);
 
@@ -31,7 +27,7 @@ const ReadingModeTopics = () => {
   }, [error]);
 
   const isTopicLocked = (topic: any) => {
-    if (user?.schoolCategory !== 'government') {
+    if (user?.schoolCategory !== "government") {
       return false;
     }
     if (!topic.unlocksAt) {
@@ -56,7 +52,7 @@ const ReadingModeTopics = () => {
   };
 
   const sortedTopics = [...topics].sort((a, b) => {
-    if (user?.schoolCategory !== 'government') {
+    if (user?.schoolCategory !== "government") {
       return 0;
     }
 
@@ -77,6 +73,140 @@ const ReadingModeTopics = () => {
     }
     return 0; // both unlocked
   });
+
+  // Group topics by weeks for trial users
+  const groupTopicsByWeeks = (topics: any[]) => {
+    if (user?.schoolCategory !== "trial") {
+      return { default: topics };
+    }
+
+    const topicsWithDates = topics.filter((topic) => topic.unlocksAt);
+
+    if (topicsWithDates.length === 0) {
+      return { default: topics };
+    }
+
+    // Find the earliest date
+    const earliestDate = new Date(
+      Math.min(
+        ...topicsWithDates.map((topic) => new Date(topic.unlocksAt).getTime())
+      )
+    );
+
+    const weekGroups: { [key: string]: any[] } = {};
+
+    topics.forEach((topic) => {
+      if (!topic.unlocksAt) {
+        // Topics without dates go to default group
+        if (!weekGroups.default) weekGroups.default = [];
+        weekGroups.default.push(topic);
+        return;
+      }
+
+      const topicDate = new Date(topic.unlocksAt);
+      const daysDiff = Math.floor(
+        (topicDate.getTime() - earliestDate.getTime()) / (1000 * 60 * 60 * 24)
+      );
+      const weekNumber = Math.floor(daysDiff / 7) + 1;
+      const weekKey = `week${weekNumber}`;
+
+      if (!weekGroups[weekKey]) {
+        weekGroups[weekKey] = [];
+      }
+      weekGroups[weekKey].push(topic);
+    });
+
+    return weekGroups;
+  };
+
+  const weekGroups = groupTopicsByWeeks(sortedTopics);
+
+  const renderTopicCard = (topic: any) => {
+    const locked = isTopicLocked(topic);
+    const unlockCountdown =
+      locked && topic.unlocksAt ? getUnlockCountdown(topic.unlocksAt) : null;
+
+    return (
+      <Card key={topic.id} className="overflow-hidden flex flex-col">
+        <div className="aspect-video w-full relative overflow-hidden">
+          <img
+            src={topic.attachmentUrl}
+            alt={topic.topicName}
+            className={`absolute inset-0 w-full h-full object-cover ${
+              locked ? "filter grayscale" : ""
+            }`}
+          />
+          {locked && (
+            <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center text-white p-4">
+              <Lock className="w-8 h-8 mb-2" />
+              <span className="text-center font-semibold">
+                {unlockCountdown}
+              </span>
+            </div>
+          )}
+        </div>
+
+        <CardContent className="flex-grow p-4">
+          <h3 className="font-medium text-base">{topic.topicName}</h3>
+        </CardContent>
+
+        <CardFooter className="flex items-center justify-between">
+          {topic.isCompleted ? (
+            <span className="inline-flex items-center rounded-md bg-green-100 px-3 py-2 text-xs font-medium text-green-800">
+              Completed
+            </span>
+          ) : (
+            <span className="inline-flex items-center rounded-md bg-gray-100 px-3 py-2 text-xs font-medium text-gray-500">
+              Incomplete
+            </span>
+          )}
+          <Link
+            to={`/student/learning-mode/${topic?.id}/${encodeURIComponent(
+              topic.topicName
+            )}?mode=reading-mode`}
+            className={locked ? "pointer-events-none" : ""}
+          >
+            <Button size="sm" disabled={locked}>
+              Start
+            </Button>
+          </Link>
+        </CardFooter>
+      </Card>
+    );
+  };
+
+  const renderComingSoonCard = () => {
+    return (
+      <Card key="coming-soon-week2" className="overflow-hidden flex flex-col">
+        <div className="aspect-video w-full relative overflow-hidden">
+          <img
+            src={topics[0]?.attachmentUrl || "/api/placeholder/400/200"}
+            alt="Week 2 Coming Soon"
+            className="absolute inset-0 w-full h-full object-cover filter grayscale"
+          />
+          <div className="absolute inset-0 bg-black bg-opacity-60 flex flex-col items-center justify-center text-white p-4">
+            <Lock className="w-8 h-8 mb-2" />
+            <span className="text-center font-semibold text-lg">
+              Coming Soon
+            </span>
+          </div>
+        </div>
+
+        <CardContent className="flex-grow p-4">
+          <h3 className="font-medium text-base">Week 2 Topics</h3>
+        </CardContent>
+
+        <CardFooter className="flex items-center justify-between">
+          <span className="inline-flex items-center rounded-md bg-gray-100 px-3 py-2 text-xs font-medium text-gray-500">
+            Locked
+          </span>
+          <Button size="sm" disabled>
+            Start
+          </Button>
+        </CardFooter>
+      </Card>
+    );
+  };
 
   return (
     <div className="mx-auto px-4 py-6">
@@ -121,50 +251,130 @@ const ReadingModeTopics = () => {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {sortedTopics.length > 0 ? (
-            sortedTopics.map((topic: any) => {
-              const locked = isTopicLocked(topic);
-              const unlockCountdown = locked && topic.unlocksAt ? getUnlockCountdown(topic.unlocksAt) : null;
+        <div>
+          {user?.schoolCategory === "trial" ? (
+            // Week-based layout for trial users
+            Object.entries(weekGroups)
+              .sort(([a], [b]) => {
+                // Sort by week number, default group goes last
+                if (a === "default") return 1;
+                if (b === "default") return -1;
+                const weekA = parseInt(a.replace("week", ""));
+                const weekB = parseInt(b.replace("week", ""));
+                return weekA - weekB;
+              })
+              .map(([weekKey, weekTopics]) => {
+                const weekNumber = weekKey.replace("week", "");
+                const isDefaultGroup = weekKey === "default";
 
-              return (
-                <Card key={topic.id} className="overflow-hidden flex flex-col">
-                  <div className="aspect-video w-full relative overflow-hidden">
-                    <img
-                      src={topic.attachmentUrl}
-                      alt={topic.topicName}
-                      className={`absolute inset-0 w-full h-full object-cover ${locked ? 'filter grayscale' : ''}`}
-                    />
-                    {locked && (
-                      <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center text-white p-4">
-                        <Lock className="w-8 h-8 mb-2" />
-                        <span className="text-center font-semibold">{unlockCountdown}</span>
-                      </div>
+                return (
+                  <div key={weekKey} className="mb-8">
+                    {!isDefaultGroup && (
+                      <h2 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-3">
+                        <Calendar className="w-5 h-5" />
+                        Week {weekNumber}
+                      </h2>
                     )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                      {weekTopics.length > 0 ? (
+                        weekTopics.map((topic: any) => renderTopicCard(topic))
+                      ) : (
+                        <div className="col-span-full text-center py-10">
+                          <p className="text-muted-foreground">
+                            No topics available
+                          </p>
+                        </div>
+                      )}
+                      {/* Add Coming Soon card for Week 2 */}
+                      {weekKey === "week2" && renderComingSoonCard()}
+                    </div>
                   </div>
-
-                  <CardContent className="flex-grow p-4">
-                    <h3 className="font-medium text-base">{topic.topicName}</h3>
-                  </CardContent>
-                    
-                    <CardFooter className='flex justify-end'>
-                      <Link to={`/student/learning-mode/${topic?.id}/${topic?.topicName}?mode=reading-mode`} className={locked ? 'pointer-events-none' : ''}>
-
-                      <Button
-                        size="sm"
-                        disabled={locked}
-                      >
-                        Start
-                      </Button>
-                    </Link>
-                    </CardFooter>
-
-                </Card>
-              );
-            })
+                );
+              })
+              // Ensure Week 2 appears even if no topics exist for it
+              .concat(
+                !Object.keys(weekGroups).includes("week2") ? (
+                  <div key="week2" className="mb-8">
+                    <h2 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-3">
+                      <Calendar className="w-5 h-5" />
+                      Week 2
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                      {renderComingSoonCard()}
+                    </div>
+                  </div>
+                ) : []
+              )
           ) : (
-            <div className="col-span-full text-center py-10">
-              <p className="text-muted-foreground">No topics available</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {sortedTopics.length > 0 ? (
+                sortedTopics.map((topic: any) => {
+                  const locked = isTopicLocked(topic);
+                  const unlockCountdown =
+                    locked && topic.unlocksAt
+                      ? getUnlockCountdown(topic.unlocksAt)
+                      : null;
+
+                  return (
+                    <Card
+                      key={topic.id}
+                      className="overflow-hidden flex flex-col"
+                    >
+                      <div className="aspect-video w-full relative overflow-hidden">
+                        <img
+                          src={topic.attachmentUrl}
+                          alt={topic.topicName}
+                          className={`absolute inset-0 w-full h-full object-cover ${
+                            locked ? "filter grayscale" : ""
+                          }`}
+                        />
+                        {locked && (
+                          <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center text-white p-4">
+                            <Lock className="w-8 h-8 mb-2" />
+                            <span className="text-center font-semibold">
+                              {unlockCountdown}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      <CardContent className="flex-grow p-4">
+                        <h3 className="font-medium text-base">
+                          {topic.topicName}
+                        </h3>
+                      </CardContent>
+
+                      <CardFooter className="flex items-center justify-between">
+                        {topic.isCompleted ? (
+                          <span className="inline-flex items-center rounded-md bg-green-100 px-3 py-2 text-xs font-medium text-green-800">
+                            Completed
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center rounded-md bg-gray-100 px-3 py-2 text-xs font-medium text-gray-500">
+                            Incomplete
+                          </span>
+                        )}
+                        <Link
+                          to={`/student/learning-mode/${
+                            topic?.id
+                          }/${encodeURIComponent(
+                            topic.topicName
+                          )}?mode=reading-mode`}
+                          className={locked ? "pointer-events-none" : ""}
+                        >
+                          <Button size="sm" disabled={locked}>
+                            Start
+                          </Button>
+                        </Link>
+                      </CardFooter>
+                    </Card>
+                  );
+                })
+              ) : (
+                <div className="col-span-full text-center py-10">
+                  <p className="text-muted-foreground">No topics available</p>
+                </div>
+              )}
             </div>
           )}
         </div>

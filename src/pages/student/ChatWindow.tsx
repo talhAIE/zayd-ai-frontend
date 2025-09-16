@@ -28,8 +28,10 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import QuestionnaireModal from "@/components/ui/QuestionaireModal";
+import { Progress } from "@/components/ui/progress";
+import AudioPlayer from "./AudioPlayer";
 
-export interface McqAnswer {
+interface McqAnswer {
   questionId: string;
   answerIndex: number;
 }
@@ -94,6 +96,7 @@ const ChatEvents = {
   SUBMIT_MCQS: "submit_mcqs",
   MCQ_RESULT: "mcq_result",
   CONTENT_PAYLOAD: "content_payload",
+  NEXT_STAGE: "next_stage",
 } as const;
 
 interface ServerToClientEvents {
@@ -144,6 +147,11 @@ interface ServerToClientEvents {
       contentAudioUrl: string;
     };
   }) => void;
+  next_stage: (payload: {
+    userId: string;
+    topicId: string;
+    chatId: string | null;
+  }) => void;
 }
 
 interface ClientToServerEvents {
@@ -181,6 +189,12 @@ interface ClientToServerEvents {
     topicId: string;
     chatId: string;
   }) => void;
+  [ChatEvents.NEXT_STAGE]: (payload: {
+    userId: string;
+    topicId: string;
+    chatId: string | null;
+  }) => void;
+  next_listening_stage: (payload: { chatId: string }) => void;
 }
 
 interface Message {
@@ -230,9 +244,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
   // --- MODIFIED: Simplified audio state management
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
+  const [isCurrentlyPlaying, setIsCurrentlyPlaying] = useState(false);
   const soundRef = useRef<Howl | null>(null);
   const [isAudioUnlocked, setIsAudioUnlocked] = useState(false);
-  const [autoplayFailed, setAutoplayFailed] = useState(false);
+  // const [autoplayFailed, setAutoplayFailed] = useState(false);
   // --- END MODIFICATION
 
   const [topicImage, setTopicImage] = useState<string | null>(null);
@@ -241,6 +256,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const [isSocketConnected, setIsSocketConnected] = useState(false);
   const [isQueationnaireOpen, setIsQuestionnaireOpen] = React.useState(false);
   const [mcqList, setMcqList] = useState<any[]>([]);
+  const [audioProgress, setAudioProgress] = useState(0);
+  const [audioDuration, setAudioDuration] = useState(0);
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [contentPayload, setContentPayload] = useState<{
     content: string;
     audioUrl: string;
@@ -254,6 +272,33 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     pointValue: number;
   } | null>(null);
   const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
+  const [isDuplicateConnectionModalOpen, setIsDuplicateConnectionModalOpen] = useState(false);
+
+  // --- Listening Mode State ---
+  const [progress, setProgress] = React.useState(30);
+  const [listeningStage, setListeningStage] = useState<string | null>(null);
+  const [listeningData, setListeningData] = useState<any>(null);
+  const [currentMcqIndex, setCurrentMcqIndex] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [showReplayPopup, setShowReplayPopup] = useState(false);
+  const [mcqAnswers, setMcqAnswers] = useState<{ [key: string]: number }>({});
+  // const [barCount, setBarCount] = useState(0);
+  const [listeningSteps, setListeningSteps] = useState(1);
+  // --- End Listening Mode State ---
+
+  const [isContextCompleted, setIsContextCompleted] = useState(false);
+  const [hasStartedContextAudio, setHasStartedContextAudio] = useState(false);
+
+  const clickLocked = React.useRef(false);
+  const onEndCalledRef = useRef(false);
+
+  // Add new states for audio completion tracking
+  const [_hasCompletedNarration, _setHasCompletedNarration] = useState(false);
+  const [_hasCompletedQuestion, _setHasCompletedQuestion] = useState(false);
+  const [hasAutoplayedStage, setHasAutoplayedStage] = useState<string | null>(
+    null
+  );
+  const [_hasCompletedKbAudio, _setHasCompletedKbAudio] = useState(false);
 
   const socketRef = useRef<Socket<
     ServerToClientEvents,
@@ -274,8 +319,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const mode = searchParams.get("mode");
   const userData = JSON.parse(localStorage.getItem("AiTutorUser") || "{}");
   const userId = userData?.id;
-  const SOCKET_URL =
-    "https://malamute-content-cougar.ngrok-free.app";
+  const SOCKET_URL = "https://tutorapp-cyfeg4ghe7gydbcy.uaenorth-01.azurewebsites.net";
   const resetActivityTimer = useCallback(() => {
     if (activityTimerRef.current) clearTimeout(activityTimerRef.current);
     activityTimerRef.current = setTimeout(() => {
@@ -291,52 +335,19 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     (navigator.userAgent.includes("Mac") && "ontouchend" in document);
 
   // --- MODIFIED: Universal Audio Unlocker ---
-  // This function sets up a one-time event listener to unlock audio on the first user interaction.
-  // const unlockAudio = useCallback(() => {
-  //   if (isAudioUnlocked) return;
-
-  //   const unlock = () => {
-  //     Howler.ctx.resume().then(() => {
-  //       logger.info("Audio context unlocked successfully by user gesture.");
-  //       setIsAudioUnlocked(true);
-  //       document.removeEventListener("touchstart", unlock, true);
-  //       document.removeEventListener("touchend", unlock, true);
-  //       document.removeEventListener("click", unlock, true);
-  //     });
-  //   };
-
-  //   logger.info("Setting up audio unlock listeners...");
-  //   document.addEventListener("touchstart", unlock, true);
-  //   document.addEventListener("touchend", unlock, true);
-  //   document.addEventListener("click", unlock, true);
-
-  //   // Cleanup function to remove listeners if the component unmounts
-  //   return () => {
-  //     document.removeEventListener("touchstart", unlock, true);
-  //     document.removeEventListener("touchend", unlock, true);
-  //     document.removeEventListener("click", unlock, true);
-  //   };
-  // }, [isAudioUnlocked]);
-  // --- CORRECTED: Universal Audio Unlocker ---
   const unlockAudio = useCallback(() => {
     if (isAudioUnlocked) return;
 
     const unlock = () => {
-      // --- THE FIX IS HERE ---
-      // First, check if the Howler context exists and if it's not already running.
-      // This prevents the "Cannot read properties of null" error.
       if (Howler.ctx && Howler.ctx.state !== "running") {
         Howler.ctx.resume().then(() => {
           logger.info("Audio context unlocked successfully by user gesture.");
           setIsAudioUnlocked(true);
-          // It's crucial to remove the listeners after a successful unlock.
           document.removeEventListener("touchstart", unlock, true);
           document.removeEventListener("touchend", unlock, true);
           document.removeEventListener("click", unlock, true);
         });
       } else {
-        // If the context doesn't exist yet or is already running, we don't need to do anything.
-        // We can consider the audio "unlocked" for our app's logic and clean up the listeners.
         setIsAudioUnlocked(true);
         document.removeEventListener("touchstart", unlock, true);
         document.removeEventListener("touchend", unlock, true);
@@ -349,7 +360,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     document.addEventListener("touchend", unlock, true);
     document.addEventListener("click", unlock, true);
 
-    // Cleanup function to remove listeners if the component unmounts before unlock
     return () => {
       document.removeEventListener("touchstart", unlock, true);
       document.removeEventListener("touchend", unlock, true);
@@ -378,7 +388,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const lastRecordingEndTimeRef = useRef<number | null>(null);
 
   useEffect(() => {
-    // This entire useEffect for socket connection remains largely the same
     if (!userId) {
       toast.error("User information is missing.");
       logger.error("User ID is missing, cannot establish connection.");
@@ -400,14 +409,23 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       setIsSocketConnected(true);
       toast.success("Connection established.");
 
-      const historyPayload = { userId, topicId };
-      logger.emitting(ChatEvents.GET_CHAT_HISTORY, historyPayload);
-      socket.emit(ChatEvents.GET_CHAT_HISTORY, historyPayload);
+      if (mode === "listening-mode") {
+        logger.emitting("start_listening", { userId, topicId });
+        socket.emit("start_listening", { userId, topicId });
+      } else {
+        const historyPayload = { userId, topicId };
+        logger.emitting(ChatEvents.GET_CHAT_HISTORY, historyPayload);
+        socket.emit(ChatEvents.GET_CHAT_HISTORY, historyPayload);
 
-      if (mode === "reading-mode" || mode === "roleplay-mode") {
-        const payload = { userId, topicId };
-        logger.emitting(ChatEvents.CONTENT_PAYLOAD, payload);
-        socket.emit(ChatEvents.CONTENT_PAYLOAD, payload);
+        if (
+          mode === "reading-mode" ||
+          mode === "roleplay-mode" ||
+          mode === "debate-mode"
+        ) {
+          const payload = { userId, topicId };
+          logger.emitting(ChatEvents.CONTENT_PAYLOAD, payload);
+          socket.emit(ChatEvents.CONTENT_PAYLOAD, payload);
+        }
       }
 
       const sessionPayload = { userId };
@@ -416,27 +434,53 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
       resetActivityTimer();
     });
-    // ... all your other socket.on listeners remain unchanged ...
-    // In your main useEffect for the socket...
+
+    socket.on("listening_payload", ({ chatId: newChatId, ...data }) => {
+      setChatId(newChatId);
+      setListeningData(data);
+      setProgress(30);
+      setListeningSteps(1);
+
+      let currentStage: string | null = null;
+      if (data.narrationText) {
+        currentStage = "initial";
+      } else if (data.questionText) {
+        currentStage = "question_text";
+        setProgress(65);
+        setListeningSteps(2);
+      } else if (data.mcqs) {
+        currentStage = "quiz";
+        setMcqList(data.mcqs);
+        setCurrentMcqIndex(0);
+        setProgress(100);
+        setListeningSteps(3);
+      }
+
+      setListeningStage(currentStage);
+      logger.info(`Listening mode stage inferred: ${currentStage}`, data);
+    });
+
+    socket.on("next_listening_stage", () => {
+      setProgress(2);
+    });
+
+    socket.on("listening_completed", () => {
+      setChatCompleted(true);
+      setIsCompleteDialogOpen(true);
+      toast.success("🎉 Listening session completed!");
+    });
 
     socket.on("disconnect", (reason: Socket.DisconnectReason) => {
       logger.error(`Socket disconnected. Reason: ${reason}`);
       setIsSocketConnected(false);
 
-      // Case 1: An unexpected network issue occurred.
-      // This is the ONLY case where we should show a "Connection lost" warning.
       if (reason === "ping timeout" || reason === "transport close") {
         if (!isInactiveDialogOpen) {
           toast.warning("Connection lost. Trying to reconnect...");
         }
-      }
-      // Case 2: The server deliberately disconnected the client.
-      else if (reason === "io server disconnect") {
+      } else if (reason === "io server disconnect") {
         toast.error("You have been disconnected by the server.");
-      }
-      // Case 3: Your own code called socket.disconnect().
-      // This is intentional, so we show NO toast. It would just be noise.
-      else if (reason === "io client disconnect") {
+      } else if (reason === "io client disconnect") {
         logger.info("Client-side disconnection initiated. No toast needed.");
       }
     });
@@ -446,8 +490,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       toast.error(`Connection failed: ${err.message}`);
     });
 
-    socket.on(ChatEvents.CHAT_HISTORY, (payload) => {
+    socket.on(ChatEvents.CHAT_HISTORY, (payload: any) => {
       logger.receiving(ChatEvents.CHAT_HISTORY, payload);
+
       const { chatHistory, chatId: newChatId } = payload;
       const formatted = chatHistory.map((msg: any) => ({
         id: msg.id,
@@ -584,7 +629,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       if (data) {
         const { content, contentAudioUrl } = data;
         if (
-          (mode === "reading-mode" || mode === "roleplay-mode") &&
+          (mode === "reading-mode" ||
+            mode === "roleplay-mode" ||
+            mode === "debate-mode") &&
           content &&
           contentAudioUrl
         ) {
@@ -600,28 +647,73 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         setMcqList(payload.questions);
         setChatId(payload.chatId);
         setIsQuestionnaireOpen(true);
+      } else if (mode === "listening-mode" && payload.mcqs) {
+        setListeningStage("quiz");
+        setMcqList(payload.mcqs);
+        setChatId(payload.chatId);
+        setListeningData((prevData: any) => ({ ...prevData, ...payload }));
+        setCurrentMcqIndex(0);
       }
     });
 
     socket.on(ChatEvents.MCQ_RESULT, (payload) => {
       logger.receiving(ChatEvents.MCQ_RESULT, payload);
-      console.log("Received MCQ RESULT:", payload);
-
       const { correctCount, required, message } = payload;
       const isSuccess = correctCount >= required;
 
-      // Show toast notification
-      if (isSuccess) {
-        toast.success("🎉 Quiz Passed!", {
-          description: `Great job! You got ${correctCount} correct answers.`,
-          duration: 4000,
-        });
-      } else {
-        toast.error("❌ Try Again", {
-          description: message,
-          duration: 4000,
-        });
+      if (mode !== "listening-mode") {
+        if (isSuccess) {
+          toast.success("🎉 Quiz Passed!", {
+            description: `Great job! You got ${correctCount} correct answers.`,
+            duration: 4000,
+          });
+        } else {
+          toast.error("❌ Try Again", {
+            description: message,
+            duration: 4000,
+          });
+        }
       }
+    });
+
+    socket.on("listening_payload", ({ chatId: newChatId, ...data }) => {
+      setChatId(newChatId);
+      setListeningData(data);
+
+      let currentStage: string | null = null;
+      if (data.narrationText) {
+        currentStage = "initial";
+        setMessages([
+          {
+            id: "narration-audio", // Use a fixed ID for narration
+            messageType: "text",
+            type: "received",
+            text: data.narrationText,
+            audioUrl: data.narrationAudioUrl,
+            audioPlayed: false,
+          },
+        ]);
+      } else if (data.questionText) {
+        currentStage = "question_text";
+        setMessages([
+          {
+            id: "question-audio", // Use a fixed ID for question
+            messageType: "text",
+            type: "received",
+            text: data.questionText,
+            audioUrl: data.questionAudioUrl,
+            audioPlayed: false,
+          },
+        ]);
+      } else if (data.mcqs) {
+        currentStage = "quiz";
+        setMessages([]); // Clear messages for quiz stage
+        setMcqList(data.mcqs);
+        setCurrentMcqIndex(0);
+      }
+
+      setListeningStage(currentStage);
+      logger.info(`Listening mode stage inferred: ${currentStage}`, data);
     });
 
     socket.on(ChatEvents.ERROR, (payload) => {
@@ -629,24 +721,24 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       removeLoadingMessage();
 
       const errorMessage = (payload.message || "").toLowerCase();
+      const errorCode = payload.code;
 
-      // Check for specific, user-facing error messages from the server
       console.log(errorMessage, "error Message");
-      if (errorMessage.includes("daily session limit")) {
+      console.log(errorCode, "error Code");
+      
+      if (errorCode === "DUPLICATE_CONNECTION" || errorMessage.includes("already connected from another session")) {
+        setIsDuplicateConnectionModalOpen(true);
+      } else if (errorMessage.includes("daily session limit")) {
         _setSessionLimitReached(true);
         toast.error("You have reached your daily session limit.");
       } else if (errorMessage.includes("user not found")) {
         toast.error("User authentication failed. Please log in again.");
-        // Optional: Redirect to login after a few seconds
         setTimeout(() => navigate("/login"), 3000);
       } else if (errorMessage.includes("chat has been completed")) {
-        // setChatCompleted(true);
-        // We can show a toast or let the banner (added below) handle the UI update.
         toast.info("This conversation has already ended.");
       } else if (errorMessage.includes("no speech recognized")) {
         toast.info("No speech recognized. Please speak clearly.");
       } else {
-        // Fallback for any other server-side issue
         toast.error(
           "An internal server error occurred. Please try again later."
         );
@@ -689,6 +781,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       }
     };
   }, [userId, topicId, navigate, resetActivityTimer, onTopicImage]);
+
+  useEffect(() => {
+    if (listeningStage === "question_text" && mode === "listening-mode") {
+      setIsContextCompleted(false);
+      setHasStartedContextAudio(false);
+    }
+  }, [listeningStage, mode]);
 
   const scrollToBottom = () =>
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -735,6 +834,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
   const startRecording = async () => {
     logger.info("Start recording requested.");
+    // Reset inactivity timer when user starts recording
+    resetInactivityTimer();
+    
     if (chatCompleted || _sessionLimitReached) {
       toast.warning("Cannot record: The chat session is complete.");
       return;
@@ -815,6 +917,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         const payload = { userId, chatId, audioBuffer: audioBase64, format };
         socketRef.current?.emit(ChatEvents.AUDIO, payload);
         resetActivityTimer();
+        resetInactivityTimer();
       };
 
       recorder.onerror = (event) => {
@@ -859,9 +962,78 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     }
   };
 
+  const submitFinalAnswers = (finalAnswers: { [key: string]: number }) => {
+    if (!socketRef.current || !chatId) {
+      toast.error("Connection issue, cannot submit final answers.");
+      return;
+    }
+
+    const answers: McqAnswer[] = Object.entries(finalAnswers).map(
+      ([questionId, answerIndex]) => ({
+        questionId,
+        answerIndex,
+      })
+    );
+
+    const payload = { chatId, answers };
+    logger.emitting(ChatEvents.SUBMIT_MCQS, payload);
+    socketRef.current.emit(ChatEvents.SUBMIT_MCQS, payload);
+  };
+
+  const handleSubmitAnswer = () => {
+    // Reset inactivity timer when user submits MCQ answer
+    resetInactivityTimer();
+    
+    if (selectedAnswer === null) {
+      toast.warning("Please select an answer.");
+      return;
+    }
+    const currentQuestion = mcqList[currentMcqIndex];
+    if (!currentQuestion) {
+      toast.error("An error occurred. Could not find current question.");
+      return;
+    }
+
+    const isCorrect = selectedAnswer === currentQuestion.correct;
+
+    if (isCorrect) {
+      toast.success("Correct!", { duration: 2000 });
+      const newAnswers = {
+        ...mcqAnswers,
+        [currentQuestion.id]: selectedAnswer,
+      };
+      setMcqAnswers(newAnswers);
+      setSelectedAnswer(null);
+
+      // move to next question or finish
+      if (currentMcqIndex < mcqList.length - 1) {
+        setCurrentMcqIndex(currentMcqIndex + 1);
+      } else {
+        // Last question answered correctly
+        submitFinalAnswers(newAnswers);
+        toast.success("🎉 Listening practice completed!", {
+          description: "Great job!",
+          duration: 4000,
+        });
+        setChatCompleted(true);
+        setIsCompleteDialogOpen(true);
+      }
+    } else {
+      // incorrect answer
+      toast.error("Not quite, try again!", {
+        description: "Listen to the audio again for a hint.",
+        duration: 3000,
+      });
+      setShowReplayPopup(true);
+    }
+  };
+
   const handleQuestionnaireSubmit = (answers: {
     [questionId: string]: number;
   }) => {
+    // Reset inactivity timer when user submits questionnaire
+    resetInactivityTimer();
+    
     const mcqAnswers: McqAnswer[] = Object.entries(answers).map(
       ([questionId, answerIndex]) => ({
         questionId,
@@ -896,23 +1068,46 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     if (inactivityTimerRef.current) {
       clearTimeout(inactivityTimerRef.current);
       inactivityTimerRef.current = null;
+      logger.info("Inactivity timer cleared");
     }
   };
 
   const startInactivityTimer = () => {
+    // Don't start inactivity timer for listening mode since it doesn't have text/audio inputs
+    if (mode === "listening-mode") {
+      logger.info("Skipping inactivity timer for listening mode");
+      return;
+    }
+
     clearInactivityTimer();
     inactivityTimerRef.current = setTimeout(() => {
-      if (socketRef.current && userId && topicId && chatId) {
-        logger.info("No user response for 20s, emitting no_user_response");
+      if (
+        socketRef.current &&
+        userId &&
+        topicId &&
+        chatId
+      ) {
+        logger.info("No user response for 2 minutes, emitting no_user_response");
         sendPlaceholder();
         socketRef.current.emit("no_user_response", { userId, topicId, chatId });
       }
     }, 2 * 60 * 1000);
+    logger.info("Inactivity timer started (2 minutes)");
+  };
+
+  const resetInactivityTimer = () => {
+    logger.info("User activity detected - resetting inactivity timer");
+    clearInactivityTimer();
+    
+    // Only restart if we're not in listening mode
+    if (mode !== "listening-mode") {
+      startInactivityTimer();
+    }
   };
 
   useEffect(() => {
     if (message.trim()) {
-      clearInactivityTimer();
+      resetInactivityTimer();
     }
   }, [message]);
 
@@ -956,160 +1151,215 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     socketRef.current?.emit(ChatEvents.TEXT, payload);
     setMessage("");
     resetActivityTimer();
-    clearInactivityTimer();
+    resetInactivityTimer();
   };
 
   // --- MODIFIED: Autoplay logic using Howler ---
-  // useEffect(() => {
-  //   const audioMsg = messages.find(
-  //     (msg) => msg.type === "received" && msg.audioUrl && !msg.audioPlayed
-  //   );
-
-  //   if (audioMsg && audioMsg.audioUrl && isAudioUnlocked && !autoplayFailed) {
-  //     logger.info(
-  //       `Attempting to auto-play audio for message ID: ${audioMsg.id}`
-  //     );
-
-  //     // Stop any currently playing sound
-  //     if (soundRef.current) {
-  //       soundRef.current.stop();
-  //     }
-
-  //     const sound = new Howl({
-  //       src: [audioMsg.audioUrl],
-  //       html5: true,
-  //       autoplay: true,
-  //       onplay: () => {
-  //         logger.info(`Autoplay successful for message ID: ${audioMsg.id}`);
-  //         setPlayingAudioId(audioMsg.id);
-  //         setMessages((current) =>
-  //           current.map((m) =>
-  //             m.id === audioMsg.id ? { ...m, audioPlayed: true } : m
-  //           )
-  //         );
-  //       },
-  //       onplayerror: () => {
-  //         logger.error(`Autoplay failed for message ID: ${audioMsg.id}`);
-  //         setAutoplayFailed(true);
-  //         sound.unload();
-  //         toast.info("Autoplay is disabled. Tap a message to play audio.", {
-  //           duration: 5000,
-  //         });
-  //       },
-  //       onend: () => {
-  //         setPlayingAudioId(null);
-  //       },
-  //     });
-  //     soundRef.current = sound;
-  //   }
-  // }, [messages, isAudioUnlocked, autoplayFailed]);
-  // --- MODIFIED: Autoplay logic using Howler ---
   useEffect(() => {
-    const audioMsg = messages.find(
-      (msg) => msg.type === "received" && msg.audioUrl && !msg.audioPlayed
-    );
-
-    // --- THE FIX IS HERE ---
-    // Add !isIOS() to the condition to prevent autoplay on iPhones/iPads.
     if (
-      audioMsg &&
-      audioMsg.audioUrl &&
-      isAudioUnlocked &&
-      !autoplayFailed &&
-      !isIOS()
-    ) {
-      logger.info(
-        `Attempting to auto-play audio for message ID: ${audioMsg.id}`
-      );
+      mode !== "listening-mode" ||
+      !listeningStage ||
+      hasAutoplayedStage === listeningStage ||
+      listeningStage === "quiz"
+    )
+      return;
 
-      // Stop any currently playing sound
-      if (soundRef.current) {
-        soundRef.current.stop();
-      }
+    let audioId: string;
+    let audioUrl: string | undefined;
+    let completionSetter: (value: boolean) => void;
 
-      const sound = new Howl({
-        src: [audioMsg.audioUrl],
-        html5: true,
-        autoplay: true,
-        onplay: () => {
-          logger.info(`Autoplay successful for message ID: ${audioMsg.id}`);
-          setPlayingAudioId(audioMsg.id);
-          setMessages((current) =>
-            current.map((m) =>
-              m.id === audioMsg.id ? { ...m, audioPlayed: true } : m
-            )
-          );
-        },
-        onplayerror: () => {
-          logger.error(`Autoplay failed for message ID: ${audioMsg.id}`);
-          setAutoplayFailed(true);
-          sound.unload();
-          toast.info("Autoplay is disabled. Tap a message to play audio.", {
-            duration: 5000,
-          });
-        },
-        onend: () => {
-          setPlayingAudioId(null);
-        },
-      });
-      soundRef.current = sound;
-    }
-  }, [messages, isAudioUnlocked, autoplayFailed]);
-  // --- END MODIFICATION
-
-  // --- MODIFIED: Audio toggle logic using Howler ---
-  const toggleAudio = (id: string, audioUrl: string | undefined) => {
-    if (!audioUrl) return;
-
-    // If this sound is already playing, stop it
-    if (playingAudioId === id && soundRef.current) {
-      soundRef.current.stop();
-      setPlayingAudioId(null);
+    if ((listeningStage === "initial" || listeningStage === "question_text") && listeningData?.kbAudioUrl) {
+      audioId = "kb-audio";
+      audioUrl = listeningData.kbAudioUrl;
+      completionSetter = setIsContextCompleted;
+    } else {
       return;
     }
 
-    // Stop any other sound that might be playing
+    if (audioUrl && isAudioUnlocked && !isIOS()) {
+      logger.info(`Autoplaying context audio for stage: ${listeningStage}`);
+      toggleAudio(audioId, audioUrl, () => completionSetter(true));
+
+      setHasAutoplayedStage(listeningStage);
+    } else if (isIOS()) {
+      toast.info("Tap the play button to start audio on this device.");
+      setHasAutoplayedStage(listeningStage);
+    }
+  }, [
+    listeningStage,
+    listeningData,
+    isAudioUnlocked,
+    hasAutoplayedStage,
+    mode,
+  ]);
+
+  const clearAudioProgress = () => {
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = null;
+    }
+    setAudioProgress(0);
+    setAudioDuration(0);
+  };
+
+  const toggleAudio = (
+    id: string,
+    audioUrl: string | undefined,
+    onEnd?: () => void
+  ) => {
+    if (!audioUrl) return;
+
+    // Reset inactivity timer when user interacts with audio
+    resetInactivityTimer();
+
+    if (soundRef.current && playingAudioId === id) {
+      if (soundRef.current.playing()) {
+        soundRef.current.pause();
+        setIsCurrentlyPlaying(false);
+      } else {
+        soundRef.current.play();
+        setIsCurrentlyPlaying(true);
+        if (id === "kb-audio" && mode === "listening-mode") {
+          onEndCalledRef.current = false;
+        }
+      }
+      return;
+    }
+
     if (soundRef.current) {
       soundRef.current.stop();
     }
 
-    // Create and play the new sound
+    clearAudioProgress();
+    onEndCalledRef.current = false;
+
     const sound = new Howl({
       src: [audioUrl],
       html5: true,
-      onplay: () => setPlayingAudioId(id),
-      onend: () => setPlayingAudioId(null),
+      onplay: () => {
+        setPlayingAudioId(id);
+        setIsCurrentlyPlaying(true);
+        if (id === "kb-audio" && mode === "listening-mode") {
+          setHasStartedContextAudio(true);
+          onEndCalledRef.current = false;
+        }
+        setAudioDuration(sound.duration());
+        if (progressIntervalRef.current)
+          clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = setInterval(() => {
+          const seek = sound.seek() || 0;
+          setAudioProgress(seek);
+          if (seek >= sound.duration() - 0.1 && onEnd && !onEndCalledRef.current) {
+            onEndCalledRef.current = true;
+            onEnd();
+            if (progressIntervalRef.current) {
+              clearInterval(progressIntervalRef.current as unknown as number);
+            }
+            progressIntervalRef.current = null;
+          }
+        }, 100);
+      },
+      onpause: () => {
+        if (progressIntervalRef.current)
+          clearInterval(progressIntervalRef.current);
+        setIsCurrentlyPlaying(false);
+      },
+      onstop: () => {
+        setPlayingAudioId(null);
+        setIsCurrentlyPlaying(false);
+        clearAudioProgress();
+      },
+      onend: () => {
+        setPlayingAudioId(null);
+        setIsCurrentlyPlaying(false);
+        clearAudioProgress();
+        if (onEnd && !onEndCalledRef.current) {
+          onEndCalledRef.current = true;
+          onEnd();
+        }
+      },
+      onload: () => {
+        setAudioDuration(sound.duration());
+      },
+      onplayerror: (soundId: number, error: any) => {
+        logger.error("Howler play error:", { soundId, error });
+        toast.error("Could not play audio.");
+        setPlayingAudioId(null);
+        setIsCurrentlyPlaying(false);
+        clearAudioProgress();
+      },
     });
 
     sound.play();
     soundRef.current = sound;
   };
-  // --- END MODIFICATION
 
-  // All other handlers like handleResetChat, handleStillThere, handleShowAssessment remain the same
+  const handleNextStage = () => {
+    // Reset inactivity timer when user clicks next
+    resetInactivityTimer();
+    
+    if (socketRef.current && userId && topicId && chatId) {
+      const payload = { userId, topicId, chatId };
+      logger.emitting(ChatEvents.NEXT_STAGE, payload);
+      socketRef.current.emit(ChatEvents.NEXT_STAGE, payload);
+
+      // If we are on the hint screen, we wait for the MCQ_LIST event.
+      // Otherwise, we reload to get the next stage (the hint screen).
+      if (mode === "listening-mode" && socketRef.current && chatId) {
+        logger.emitting("next_listening_stage", { chatId });
+        socketRef.current.emit("next_listening_stage", { chatId });
+        toast.info("Loading next part...");
+        return;
+      }
+      if (listeningStage === "question_text") {
+        toast.info("Loading quiz...");
+      } else {
+        toast.info("Loading next part...");
+        setTimeout(() => {
+          window.location.reload();
+        }, 500); // Small delay to ensure event is sent
+      }
+    } else {
+      toast.error("Cannot proceed to next stage. Connection issue.");
+      logger.error("Could not emit next_stage", {
+        socket: !!socketRef.current,
+        userId,
+        topicId,
+        chatId,
+      });
+    }
+  };
+
   const handleResetChat = () => {
-    logger.info("Handling chat reset and reconnecting socket.");
+    logger.info("Handling chat reset - disconnecting and reconnecting socket.");
     if (!socketRef.current) return toast.error("Socket not available.");
 
-    const payload = { userId, topicId };
-    logger.emitting(ChatEvents.RESET_CHAT, payload);
-    socketRef.current.emit(ChatEvents.RESET_CHAT, payload);
+    // First disconnect the socket
+    socketRef.current.disconnect();
+    
+    // Wait a moment then reconnect and emit reset
+    setTimeout(() => {
+      if (socketRef.current) {
+        socketRef.current.connect();
+        
+        // Wait for connection to be established
+        socketRef.current.on('connect', () => {
+          const payload = { userId, topicId };
+          logger.emitting(ChatEvents.RESET_CHAT, payload);
+          socketRef.current?.emit(ChatEvents.RESET_CHAT, payload);
+          
+          setMessages([]);
+          setChatCompleted(false);
+          setIsCompleteDialogOpen(false);
+          setPlayingAudioId(null);
+          toast.info("Resetting chat session...");
 
-    setMessages([]);
-    setChatCompleted(false);
-    setIsCompleteDialogOpen(false);
-    setPlayingAudioId(null); // MODIFIED
-    toast.info("Resetting chat session...");
-
-    const resetPayload = { userId, topicId };
-    logger.emitting(ChatEvents.RESET_CHAT, resetPayload);
-    socketRef.current.emit(ChatEvents.RESET_CHAT, resetPayload);
-
-    const historyPayload = { userId, topicId };
-    logger.emitting(ChatEvents.GET_CHAT_HISTORY, historyPayload);
-    socketRef.current.emit(ChatEvents.GET_CHAT_HISTORY, historyPayload);
-
-    window.location.reload();
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        });
+      }
+    }, 500);
   };
 
   const handleStillThere = (isContinuing: boolean) => {
@@ -1135,308 +1385,102 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       sec % 60
     ).padStart(2, "0")}`;
 
+
+
   return (
     // The JSX part remains largely the same, only the audio player logic needs updates.
-    <div className="flex flex-col max-h-[86vh] min-h-[86vh] md:min-h-[82vh] md:max-h-[82vh] max-w-[800px] mx-auto bg-gray-100 rounded-xl overflow-hidden shadow-2xl">
-      <header className="flex justify-between items-center px-6 py-4 border-b bg-white">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-          <ChevronLeft className="h-5 w-5" />
-        </Button>
-        <h2 className="text-lg font-semibold">
-          {mode === "photo-mode"
-            ? "Photo Mode"
-            : mode === "reading-mode"
-            ? "Reading Mode"
-            : mode === "roleplay-mode"
-            ? "Roleplay Mode"
-            : "Chat Mode"}
-        </h2>
-        <div className="flex items-center gap-2 text-sm text-gray-500">
-          <Clock className="h-4 w-4" />
-          <span>
-            {sessionTimeRemaining ? formatTime(sessionTimeRemaining) : "..."}
-          </span>
-        </div>
-      </header>
+    <>
+      {mode === "listening-mode" && (
+        <>
+          <div className="space-y-4 border border-blue-400 p-4 rounded-xl bg-white/70 backdrop-blur mb-4">
+            <Progress value={progress} className="h-2 bg-gray-200" />
 
-      <div className="md:hidden">
-        {mode === "photo-mode" && topicImage && (
-          <div className="p-4">
-            <img
-              src={topicImage}
-              alt="Topic context"
-              className="w-full rounded-lg object-top object-cover max-h-48"
-            />
-          </div>
-        )}
-      </div>
-      {_sessionLimitReached && (
-        <div className="bg-yellow-500 text-white text-center p-2 text-sm font-semibold">
-          You have reached your session limit.
-        </div>
-      )}
-      {chatCompleted && !isCompleteDialogOpen && (
-        <div className="bg-primary/80 backdrop-blur-sm text-white text-center p-2 text-sm font-semibold">
-          This conversation has ended.
-        </div>
-      )}
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
-        {contentPayload && (
-          <div className="p-4 rounded-lg shadow-sm bg-white border border-gray-200">
-            <p
-              className={`text-gray-800 text-base leading-relaxed whitespace-pre-wrap transition-all duration-300 ${
-                !isContentExpanded ? "line-clamp-3" : "line-clamp-none"
-              }`}
-            >
-              {contentPayload.content.split(/(\*\*.*?\*\*)/g).map((part, i) =>
-                part.startsWith("**") && part.endsWith("**") ? (
-                  <span key={i} className="font-bold text-blue-600">
-                    {part.slice(2, -2)}
-                  </span>
-                ) : (
-                  part
-                )
-              )}
-            </p>
-            <div className="flex items-center gap-4 mt-2">
-              {contentPayload.audioUrl && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() =>
-                    toggleAudio(
-                      "content-payload-audio",
-                      contentPayload.audioUrl
-                    )
-                  }
-                  className={`flex items-center gap-1 p-1 h-auto ${
-                    playingAudioId === "content-payload-audio"
-                      ? "text-primary font-semibold"
-                      : "text-gray-500"
-                  }`}
-                >
-                  {playingAudioId === "content-payload-audio" ? (
-                    <Pause className="h-4 w-4" />
-                  ) : (
-                    <Play className="h-4 w-4" />
-                  )}
-                  <span className="text-xs">Play Audio</span>
-                </Button>
-              )}
-              <Button
-                variant="link"
-                size="sm"
-                onClick={() => setIsContentExpanded(!isContentExpanded)}
-                className="text-sm text-blue-600 p-0 h-auto"
-              >
-                {isContentExpanded ? "See Less" : "See More"}
-              </Button>
+            <div className="flex items-center justify-between">
+              <span className="font-medium text-blue-700">
+                Step {listeningSteps}/3
+              </span>
+              <span className="flex items-center gap-1 text-blue-700">
+                <Clock className="h-4 w-4" />
+                <span>
+                  {sessionTimeRemaining
+                    ? formatTime(sessionTimeRemaining)
+                    : "..."}
+                </span>
+              </span>
             </div>
-          </div>
-        )}
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex flex-col gap-1 ${
-              msg.type === "sent"
-                ? "self-end items-end"
-                : "self-start items-start"
-            }`}
-          >
-            {msg.loading ? (
-              <div className="flex items-center gap-2 bg-white p-3 rounded-xl shadow-sm">
-                <LoaderPinwheel
-                  size={18}
-                  className="animate-spin text-primary"
-                />
-                <span className="text-sm text-gray-500">AI is thinking...</span>
-              </div>
-            ) : msg.messageType === "audio" && msg.audioURL ? (
-              <div className="p-2 bg-primary rounded-xl shadow">
-                <audio
-                  src={msg.audioURL}
-                  controls
-                  className="message-audio h-10"
-                />
-              </div>
-            ) : (
-              <div
-                className={`p-3 rounded-xl max-w-md shadow-sm ${
-                  msg.type === "sent"
-                    ? "bg-primary text-white rounded-tr-none"
-                    : "bg-white text-gray-800 rounded-tl-none"
-                }`}
-              >
-                {msg.text && (
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                    {msg.text.split(/(\*\*.*?\*\*)/g).map((part, i) =>
-                      part.startsWith("**") && part.endsWith("**") ? (
-                        <span key={i} className="font-bold text-blue-600">
-                          {part.slice(2, -2)}
-                        </span>
-                      ) : (
-                        part
-                      )
-                    )}
-                  </p>
-                )}
 
-                <div className="flex gap-2 items-center mt-2 flex-wrap">
-                  {msg.type === "received" && msg.audioUrl && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggleAudio(msg.id, msg.audioUrl)} // MODIFIED
-                      className={`flex items-center gap-1 p-1 h-auto ${
-                        playingAudioId === msg.id
-                          ? "text-primary font-semibold"
-                          : "text-gray-500"
-                      } ${
-                        autoplayFailed && !playingAudioId
-                          ? "animate-pulse text-blue-600"
-                          : ""
-                      }`}
-                    >
-                      {playingAudioId === msg.id ? (
-                        <Pause className="h-4 w-4" />
-                      ) : (
-                        <Play className="h-4 w-4" />
-                      )}
-                      <span className="text-xs">
-                        {autoplayFailed ? "Tap to Play" : "Play"}
-                      </span>
-                    </Button>
-                  )}
-                  {/* --- MODIFIED: Removed the hidden <audio> element --- */}
-                  {msg.type === "received" && msg.hasFeedback && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() =>
-                        onShowFeedback({
-                          type: "feedback",
-                          content: msg.feedback,
-                        })
-                      }
-                      className="flex items-center gap-1 text-primary text-xs p-1 h-auto"
-                    >
-                      <MessageCircle className="h-4 w-4" />
-                      View Feedback
-                    </Button>
-                  )}
-                  {msg.type === "sent" && msg.audioUrl && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => toggleAudio(msg.id, msg.audioUrl)} // MODIFIED
-                      className={`flex items-center gap-1 p-1 h-auto ${
-                        playingAudioId === msg.id
-                          ? "text-primary font-semibold"
-                          : "text-gray-500"
-                      }`}
-                    >
-                      {playingAudioId === msg.id ? (
-                        <Pause className="h-4 w-4" />
-                      ) : (
-                        <Play className="h-4 w-4" />
-                      )}
-                      <span className="text-xs">Play Recording</span>
-                    </Button>
-                  )}
-                  {msg.type === "sent" && msg.hasAssessment && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleShowAssessment(msg.assessments)}
-                      className="flex items-center gap-1 bg-white text-primary text-xs p-1 h-auto rounded-md shadow-sm border"
-                    >
-                      <BarChart2 className="h-4 w-4" />
-                      View Assessment
-                    </Button>
+            {/* compact controls */}
+            <div>
+              <AudioPlayer
+                audioSrc={listeningData?.kbAudioUrl || ""}
+                isPlaying={playingAudioId === "kb-audio" && isCurrentlyPlaying}
+                progress={playingAudioId === "kb-audio" ? audioProgress : 0}
+                duration={playingAudioId === "kb-audio" ? audioDuration : 0}
+                onTogglePlay={() =>
+                  toggleAudio("kb-audio", listeningData?.kbAudioUrl, () => setIsContextCompleted(true))
+                }
+              />
+              {mode === "listening-mode" && (
+                <div className="flex justify-end items-center h-4 pr-2 mt-2 md:mt-0">
+                  {!hasStartedContextAudio ? (
+                    <span className="text-blue-500 text-xs flex items-center gap-1 animate-pulse">
+                      ▶ Play to proceed to next step
+                    </span>
+                  ) : !isContextCompleted ? (
+                    <span className="text-orange-500 text-xs flex items-center gap-1">
+                      <span className="animate-spin duration-1500">⏳</span>
+                      Listening...
+                    </span>
+                  ) : (
+                    <span className="text-green-500 text-xs flex items-center gap-1">
+                      ✓ Completed
+                    </span>
                   )}
                 </div>
-              </div>
-            )}
-          </div>
-        ))}
-        <div ref={messagesEndRef} />
-      </div>
-
-      <form onSubmit={handleSubmit} className="border-t p-4 bg-gray-50">
-        <div className="flex items-center bg-white rounded-full px-4 py-1 shadow-sm">
-          <Input
-            type="text"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder={
-              isRecording
-                ? `Recording... ${formatTime(recordTime)}`
-                : "Write a message or press mic..."
-            }
-            disabled={
-              isRecording ||
-              chatCompleted ||
-              _sessionLimitReached ||
-              !isSocketConnected
-            }
-            className="flex-1 border-none focus:ring-0 bg-transparent"
-          />
-          {isRecording ? (
-            <div className="flex items-center gap-1">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => stopRecording(true)}
-                className="text-red-500 hover:bg-red-100 rounded-full"
-              >
-                <X className="h-5 w-5" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => stopRecording(false)}
-                className="text-green-500 hover:bg-green-100 rounded-full"
-              >
-                <ArrowUp className="h-5 w-5" />
-              </Button>
+              )}
             </div>
-          ) : message.trim() ? (
-            <Button
-              type="submit"
-              variant="ghost"
-              size="icon"
-              className="text-primary"
-              disabled={!isSocketConnected || chatCompleted}
-            >
-              <Send className="h-5 w-5" />
-            </Button>
-          ) : (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="text-primary"
-              onClick={startRecording}
-              disabled={!isSocketConnected || chatCompleted}
-            >
-              <Mic className="h-5 w-5" />
-            </Button>
-          )}
-        </div>
-      </form>
+          </div>
+          <Dialog open={showReplayPopup} onOpenChange={setShowReplayPopup}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>That's not quite right</DialogTitle>
+                <DialogDescription>
+                  Would you like to listen to the audio again for a hint before
+                  you try again?
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="gap-2 sm:justify-center">
+                <Button
+                  onClick={() => {
+                    if (listeningData?.kbAudioUrl) {
+                      toggleAudio("kb-audio", listeningData.kbAudioUrl, () => setIsContextCompleted(true));
+                    }
+                    setShowReplayPopup(false);
+                  }}
+                >
+                  Replay Audio
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </>
+      )}
 
-      {/* --- All Dialogs remain unchanged --- */}
       <Dialog
         open={isCompleteDialogOpen}
         onOpenChange={(open) => !open && navigate(-1)}
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Chat Completed</DialogTitle>
+            <DialogTitle>
+              {mode === "listening-mode"
+                ? "Practice Complete"
+                : "Chat Completed"}
+            </DialogTitle>
             <DialogDescription>
-              This conversation has ended. Would you like to start over?
+              {mode === "listening-mode"
+                ? "Great job! You've successfully completed the listening exercise."
+                : "This conversation has ended. Would you like to start over?"}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -1447,74 +1491,465 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <Dialog
-        open={isInactiveDialogOpen}
-        onOpenChange={(open) => !open && handleStillThere(false)}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Are you still there?</DialogTitle>
-            <DialogDescription>
-              Your session was paused due to inactivity. Do you want to
-              continue?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => handleStillThere(false)}>
-              No, End Session
-            </Button>
-            <Button onClick={() => handleStillThere(true)}>
-              Yes, I'm Here
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      <Dialog open={isBadgeModalOpen} onOpenChange={setIsBadgeModalOpen}>
-        <DialogContent className="sm:max-w-md text-center">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold flex items-center justify-center gap-2">
-              <Award className="h-7 w-7 text-yellow-500" />
-              Badge Unlocked!
-            </DialogTitle>
-            <DialogDescription className="text-center pt-2">
-              Congratulations! You've earned a new badge for your progress.
-            </DialogDescription>
-          </DialogHeader>
-          {unlockedBadgeInfo && (
-            <div className="flex flex-col items-center justify-center p-4 my-4 bg-gray-50 rounded-lg">
-              <img
-                src={unlockedBadgeInfo.iconUrl}
-                alt={unlockedBadgeInfo.name}
-                className="w-24 h-24 mb-4 drop-shadow-lg"
-              />
-              <h3 className="text-xl font-semibold text-primary">
-                {unlockedBadgeInfo.name}
-              </h3>
-              <p className="text-sm text-gray-600 mt-1">
-                {unlockedBadgeInfo.description}
-              </p>
-              <p className="text-lg font-bold text-yellow-600 mt-4">
-                +{unlockedBadgeInfo.pointValue} Points
-              </p>
+
+      {listeningStage === "quiz" && mcqList.length > 0 && (
+        <div className="w-full flex flex-col items-center gap-4">
+          <div className="p-6 border rounded-xl bg-white shadow-lg w-full my-4 text-left">
+            <div className="flex justify-end mb-2">
+              <span className="text-sm font-semibold text-gray-600">
+                Question {currentMcqIndex + 1}/{mcqList.length}
+              </span>
+            </div>
+            <p className="text-lg font-semibold mb-4">
+              {mcqList[currentMcqIndex].question}
+            </p>
+            <div className="flex flex-col gap-2">
+              {mcqList[currentMcqIndex].options.map(
+                (option: string, index: number) => (
+                  <Button
+                    key={index}
+                    variant={selectedAnswer === index ? "default" : "outline"}
+                    onClick={() => {
+                      setSelectedAnswer(index);
+                      resetInactivityTimer();
+                    }}
+                    className="w-full justify-start p-4 h-auto transition-colors"
+                  >
+                    <div
+                      className={`w-5 h-5 mr-4 rounded-full border border-primary flex-shrink-0 ${
+                        selectedAnswer === index ? "bg-primary" : ""
+                      }`}
+                    />
+                    <span>{option}</span>
+                  </Button>
+                )
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {listeningStage !== "quiz" && (
+        <div
+          className={`flex flex-col max-w-[800px] mx-auto bg-gray-100 rounded-xl overflow-hidden shadow-2xl ${
+            mode === "listening-mode"
+              ? "min-h-[49vh] max-h-[49vh]"
+              : "max-h-[86vh] min-h-[86vh] md:min-h-[82vh] md:max-h-[82vh]"
+          }`}
+        >
+          {mode !== "listening-mode" && (
+            <header className="flex justify-between items-center px-6 py-4 border-b bg-white">
+              <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+              <h2 className="text-lg font-semibold">
+                {mode === "photo-mode"
+                  ? "Photo Mode"
+                  : mode === "reading-mode"
+                  ? "Reading Mode"
+                  : mode === "roleplay-mode"
+                  ? "Roleplay Mode" 
+                  : mode === "debate-mode"
+                  ? "Debate Mode"
+                  : "Chat Mode"}
+              </h2>
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <Clock className="h-4 w-4" />
+                <span>
+                  {sessionTimeRemaining
+                    ? formatTime(sessionTimeRemaining)
+                    : "..."}
+                </span>
+              </div>
+            </header>
+          )}
+
+          <div className="md:hidden">
+            {mode === "photo-mode" && topicImage && (
+              <div className="p-4">
+                <img
+                  src={topicImage}
+                  alt="Topic context"
+                  className="w-full rounded-lg object-top object-cover max-h-48"
+                />
+              </div>
+            )}
+          </div>
+          {_sessionLimitReached && (
+            <div className="bg-yellow-500 text-white text-center p-2 text-sm font-semibold">
+              You have reached your session limit.
             </div>
           )}
-          <DialogFooter className="sm:justify-center">
-            <Button
-              onClick={() => setIsBadgeModalOpen(false)}
-              className="w-full"
-            >
-              Claim & Continue
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      <QuestionnaireModal
-        open={isQueationnaireOpen}
-        onClose={() => setIsQuestionnaireOpen(false)}
-        onSubmit={handleQuestionnaireSubmit}
-        mcqs={mcqList}
-      />
-    </div>
+          {chatCompleted && !isCompleteDialogOpen && (
+            <div className="bg-primary/80 backdrop-blur-sm text-white text-center p-2 text-sm font-semibold">
+              This conversation has ended.
+            </div>
+          )}
+          <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+            {contentPayload && (
+              <div className="p-4 rounded-lg shadow-sm bg-white border border-gray-200">
+                <p
+                  className={`text-gray-800 text-base leading-relaxed whitespace-pre-wrap transition-all duration-300 ${
+                    !isContentExpanded ? "line-clamp-3" : "line-clamp-none"
+                  }`}
+                >
+                  {contentPayload.content
+                    .split(/(\*\*.*?\*\*)/g)
+                    .map((part, i) =>
+                      part.startsWith("**") && part.endsWith("**") ? (
+                        <span key={i} className="font-bold text-blue-600">
+                          {part.slice(2, -2)}
+                        </span>
+                      ) : (
+                        part
+                      )
+                    )}
+                </p>
+                <div className="flex items-center gap-4 mt-2">
+                  {contentPayload.audioUrl && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() =>
+                        toggleAudio(
+                          "content-payload-audio",
+                          contentPayload.audioUrl
+                        )
+                      }
+                    >
+                      {playingAudioId === "content-payload-audio" && isCurrentlyPlaying ? (
+                        <Pause className="h-5 w-5" />
+                      ) : (
+                        <Play className="h-5 w-5" />
+                      )}
+                    </Button>
+                  )}
+                  <Button
+                    variant="link"
+                    size="sm"
+                    onClick={() => {
+                      setIsContentExpanded(!isContentExpanded);
+                      resetInactivityTimer();
+                    }}
+                    className="text-sm text-blue-600 p-0 h-auto"
+                  >
+                    {isContentExpanded ? "See Less" : "See More"}
+                  </Button>
+                </div>
+              </div>
+            )}
+            {messages.map((msg) => (
+              <div
+                key={msg.id}
+                className={`flex flex-col gap-1 ${
+                  msg.type === "sent"
+                    ? "self-end items-end"
+                    : "self-start items-start"
+                }`}
+              >
+                {msg.loading ? (
+                  <div className="flex items-center gap-2 bg-white p-3 rounded-xl shadow-sm">
+                    <LoaderPinwheel
+                      size={18}
+                      className="animate-spin text-primary"
+                    />
+                    <span className="text-sm text-gray-500">
+                      AI is thinking...
+                    </span>
+                  </div>
+                ) : msg.messageType === "audio" && msg.audioURL ? (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => toggleAudio(msg.id, msg.audioURL)}
+                  >
+                    {playingAudioId === msg.id && isCurrentlyPlaying ? (
+                      <Pause className="h-5 w-5" />
+                    ) : (
+                      <Play className="h-5 w-5" />
+                    )}
+                  </Button>
+                ) : (
+                  <div
+                    className={`p-3 rounded-xl max-w-md shadow-sm ${
+                      msg.type === "sent"
+                        ? "bg-primary text-white rounded-tr-none"
+                        : "bg-white text-gray-800 rounded-tl-none"
+                    }`}
+                  >
+                    {msg.text && (
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                        {msg.text.split(/(\*\*.*?\*\*)/g).map((part, i) =>
+                          part.startsWith("**") && part.endsWith("**") ? (
+                            <span key={i} className="font-bold text-blue-600">
+                              {part.slice(2, -2)}
+                            </span>
+                          ) : (
+                            part
+                          )
+                        )}
+                      </p>
+                    )}
+
+                    <div className="flex gap-2 items-center mt-2 flex-wrap">
+                      {msg.type === "received" && msg.audioUrl && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => toggleAudio(msg.id, msg.audioUrl)}
+                        >
+                          {playingAudioId === msg.id && isCurrentlyPlaying ? (
+                            <Pause className="h-5 w-5" />
+                          ) : (
+                            <Play className="h-5 w-5" />
+                          )}
+                        </Button>
+                      )}
+                      {msg.type === "received" && msg.hasFeedback && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            onShowFeedback({
+                              type: "feedback",
+                              content: msg.feedback,
+                            });
+                            resetInactivityTimer();
+                          }}
+                          className="flex items-center gap-1 text-primary text-xs p-1 h-auto"
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                          View Feedback
+                        </Button>
+                      )}
+                      {msg.type === "sent" && msg.hasAssessment && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            handleShowAssessment(msg.assessments);
+                            resetInactivityTimer();
+                          }}
+                          className="flex items-center gap-1 bg-white text-primary text-xs p-1 h-auto rounded-md shadow-sm border"
+                        >
+                          <BarChart2 className="h-4 w-4" />
+                          View Assessment
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {mode !== "listening-mode" && (
+            <form onSubmit={handleSubmit} className="border-t p-4 bg-gray-50">
+              <div className="flex items-center bg-white rounded-full px-4 py-1 shadow-sm">
+                <Input
+                  type="text"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder={
+                    isRecording
+                      ? `Recording... ${formatTime(recordTime)}`
+                      : "Write a message or press mic..."
+                  }
+                  disabled={
+                    isRecording ||
+                    chatCompleted ||
+                    _sessionLimitReached ||
+                    !isSocketConnected
+                  }
+                  className="flex-1 border-none focus:ring-0 bg-transparent"
+                />
+                {isRecording ? (
+                  <div className="flex items-center gap-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => stopRecording(true)}
+                      className="text-red-500 hover:bg-red-100 rounded-full"
+                    >
+                      <X className="h-5 w-5" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => stopRecording(false)}
+                      className="text-green-500 hover:bg-green-100 rounded-full"
+                    >
+                      <ArrowUp className="h-5 w-5" />
+                    </Button>
+                  </div>
+                ) : message.trim() ? (
+                  <Button
+                    type="submit"
+                    variant="ghost"
+                    size="icon"
+                    className="text-primary"
+                    disabled={!isSocketConnected || chatCompleted}
+                  >
+                    <Send className="h-5 w-5" />
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="text-primary"
+                    onClick={startRecording}
+                    disabled={!isSocketConnected || chatCompleted}
+                  >
+                    <Mic className="h-5 w-5" />
+                  </Button>
+                )}
+              </div>
+            </form>
+          )}
+          <Dialog
+            open={isInactiveDialogOpen}
+            onOpenChange={(open) => !open && handleStillThere(false)}
+          >
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Are you still there?</DialogTitle>
+                <DialogDescription>
+                  Your session was paused due to inactivity. Do you want to
+                  continue?
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => handleStillThere(false)}
+                >
+                  No, End Session
+                </Button>
+                <Button onClick={() => handleStillThere(true)}>
+                  Yes, I'm Here
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          <Dialog open={isBadgeModalOpen} onOpenChange={setIsBadgeModalOpen}>
+            <DialogContent className="sm:max-w-md text-center">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold flex items-center justify-center gap-2">
+                  <Award className="h-7 w-7 text-yellow-500" />
+                  Badge Unlocked!
+                </DialogTitle>
+                <DialogDescription className="text-center pt-2">
+                  Congratulations! You've earned a new badge for your progress.
+                </DialogDescription>
+              </DialogHeader>
+              {unlockedBadgeInfo && (
+                <div className="flex flex-col items-center justify-center p-4 my-4 bg-gray-50 rounded-lg">
+                  <img
+                    src={unlockedBadgeInfo.iconUrl}
+                    alt={unlockedBadgeInfo.name}
+                    className="w-24 h-24 mb-4 drop-shadow-lg"
+                  />
+                  <h3 className="text-xl font-semibold text-primary">
+                    {unlockedBadgeInfo.name}
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {unlockedBadgeInfo.description}
+                  </p>
+                  <p className="text-lg font-bold text-yellow-600 mt-4">
+                    +{unlockedBadgeInfo.pointValue} Points
+                  </p>
+                </div>
+              )}
+              <DialogFooter className="sm:justify-center">
+                <Button
+                  onClick={() => setIsBadgeModalOpen(false)}
+                  className="w-full"
+                >
+                  Claim & Continue
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          <Dialog open={isDuplicateConnectionModalOpen} onOpenChange={setIsDuplicateConnectionModalOpen}>
+            <DialogContent className="sm:max-w-md text-center">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold text-red-600">
+                  Duplicate Session Detected
+                </DialogTitle>
+                <DialogDescription className="text-center pt-2">
+                  You are already connected from another session. Please logout from other sessions and try again.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex flex-col items-center justify-center p-4 my-4 bg-red-50 rounded-lg border border-red-200">
+                <div className="w-16 h-16 mb-4 bg-red-100 rounded-full flex items-center justify-center">
+                  <X className="h-8 w-8 text-red-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-red-700 mb-2">
+                  Connection Blocked
+                </h3>
+                <p className="text-sm text-red-600 text-center">
+                  Only one active session is allowed per account. Please close other browser tabs or devices where you're logged in.
+                </p>
+              </div>
+              <DialogFooter className="sm:justify-center space-y-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsDuplicateConnectionModalOpen(false);
+                    navigate("/login");
+                  }}
+                  className="w-full"
+                >
+                  Go to Login
+                </Button>
+                <Button
+                  onClick={() => {
+                    setIsDuplicateConnectionModalOpen(false);
+                    window.location.reload();
+                  }}
+                  className="w-full"
+                >
+                  Try Again
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          <QuestionnaireModal
+            open={isQueationnaireOpen}
+            onClose={() => setIsQuestionnaireOpen(false)}
+            onSubmit={handleQuestionnaireSubmit}
+            mcqs={mcqList}
+          />
+        </div>
+      )}
+
+      {mode === "listening-mode" && (
+        <div>
+          <Button
+            className="w-full mt-4 rounded-full p-5"
+            onClick={() => {
+              if (clickLocked.current) return;
+              clickLocked.current = true;
+              setTimeout(() => (clickLocked.current = false), 2000);
+
+              (listeningStage === "quiz"
+                ? handleSubmitAnswer
+                : handleNextStage)();
+            }}
+            disabled={
+              (mode === "listening-mode" && (listeningStage === "initial" || listeningStage === "question_text") && !isContextCompleted) ||
+              (mode === "listening-mode" && listeningStage === "quiz" && selectedAnswer === null)
+            }
+          >
+            {listeningStage === "quiz" ? "Submit Answer" : "Next"}
+          </Button>
+        </div>
+      )}
+    </>
   );
 };
 
