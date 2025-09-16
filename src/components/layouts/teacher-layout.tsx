@@ -1,32 +1,42 @@
-import { ReactNode, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '@/redux/hooks';
-import { Link, useLocation } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import { ReactNode, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+// import { useAppSelector } from '@/redux/hooks';
+import { Link, useLocation } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+
 import {
-  BookOpen,
+  LayoutDashboard,
+  // BookOpen,
+  // BarChart2,
+  // LogOut,
+  // Bell,
   Menu,
   X,
-  LayoutDashboard,
-  BookCopy,
-  Users,
-  FileText,
-  BarChart2,
+  // Brain,
+  ChevronLeft,
+  // Bell,
+  // Settings,
+  // ChevronDown,
+  // Languages,
   LogOut,
-  Bell,
-} from 'lucide-react';
-import { ThemeToggle } from '@/components/theme-toggle';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { logout } from '@/redux/slices/authSlice';
+} from "lucide-react";
+// import { ThemeToggle } from '@/components/theme-toggle';
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { logout } from "@/redux/slices/authSlice";
+import { toast } from "sonner";
+import StudentReportModal from "../ui/StudentReportModal";
+// import {
+//   DropdownMenu,
+//   DropdownMenuContent,
+//   DropdownMenuItem,
+//   DropdownMenuLabel,
+//   DropdownMenuSeparator,
+//   DropdownMenuTrigger,
+// } from '@/components/ui/dropdown-menu';
+// import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+// import { useDispatch } from 'react-redux';
+// import { logout } from '@/redux/slices/authSlice';
 
 interface TeacherLayoutProps {
   children: ReactNode;
@@ -34,17 +44,45 @@ interface TeacherLayoutProps {
 
 export function TeacherLayout({ children }: TeacherLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  
+
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
+  const { data: studentProfileData } = useAppSelector(
+    (state) => state.studentProfile
+  );
+
+  const pathSegments = location.pathname.split("/").filter(Boolean);
+  const lastSegment = pathSegments[pathSegments.length - 1] || "";
+
+  // Capitalize each word
+  // const formattedTitle = lastSegment
+  //   .split("-")
+  //   .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+  //   .join(" ");
+
+  const decodeAndFormatTitle = (text: string) => {
+    return decodeURIComponent(text) // Decode %20 etc.
+      .replace(/[-_]+/g, " ") // Replace dashes and underscores with space
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Capitalize each word
+      .join(" ");
+  };
+
+  let formattedTitle;
+  if (location.pathname.startsWith("/teacher/student-profile/")) {
+    formattedTitle = "Student Profile";
+  } else {
+    formattedTitle = decodeAndFormatTitle(lastSegment).split(":")[0];
+  }
 
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate('/login');
-    } else if (user?.role !== 'teacher') {
-      navigate('/');
+      navigate("/login");
+    } else if (user?.role !== "teacher") {
+      navigate("/");
     }
   }, [isAuthenticated, user, navigate]);
 
@@ -54,250 +92,200 @@ export function TeacherLayout({ children }: TeacherLayoutProps) {
 
   const handleLogout = async () => {
     await dispatch(logout());
-    navigate('/login');
+    toast.success("Logged out successfully");
+    navigate("/login");
   };
 
-  return (
-    <div className="flex min-h-screen bg-background">
-      {/* Sidebar for mobile */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div
-            className="fixed inset-0 bg-black/50"
-            onClick={() => setSidebarOpen(false)}
-          ></div>
-          <nav className="fixed top-0 left-0 bottom-0 w-72 bg-background p-6 border-r overflow-auto">
-            <div className="flex items-center justify-between mb-8">
-              <Link to="/teacher/dashboard" className="flex items-center gap-2">
-                <BookOpen className="h-6 w-6 text-[var(--primarybg)]" />
-                <span className="font-semibold text-xl text-[var(--font-dark)]">
-                  EduPlatform
-                </span>
-              </Link>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setSidebarOpen(false)}
-              >
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
-            <ScrollArea className="h-[calc(100vh-8rem)]">
-              <div className="space-y-1">
-                <Link
-                  to="/teacher/dashboard"
-                  className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive('/teacher/dashboard')
-                      ? 'bg-[var(--primarybg)] text-white'
-                      : 'hover:bg-muted'
-                  }`}
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  <LayoutDashboard className="h-5 w-5" />
-                  Dashboard
-                </Link>
-                <Link
-                  to="/teacher/courses"
-                  className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive('/teacher/courses')
-                      ? 'bg-[var(--primarybg)] text-white'
-                      : 'hover:bg-muted'
-                  }`}
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  <BookCopy className="h-5 w-5" />
-                  Course Management
-                </Link>
-                <Link
-                  to="/teacher/students"
-                  className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive('/teacher/students')
-                      ? 'bg-[var(--primarybg)] text-white'
-                      : 'hover:bg-muted'
-                  }`}
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  <Users className="h-5 w-5" />
-                  Student Management
-                </Link>
-                <Link
-                  to="/teacher/assignments"
-                  className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive('/teacher/assignments')
-                      ? 'bg-[var(--primarybg)] text-white'
-                      : 'hover:bg-muted'
-                  }`}
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  <FileText className="h-5 w-5" />
-                  Assignments
-                </Link>
-                <Link
-                  to="/teacher/analytics"
-                  className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive('/teacher/analytics')
-                      ? 'bg-[var(--primarybg)] text-white'
-                      : 'hover:bg-muted'
-                  }`}
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  <BarChart2 className="h-5 w-5" />
-                  Analytics
-                </Link>
-              </div>
-            </ScrollArea>
-          </nav>
-        </div>
-      )}
+  const handleViewReport = () => {
+    setIsReportModalOpen(true);
+  };
 
-      {/* Sidebar for desktop */}
-      <nav className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:border-r lg:bg-background lg:pt-5 lg:pb-4">
-        <div className="px-4 mb-6">
-          <Link to="/teacher/dashboard" className="flex items-center gap-2">
-            <BookOpen className="h-6 w-6 text-[var(--primarybg)]" />
-            <span className="font-semibold text-xl text-[var(--font-dark)]">
-              EduPlatform
-            </span>
-          </Link>
-        </div>
-        <ScrollArea className="flex-1 px-4">
-          <div className="space-y-1">
+  const handleCloseReportModal = () => {
+    setIsReportModalOpen(false);
+  };
+
+  const sidebarItems = [
+    { path: "/teacher/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+  ];
+
+  return (
+    <div className="flex min-h-screen bg-background ">
+      <div
+        className={`fixed inset-0 z-50 transform transition-transform duration-300 ease-in-out lg:hidden ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div
+          className="fixed inset-0 bg-black/50"
+          onClick={() => setSidebarOpen(false)}
+        ></div>
+        <nav className="fixed top-0 left-0 bottom-0 w-72 bg-[#065FF0] p-8 rounded-3xl my-6">
+          <div className="flex items-center justify-between mb-8 text-white">
             <Link
               to="/teacher/dashboard"
-              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                isActive('/teacher/dashboard')
-                  ? 'bg-[var(--primarybg)] text-white'
-                  : 'hover:bg-muted'
-              }`}
+              className="flex items-center gap-2 text-2xl font-bold"
             >
-              <LayoutDashboard className="h-5 w-5" />
-              Dashboard
+              AI Tutor.
             </Link>
-            <Link
-              to="/teacher/courses"
-              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                isActive('/teacher/courses')
-                  ? 'bg-[var(--primarybg)] text-white'
-                  : 'hover:bg-muted'
-              }`}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSidebarOpen(false)}
+              className="text-white hover:bg-blue-600"
             >
-              <BookCopy className="h-5 w-5" />
-              Course Management
-            </Link>
-            <Link
-              to="/teacher/students"
-              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                isActive('/teacher/students')
-                  ? 'bg-[var(--primarybg)] text-white'
-                  : 'hover:bg-muted'
-              }`}
-            >
-              <Users className="h-5 w-5" />
-              Student Management
-            </Link>
-            <Link
-              to="/teacher/assignments"
-              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                isActive('/teacher/assignments')
-                  ? 'bg-[var(--primarybg)] text-white'
-                  : 'hover:bg-muted'
-              }`}
-            >
-              <FileText className="h-5 w-5" />
-              Assignments
-            </Link>
-            <Link
-              to="/teacher/analytics"
-              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                isActive('/teacher/analytics')
-                  ? 'bg-[var(--primarybg)] text-white'
-                  : 'hover:bg-muted'
-              }`}
-            >
-              <BarChart2 className="h-5 w-5" />
-              Analytics
-            </Link>
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+          <ScrollArea className="h-[calc(100vh-8rem)] mt-16">
+            <div className="space-y-8">
+              {sidebarItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-md text-md font-bold transition-colors ${
+                    isActive(item.path)
+                      ? "bg-[#065FF0]/10 text-white"
+                      : "text-white hover:bg-white/10 hover:text-white"
+                  }`}
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  <item.icon className="h-5 w-5 text-white font-bold" />
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </ScrollArea>
+        </nav>
+      </div>
+      {/* )} */}
+
+      {/* Sidebar for desktop */}
+      <nav className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:bg-[#065FF0] my-6 rounded-3xl mr-2">
+        <div className="p-6">
+          <Link
+            to="/teacher/dashboard"
+            className="flex items-center gap-2 text-2xl font-bold text-white"
+          >
+            AI Tutor.
+          </Link>
+        </div>
+        <ScrollArea className="flex-1 px-4 mt-16">
+          <div className="space-y-8">
+            {sidebarItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-md font-medium transition-colors ${
+                  isActive(item.path)
+                    ? "bg-white/10 text-white font-bold"
+                    : "text-white hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                <item.icon className="h-5 w-5 font-bold" />
+                {item.label}
+              </Link>
+            ))}
           </div>
         </ScrollArea>
-        <div className="mt-auto px-4">
-          <Button
-            variant="ghost"
-            className="w-full justify-start gap-3"
-            onClick={handleLogout}
-          >
-            <LogOut className="h-5 w-5" />
-            Logout
-          </Button>
-        </div>
       </nav>
 
       {/* Main content */}
       <div className="lg:pl-64 flex flex-col flex-1">
         {/* Top header */}
-        <header className="sticky top-0 z-10 flex items-center justify-between h-16 px-4 border-b bg-background lg:px-6">
-          <div className="flex items-center lg:hidden">
+        <header className="sticky top-0 z-10 flex lg:hidden items-center justify-between h-16 px-4 bg-background lg:px-8">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="lg:hidden"
+            onClick={() => setSidebarOpen(true)}
+          >
+            <Menu className="h-6 w-6" />
+          </Button>
+          <h1 className="text-md font-medium tracking-tight">
+            {formattedTitle}
+          </h1>
+
+          {location.pathname.startsWith("/teacher/student-profile") && (
+            <Button onClick={handleViewReport}>View Report</Button>
+          )}
+
+          <Button
+            onClick={handleLogout}
+            size="sm"
+            variant="ghost"
+            className="rounded-full bg-[#F8F9FD] h-10 w-10 p-0 flex items-center justify-center"
+          >
+            <LogOut className="w-5 h-5" />
+          </Button>
+        </header>
+        <header className="sticky top-0 z-10 hidden lg:flex items-center justify-between h-16 bg-background py-10 px-8 ">
+          <div className="flex items-center">
             <Button
               variant="ghost"
               size="icon"
+              onClick={() => navigate(-1)}
               className="mr-2"
-              onClick={() => setSidebarOpen(true)}
             >
-              <Menu className="h-6 w-6" />
-              <span className="sr-only">Toggle Menu</span>
+              <ChevronLeft className="h-5 w-5" />
             </Button>
-            <Link to="/teacher/dashboard" className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-[var(--primarybg)]" />
-              <span className="font-semibold text-[var(--font-dark)]">
-                EduPlatform
-              </span>
-            </Link>
+            <h1 className="text-2xl font-bold">{formattedTitle}</h1>
           </div>
-          <div className="flex items-center gap-3 ml-auto">
-            <ThemeToggle />
-            <Button variant="ghost" size="icon">
-              <Bell className="h-5 w-5" />
+
+          <div className="flex items-center gap-3">
+            {/* <Button size="sm" variant="ghost" className="rounded-full bg-[#F8F9FD] h-10 w-10 p-0 flex items-center justify-center">
+              <Bell className="w-5 h-5" />
+            </Button> */}
+
+            {/* User Info */}
+            {/* <div className="flex items-center gap-2 bg-[#F8F9FD] px-3 py-1 rounded-full h-10">
+              
+              <img
+                src="https://i.pravatar.cc/30"
+                alt="user"
+                className="w-7 h-7 rounded-full object-cover"
+              />
+              <div className="flex flex-col justify-center">
+                <span className="text-xs font-semibold leading-tight">hanry</span>
+                <span className="text-xs text-gray-500 leading-tight">hanry463@gmail.com</span>
+              </div>
+              <Button size="icon" variant="ghost" className="rounded-full p-0 h-6 w-6 ml-1">
+                <Settings className="w-4 h-4" />
+              </Button>
+            </div> */}
+
+            {/* Language */}
+            {/* <Button variant="ghost" className="rounded-full bg-[#F8F9FD] h-10 flex items-center px-3 py-0">
+              <Languages className="w-5 h-5" />
+              <ChevronDown className="w-4 h-4 ml-1" />
+            </Button> */}
+
+            {location.pathname.startsWith("/teacher/student-profile") && (
+              <Button onClick={handleViewReport}>View Report</Button>
+            )}
+
+            {/* Logout */}
+            <Button
+              onClick={handleLogout}
+              size="sm"
+              variant="ghost"
+              className="rounded-full bg-[#F8F9FD] h-10 w-10 p-0 flex items-center justify-center"
+            >
+              <LogOut className="w-5 h-5" />
             </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="rounded-full h-8 w-8 p-0 ml-2"
-                >
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src="" alt={user?.username || 'User'} />
-                    <AvatarFallback>
-                      {user?.username?.charAt(0) || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <Link to="/teacher/profile" className="w-full">
-                    Profile
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Link to="/teacher/settings" className="w-full">
-                    Settings
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
-                  Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
         </header>
 
         {/* Main Content */}
         <main className="flex-1">
-          <div className="p-4 lg:p-6">{children}</div>
+          <div className="p-4 lg:p-8">{children}</div>
         </main>
       </div>
+
+      <StudentReportModal
+        isOpen={isReportModalOpen}
+        onClose={handleCloseReportModal}
+        studentData={studentProfileData}
+      />
     </div>
   );
 }

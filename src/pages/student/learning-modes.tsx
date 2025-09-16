@@ -46,6 +46,18 @@ const modes = [
     image: debateModeAvatar,
     route: "/student/learning-modes/debate-mode",
   },
+  {
+    title: "Listening Mode",
+    description: "Listen to stories and practice saying words with the AI.",
+    image: listeningModeAvatar,
+    route: "/student/learning-modes/listening-mode",
+  },
+  {
+    title: "Debate Mode",
+    description: "Practice debating skills and critical thinking with the AI.",
+    image: debateModeAvatar,
+    route: "/student/learning-modes/debate-mode",
+  },
 ];
 
 const LearningModes: React.FC = () => {
