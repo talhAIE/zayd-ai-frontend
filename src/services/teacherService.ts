@@ -17,10 +17,19 @@ export interface TeacherStudent {
   completedTopics: number;
 }
 
+export interface PaginationInfo {
+  currentPage: number;
+  totalPages: number;
+  limit: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+}
+
 export interface TeacherDashboardData {
   teacherInfo: TeacherInfo;
   students: TeacherStudent[];
   totalStudents: number;
+  pagination: PaginationInfo;
 }
 
 export interface UsageGraphData {
@@ -69,6 +78,9 @@ export interface TeacherDashboardFilters {
   sortOrder?: 'asc' | 'desc';
   minCompletedTopics?: number;
   maxCompletedTopics?: number;
+  page?: number;
+  limit?: number;
+  search?: string;
 }
 
 
@@ -103,6 +115,15 @@ export const fetchTeacherStudents = async (
       }
       if (filters.maxCompletedTopics !== undefined) {
         params.append('maxCompletedTopics', filters.maxCompletedTopics.toString());
+      }
+      if (filters.page !== undefined) {
+        params.append('page', filters.page.toString());
+      }
+      if (filters.limit !== undefined) {
+        params.append('limit', filters.limit.toString());
+      }
+      if (filters.search) {
+        params.append('search', filters.search);
       }
     }
     

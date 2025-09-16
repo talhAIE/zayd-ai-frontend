@@ -399,9 +399,10 @@ const Rewards = (): JSX.Element => {
         modifiedPdfBytes.byteOffset + modifiedPdfBytes.byteLength
       );
       // Ensure we have an ArrayBuffer, not SharedArrayBuffer
-      const safeArrayBuffer = arrayBuffer instanceof ArrayBuffer 
-        ? arrayBuffer 
-        : new Uint8Array(arrayBuffer).slice().buffer;
+      const safeArrayBuffer =
+        arrayBuffer instanceof ArrayBuffer
+          ? arrayBuffer
+          : new Uint8Array(arrayBuffer).slice().buffer;
       const blob = new Blob([safeArrayBuffer], { type: "application/pdf" });
 
       const url = URL.createObjectURL(blob);

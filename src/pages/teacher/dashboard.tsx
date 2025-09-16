@@ -52,6 +52,8 @@ export default function TeacherDashboard() {
     filterValues,
     filterValuesLoading,
     filterValuesError,
+    pagination,
+    totalStudents,
   } = useAppSelector((state) => state.teacher);
 
   // Local state for form inputs
@@ -63,7 +65,7 @@ export default function TeacherDashboard() {
   const [minCompletedTopics, setMinCompletedTopics] = useState("");
   const [maxCompletedTopics, setMaxCompletedTopics] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 8;
+  const pageSize = pagination?.limit || 10;
 
   // Debounced search term to avoid excessive API calls
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
@@ -192,6 +194,8 @@ export default function TeacherDashboard() {
     const filters: TeacherDashboardFilters = {
       sortBy: sortBy as any,
       sortOrder: sortOrder as any,
+      page: currentPage,
+      limit: pageSize,
     };
 
     if (gradeFilter !== "all") {
@@ -215,6 +219,11 @@ export default function TeacherDashboard() {
       if (!isNaN(max)) {
         filters.maxCompletedTopics = max;
       }
+    }
+
+    // Add search term to filters if it exists
+    if (debouncedSearchTerm.trim()) {
+      filters.search = debouncedSearchTerm.trim();
     }
 
     return filters;
@@ -245,6 +254,8 @@ export default function TeacherDashboard() {
     sortOrder,
     minCompletedTopics,
     maxCompletedTopics,
+    currentPage,
+    debouncedSearchTerm,
   ]);
 
   const transformedStudents = useMemo(() => {
@@ -260,33 +271,14 @@ export default function TeacherDashboard() {
     }));
   }, [students]);
 
-  const filteredStudents = useMemo(() => {
-    if (!debouncedSearchTerm.trim()) {
-      return transformedStudents;
-    }
-
-    const searchLower = debouncedSearchTerm.toLowerCase().trim();
-    return transformedStudents.filter((student) =>
-      student.name.toLowerCase().includes(searchLower)
-    );
-  }, [transformedStudents, debouncedSearchTerm]);
-
-  const totalPages = useMemo(() => {
-    return Math.ceil(filteredStudents.length / pageSize);
-  }, [filteredStudents.length, pageSize]);
-
-  const paginatedStudents = useMemo(() => {
-    return filteredStudents.slice(
-      (currentPage - 1) * pageSize,
-      currentPage * pageSize
-    );
-  }, [filteredStudents, currentPage, pageSize]);
+  // Use API pagination data
+  const totalPages = pagination?.totalPages || 1;
+  const paginatedStudents = transformedStudents;
 
   useEffect(() => {
     setCurrentPage(1);
     setSelectedStudents(new Set());
   }, [
-    debouncedSearchTerm,
     gradeFilter,
     topicStatusFilter,
     sortBy,
@@ -870,36 +862,52 @@ export default function TeacherDashboard() {
           {/* Pagination Controls */}
           <div className="flex flex-wrap justify-between items-center mt-4 gap-2">
             <span className="text-sm text-muted-foreground">
-              Page {currentPage} of {totalPages}
+              Page {pagination?.currentPage || currentPage} of{" "}
+              {pagination?.totalPages || totalPages}
+              {pagination && (
+                <span className="ml-2">({totalStudents} total students)</span>
+              )}
             </span>
             <div className="flex gap-2 items-center">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
+                disabled={!pagination?.hasPrevious}
               >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
-              {/* Page numbers */}
-              {Array.from({ length: totalPages }, (_, i) => (
-                <Button
-                  key={i + 1}
-                  variant={currentPage === i + 1 ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={currentPage === i + 1 ? "font-bold" : ""}
-                >
-                  {i + 1}
-                </Button>
-              ))}
+              {/* Page numbers - show limited range around current page */}
+              {(() => {
+                const current = pagination?.currentPage || currentPage;
+                const total = pagination?.totalPages || totalPages;
+                const start = Math.max(1, current - 2);
+                const end = Math.min(total, current + 2);
+
+                return Array.from({ length: end - start + 1 }, (_, i) => {
+                  const pageNum = start + i;
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={current === pageNum ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={current === pageNum ? "font-bold" : ""}
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                });
+              })()}
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() =>
-                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  setCurrentPage((p) =>
+                    Math.min(pagination?.totalPages || totalPages, p + 1)
+                  )
                 }
-                disabled={currentPage === totalPages}
+                disabled={!pagination?.hasNext}
               >
                 <ChevronRight className="w-4 h-4" />
               </Button>

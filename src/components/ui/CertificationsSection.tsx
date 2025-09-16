@@ -1,4 +1,5 @@
 import { Card, CardHeader } from "@/components/ui/card";
+import { CertificateIcon } from "@/components/Icons";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface CertificationsSectionProps {
@@ -47,29 +48,32 @@ export function CertificationsSection({
           <TabsContent value="certifications" className="mt-4">
             <div className="space-y-3 max-h-80 overflow-y-auto">
               {achievements && achievements.length > 0 ? (
-                achievements.slice(0, 3).map((achievement) => (
-                  <div
-                    key={achievement.id}
-                    className="flex items-start space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <img
-                      src={achievement.iconUrl}
-                      alt={achievement.name}
-                      className="w-12 h-12 rounded object-cover flex-shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-gray-500">
-                        Awarded {formatDate(achievement.awardedAt)}
-                      </p>
-                      <p className="mt-1 text-sm font-bold text-gray-800 break-words">
-                        {achievement.name}
-                      </p>
-                      <p className="text-xs text-gray-600 break-words leading-relaxed">
-                        {achievement.description}
-                      </p>
+                achievements
+                  .filter(
+                    (achievement) => achievement.category === "certificate"
+                  )
+                  .slice(0, 3)
+                  .map((achievement) => (
+                    <div
+                      key={achievement.id}
+                      className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="w-12 h-12 rounded flex-shrink-0 flex items-center justify-center">
+                        <CertificateIcon className="w-12 h-12" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-gray-500">
+                          Awarded {formatDate(achievement.awardedAt)}
+                        </p>
+                        <p className="mt-1 text-sm font-bold text-gray-800 break-words">
+                          {achievement.name}
+                        </p>
+                        <p className="text-xs text-gray-600 break-words leading-relaxed">
+                          {achievement.description}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  ))
               ) : (
                 <div className="text-center py-8 text-gray-500">
                   <p>No achievements yet</p>
@@ -84,13 +88,19 @@ export function CertificationsSection({
                 achievements.map((achievement) => (
                   <div
                     key={achievement.id}
-                    className="flex items-start space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                   >
-                    <img
-                      src={achievement.iconUrl}
-                      alt={achievement.name}
-                      className="w-12 h-12 rounded object-cover flex-shrink-0"
-                    />
+                    {achievement.category === "certificate" ? (
+                      <div className="w-12 h-12 rounded flex-shrink-0 flex items-center justify-center">
+                        <CertificateIcon className="w-12 h-12" />
+                      </div>
+                    ) : (
+                      <img
+                        src={achievement.iconUrl}
+                        alt={achievement.name}
+                        className="w-12 h-12 rounded object-cover flex-shrink-0"
+                      />
+                    )}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-gray-800 break-words">
                         {achievement.name}
