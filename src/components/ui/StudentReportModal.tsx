@@ -121,7 +121,8 @@ export default function StudentReportModal({
         totalUsageValueP,
       });
 
-      if (studentNameDiv) (studentNameDiv as HTMLElement).classList.add("-mt-3");
+      if (studentNameDiv)
+        (studentNameDiv as HTMLElement).classList.add("-mt-3");
       if (gradeDiv) (gradeDiv as HTMLElement).classList.add("-mt-3");
       if (schoolDiv) (schoolDiv as HTMLElement).classList.add("-mt-3");
 
@@ -130,8 +131,10 @@ export default function StudentReportModal({
       });
       if (totalPointsP) (totalPointsP as HTMLElement).classList.add("-mt-3");
       if (totalUsageP) (totalUsageP as HTMLElement).classList.add("-mt-3");
-      if (totalPointsValueP) (totalPointsValueP as HTMLElement).classList.add("-mt-3");
-      if (totalUsageValueP) (totalUsageValueP as HTMLElement).classList.add("-mt-3");
+      if (totalPointsValueP)
+        (totalPointsValueP as HTMLElement).classList.add("-mt-3");
+      if (totalUsageValueP)
+        (totalUsageValueP as HTMLElement).classList.add("-mt-3");
 
       await new Promise((resolve) => setTimeout(resolve, 100));
 
@@ -145,7 +148,8 @@ export default function StudentReportModal({
       });
 
       // Remove -mt-3 after capture to avoid position issues on viewing the report
-      if (studentNameDiv) (studentNameDiv as HTMLElement).classList.remove("-mt-3");
+      if (studentNameDiv)
+        (studentNameDiv as HTMLElement).classList.remove("-mt-3");
       if (gradeDiv) (gradeDiv as HTMLElement).classList.remove("-mt-3");
       if (schoolDiv) (schoolDiv as HTMLElement).classList.remove("-mt-3");
 
@@ -155,8 +159,10 @@ export default function StudentReportModal({
 
       if (totalPointsP) (totalPointsP as HTMLElement).classList.remove("-mt-3");
       if (totalUsageP) (totalUsageP as HTMLElement).classList.remove("-mt-3");
-      if (totalPointsValueP) (totalPointsValueP as HTMLElement).classList.remove("-mt-3");
-      if (totalUsageValueP) (totalUsageValueP as HTMLElement).classList.remove("-mt-3");
+      if (totalPointsValueP)
+        (totalPointsValueP as HTMLElement).classList.remove("-mt-3");
+      if (totalUsageValueP)
+        (totalUsageValueP as HTMLElement).classList.remove("-mt-3");
 
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF("p", "mm", "a4");
@@ -197,36 +203,44 @@ export default function StudentReportModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full mx-1 sm:mx-0">
         <Button
-          className="absolute right-4 top-4 me-8"
+          className="absolute right-2 sm:right-4 top-2 sm:top-4 me-2 sm:me-8 text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2"
           onClick={downloadReport}
         >
-          <Download className="w-4 h-4 mr-2" />
-          Download Report
+          <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+          <span className="hidden sm:inline">Download Report</span>
+          <span className="sm:hidden">Download</span>
         </Button>
-        <DialogHeader className="mt-16">
-          <DialogTitle className="text-2xl font-bold text-center mb-2">
+        <DialogHeader className="mt-12 sm:mt-16">
+          <DialogTitle className="text-lg sm:text-2xl font-bold text-center mb-2">
             Student Report
           </DialogTitle>
-          <p className="text-center text-gray-600 mb-6">
+          <p className="text-center text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">
             A Clear View of Academic Growth
           </p>
         </DialogHeader>
 
-        <div ref={reportRef} className="space-y-6 bg-[#F8F9FD] p-6 rounded-2xl">
+        <div
+          ref={reportRef}
+          className="space-y-4 sm:space-y-6 bg-[#F8F9FD] p-3 sm:p-6 rounded-2xl w-full overflow-hidden"
+        >
           {/* Student Information Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
             {/* Student Name Card - Blue background */}
             <Card className="bg-blue-600 text-white">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                    <User className="w-6 h-6" />
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-full flex items-center justify-center">
+                    <User className="w-5 h-5 sm:w-6 sm:h-6" />
                   </div>
-                  <div>
-                    <p className="text-sm opacity-90">Student Name</p>
-                    <p className="text-xl font-bold">{data.studentName}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs sm:text-sm opacity-90">
+                      Student Name
+                    </p>
+                    <p className="text-lg sm:text-xl font-bold">
+                      {data.studentName}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -234,29 +248,35 @@ export default function StudentReportModal({
 
             {/* Grade Card */}
             <Card>
-              <CardContent className="p-4">
+              <CardContent className="p-3 sm:p-4">
                 <div className="flex flex-col items-center justify-center h-full text-center">
-                  <p className="text-sm text-gray-600 mb-1">Grade</p>
-                  <p className="text-lg font-semibold">Grade {data.grade}</p>
+                  <p className="text-xs sm:text-sm text-gray-600 mb-1">Grade</p>
+                  <p className="text-base sm:text-lg font-semibold">
+                    Grade {data.grade}
+                  </p>
                 </div>
               </CardContent>
             </Card>
 
             {/* School Name Card */}
             <Card>
-              <CardContent className="p-4">
+              <CardContent className="p-3 sm:p-4">
                 <div className="flex flex-col items-center justify-center h-full text-center">
-                  <p className="text-sm text-gray-600 mb-1">School Name</p>
-                  <p className="text-lg font-semibold">{data.schoolName}</p>
+                  <p className="text-xs sm:text-sm text-gray-600 mb-1">
+                    School Name
+                  </p>
+                  <p className="text-base sm:text-lg font-semibold">
+                    {data.schoolName}
+                  </p>
                 </div>
               </CardContent>
             </Card>
           </div>
 
           {/* Summary Statistics */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6">
             <Card className="bg-white border-0">
-              <CardContent className="p-3">
+              <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center justify-between h-full">
                   <p className="text-sm font-medium text-blue-600">
                     TOTAL POINTS
@@ -270,7 +290,7 @@ export default function StudentReportModal({
               </CardContent>
             </Card>
             <Card>
-              <CardContent className="p-3">
+              <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center justify-between h-full">
                   <p className="text-sm font-medium text-blue-600">
                     TOTAL USAGE
@@ -287,8 +307,8 @@ export default function StudentReportModal({
 
           {/* Models and Topic Completion */}
           <Card>
-            <CardContent className="p-6">
-              <div className="overflow-x-auto">
+            <CardContent className="p-3 sm:p-6">
+              <div className="overflow-x-auto -mx-3 sm:mx-0">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b">
@@ -324,7 +344,7 @@ export default function StudentReportModal({
           </Card>
 
           {/* Awards and Recognition */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             {/* Certifications */}
             <Card>
               <CardContent className="p-6">
