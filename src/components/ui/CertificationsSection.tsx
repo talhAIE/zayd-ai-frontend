@@ -52,7 +52,6 @@ export function CertificationsSection({
                   .filter(
                     (achievement) => achievement.category === "certificate"
                   )
-                  .slice(0, 3)
                   .map((achievement) => (
                     <div
                       key={achievement.id}
@@ -85,36 +84,40 @@ export function CertificationsSection({
           <TabsContent value="rewards" className="mt-4">
             <div className="space-y-3 max-h-80 overflow-y-auto">
               {achievements && achievements.length > 0 ? (
-                achievements.map((achievement) => (
-                  <div
-                    key={achievement.id}
-                    className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    {achievement.category === "certificate" ? (
-                      <div className="w-12 h-12 rounded flex-shrink-0 flex items-center justify-center">
-                        <CertificateIcon className="w-12 h-12" />
+                achievements
+                  .filter(
+                    (achievement) => achievement.category !== "certificate"
+                  )
+                  .map((achievement) => (
+                    <div
+                      key={achievement.id}
+                      className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      {achievement.category === "certificate" ? (
+                        <div className="w-12 h-12 rounded flex-shrink-0 flex items-center justify-center">
+                          <CertificateIcon className="w-12 h-12" />
+                        </div>
+                      ) : (
+                        <img
+                          src={achievement.iconUrl}
+                          alt={achievement.name}
+                          className="w-12 h-12 rounded object-cover flex-shrink-0"
+                        />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-gray-800 break-words">
+                          {achievement.name}
+                        </p>
+                        <p className="text-xs text-gray-600 break-words leading-relaxed">
+                          {achievement.description}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {achievement.category} •{" "}
+                          {formatDate(achievement.awardedAt)}
+                        </p>
                       </div>
-                    ) : (
-                      <img
-                        src={achievement.iconUrl}
-                        alt={achievement.name}
-                        className="w-12 h-12 rounded object-cover flex-shrink-0"
-                      />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-gray-800 break-words">
-                        {achievement.name}
-                      </p>
-                      <p className="text-xs text-gray-600 break-words leading-relaxed">
-                        {achievement.description}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {achievement.category} •{" "}
-                        {formatDate(achievement.awardedAt)}
-                      </p>
                     </div>
-                  </div>
-                ))
+                  ))
               ) : (
                 <div className="text-center py-8 text-gray-500">
                   <p>No rewards yet</p>

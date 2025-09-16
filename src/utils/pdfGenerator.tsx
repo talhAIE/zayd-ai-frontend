@@ -33,6 +33,15 @@ const createReportElement = (studentData: StudentProfileData): HTMLElement => {
     })
   );
 
+  const certificates =
+    studentData.achievements?.filter(
+      (achievement) => achievement.category === "certificate"
+    ) || [];
+  const rewards =
+    studentData.achievements?.filter(
+      (achievement) => achievement.category !== "certificate"
+    ) || [];
+
   container.innerHTML = `
     <div class="space-y-6 bg-[#F8F9FD] p-6 rounded-2xl">
       <!-- Student Information Cards -->
@@ -129,9 +138,10 @@ const createReportElement = (studentData: StudentProfileData): HTMLElement => {
           <hr />
           <div class="space-y-3 mt-6">
             ${
-              studentData.achievements
-                ?.map(
-                  (achievement) => `
+              certificates.length > 0
+                ? certificates
+                    .map(
+                      (achievement) => `
               <div class="flex items-center gap-3">
                 <div class="w-6 h-6 rounded-full flex items-center justify-center">
                   <svg width="22" height="22" viewBox="0 0 16 17" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -146,9 +156,9 @@ const createReportElement = (studentData: StudentProfileData): HTMLElement => {
                 <span class="text-sm">${achievement.name}</span>
               </div>
             `
-                )
-                .join("") ||
-              '<p class="text-sm text-gray-500">No certifications yet</p>'
+                    )
+                    .join("")
+                : '<p class="text-sm text-gray-500 italic">No certificates earned yet</p>'
             }
           </div>
         </div>
@@ -159,9 +169,10 @@ const createReportElement = (studentData: StudentProfileData): HTMLElement => {
           <hr />
           <div class="space-y-3 mt-6">
             ${
-              studentData.achievements
-                ?.map(
-                  (achievement) => `
+              rewards.length > 0
+                ? rewards
+                    .map(
+                      (achievement) => `
               <div class="flex items-center gap-3">
                 <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
                   <svg width="16" height="17" viewBox="0 0 16 17" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -175,9 +186,9 @@ const createReportElement = (studentData: StudentProfileData): HTMLElement => {
                 <span class="text-sm">${achievement.name}</span>
               </div>
             `
-                )
-                .join("") ||
-              '<p class="text-sm text-gray-500">No rewards yet</p>'
+                    )
+                    .join("")
+                : '<p class="text-sm text-gray-500 italic">No rewards earned yet</p>'
             }
           </div>
         </div>
@@ -199,7 +210,7 @@ export const generateStudentReportPDF = async (
     // Wait for fonts and images to load
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    // Add -mt-3 to specific divs only during PDF generation to avoid position issues on the pdf
+    // Add -mt-4 to specific divs only during PDF generation to avoid position issues on the pdf
     const studentNameDiv = reportElement.querySelector(
       ".bg-blue-600 .flex > div:last-child"
     );
@@ -257,20 +268,20 @@ export const generateStudentReportPDF = async (
       }
     });
 
-    // Apply -mt-3 classes for better PDF positioning
-    if (studentNameDiv) (studentNameDiv as HTMLElement).classList.add("-mt-3");
-    if (gradeDiv) (gradeDiv as HTMLElement).classList.add("-mt-3");
-    if (schoolDiv) (schoolDiv as HTMLElement).classList.add("-mt-3");
+    // Apply -mt-4 classes for better PDF positioning
+    if (studentNameDiv) (studentNameDiv as HTMLElement).classList.add("-mt-4");
+    if (gradeDiv) (gradeDiv as HTMLElement).classList.add("-mt-4");
+    if (schoolDiv) (schoolDiv as HTMLElement).classList.add("-mt-4");
 
     achievementSpans.forEach((span) => {
-      (span as HTMLElement).classList.add("-mt-3");
+      (span as HTMLElement).classList.add("-mt-4");
     });
-    if (totalPointsP) (totalPointsP as HTMLElement).classList.add("-mt-3");
-    if (totalUsageP) (totalUsageP as HTMLElement).classList.add("-mt-3");
+    if (totalPointsP) (totalPointsP as HTMLElement).classList.add("-mt-4");
+    if (totalUsageP) (totalUsageP as HTMLElement).classList.add("-mt-4");
     if (totalPointsValueP)
-      (totalPointsValueP as HTMLElement).classList.add("-mt-3");
+      (totalPointsValueP as HTMLElement).classList.add("-mt-4");
     if (totalUsageValueP)
-      (totalUsageValueP as HTMLElement).classList.add("-mt-3");
+      (totalUsageValueP as HTMLElement).classList.add("-mt-4");
 
     await new Promise((resolve) => setTimeout(resolve, 100));
 
@@ -284,22 +295,22 @@ export const generateStudentReportPDF = async (
       height: reportElement.scrollHeight,
     });
 
-    // Remove -mt-3 after capture to avoid position issues
+    // Remove -mt-4 after capture to avoid position issues
     if (studentNameDiv)
-      (studentNameDiv as HTMLElement).classList.remove("-mt-3");
-    if (gradeDiv) (gradeDiv as HTMLElement).classList.remove("-mt-3");
-    if (schoolDiv) (schoolDiv as HTMLElement).classList.remove("-mt-3");
+      (studentNameDiv as HTMLElement).classList.remove("-mt-4");
+    if (gradeDiv) (gradeDiv as HTMLElement).classList.remove("-mt-4");
+    if (schoolDiv) (schoolDiv as HTMLElement).classList.remove("-mt-4");
 
     achievementSpans.forEach((span) => {
-      (span as HTMLElement).classList.remove("-mt-3");
+      (span as HTMLElement).classList.remove("-mt-4");
     });
 
-    if (totalPointsP) (totalPointsP as HTMLElement).classList.remove("-mt-3");
-    if (totalUsageP) (totalUsageP as HTMLElement).classList.remove("-mt-3");
+    if (totalPointsP) (totalPointsP as HTMLElement).classList.remove("-mt-4");
+    if (totalUsageP) (totalUsageP as HTMLElement).classList.remove("-mt-4");
     if (totalPointsValueP)
-      (totalPointsValueP as HTMLElement).classList.remove("-mt-3");
+      (totalPointsValueP as HTMLElement).classList.remove("-mt-4");
     if (totalUsageValueP)
-      (totalUsageValueP as HTMLElement).classList.remove("-mt-3");
+      (totalUsageValueP as HTMLElement).classList.remove("-mt-4");
 
     // Clean up
     document.body.removeChild(reportElement);
