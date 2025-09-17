@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+// import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, Loader2, Eye, X, Download } from "lucide-react";
+import { Loader2, Eye, X, Download } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -34,7 +34,7 @@ import {
   fetchTeacherData,
   fetchTeacherFilterValues,
 } from "@/redux/slices/teacherSlice";
-import { useDebounce } from "@/hooks/useDebounce";
+// import { useDebounce } from "@/hooks/useDebounce";
 import {
   TeacherDashboardFilters,
   downloadIndividualStudentReport,
@@ -57,7 +57,7 @@ export default function TeacherDashboard() {
   } = useAppSelector((state) => state.teacher);
 
   // Local state for form inputs
-  const [searchTerm, setSearchTerm] = useState("");
+  // const [searchTerm, setSearchTerm] = useState("");
   const [gradeFilter, setGradeFilter] = useState("all");
   const [topicStatusFilter, setTopicStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState("points");
@@ -68,7 +68,7 @@ export default function TeacherDashboard() {
   const pageSize = pagination?.limit || 10;
 
   // Debounced search term to avoid excessive API calls
-  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  // const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   const [visibleColumns, setVisibleColumns] = useState({
     name: true,
@@ -222,9 +222,9 @@ export default function TeacherDashboard() {
     }
 
     // Add search term to filters if it exists
-    if (debouncedSearchTerm.trim()) {
-      filters.search = debouncedSearchTerm.trim();
-    }
+    // if (debouncedSearchTerm.trim()) {
+    //   filters.search = debouncedSearchTerm.trim();
+    // }
 
     return filters;
   };
@@ -255,7 +255,7 @@ export default function TeacherDashboard() {
     minCompletedTopics,
     maxCompletedTopics,
     currentPage,
-    debouncedSearchTerm,
+    // debouncedSearchTerm,
   ]);
 
   const transformedStudents = useMemo(() => {
@@ -292,7 +292,7 @@ export default function TeacherDashboard() {
   };
 
   const handleClearFilters = () => {
-    setSearchTerm("");
+    // setSearchTerm("");
     setGradeFilter("all");
     setTopicStatusFilter("all");
     setSortBy("points");
@@ -305,14 +305,14 @@ export default function TeacherDashboard() {
 
   const hasActiveFilters = useMemo(() => {
     return (
-      searchTerm ||
+      // searchTerm ||
       gradeFilter !== "all" ||
       topicStatusFilter !== "all" ||
       minCompletedTopics ||
       maxCompletedTopics
     );
   }, [
-    searchTerm,
+    // searchTerm,
     gradeFilter,
     topicStatusFilter,
     minCompletedTopics,
@@ -435,7 +435,7 @@ export default function TeacherDashboard() {
 
           {/* Search and Sort */}
           <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
-            <div className="relative w-full sm:w-56">
+            {/* <div className="relative w-full sm:w-56">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[var(--font-light2)]" />
               <Input
                 className="pl-9 w-full"
@@ -443,7 +443,7 @@ export default function TeacherDashboard() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-            </div>
+            </div> */}
 
             <Select
               value={sortBy}
@@ -747,14 +747,14 @@ export default function TeacherDashboard() {
                       <p className="text-[var(--font-light2)] mb-2">
                         No students found matching your criteria.
                       </p>
-                      {searchTerm && (
+                      {/* {searchTerm && (
                         <Button
                           onClick={() => setSearchTerm("")}
                           variant="outline"
                         >
                           Clear Search
                         </Button>
-                      )}
+                      )} */}
                     </TableCell>
                   </TableRow>
                 )}
