@@ -56,6 +56,9 @@ export const login = createAsyncThunk(
         localStorage.setItem('token', data.token);
       }
       
+      localStorage.setItem('loginEvent', Date.now().toString());
+      localStorage.removeItem('loginEvent');
+      
       return {
         user: userWithRole,
         token: data.token || null,
@@ -97,6 +100,9 @@ export const addPhoneNumber = createAsyncThunk(
         localStorage.setItem('token', data.token);
       }
       
+      localStorage.setItem('loginEvent', Date.now().toString());
+      localStorage.removeItem('loginEvent');
+      
       return {
         user: userWithRole,
         token: data.token || null,
@@ -118,6 +124,9 @@ export const logout = createAsyncThunk('auth/logout', async (_, { }) => {
   localStorage.removeItem('AiTutorUser');
   localStorage.removeItem('token');
   
+  localStorage.setItem('logoutEvent', Date.now().toString());
+  localStorage.removeItem('logoutEvent');
+  
   return null;
 });
 
@@ -127,6 +136,12 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     clearError: (state) => {
+      state.error = null;
+    },
+    crossTabLogout: (state) => {
+      state.user = null;
+      state.token = null;
+      state.isAuthenticated = false;
       state.error = null;
     },
   },
@@ -176,5 +191,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearError } = authSlice.actions;
+export const { clearError, crossTabLogout } = authSlice.actions;
 export default authSlice.reducer;
