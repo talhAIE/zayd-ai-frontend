@@ -80,6 +80,12 @@ const LearningModes: React.FC = () => {
     );
   }
 
+  if (schoolCategory === "american-2025") {
+    filteredModes = modes.filter(
+      (mode) => mode.title === "Reading Mode" || mode.title === "Role Play Mode" || mode.title === "Listening Mode"
+    );
+  }
+
   // const [isQueationnaireOpen, setIsQuestionnaireOpen] = React.useState(true);
 
   const handleStartButton = (route: string) => {
