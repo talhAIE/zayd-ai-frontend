@@ -9,12 +9,13 @@ export interface TeacherInfo {
 export interface TeacherStudent {
   id: string;
   studentName: string;
-  grade: string;
+  class: string;
   cefrLevel: string;
   currentStreak: number;
   usage: number;
   totalPoints: number;
   completedTopics: number;
+  totalTopics: number;
 }
 
 export interface PaginationInfo {
@@ -58,7 +59,7 @@ export type TopicsCompletedPerMode = Record<string, TopicsByMode>;
 export interface StudentProfileData {
   id: string;
   studentName: string;
-  grade: string;
+  class: string;
   schoolName: string;
   cefrLevel: string;
   totalPoints: number;
@@ -72,12 +73,13 @@ export interface StudentProfileData {
 }
 
 export interface TeacherDashboardFilters {
-  grade?: string;
+  class?: string;
   topicStatus?: 'completed' | 'incomplete' | 'all';
   sortBy?: 'points' | 'streak' | 'usage' | 'name' | 'completedTopics';
   sortOrder?: 'asc' | 'desc';
   minCompletedTopics?: number;
   maxCompletedTopics?: number;
+  timeFilter?: 'daily' | 'weekly' | 'monthly' | 'all';
   page?: number;
   limit?: number;
   search?: string;
@@ -90,7 +92,7 @@ export interface FilterOption {
 }
 
 export interface TeacherDashboardFilterValues {
-  grades: string[];
+  classes: string[];
   topicStatusOptions: FilterOption[];
   sortByOptions: FilterOption[];
   sortOrderOptions: FilterOption[];
@@ -104,7 +106,7 @@ export const fetchTeacherStudents = async (
     const params = new URLSearchParams();
     
     if (filters) {
-      if (filters.grade) params.append('grade', filters.grade);
+      if (filters.class) params.append('class', filters.class);
       if (filters.topicStatus && filters.topicStatus !== 'all') {
         params.append('topicStatus', filters.topicStatus);
       }
@@ -115,6 +117,9 @@ export const fetchTeacherStudents = async (
       }
       if (filters.maxCompletedTopics !== undefined) {
         params.append('maxCompletedTopics', filters.maxCompletedTopics.toString());
+      }
+      if (filters.timeFilter && filters.timeFilter !== 'all') {
+        params.append('timeFilter', filters.timeFilter);
       }
       if (filters.page !== undefined) {
         params.append('page', filters.page.toString());
@@ -216,7 +221,7 @@ export const fetchAllTeacherStudents = async (
     const params = new URLSearchParams();
     
     if (filters) {
-      if (filters.grade) params.append('grade', filters.grade);
+      if (filters.class) params.append('class', filters.class);
       if (filters.topicStatus && filters.topicStatus !== 'all') {
         params.append('topicStatus', filters.topicStatus);
       }
@@ -227,6 +232,9 @@ export const fetchAllTeacherStudents = async (
       }
       if (filters.maxCompletedTopics !== undefined) {
         params.append('maxCompletedTopics', filters.maxCompletedTopics.toString());
+      }
+      if (filters.timeFilter && filters.timeFilter !== 'all') {
+        params.append('timeFilter', filters.timeFilter);
       }
       if (filters.search) {
         params.append('search', filters.search);

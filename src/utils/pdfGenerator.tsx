@@ -17,12 +17,10 @@ const createReportElement = (studentData: StudentProfileData): HTMLElement => {
   const totalUsageDisplay = `${totalUsageMinutes} Mins`;
 
   const formatModeName = (modeKey: string): string => {
-    return (
-      modeKey
-        .split("-")
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ")
-    );
+    return modeKey
+      .split("-")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   };
 
   const modesData = Object.entries(studentData.topicsByMode).map(
@@ -61,11 +59,11 @@ const createReportElement = (studentData: StudentProfileData): HTMLElement => {
           </div>
         </div>
 
-        <!-- Grade Card -->
+        <!-- Class Card -->
         <div class="bg-white rounded-lg p-4 shadow-sm">
           <div class="flex flex-col items-center justify-center h-full text-center">
-            <p class="text-sm text-gray-600 mb-1">Grade</p>
-            <p class="text-lg font-semibold">Grade ${studentData.grade}</p>
+            <p class="text-sm text-gray-600 mb-1">Class</p>
+            <p class="text-lg font-semibold">${studentData.class}</p>
           </div>
         </div>
 
@@ -216,15 +214,15 @@ export const generateStudentReportPDF = async (
     );
 
     const allDivs = reportElement.querySelectorAll("div");
-    let gradeDiv: HTMLElement | null = null;
+    let classDiv: HTMLElement | null = null;
     let schoolDiv: HTMLElement | null = null;
 
     allDivs.forEach((div: Element) => {
       const text = div.textContent || "";
-      if (text.includes("Grade") && text.includes("Grade ")) {
-        gradeDiv = div as HTMLElement;
+      if (text.includes("Class") && text.includes("Class ")) {
+        classDiv = div as HTMLElement;
       }
-      if (text.includes("School Name") && !text.includes("Grade")) {
+      if (text.includes("School Name") && !text.includes("Class")) {
         schoolDiv = div as HTMLElement;
       }
     });
@@ -270,7 +268,7 @@ export const generateStudentReportPDF = async (
 
     // Apply -mt-4 classes for better PDF positioning
     if (studentNameDiv) (studentNameDiv as HTMLElement).classList.add("-mt-4");
-    if (gradeDiv) (gradeDiv as HTMLElement).classList.add("-mt-4");
+    if (classDiv) (classDiv as HTMLElement).classList.add("-mt-4");
     if (schoolDiv) (schoolDiv as HTMLElement).classList.add("-mt-4");
 
     achievementSpans.forEach((span) => {
@@ -305,7 +303,7 @@ export const generateStudentReportPDF = async (
     // Remove -mt-4 after capture to avoid position issues
     if (studentNameDiv)
       (studentNameDiv as HTMLElement).classList.remove("-mt-4");
-    if (gradeDiv) (gradeDiv as HTMLElement).classList.remove("-mt-4");
+    if (classDiv) (classDiv as HTMLElement).classList.remove("-mt-4");
     if (schoolDiv) (schoolDiv as HTMLElement).classList.remove("-mt-4");
 
     achievementSpans.forEach((span) => {

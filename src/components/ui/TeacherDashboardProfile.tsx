@@ -5,7 +5,7 @@ import { Activity } from "lucide-react";
 interface TeacherDashboardProfileProps {
   studentData?: {
     studentName: string;
-    grade: string;
+    class: string;
     cefrLevel: string;
     totalPoints: number;
     currentStreak: number;
@@ -41,14 +41,14 @@ const TeacherDashboardProfile = ({
             </h3>
           </div>
           <div className="space-y-1.5 xs:space-y-2 sm:space-y-3">
-            {/* Grade Box */}
+            {/* Class Box */}
             <div className="flex items-center justify-between rounded-full p-1.5 xs:p-2 sm:p-3 border border-gray-200">
               <span className="font-medium text-xs text-[#6250E9] truncate">
-                Grade
+                Class
               </span>
               <div className="bg-gradient-to-r from-purple-100 to-blue-100 rounded-full px-2 xs:px-3 sm:px-4 py-1">
                 <span className="font-medium text-xs bg-gradient-to-r from-[#6250E9] to-[#69BDFF] bg-clip-text text-transparent">
-                  {studentData?.grade || "N/A"}
+                  {studentData?.class || "N/A"}
                 </span>
               </div>
             </div>

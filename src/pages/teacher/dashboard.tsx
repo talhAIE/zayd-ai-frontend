@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 // import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Table,
   TableBody,
@@ -43,6 +43,11 @@ import {
 import { generateStudentReportPDF } from "@/utils/pdfGenerator";
 import { toast } from "sonner";
 
+const convertSecondsToMinutes = (seconds: number): string => {
+  const minutes = Math.round(seconds / 60);
+  return `${minutes} min`;
+};
+
 export default function TeacherDashboard() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -59,8 +64,9 @@ export default function TeacherDashboard() {
 
   // Local state for form inputs
   // const [searchTerm, setSearchTerm] = useState("");
-  const [gradeFilter, setGradeFilter] = useState("all");
+  const [classFilter, setClassFilter] = useState("all");
   const [topicStatusFilter, setTopicStatusFilter] = useState("all");
+  const [timeFilter, setTimeFilter] = useState("all");
   const [sortBy, setSortBy] = useState("points");
   const [sortOrder, setSortOrder] = useState("desc");
   const [minCompletedTopics, setMinCompletedTopics] = useState("");
@@ -73,7 +79,7 @@ export default function TeacherDashboard() {
 
   const [visibleColumns, setVisibleColumns] = useState({
     name: true,
-    grade: true,
+    class: true,
     cefrLevel: true,
     streak: true,
     usage: true,
@@ -91,7 +97,7 @@ export default function TeacherDashboard() {
   const [allStudents, setAllStudents] = useState<any[]>([]);
 
   const columnOptions = [
-    { key: "grade", label: "Grade" },
+    { key: "class", label: "Class" },
     { key: "cefrLevel", label: "CEFR Level" },
     { key: "streak", label: "Streak" },
     { key: "usage", label: "Usage" },
@@ -151,12 +157,13 @@ export default function TeacherDashboard() {
         studentsToDownload = allStudents.map((student) => ({
           id: student.id,
           name: student.studentName,
-          grade: student.grade,
+          class: student.class,
           cefrLevel: student.cefrLevel,
           streak: student.currentStreak,
-          usage: student.usage,
+          usage: convertSecondsToMinutes(student.usage),
           totalPoints: student.totalPoints,
           completedTopics: student.completedTopics,
+          totalTopics: student.totalTopics,
         }));
       }
 
@@ -219,13 +226,17 @@ export default function TeacherDashboard() {
       limit: pageSize,
     };
 
-    if (gradeFilter !== "all") {
-      const numericGrade = gradeFilter.replace("Grade ", "");
-      filters.grade = numericGrade;
+    if (classFilter !== "all") {
+      const numericClass = classFilter.replace("Class ", "");
+      filters.class = numericClass;
     }
 
     if (topicStatusFilter !== "all") {
       filters.topicStatus = topicStatusFilter as any;
+    }
+
+    if (timeFilter !== "all") {
+      filters.timeFilter = timeFilter as any;
     }
 
     if (minCompletedTopics) {
@@ -269,8 +280,9 @@ export default function TeacherDashboard() {
       fetchData();
     }
   }, [
-    gradeFilter,
+    classFilter,
     topicStatusFilter,
+    timeFilter,
     sortBy,
     sortOrder,
     minCompletedTopics,
@@ -292,12 +304,13 @@ export default function TeacherDashboard() {
           const transformedAllStudents = allStudentsData.map((student) => ({
             id: student.id,
             name: student.studentName,
-            grade: student.grade,
+            class: student.class,
             cefrLevel: student.cefrLevel,
             streak: student.currentStreak,
             usage: student.usage,
             totalPoints: student.totalPoints,
             completedTopics: student.completedTopics,
+            totalTopics: student.totalTopics,
           }));
           setAllStudents(transformedAllStudents);
         } catch (error) {
@@ -308,8 +321,9 @@ export default function TeacherDashboard() {
 
     fetchAllStudents();
   }, [
-    gradeFilter,
+    classFilter,
     topicStatusFilter,
+    timeFilter,
     sortBy,
     sortOrder,
     minCompletedTopics,
@@ -321,12 +335,13 @@ export default function TeacherDashboard() {
     return students.map((student) => ({
       id: student.id,
       name: student.studentName,
-      grade: student.grade,
+      class: student.class,
       cefrLevel: student.cefrLevel,
       streak: student.currentStreak,
       usage: student.usage,
       totalPoints: student.totalPoints,
       completedTopics: student.completedTopics,
+      totalTopics: student.totalTopics,
     }));
   }, [students]);
 
@@ -338,8 +353,9 @@ export default function TeacherDashboard() {
     setCurrentPage(1);
     setSelectedStudents(new Set());
   }, [
-    gradeFilter,
+    classFilter,
     topicStatusFilter,
+    timeFilter,
     sortBy,
     sortOrder,
     minCompletedTopics,
@@ -352,8 +368,9 @@ export default function TeacherDashboard() {
 
   const handleClearFilters = () => {
     // setSearchTerm("");
-    setGradeFilter("all");
+    setClassFilter("all");
     setTopicStatusFilter("all");
+    setTimeFilter("all");
     setSortBy("points");
     setSortOrder("desc");
     setMinCompletedTopics("");
@@ -365,15 +382,17 @@ export default function TeacherDashboard() {
   const hasActiveFilters = useMemo(() => {
     return (
       // searchTerm ||
-      gradeFilter !== "all" ||
+      classFilter !== "all" ||
       topicStatusFilter !== "all" ||
+      timeFilter !== "all" ||
       minCompletedTopics ||
       maxCompletedTopics
     );
   }, [
     // searchTerm,
-    gradeFilter,
+    classFilter,
     topicStatusFilter,
+    timeFilter,
     minCompletedTopics,
     maxCompletedTopics,
   ]);
@@ -433,32 +452,24 @@ export default function TeacherDashboard() {
           {/* Filter Buttons */}
           <div className="flex gap-2 flex-wrap w-full sm:w-auto">
             <Select
-              value={gradeFilter}
-              onValueChange={setGradeFilter}
+              value={classFilter}
+              onValueChange={setClassFilter}
               disabled={filterValuesLoading}
             >
               <SelectTrigger className="flex-1 min-w-[140px]">
                 <SelectValue
-                  placeholder={filterValuesLoading ? "Loading..." : "Grade"}
+                  placeholder={filterValuesLoading ? "Loading..." : "Class"}
                 />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Grades</SelectItem>
-                {filterValues?.grades?.length ? (
-                  filterValues.grades.map((grade) => (
-                    <SelectItem key={grade} value={`Grade ${grade}`}>
-                      Grade {grade}
-                    </SelectItem>
-                  ))
-                ) : (
-                  // Fallback options if filter values are not loaded
-                  <>
-                    <SelectItem value="Grade 9">Grade 9</SelectItem>
-                    <SelectItem value="Grade 10">Grade 10</SelectItem>
-                    <SelectItem value="Grade 11">Grade 11</SelectItem>
-                    <SelectItem value="Grade 12">Grade 12</SelectItem>
-                  </>
-                )}
+                <SelectItem value="all">All Classes</SelectItem>
+                {filterValues?.classes?.length
+                  ? filterValues.classes.map((classItem) => (
+                      <SelectItem key={classItem} value={`Class ${classItem}`}>
+                        Class {classItem}
+                      </SelectItem>
+                    ))
+                  : null}
               </SelectContent>
             </Select>
 
@@ -488,6 +499,26 @@ export default function TeacherDashboard() {
                     <SelectItem value="incomplete">Incomplete</SelectItem>
                   </>
                 )}
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={timeFilter}
+              onValueChange={setTimeFilter}
+              disabled={filterValuesLoading}
+            >
+              <SelectTrigger className="flex-1 min-w-[140px]">
+                <SelectValue
+                  placeholder={
+                    filterValuesLoading ? "Loading..." : "Time Filter"
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Time</SelectItem>
+                <SelectItem value="daily">Daily</SelectItem>
+                <SelectItem value="weekly">Weekly</SelectItem>
+                <SelectItem value="monthly">Monthly</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -657,9 +688,9 @@ export default function TeacherDashboard() {
                   {visibleColumns.name && (
                     <TableHead className="px-6 py-4">Student Name</TableHead>
                   )}
-                  {visibleColumns.grade && (
+                  {visibleColumns.class && (
                     <TableHead className="text-center px-6 py-4">
-                      Grade
+                      Class
                     </TableHead>
                   )}
                   {visibleColumns.cefrLevel && (
@@ -709,12 +740,8 @@ export default function TeacherDashboard() {
                         <TableCell className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             <Avatar>
-                              <AvatarImage
-                                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${student.id}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`}
-                                alt={student.name}
-                              />
                               <AvatarFallback>
-                                {student.name.charAt(0)}
+                                {student.name.charAt(0).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
                             <div>
@@ -723,10 +750,10 @@ export default function TeacherDashboard() {
                           </div>
                         </TableCell>
                       )}
-                      {visibleColumns.grade && (
+                      {visibleColumns.class && (
                         <TableCell className="text-center px-6 py-4">
                           <div className="flex items-center justify-center">
-                            <span className="font-medium">{student.grade}</span>
+                            <span className="font-medium">{student.class}</span>
                           </div>
                         </TableCell>
                       )}
@@ -755,7 +782,7 @@ export default function TeacherDashboard() {
                         <TableCell className="text-center px-6 py-4">
                           <div className="flex items-center justify-center">
                             <span className="font-medium">
-                              {student.usage.toLocaleString()}
+                              {convertSecondsToMinutes(student.usage)}
                             </span>
                           </div>
                         </TableCell>
@@ -776,7 +803,7 @@ export default function TeacherDashboard() {
                         <TableCell className="text-center px-6 py-4">
                           <div className="flex items-center justify-center">
                             <span className="font-bold text-green-600">
-                              {student.completedTopics}
+                              {student.completedTopics}/{student.totalTopics}
                             </span>
                             <span className="text-xs text-gray-500 ml-1">
                               topics
@@ -850,20 +877,18 @@ export default function TeacherDashboard() {
                       aria-label={`Select ${student.name}`}
                     />
                     <Avatar>
-                      <AvatarImage
-                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${student.id}`}
-                        alt={student.name}
-                      />
-                      <AvatarFallback>{student.name.charAt(0)}</AvatarFallback>
+                      <AvatarFallback>
+                        {student.name.charAt(0).toUpperCase()}
+                      </AvatarFallback>
                     </Avatar>
                     <div>
                       <div className="font-medium">{student.name}</div>
                     </div>
                   </div>
                   <div className="text-sm">
-                    {visibleColumns.grade && (
+                    {visibleColumns.class && (
                       <p>
-                        <strong>Grade:</strong> {student.grade}
+                        <strong>Class:</strong> {student.class}
                       </p>
                     )}
                     {visibleColumns.cefrLevel && (
@@ -884,7 +909,8 @@ export default function TeacherDashboard() {
                     )}
                     {visibleColumns.usage && (
                       <p>
-                        <strong>Usage:</strong> {student.usage.toLocaleString()}
+                        <strong>Usage:</strong>{" "}
+                        {convertSecondsToMinutes(student.usage)}
                       </p>
                     )}
                     {visibleColumns.totalPoints && (
@@ -899,7 +925,7 @@ export default function TeacherDashboard() {
                       <p>
                         <strong>Completed Topics:</strong>{" "}
                         <span className="font-bold text-green-600">
-                          {student.completedTopics} topics
+                          {student.completedTopics}/{student.totalTopics} topics
                         </span>
                       </p>
                     )}
