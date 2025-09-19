@@ -285,14 +285,21 @@ export const generateStudentReportPDF = async (
 
     await new Promise((resolve) => setTimeout(resolve, 100));
 
+    const maxWidth = 1200;
+    const elementWidth = reportElement.scrollWidth;
+    const elementHeight = reportElement.scrollHeight;
+    const scale = Math.min(1.25, maxWidth / elementWidth);
+
     // Generate canvas
     const canvas = await html2canvas(reportElement, {
-      scale: 2,
+      scale: scale,
       useCORS: true,
       allowTaint: true,
       backgroundColor: "#ffffff",
-      width: reportElement.scrollWidth,
-      height: reportElement.scrollHeight,
+      width: elementWidth,
+      height: elementHeight,
+      logging: false,
+      imageTimeout: 0,
     });
 
     // Remove -mt-4 after capture to avoid position issues
@@ -316,7 +323,7 @@ export const generateStudentReportPDF = async (
     document.body.removeChild(reportElement);
 
     // Create PDF
-    const imgData = canvas.toDataURL("image/png");
+    const imgData = canvas.toDataURL("image/jpeg"); // JPEG with 75% quality for better compression
     const pdf = new jsPDF("p", "mm", "a4");
 
     const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -329,7 +336,7 @@ export const generateStudentReportPDF = async (
 
     pdf.addImage(
       imgData,
-      "PNG",
+      "JPEG",
       imgX,
       imgY,
       imgWidth * ratio,

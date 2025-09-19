@@ -147,13 +147,20 @@ export default function StudentReportModal({
 
       await new Promise((resolve) => setTimeout(resolve, 100));
 
+      const maxWidth = 1200;
+      const elementWidth = reportRef.current.scrollWidth;
+      const elementHeight = reportRef.current.scrollHeight;
+      const scale = Math.min(1.25, maxWidth / elementWidth);
+
       const canvas = await html2canvas(reportRef.current, {
-        scale: 2,
+        scale: scale,
         useCORS: true,
         allowTaint: true,
         backgroundColor: "#ffffff",
-        width: reportRef.current.scrollWidth,
-        height: reportRef.current.scrollHeight,
+        width: elementWidth,
+        height: elementHeight,
+        logging: false,
+        imageTimeout: 0,
       });
 
       // Remove -mt-3 after capture to avoid position issues on viewing the report
@@ -173,7 +180,7 @@ export default function StudentReportModal({
       if (totalUsageValueP)
         (totalUsageValueP as HTMLElement).classList.remove("-mt-3");
 
-      const imgData = canvas.toDataURL("image/png");
+      const imgData = canvas.toDataURL("image/jpeg");
       const pdf = new jsPDF("p", "mm", "a4");
 
       const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -186,7 +193,7 @@ export default function StudentReportModal({
 
       pdf.addImage(
         imgData,
-        "PNG",
+        "JPEG",
         imgX,
         imgY,
         imgWidth * ratio,
