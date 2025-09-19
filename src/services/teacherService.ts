@@ -208,6 +208,52 @@ export const downloadBulkStudentReports = async (
   }
 };
 
+export const fetchAllTeacherStudents = async (
+  teacherId: string, 
+  filters?: Omit<TeacherDashboardFilters, 'page' | 'limit'>
+): Promise<TeacherStudent[]> => {
+  try {
+    const params = new URLSearchParams();
+    
+    if (filters) {
+      if (filters.grade) params.append('grade', filters.grade);
+      if (filters.topicStatus && filters.topicStatus !== 'all') {
+        params.append('topicStatus', filters.topicStatus);
+      }
+      if (filters.sortBy) params.append('sortBy', filters.sortBy);
+      if (filters.sortOrder) params.append('sortOrder', filters.sortOrder);
+      if (filters.minCompletedTopics !== undefined) {
+        params.append('minCompletedTopics', filters.minCompletedTopics.toString());
+      }
+      if (filters.maxCompletedTopics !== undefined) {
+        params.append('maxCompletedTopics', filters.maxCompletedTopics.toString());
+      }
+      if (filters.search) {
+        params.append('search', filters.search);
+      }
+    }
+    
+    params.append('limit', '10000');
+    params.append('page', '1');
+    
+    const queryString = params.toString();
+    const url = `/teacher-dashboard/${teacherId}${queryString ? `?${queryString}` : ''}`;
+    
+    const response = await apiClient.get(url);
+    
+    if (response.data.status && response.data.data) {
+      return response.data.data.students as TeacherStudent[];
+    } else {
+      throw new Error('Invalid response format');
+    }
+  } catch (error: any) {
+    if (error.response && error.response.data) {
+      throw new Error(error.response.data.message || 'Failed to fetch all teacher students');
+    }
+    throw new Error(error.message || 'Failed to fetch all teacher students');
+  }
+};
+
 export const downloadIndividualStudentReport = async (
   teacherId: string,
   studentId: string

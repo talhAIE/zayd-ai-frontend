@@ -39,7 +39,7 @@ export default function StudentReportModal({
       modeKey
         .split("-")
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ") + " MODE"
+        .join(" ")
     );
   };
 
@@ -321,7 +321,7 @@ export default function StudentReportModal({
             </Card>
           </div>
 
-          {/* Models and Topic Completion */}
+          {/* Modes and Topic Completion */}
           <Card>
             <CardContent className="p-3 sm:p-6">
               <div className="overflow-x-auto -mx-3 sm:mx-0">
@@ -329,7 +329,7 @@ export default function StudentReportModal({
                   <thead>
                     <tr className="border-b">
                       <th className="text-left py-3 px-4 font-semibold text-blue-600">
-                        MODELS
+                        MODES
                       </th>
                       <th className="text-center py-3 px-4 font-semibold text-blue-600">
                         COMPLETE TOPICS

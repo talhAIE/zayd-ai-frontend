@@ -21,11 +21,11 @@ const createReportElement = (studentData: StudentProfileData): HTMLElement => {
       modeKey
         .split("-")
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ") + " MODE"
+        .join(" ")
     );
   };
 
-  const modelsData = Object.entries(studentData.topicsByMode).map(
+  const modesData = Object.entries(studentData.topicsByMode).map(
     ([modeKey, modeData]) => ({
       name: formatModeName(modeKey),
       completeTopics: `${modeData.completed} topics`,
@@ -100,26 +100,26 @@ const createReportElement = (studentData: StudentProfileData): HTMLElement => {
         </div>
       </div>
 
-      <!-- Models and Topic Completion -->
+      <!-- Modes and Topic Completion -->
       <div class="bg-white rounded-lg p-6 shadow-sm">
         <div class="overflow-x-auto">
           <table class="w-full">
             <thead>
               <tr class="border-b">
-                <th class="text-left py-3 px-4 font-semibold text-blue-600">MODELS</th>
+                <th class="text-left py-3 px-4 font-semibold text-blue-600">MODES</th>
                 <th class="text-center py-3 px-4 font-semibold text-blue-600">COMPLETE TOPICS</th>
                 <th class="text-center py-3 px-4 font-semibold text-blue-600">INCOMPLETE TOPICS</th>
               </tr>
             </thead>
             <tbody>
-              ${modelsData
+              ${modesData
                 .map(
-                  (model) => `
+                  (mode) => `
                 <tr class="border-b">
-                  <td class="py-3 px-4 font-medium">${model.name}</td>
-                  <td class="py-3 px-4 text-center">${model.completeTopics}</td>
+                  <td class="py-3 px-4 font-medium">${mode.name}</td>
+                  <td class="py-3 px-4 text-center">${mode.completeTopics}</td>
                   <td class="py-3 px-4 text-center">
-                    <span class="font-semibold text-blue-600">${model.incompleteTopics}</span>
+                    <span class="font-semibold text-blue-600">${mode.incompleteTopics}</span>
                   </td>
                 </tr>
               `

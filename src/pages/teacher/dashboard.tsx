@@ -38,6 +38,7 @@ import {
 import {
   TeacherDashboardFilters,
   downloadIndividualStudentReport,
+  fetchAllTeacherStudents,
 } from "@/services/teacherService";
 import { generateStudentReportPDF } from "@/utils/pdfGenerator";
 import { toast } from "sonner";
@@ -87,6 +88,7 @@ export default function TeacherDashboard() {
   const [downloadingStudent, setDownloadingStudent] = useState<string | null>(
     null
   );
+  const [allStudents, setAllStudents] = useState<any[]>([]);
 
   const columnOptions = [
     { key: "grade", label: "Grade" },
@@ -117,43 +119,62 @@ export default function TeacherDashboard() {
   };
 
   const toggleSelectAll = () => {
-    if (selectedStudents.size === paginatedStudents.length) {
+    if (
+      selectedStudents.size === allStudents.length &&
+      allStudents.length > 0
+    ) {
       setSelectedStudents(new Set());
     } else {
-      setSelectedStudents(
-        new Set(paginatedStudents.map((student) => student.id))
-      );
+      setSelectedStudents(new Set(allStudents.map((student) => student.id)));
     }
   };
 
   const handleBulkDownload = async () => {
-    if (selectedStudents.size === 0) {
-      toast.error("Please select at least one student to download reports");
-      return;
-    }
-
     setIsDownloading(true);
     try {
-      const studentIds = Array.from(selectedStudents);
+      let studentsToDownload: any[] = [];
+
+      if (selectedStudents.size > 0) {
+        // Download selected students only
+        studentsToDownload = transformedStudents.filter((s) =>
+          selectedStudents.has(s.id)
+        );
+      } else {
+        // Download all students based on current filters
+        const filters = buildFilters();
+        // Remove pagination from filters for fetching all students
+        const { page, limit, ...allStudentsFilters } = filters;
+        const allStudents = await fetchAllTeacherStudents(
+          teacherId,
+          allStudentsFilters
+        );
+        studentsToDownload = allStudents.map((student) => ({
+          id: student.id,
+          name: student.studentName,
+          grade: student.grade,
+          cefrLevel: student.cefrLevel,
+          streak: student.currentStreak,
+          usage: student.usage,
+          totalPoints: student.totalPoints,
+          completedTopics: student.completedTopics,
+        }));
+      }
+
+      if (studentsToDownload.length === 0) {
+        toast.error("No students found to download reports");
+        return;
+      }
+
       let successCount = 0;
       let errorCount = 0;
 
-      for (const studentId of studentIds) {
+      for (const student of studentsToDownload) {
         try {
-          const student = transformedStudents.find((s) => s.id === studentId);
-          if (!student) {
-            console.warn(
-              `Student with ID ${studentId} not found in current data`
-            );
-            errorCount++;
-            continue;
-          }
-
           setDownloadingStudent(student.name);
 
           const studentData = await downloadIndividualStudentReport(
             teacherId,
-            studentId
+            student.id
           );
 
           await generateStudentReportPDF(studentData);
@@ -162,7 +183,7 @@ export default function TeacherDashboard() {
           await new Promise((resolve) => setTimeout(resolve, 500));
         } catch (error) {
           console.error(
-            `Error downloading report for student ${studentId}:`,
+            `Error downloading report for student ${student.id}:`,
             error
           );
           errorCount++;
@@ -255,6 +276,44 @@ export default function TeacherDashboard() {
     minCompletedTopics,
     maxCompletedTopics,
     currentPage,
+    // debouncedSearchTerm,
+  ]);
+
+  useEffect(() => {
+    const fetchAllStudents = async () => {
+      if (teacherId) {
+        try {
+          const filters = buildFilters();
+          const { page, limit, ...allStudentsFilters } = filters;
+          const allStudentsData = await fetchAllTeacherStudents(
+            teacherId,
+            allStudentsFilters
+          );
+          const transformedAllStudents = allStudentsData.map((student) => ({
+            id: student.id,
+            name: student.studentName,
+            grade: student.grade,
+            cefrLevel: student.cefrLevel,
+            streak: student.currentStreak,
+            usage: student.usage,
+            totalPoints: student.totalPoints,
+            completedTopics: student.completedTopics,
+          }));
+          setAllStudents(transformedAllStudents);
+        } catch (error) {
+          console.error("Error fetching all students:", error);
+        }
+      }
+    };
+
+    fetchAllStudents();
+  }, [
+    gradeFilter,
+    topicStatusFilter,
+    sortBy,
+    sortOrder,
+    minCompletedTopics,
+    maxCompletedTopics,
     // debouncedSearchTerm,
   ]);
 
@@ -553,7 +612,7 @@ export default function TeacherDashboard() {
 
             <Button
               onClick={handleBulkDownload}
-              disabled={selectedStudents.size === 0 || isDownloading}
+              disabled={isDownloading}
               className="w-full sm:w-auto"
               size="sm"
             >
@@ -567,7 +626,9 @@ export default function TeacherDashboard() {
               ) : (
                 <>
                   <Download className="h-4 w-4 mr-2" />
-                  Download Bulk Reports ({selectedStudents.size})
+                  {selectedStudents.size > 0
+                    ? `Download Selected Reports (${selectedStudents.size})`
+                    : `Download All Reports (${totalStudents})`}
                 </>
               )}
             </Button>
@@ -586,8 +647,8 @@ export default function TeacherDashboard() {
                   <TableHead className="w-12 px-6 py-4">
                     <Checkbox
                       checked={
-                        paginatedStudents.length > 0 &&
-                        selectedStudents.size === paginatedStudents.length
+                        allStudents.length > 0 &&
+                        selectedStudents.size === allStudents.length
                       }
                       onCheckedChange={toggleSelectAll}
                       aria-label="Select all students"
@@ -767,10 +828,10 @@ export default function TeacherDashboard() {
             {paginatedStudents.length > 0 && (
               <div className="flex justify-between items-center mt-4 mb-4">
                 <span className="text-sm text-gray-600">
-                  {selectedStudents.size} of {paginatedStudents.length} selected
+                  {selectedStudents.size} of {allStudents.length} selected
                 </span>
                 <Button variant="outline" size="sm" onClick={toggleSelectAll}>
-                  {selectedStudents.size === paginatedStudents.length
+                  {selectedStudents.size === allStudents.length
                     ? "Deselect All"
                     : "Select All"}
                 </Button>
