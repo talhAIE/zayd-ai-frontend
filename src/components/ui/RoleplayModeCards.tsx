@@ -34,6 +34,7 @@ export function RoleplayModeCards({ topicsData }: RoleplayModeCardsProps) {
         color: "#2DE000",
         completed: modeData.completed,
         incomplete: modeData.incomplete,
+        total: modeData.total,
       }))
     : [];
 
@@ -128,6 +129,15 @@ export function RoleplayModeCards({ topicsData }: RoleplayModeCardsProps) {
                       </span>
                       <br />
                       <span className="text-sm">Incomplete</span>
+                    </div>
+                  </div>
+                  <div className="p-4 flex items-center justify-center">
+                    <div className="text-lg bg-[#F8F9FD] px-12 py-4 rounded-lg">
+                      <span className="text-[#065FF0] font-bold">
+                        {mode.total || 0}
+                      </span>
+                      <br />
+                      <span className="text-sm">Total</span>
                     </div>
                   </div>
                 </div>

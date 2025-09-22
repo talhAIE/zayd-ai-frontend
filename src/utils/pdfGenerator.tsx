@@ -17,15 +17,13 @@ const createReportElement = (studentData: StudentProfileData): HTMLElement => {
   const totalUsageDisplay = `${totalUsageMinutes} Mins`;
 
   const formatModeName = (modeKey: string): string => {
-    return (
-      modeKey
-        .split("-")
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ") + " MODE"
-    );
+    return modeKey
+      .split("-")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   };
 
-  const modelsData = Object.entries(studentData.topicsByMode).map(
+  const modesData = Object.entries(studentData.topicsByMode).map(
     ([modeKey, modeData]) => ({
       name: formatModeName(modeKey),
       completeTopics: `${modeData.completed} topics`,
@@ -61,11 +59,11 @@ const createReportElement = (studentData: StudentProfileData): HTMLElement => {
           </div>
         </div>
 
-        <!-- Grade Card -->
+        <!-- Class Card -->
         <div class="bg-white rounded-lg p-4 shadow-sm">
           <div class="flex flex-col items-center justify-center h-full text-center">
-            <p class="text-sm text-gray-600 mb-1">Grade</p>
-            <p class="text-lg font-semibold">Grade ${studentData.grade}</p>
+            <p class="text-sm text-gray-600 mb-1">Class</p>
+            <p class="text-lg font-semibold">${studentData.class}</p>
           </div>
         </div>
 
@@ -100,26 +98,26 @@ const createReportElement = (studentData: StudentProfileData): HTMLElement => {
         </div>
       </div>
 
-      <!-- Models and Topic Completion -->
+      <!-- Modes and Topic Completion -->
       <div class="bg-white rounded-lg p-6 shadow-sm">
         <div class="overflow-x-auto">
           <table class="w-full">
             <thead>
               <tr class="border-b">
-                <th class="text-left py-3 px-4 font-semibold text-blue-600">MODELS</th>
+                <th class="text-left py-3 px-4 font-semibold text-blue-600">MODES</th>
                 <th class="text-center py-3 px-4 font-semibold text-blue-600">COMPLETE TOPICS</th>
                 <th class="text-center py-3 px-4 font-semibold text-blue-600">INCOMPLETE TOPICS</th>
               </tr>
             </thead>
             <tbody>
-              ${modelsData
+              ${modesData
                 .map(
-                  (model) => `
+                  (mode) => `
                 <tr class="border-b">
-                  <td class="py-3 px-4 font-medium">${model.name}</td>
-                  <td class="py-3 px-4 text-center">${model.completeTopics}</td>
+                  <td class="py-3 px-4 font-medium">${mode.name}</td>
+                  <td class="py-3 px-4 text-center">${mode.completeTopics}</td>
                   <td class="py-3 px-4 text-center">
-                    <span class="font-semibold text-blue-600">${model.incompleteTopics}</span>
+                    <span class="font-semibold text-blue-600">${mode.incompleteTopics}</span>
                   </td>
                 </tr>
               `
@@ -216,15 +214,15 @@ export const generateStudentReportPDF = async (
     );
 
     const allDivs = reportElement.querySelectorAll("div");
-    let gradeDiv: HTMLElement | null = null;
+    let classDiv: HTMLElement | null = null;
     let schoolDiv: HTMLElement | null = null;
 
     allDivs.forEach((div: Element) => {
       const text = div.textContent || "";
-      if (text.includes("Grade") && text.includes("Grade ")) {
-        gradeDiv = div as HTMLElement;
+      if (text.includes("Class") && text.includes("Class ")) {
+        classDiv = div as HTMLElement;
       }
-      if (text.includes("School Name") && !text.includes("Grade")) {
+      if (text.includes("School Name") && !text.includes("Class")) {
         schoolDiv = div as HTMLElement;
       }
     });
@@ -270,7 +268,7 @@ export const generateStudentReportPDF = async (
 
     // Apply -mt-4 classes for better PDF positioning
     if (studentNameDiv) (studentNameDiv as HTMLElement).classList.add("-mt-4");
-    if (gradeDiv) (gradeDiv as HTMLElement).classList.add("-mt-4");
+    if (classDiv) (classDiv as HTMLElement).classList.add("-mt-4");
     if (schoolDiv) (schoolDiv as HTMLElement).classList.add("-mt-4");
 
     achievementSpans.forEach((span) => {
@@ -285,20 +283,27 @@ export const generateStudentReportPDF = async (
 
     await new Promise((resolve) => setTimeout(resolve, 100));
 
+    const maxWidth = 1200;
+    const elementWidth = reportElement.scrollWidth;
+    const elementHeight = reportElement.scrollHeight;
+    const scale = Math.min(1.25, maxWidth / elementWidth);
+
     // Generate canvas
     const canvas = await html2canvas(reportElement, {
-      scale: 2,
+      scale: scale,
       useCORS: true,
       allowTaint: true,
       backgroundColor: "#ffffff",
-      width: reportElement.scrollWidth,
-      height: reportElement.scrollHeight,
+      width: elementWidth,
+      height: elementHeight,
+      logging: false,
+      imageTimeout: 0,
     });
 
     // Remove -mt-4 after capture to avoid position issues
     if (studentNameDiv)
       (studentNameDiv as HTMLElement).classList.remove("-mt-4");
-    if (gradeDiv) (gradeDiv as HTMLElement).classList.remove("-mt-4");
+    if (classDiv) (classDiv as HTMLElement).classList.remove("-mt-4");
     if (schoolDiv) (schoolDiv as HTMLElement).classList.remove("-mt-4");
 
     achievementSpans.forEach((span) => {
@@ -316,7 +321,7 @@ export const generateStudentReportPDF = async (
     document.body.removeChild(reportElement);
 
     // Create PDF
-    const imgData = canvas.toDataURL("image/png");
+    const imgData = canvas.toDataURL("image/jpeg"); // JPEG with 75% quality for better compression
     const pdf = new jsPDF("p", "mm", "a4");
 
     const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -329,7 +334,7 @@ export const generateStudentReportPDF = async (
 
     pdf.addImage(
       imgData,
-      "PNG",
+      "JPEG",
       imgX,
       imgY,
       imgWidth * ratio,

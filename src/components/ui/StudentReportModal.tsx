@@ -35,12 +35,10 @@ export default function StudentReportModal({
   const totalUsageDisplay = `${totalUsageMinutes} Mins`;
 
   const formatModeName = (modeKey: string): string => {
-    return (
-      modeKey
-        .split("-")
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ") + " MODE"
-    );
+    return modeKey
+      .split("-")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   };
 
   const modelsData = Object.entries(data.topicsByMode).map(
@@ -70,15 +68,15 @@ export default function StudentReportModal({
       );
 
       const allDivs = reportRef.current.querySelectorAll("div");
-      let gradeDiv: HTMLElement | null = null;
+      let classDiv: HTMLElement | null = null;
       let schoolDiv: HTMLElement | null = null;
 
       allDivs.forEach((div: Element) => {
         const text = div.textContent || "";
-        if (text.includes("Grade") && text.includes("Grade ")) {
-          gradeDiv = div as HTMLElement;
+        if (text.includes("Class") && text.includes("Class ")) {
+          classDiv = div as HTMLElement;
         }
-        if (text.includes("School Name") && !text.includes("Grade")) {
+        if (text.includes("School Name") && !text.includes("Class")) {
           schoolDiv = div as HTMLElement;
         }
       });
@@ -121,7 +119,7 @@ export default function StudentReportModal({
 
       console.log("Found elements:", {
         studentNameDiv,
-        gradeDiv,
+        classDiv,
         schoolDiv,
         achievementSpans: achievementSpans.length,
         totalPointsP,
@@ -132,7 +130,7 @@ export default function StudentReportModal({
 
       if (studentNameDiv)
         (studentNameDiv as HTMLElement).classList.add("-mt-3");
-      if (gradeDiv) (gradeDiv as HTMLElement).classList.add("-mt-3");
+      if (classDiv) (classDiv as HTMLElement).classList.add("-mt-3");
       if (schoolDiv) (schoolDiv as HTMLElement).classList.add("-mt-3");
 
       achievementSpans.forEach((span) => {
@@ -147,19 +145,26 @@ export default function StudentReportModal({
 
       await new Promise((resolve) => setTimeout(resolve, 100));
 
+      const maxWidth = 1200;
+      const elementWidth = reportRef.current.scrollWidth;
+      const elementHeight = reportRef.current.scrollHeight;
+      const scale = Math.min(1.25, maxWidth / elementWidth);
+
       const canvas = await html2canvas(reportRef.current, {
-        scale: 2,
+        scale: scale,
         useCORS: true,
         allowTaint: true,
         backgroundColor: "#ffffff",
-        width: reportRef.current.scrollWidth,
-        height: reportRef.current.scrollHeight,
+        width: elementWidth,
+        height: elementHeight,
+        logging: false,
+        imageTimeout: 0,
       });
 
       // Remove -mt-3 after capture to avoid position issues on viewing the report
       if (studentNameDiv)
         (studentNameDiv as HTMLElement).classList.remove("-mt-3");
-      if (gradeDiv) (gradeDiv as HTMLElement).classList.remove("-mt-3");
+      if (classDiv) (classDiv as HTMLElement).classList.remove("-mt-3");
       if (schoolDiv) (schoolDiv as HTMLElement).classList.remove("-mt-3");
 
       achievementSpans.forEach((span) => {
@@ -173,7 +178,7 @@ export default function StudentReportModal({
       if (totalUsageValueP)
         (totalUsageValueP as HTMLElement).classList.remove("-mt-3");
 
-      const imgData = canvas.toDataURL("image/png");
+      const imgData = canvas.toDataURL("image/jpeg");
       const pdf = new jsPDF("p", "mm", "a4");
 
       const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -186,7 +191,7 @@ export default function StudentReportModal({
 
       pdf.addImage(
         imgData,
-        "PNG",
+        "JPEG",
         imgX,
         imgY,
         imgWidth * ratio,
@@ -255,13 +260,13 @@ export default function StudentReportModal({
               </CardContent>
             </Card>
 
-            {/* Grade Card */}
+            {/* Class Card */}
             <Card>
               <CardContent className="p-3 sm:p-4">
                 <div className="flex flex-col items-center justify-center h-full text-center">
-                  <p className="text-xs sm:text-sm text-gray-600 mb-1">Grade</p>
+                  <p className="text-xs sm:text-sm text-gray-600 mb-1">Class</p>
                   <p className="text-base sm:text-lg font-semibold">
-                    Grade {data.grade}
+                    {data.class}
                   </p>
                 </div>
               </CardContent>
@@ -314,7 +319,7 @@ export default function StudentReportModal({
             </Card>
           </div>
 
-          {/* Models and Topic Completion */}
+          {/* Modes and Topic Completion */}
           <Card>
             <CardContent className="p-3 sm:p-6">
               <div className="overflow-x-auto -mx-3 sm:mx-0">
@@ -322,7 +327,7 @@ export default function StudentReportModal({
                   <thead>
                     <tr className="border-b">
                       <th className="text-left py-3 px-4 font-semibold text-blue-600">
-                        MODELS
+                        MODES
                       </th>
                       <th className="text-center py-3 px-4 font-semibold text-blue-600">
                         COMPLETE TOPICS

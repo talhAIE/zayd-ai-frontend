@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 // import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Table,
   TableBody,
@@ -38,9 +38,15 @@ import {
 import {
   TeacherDashboardFilters,
   downloadIndividualStudentReport,
+  fetchAllTeacherStudents,
 } from "@/services/teacherService";
 import { generateStudentReportPDF } from "@/utils/pdfGenerator";
 import { toast } from "sonner";
+
+const convertSecondsToMinutes = (seconds: number): string => {
+  const minutes = Math.round(seconds / 60);
+  return `${minutes} min`;
+};
 
 export default function TeacherDashboard() {
   const navigate = useNavigate();
@@ -58,8 +64,9 @@ export default function TeacherDashboard() {
 
   // Local state for form inputs
   // const [searchTerm, setSearchTerm] = useState("");
-  const [gradeFilter, setGradeFilter] = useState("all");
+  const [classFilter, setClassFilter] = useState("all");
   const [topicStatusFilter, setTopicStatusFilter] = useState("all");
+  const [timeFilter, setTimeFilter] = useState("all");
   const [sortBy, setSortBy] = useState("points");
   const [sortOrder, setSortOrder] = useState("desc");
   const [minCompletedTopics, setMinCompletedTopics] = useState("");
@@ -72,7 +79,7 @@ export default function TeacherDashboard() {
 
   const [visibleColumns, setVisibleColumns] = useState({
     name: true,
-    grade: true,
+    class: true,
     cefrLevel: true,
     streak: true,
     usage: true,
@@ -87,9 +94,10 @@ export default function TeacherDashboard() {
   const [downloadingStudent, setDownloadingStudent] = useState<string | null>(
     null
   );
+  const [allStudents, setAllStudents] = useState<any[]>([]);
 
   const columnOptions = [
-    { key: "grade", label: "Grade" },
+    { key: "class", label: "Class" },
     { key: "cefrLevel", label: "CEFR Level" },
     { key: "streak", label: "Streak" },
     { key: "usage", label: "Usage" },
@@ -117,43 +125,63 @@ export default function TeacherDashboard() {
   };
 
   const toggleSelectAll = () => {
-    if (selectedStudents.size === paginatedStudents.length) {
+    if (
+      selectedStudents.size === allStudents.length &&
+      allStudents.length > 0
+    ) {
       setSelectedStudents(new Set());
     } else {
-      setSelectedStudents(
-        new Set(paginatedStudents.map((student) => student.id))
-      );
+      setSelectedStudents(new Set(allStudents.map((student) => student.id)));
     }
   };
 
   const handleBulkDownload = async () => {
-    if (selectedStudents.size === 0) {
-      toast.error("Please select at least one student to download reports");
-      return;
-    }
-
     setIsDownloading(true);
     try {
-      const studentIds = Array.from(selectedStudents);
+      let studentsToDownload: any[] = [];
+
+      if (selectedStudents.size > 0) {
+        // Download selected students only
+        studentsToDownload = transformedStudents.filter((s) =>
+          selectedStudents.has(s.id)
+        );
+      } else {
+        // Download all students based on current filters
+        const filters = buildFilters();
+        // Remove pagination from filters for fetching all students
+        const { page, limit, ...allStudentsFilters } = filters;
+        const allStudents = await fetchAllTeacherStudents(
+          teacherId,
+          allStudentsFilters
+        );
+        studentsToDownload = allStudents.map((student) => ({
+          id: student.id,
+          name: student.studentName,
+          class: student.class,
+          cefrLevel: student.cefrLevel,
+          streak: student.currentStreak,
+          usage: convertSecondsToMinutes(student.usage),
+          totalPoints: student.totalPoints,
+          completedTopics: student.completedTopics,
+          totalTopics: student.totalTopics,
+        }));
+      }
+
+      if (studentsToDownload.length === 0) {
+        toast.error("No students found to download reports");
+        return;
+      }
+
       let successCount = 0;
       let errorCount = 0;
 
-      for (const studentId of studentIds) {
+      for (const student of studentsToDownload) {
         try {
-          const student = transformedStudents.find((s) => s.id === studentId);
-          if (!student) {
-            console.warn(
-              `Student with ID ${studentId} not found in current data`
-            );
-            errorCount++;
-            continue;
-          }
-
           setDownloadingStudent(student.name);
 
           const studentData = await downloadIndividualStudentReport(
             teacherId,
-            studentId
+            student.id
           );
 
           await generateStudentReportPDF(studentData);
@@ -162,7 +190,7 @@ export default function TeacherDashboard() {
           await new Promise((resolve) => setTimeout(resolve, 500));
         } catch (error) {
           console.error(
-            `Error downloading report for student ${studentId}:`,
+            `Error downloading report for student ${student.id}:`,
             error
           );
           errorCount++;
@@ -198,13 +226,17 @@ export default function TeacherDashboard() {
       limit: pageSize,
     };
 
-    if (gradeFilter !== "all") {
-      const numericGrade = gradeFilter.replace("Grade ", "");
-      filters.grade = numericGrade;
+    if (classFilter !== "all") {
+      const numericClass = classFilter.replace("Class ", "");
+      filters.class = numericClass;
     }
 
     if (topicStatusFilter !== "all") {
       filters.topicStatus = topicStatusFilter as any;
+    }
+
+    if (timeFilter !== "all") {
+      filters.timeFilter = timeFilter as any;
     }
 
     if (minCompletedTopics) {
@@ -248,8 +280,9 @@ export default function TeacherDashboard() {
       fetchData();
     }
   }, [
-    gradeFilter,
+    classFilter,
     topicStatusFilter,
+    timeFilter,
     sortBy,
     sortOrder,
     minCompletedTopics,
@@ -258,16 +291,57 @@ export default function TeacherDashboard() {
     // debouncedSearchTerm,
   ]);
 
+  useEffect(() => {
+    const fetchAllStudents = async () => {
+      if (teacherId) {
+        try {
+          const filters = buildFilters();
+          const { page, limit, ...allStudentsFilters } = filters;
+          const allStudentsData = await fetchAllTeacherStudents(
+            teacherId,
+            allStudentsFilters
+          );
+          const transformedAllStudents = allStudentsData.map((student) => ({
+            id: student.id,
+            name: student.studentName,
+            class: student.class,
+            cefrLevel: student.cefrLevel,
+            streak: student.currentStreak,
+            usage: student.usage,
+            totalPoints: student.totalPoints,
+            completedTopics: student.completedTopics,
+            totalTopics: student.totalTopics,
+          }));
+          setAllStudents(transformedAllStudents);
+        } catch (error) {
+          console.error("Error fetching all students:", error);
+        }
+      }
+    };
+
+    fetchAllStudents();
+  }, [
+    classFilter,
+    topicStatusFilter,
+    timeFilter,
+    sortBy,
+    sortOrder,
+    minCompletedTopics,
+    maxCompletedTopics,
+    // debouncedSearchTerm,
+  ]);
+
   const transformedStudents = useMemo(() => {
     return students.map((student) => ({
       id: student.id,
       name: student.studentName,
-      grade: student.grade,
+      class: student.class,
       cefrLevel: student.cefrLevel,
       streak: student.currentStreak,
       usage: student.usage,
       totalPoints: student.totalPoints,
       completedTopics: student.completedTopics,
+      totalTopics: student.totalTopics,
     }));
   }, [students]);
 
@@ -279,8 +353,9 @@ export default function TeacherDashboard() {
     setCurrentPage(1);
     setSelectedStudents(new Set());
   }, [
-    gradeFilter,
+    classFilter,
     topicStatusFilter,
+    timeFilter,
     sortBy,
     sortOrder,
     minCompletedTopics,
@@ -293,8 +368,9 @@ export default function TeacherDashboard() {
 
   const handleClearFilters = () => {
     // setSearchTerm("");
-    setGradeFilter("all");
+    setClassFilter("all");
     setTopicStatusFilter("all");
+    setTimeFilter("all");
     setSortBy("points");
     setSortOrder("desc");
     setMinCompletedTopics("");
@@ -306,15 +382,17 @@ export default function TeacherDashboard() {
   const hasActiveFilters = useMemo(() => {
     return (
       // searchTerm ||
-      gradeFilter !== "all" ||
+      classFilter !== "all" ||
       topicStatusFilter !== "all" ||
+      timeFilter !== "all" ||
       minCompletedTopics ||
       maxCompletedTopics
     );
   }, [
     // searchTerm,
-    gradeFilter,
+    classFilter,
     topicStatusFilter,
+    timeFilter,
     minCompletedTopics,
     maxCompletedTopics,
   ]);
@@ -374,32 +452,24 @@ export default function TeacherDashboard() {
           {/* Filter Buttons */}
           <div className="flex gap-2 flex-wrap w-full sm:w-auto">
             <Select
-              value={gradeFilter}
-              onValueChange={setGradeFilter}
+              value={classFilter}
+              onValueChange={setClassFilter}
               disabled={filterValuesLoading}
             >
               <SelectTrigger className="flex-1 min-w-[140px]">
                 <SelectValue
-                  placeholder={filterValuesLoading ? "Loading..." : "Grade"}
+                  placeholder={filterValuesLoading ? "Loading..." : "Class"}
                 />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Grades</SelectItem>
-                {filterValues?.grades?.length ? (
-                  filterValues.grades.map((grade) => (
-                    <SelectItem key={grade} value={`Grade ${grade}`}>
-                      Grade {grade}
-                    </SelectItem>
-                  ))
-                ) : (
-                  // Fallback options if filter values are not loaded
-                  <>
-                    <SelectItem value="Grade 9">Grade 9</SelectItem>
-                    <SelectItem value="Grade 10">Grade 10</SelectItem>
-                    <SelectItem value="Grade 11">Grade 11</SelectItem>
-                    <SelectItem value="Grade 12">Grade 12</SelectItem>
-                  </>
-                )}
+                <SelectItem value="all">All Classes</SelectItem>
+                {filterValues?.classes?.length
+                  ? filterValues.classes.map((classItem) => (
+                      <SelectItem key={classItem} value={`Class ${classItem}`}>
+                        Class {classItem}
+                      </SelectItem>
+                    ))
+                  : null}
               </SelectContent>
             </Select>
 
@@ -429,6 +499,26 @@ export default function TeacherDashboard() {
                     <SelectItem value="incomplete">Incomplete</SelectItem>
                   </>
                 )}
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={timeFilter}
+              onValueChange={setTimeFilter}
+              disabled={filterValuesLoading}
+            >
+              <SelectTrigger className="flex-1 min-w-[140px]">
+                <SelectValue
+                  placeholder={
+                    filterValuesLoading ? "Loading..." : "Time Filter"
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Time</SelectItem>
+                <SelectItem value="daily">Daily</SelectItem>
+                <SelectItem value="weekly">Weekly</SelectItem>
+                <SelectItem value="monthly">Monthly</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -553,7 +643,7 @@ export default function TeacherDashboard() {
 
             <Button
               onClick={handleBulkDownload}
-              disabled={selectedStudents.size === 0 || isDownloading}
+              disabled={isDownloading}
               className="w-full sm:w-auto"
               size="sm"
             >
@@ -567,7 +657,9 @@ export default function TeacherDashboard() {
               ) : (
                 <>
                   <Download className="h-4 w-4 mr-2" />
-                  Download Bulk Reports ({selectedStudents.size})
+                  {selectedStudents.size > 0
+                    ? `Download Selected Reports (${selectedStudents.size})`
+                    : `Download All Reports (${totalStudents})`}
                 </>
               )}
             </Button>
@@ -586,8 +678,8 @@ export default function TeacherDashboard() {
                   <TableHead className="w-12 px-6 py-4">
                     <Checkbox
                       checked={
-                        paginatedStudents.length > 0 &&
-                        selectedStudents.size === paginatedStudents.length
+                        allStudents.length > 0 &&
+                        selectedStudents.size === allStudents.length
                       }
                       onCheckedChange={toggleSelectAll}
                       aria-label="Select all students"
@@ -596,9 +688,9 @@ export default function TeacherDashboard() {
                   {visibleColumns.name && (
                     <TableHead className="px-6 py-4">Student Name</TableHead>
                   )}
-                  {visibleColumns.grade && (
+                  {visibleColumns.class && (
                     <TableHead className="text-center px-6 py-4">
-                      Grade
+                      Class
                     </TableHead>
                   )}
                   {visibleColumns.cefrLevel && (
@@ -648,12 +740,8 @@ export default function TeacherDashboard() {
                         <TableCell className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             <Avatar>
-                              <AvatarImage
-                                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${student.id}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`}
-                                alt={student.name}
-                              />
                               <AvatarFallback>
-                                {student.name.charAt(0)}
+                                {student.name.charAt(0).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
                             <div>
@@ -662,10 +750,10 @@ export default function TeacherDashboard() {
                           </div>
                         </TableCell>
                       )}
-                      {visibleColumns.grade && (
+                      {visibleColumns.class && (
                         <TableCell className="text-center px-6 py-4">
                           <div className="flex items-center justify-center">
-                            <span className="font-medium">{student.grade}</span>
+                            <span className="font-medium">{student.class}</span>
                           </div>
                         </TableCell>
                       )}
@@ -694,7 +782,7 @@ export default function TeacherDashboard() {
                         <TableCell className="text-center px-6 py-4">
                           <div className="flex items-center justify-center">
                             <span className="font-medium">
-                              {student.usage.toLocaleString()}
+                              {convertSecondsToMinutes(student.usage)}
                             </span>
                           </div>
                         </TableCell>
@@ -715,7 +803,7 @@ export default function TeacherDashboard() {
                         <TableCell className="text-center px-6 py-4">
                           <div className="flex items-center justify-center">
                             <span className="font-bold text-green-600">
-                              {student.completedTopics}
+                              {student.completedTopics}/{student.totalTopics}
                             </span>
                             <span className="text-xs text-gray-500 ml-1">
                               topics
@@ -767,10 +855,10 @@ export default function TeacherDashboard() {
             {paginatedStudents.length > 0 && (
               <div className="flex justify-between items-center mt-4 mb-4">
                 <span className="text-sm text-gray-600">
-                  {selectedStudents.size} of {paginatedStudents.length} selected
+                  {selectedStudents.size} of {allStudents.length} selected
                 </span>
                 <Button variant="outline" size="sm" onClick={toggleSelectAll}>
-                  {selectedStudents.size === paginatedStudents.length
+                  {selectedStudents.size === allStudents.length
                     ? "Deselect All"
                     : "Select All"}
                 </Button>
@@ -789,20 +877,18 @@ export default function TeacherDashboard() {
                       aria-label={`Select ${student.name}`}
                     />
                     <Avatar>
-                      <AvatarImage
-                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${student.id}`}
-                        alt={student.name}
-                      />
-                      <AvatarFallback>{student.name.charAt(0)}</AvatarFallback>
+                      <AvatarFallback>
+                        {student.name.charAt(0).toUpperCase()}
+                      </AvatarFallback>
                     </Avatar>
                     <div>
                       <div className="font-medium">{student.name}</div>
                     </div>
                   </div>
                   <div className="text-sm">
-                    {visibleColumns.grade && (
+                    {visibleColumns.class && (
                       <p>
-                        <strong>Grade:</strong> {student.grade}
+                        <strong>Class:</strong> {student.class}
                       </p>
                     )}
                     {visibleColumns.cefrLevel && (
@@ -823,7 +909,8 @@ export default function TeacherDashboard() {
                     )}
                     {visibleColumns.usage && (
                       <p>
-                        <strong>Usage:</strong> {student.usage.toLocaleString()}
+                        <strong>Usage:</strong>{" "}
+                        {convertSecondsToMinutes(student.usage)}
                       </p>
                     )}
                     {visibleColumns.totalPoints && (
@@ -838,7 +925,7 @@ export default function TeacherDashboard() {
                       <p>
                         <strong>Completed Topics:</strong>{" "}
                         <span className="font-bold text-green-600">
-                          {student.completedTopics} topics
+                          {student.completedTopics}/{student.totalTopics} topics
                         </span>
                       </p>
                     )}
