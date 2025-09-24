@@ -272,7 +272,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     pointValue: number;
   } | null>(null);
   const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
-  const [isDuplicateConnectionModalOpen, setIsDuplicateConnectionModalOpen] = useState(false);
+  const [isDuplicateConnectionModalOpen, setIsDuplicateConnectionModalOpen] =
+    useState(false);
 
   // --- Listening Mode State ---
   const [progress, setProgress] = React.useState(30);
@@ -725,8 +726,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
       console.log(errorMessage, "error Message");
       console.log(errorCode, "error Code");
-      
-      if (errorCode === "DUPLICATE_CONNECTION" || errorMessage.includes("already connected from another session")) {
+
+      if (
+        errorCode === "DUPLICATE_CONNECTION" ||
+        errorMessage.includes("already connected from another session")
+      ) {
         setIsDuplicateConnectionModalOpen(true);
       } else if (errorMessage.includes("daily session limit")) {
         _setSessionLimitReached(true);
@@ -836,7 +840,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     logger.info("Start recording requested.");
     // Reset inactivity timer when user starts recording
     resetInactivityTimer();
-    
+
     if (chatCompleted || _sessionLimitReached) {
       toast.warning("Cannot record: The chat session is complete.");
       return;
@@ -983,7 +987,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const handleSubmitAnswer = () => {
     // Reset inactivity timer when user submits MCQ answer
     resetInactivityTimer();
-    
+
     if (selectedAnswer === null) {
       toast.warning("Please select an answer.");
       return;
@@ -1033,7 +1037,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   }) => {
     // Reset inactivity timer when user submits questionnaire
     resetInactivityTimer();
-    
+
     const mcqAnswers: McqAnswer[] = Object.entries(answers).map(
       ([questionId, answerIndex]) => ({
         questionId,
@@ -1081,13 +1085,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
     clearInactivityTimer();
     inactivityTimerRef.current = setTimeout(() => {
-      if (
-        socketRef.current &&
-        userId &&
-        topicId &&
-        chatId
-      ) {
-        logger.info("No user response for 2 minutes, emitting no_user_response");
+      if (socketRef.current && userId && topicId && chatId) {
+        logger.info(
+          "No user response for 2 minutes, emitting no_user_response"
+        );
         sendPlaceholder();
         socketRef.current.emit("no_user_response", { userId, topicId, chatId });
       }
@@ -1098,7 +1099,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const resetInactivityTimer = () => {
     logger.info("User activity detected - resetting inactivity timer");
     clearInactivityTimer();
-    
+
     // Only restart if we're not in listening mode
     if (mode !== "listening-mode") {
       startInactivityTimer();
@@ -1168,7 +1169,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     let audioUrl: string | undefined;
     let completionSetter: (value: boolean) => void;
 
-    if ((listeningStage === "initial" || listeningStage === "question_text") && listeningData?.kbAudioUrl) {
+    if (
+      (listeningStage === "initial" || listeningStage === "question_text") &&
+      listeningData?.kbAudioUrl
+    ) {
       audioId = "kb-audio";
       audioUrl = listeningData.kbAudioUrl;
       completionSetter = setIsContextCompleted;
@@ -1249,7 +1253,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         progressIntervalRef.current = setInterval(() => {
           const seek = sound.seek() || 0;
           setAudioProgress(seek);
-          if (seek >= sound.duration() - 0.1 && onEnd && !onEndCalledRef.current) {
+          if (
+            seek >= sound.duration() - 0.1 &&
+            onEnd &&
+            !onEndCalledRef.current
+          ) {
             onEndCalledRef.current = true;
             onEnd();
             if (progressIntervalRef.current) {
@@ -1297,7 +1305,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const handleNextStage = () => {
     // Reset inactivity timer when user clicks next
     resetInactivityTimer();
-    
+
     if (socketRef.current && userId && topicId && chatId) {
       const payload = { userId, topicId, chatId };
       logger.emitting(ChatEvents.NEXT_STAGE, payload);
@@ -1336,18 +1344,18 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
     // First disconnect the socket
     socketRef.current.disconnect();
-    
+
     // Wait a moment then reconnect and emit reset
     setTimeout(() => {
       if (socketRef.current) {
         socketRef.current.connect();
-        
+
         // Wait for connection to be established
-        socketRef.current.on('connect', () => {
+        socketRef.current.on("connect", () => {
           const payload = { userId, topicId };
           logger.emitting(ChatEvents.RESET_CHAT, payload);
           socketRef.current?.emit(ChatEvents.RESET_CHAT, payload);
-          
+
           setMessages([]);
           setChatCompleted(false);
           setIsCompleteDialogOpen(false);
@@ -1385,8 +1393,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       sec % 60
     ).padStart(2, "0")}`;
 
-
-
   return (
     // The JSX part remains largely the same, only the audio player logic needs updates.
     <>
@@ -1417,7 +1423,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 progress={playingAudioId === "kb-audio" ? audioProgress : 0}
                 duration={playingAudioId === "kb-audio" ? audioDuration : 0}
                 onTogglePlay={() =>
-                  toggleAudio("kb-audio", listeningData?.kbAudioUrl, () => setIsContextCompleted(true))
+                  toggleAudio("kb-audio", listeningData?.kbAudioUrl, () =>
+                    setIsContextCompleted(true)
+                  )
                 }
               />
               {mode === "listening-mode" && (
@@ -1453,7 +1461,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 <Button
                   onClick={() => {
                     if (listeningData?.kbAudioUrl) {
-                      toggleAudio("kb-audio", listeningData.kbAudioUrl, () => setIsContextCompleted(true));
+                      toggleAudio("kb-audio", listeningData.kbAudioUrl, () =>
+                        setIsContextCompleted(true)
+                      );
                     }
                     setShowReplayPopup(false);
                   }}
@@ -1548,7 +1558,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   : mode === "reading-mode"
                   ? "Reading Mode"
                   : mode === "roleplay-mode"
-                  ? "Roleplay Mode" 
+                  ? "Roleplay Mode"
                   : mode === "debate-mode"
                   ? "Debate Mode"
                   : "Chat Mode"}
@@ -1617,7 +1627,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                         )
                       }
                     >
-                      {playingAudioId === "content-payload-audio" && isCurrentlyPlaying ? (
+                      {playingAudioId === "content-payload-audio" &&
+                      isCurrentlyPlaying ? (
                         <Pause className="h-5 w-5" />
                       ) : (
                         <Play className="h-5 w-5" />
@@ -1671,7 +1682,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   </Button>
                 ) : (
                   <div
-                    className={`p-3 rounded-xl max-w-md shadow-sm ${
+                    className={`p-3 rounded-xl max-w-md shadow-sm break-words ${
                       msg.type === "sent"
                         ? "bg-primary text-white rounded-tr-none"
                         : "bg-white text-gray-800 rounded-tl-none"
@@ -1874,14 +1885,18 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               </DialogFooter>
             </DialogContent>
           </Dialog>
-          <Dialog open={isDuplicateConnectionModalOpen} onOpenChange={setIsDuplicateConnectionModalOpen}>
+          <Dialog
+            open={isDuplicateConnectionModalOpen}
+            onOpenChange={setIsDuplicateConnectionModalOpen}
+          >
             <DialogContent className="sm:max-w-md text-center">
               <DialogHeader>
                 <DialogTitle className="text-2xl font-bold text-red-600">
                   Duplicate Session Detected
                 </DialogTitle>
                 <DialogDescription className="text-center pt-2">
-                  You are already connected from another session. Please logout from other sessions and try again.
+                  You are already connected from another session. Please logout
+                  from other sessions and try again.
                 </DialogDescription>
               </DialogHeader>
               <div className="flex flex-col items-center justify-center p-4 my-4 bg-red-50 rounded-lg border border-red-200">
@@ -1892,7 +1907,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   Connection Blocked
                 </h3>
                 <p className="text-sm text-red-600 text-center">
-                  Only one active session is allowed per account. Please close other browser tabs or devices where you're logged in.
+                  Only one active session is allowed per account. Please close
+                  other browser tabs or devices where you're logged in.
                 </p>
               </div>
               <DialogFooter className="sm:justify-center space-y-2">
@@ -1941,8 +1957,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 : handleNextStage)();
             }}
             disabled={
-              (mode === "listening-mode" && (listeningStage === "initial" || listeningStage === "question_text") && !isContextCompleted) ||
-              (mode === "listening-mode" && listeningStage === "quiz" && selectedAnswer === null)
+              (mode === "listening-mode" &&
+                (listeningStage === "initial" ||
+                  listeningStage === "question_text") &&
+                !isContextCompleted) ||
+              (mode === "listening-mode" &&
+                listeningStage === "quiz" &&
+                selectedAnswer === null)
             }
           >
             {listeningStage === "quiz" ? "Submit Answer" : "Next"}

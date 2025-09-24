@@ -218,42 +218,61 @@ export const fetchAllTeacherStudents = async (
   filters?: Omit<TeacherDashboardFilters, 'page' | 'limit'>
 ): Promise<TeacherStudent[]> => {
   try {
-    const params = new URLSearchParams();
+    const allStudents: TeacherStudent[] = [];
+    let currentPage = 1;
+    let hasMore = true;
+    const pageSize = 100;
     
-    if (filters) {
-      if (filters.class) params.append('class', filters.class);
-      if (filters.topicStatus && filters.topicStatus !== 'all') {
-        params.append('topicStatus', filters.topicStatus);
+    while (hasMore) {
+      const params = new URLSearchParams();
+      
+      if (filters) {
+        if (filters.class) params.append('class', filters.class);
+        if (filters.topicStatus && filters.topicStatus !== 'all') {
+          params.append('topicStatus', filters.topicStatus);
+        }
+        if (filters.sortBy) params.append('sortBy', filters.sortBy);
+        if (filters.sortOrder) params.append('sortOrder', filters.sortOrder);
+        if (filters.minCompletedTopics !== undefined) {
+          params.append('minCompletedTopics', filters.minCompletedTopics.toString());
+        }
+        if (filters.maxCompletedTopics !== undefined) {
+          params.append('maxCompletedTopics', filters.maxCompletedTopics.toString());
+        }
+        if (filters.timeFilter && filters.timeFilter !== 'all') {
+          params.append('timeFilter', filters.timeFilter);
+        }
+        if (filters.search) {
+          params.append('search', filters.search);
+        }
       }
-      if (filters.sortBy) params.append('sortBy', filters.sortBy);
-      if (filters.sortOrder) params.append('sortOrder', filters.sortOrder);
-      if (filters.minCompletedTopics !== undefined) {
-        params.append('minCompletedTopics', filters.minCompletedTopics.toString());
-      }
-      if (filters.maxCompletedTopics !== undefined) {
-        params.append('maxCompletedTopics', filters.maxCompletedTopics.toString());
-      }
-      if (filters.timeFilter && filters.timeFilter !== 'all') {
-        params.append('timeFilter', filters.timeFilter);
-      }
-      if (filters.search) {
-        params.append('search', filters.search);
+      
+      params.append('limit', pageSize.toString());
+      params.append('page', currentPage.toString());
+      
+      const queryString = params.toString();
+      const url = `/teacher-dashboard/${teacherId}${queryString ? `?${queryString}` : ''}`;
+      
+      const response = await apiClient.get(url);
+      
+      if (response.data.status && response.data.data) {
+        const pageData = response.data.data as TeacherDashboardData;
+        const students = pageData.students;
+        
+        if (students && students.length > 0) {
+          allStudents.push(...students);
+          currentPage++;
+          
+          hasMore = pageData.pagination?.hasNext || false;
+        } else {
+          hasMore = false;
+        }
+      } else {
+        throw new Error('Invalid response format');
       }
     }
     
-    params.append('limit', '10000');
-    params.append('page', '1');
-    
-    const queryString = params.toString();
-    const url = `/teacher-dashboard/${teacherId}${queryString ? `?${queryString}` : ''}`;
-    
-    const response = await apiClient.get(url);
-    
-    if (response.data.status && response.data.data) {
-      return response.data.data.students as TeacherStudent[];
-    } else {
-      throw new Error('Invalid response format');
-    }
+    return allStudents;
   } catch (error: any) {
     if (error.response && error.response.data) {
       throw new Error(error.response.data.message || 'Failed to fetch all teacher students');

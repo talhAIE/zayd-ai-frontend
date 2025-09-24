@@ -1,5 +1,6 @@
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import JSZip from "jszip";
 import { StudentProfileData } from "@/services/teacherService";
 
 // Create a temporary container for the report
@@ -197,9 +198,9 @@ const createReportElement = (studentData: StudentProfileData): HTMLElement => {
   return container;
 };
 
-export const generateStudentReportPDF = async (
+export const generateStudentReportPDFBlob = async (
   studentData: StudentProfileData
-): Promise<void> => {
+): Promise<{ blob: Blob; filename: string }> => {
   try {
     // Create the report element
     const reportElement = createReportElement(studentData);
@@ -219,7 +220,7 @@ export const generateStudentReportPDF = async (
 
     allDivs.forEach((div: Element) => {
       const text = div.textContent || "";
-      if (text.includes("Class") && text.includes("Class ")) {
+      if (text.includes("Class") && !text.includes("School Name")) {
         classDiv = div as HTMLElement;
       }
       if (text.includes("School Name") && !text.includes("Class")) {
@@ -341,21 +342,118 @@ export const generateStudentReportPDF = async (
       imgHeight * ratio
     );
 
-    // Generate filename
+    // Generate filename with student ID to ensure uniqueness
     const currentDate = new Date().toLocaleDateString("en-US", {
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
     });
-    const filename = `${studentData.studentName.replace(
-      /\s+/g,
-      "_"
-    )}_Report_${currentDate.replace(/\//g, "-")}.pdf`;
+    const sanitizedName = studentData.studentName
+      .replace(/[^a-zA-Z0-9\s]/g, "")
+      .replace(/\s+/g, "_");
+    const filename = `${sanitizedName}_${
+      studentData.id
+    }_Report_${currentDate.replace(/\//g, "-")}.pdf`;
 
-    // Download the PDF
-    pdf.save(filename);
+    // Convert PDF to blob
+    const pdfBlob = pdf.output("blob");
+
+    return { blob: pdfBlob, filename };
   } catch (error) {
-    console.error("Error generating PDF:", error);
+    console.error("Error generating PDF blob:", error);
     throw new Error("Failed to generate PDF report");
+  }
+};
+
+export const generateBulkStudentReportsZip = async (
+  studentsData: StudentProfileData[],
+  onProgress?: (current: number, total: number, studentName: string) => void
+): Promise<void> => {
+  try {
+    const zip = new JSZip();
+    let successCount = 0;
+    let errorCount = 0;
+    const usedFilenames = new Set<string>();
+
+    for (let i = 0; i < studentsData.length; i++) {
+      const studentData = studentsData[i];
+
+      try {
+        // Update progress
+        if (onProgress) {
+          onProgress(i + 1, studentsData.length, studentData.studentName);
+        }
+
+        // Generate PDF blob
+        const { blob, filename } = await generateStudentReportPDFBlob(
+          studentData
+        );
+
+        // Check for duplicate filenames and handle them
+        let finalFilename = filename;
+        let counter = 1;
+        while (usedFilenames.has(finalFilename)) {
+          const nameWithoutExt = filename.replace(".pdf", "");
+          finalFilename = `${nameWithoutExt}_${counter}.pdf`;
+          counter++;
+        }
+        usedFilenames.add(finalFilename);
+
+        // Add PDF to zip
+        zip.file(finalFilename, blob);
+        successCount++;
+
+        if (finalFilename !== filename) {
+          console.warn(
+            `Filename renamed for ${studentData.studentName}: ${finalFilename} (duplicate detected)`
+          );
+        }
+
+        // Small delay to prevent browser freezing
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      } catch (error) {
+        errorCount++;
+        console.error(
+          `Error generating PDF for student ${studentData.studentName}:`,
+          error
+        );
+      }
+    }
+
+    if (successCount === 0) {
+      throw new Error("No PDFs were generated successfully");
+    }
+
+    // Generate zip file
+    const zipBlob = await zip.generateAsync({ type: "blob" });
+
+    // Create download link
+    const currentDate = new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+    const zipFilename = `Student_Reports_${currentDate.replace(
+      /\//g,
+      "-"
+    )}.zip`;
+
+    const url = URL.createObjectURL(zipBlob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = zipFilename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    if (errorCount > 0) {
+      console.warn(
+        `PDF generation completed with ${errorCount} errors out of ${studentsData.length} students`
+      );
+    }
+  } catch (error) {
+    console.error("Error generating bulk PDF zip:", error);
+    throw new Error("Failed to generate bulk PDF reports");
   }
 };
