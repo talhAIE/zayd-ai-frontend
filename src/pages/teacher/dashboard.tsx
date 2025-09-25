@@ -37,7 +37,7 @@ import {
 // import { useDebounce } from "@/hooks/useDebounce";
 import {
   TeacherDashboardFilters,
-  downloadIndividualStudentReport,
+  fetchBulkStudentReports,
   fetchAllTeacherStudents,
 } from "@/services/teacherService";
 import { generateBulkStudentReportsZip } from "@/utils/pdfGenerator";
@@ -138,92 +138,44 @@ export default function TeacherDashboard() {
   const handleBulkDownload = async () => {
     setIsDownloading(true);
     try {
-      let studentsToDownload: any[] = [];
-
-      const filters = buildFilters();
-      const { page, limit, ...allStudentsFilters } = filters;
-      const allStudentsData = await fetchAllTeacherStudents(
-        teacherId,
-        allStudentsFilters
-      );
-
-      console.log(
-        `Fetched ${allStudentsData.length} students for bulk download`
-      );
+      let studentIds: string[] | undefined;
 
       if (selectedStudents.size > 0) {
-        // Download selected students only
-        studentsToDownload = allStudentsData
+        const filters = buildFilters();
+        const { page, limit, ...allStudentsFilters } = filters;
+        const allStudentsData = await fetchAllTeacherStudents(
+          teacherId,
+          allStudentsFilters
+        );
+
+        studentIds = allStudentsData
           .filter((s) => selectedStudents.has(s.id))
-          .map((student) => ({
-            id: student.id,
-            name: student.studentName,
-            class: student.class,
-            cefrLevel: student.cefrLevel,
-            streak: student.currentStreak,
-            usage: convertSecondsToMinutes(student.usage),
-            totalPoints: student.totalPoints,
-            completedTopics: student.completedTopics,
-            totalTopics: student.totalTopics,
-          }));
-      } else {
-        // Download all students
-        studentsToDownload = allStudentsData.map((student) => ({
-          id: student.id,
-          name: student.studentName,
-          class: student.class,
-          cefrLevel: student.cefrLevel,
-          streak: student.currentStreak,
-          usage: convertSecondsToMinutes(student.usage),
-          totalPoints: student.totalPoints,
-          completedTopics: student.completedTopics,
-          totalTopics: student.totalTopics,
-        }));
+          .map((student) => student.id);
       }
 
-      if (studentsToDownload.length === 0) {
+      if (studentIds && studentIds.length === 0) {
         toast.error("No students found to download reports");
         return;
       }
 
-      const studentsData = [];
-      let dataFetchErrorCount = 0;
+      setDownloadingStudent("Fetching bulk report data...");
 
-      for (const student of studentsToDownload) {
-        try {
-          setDownloadingStudent(`Fetching data for ${student.name}...`);
-          const studentData = await downloadIndividualStudentReport(
-            teacherId,
-            student.id
-          );
-          studentsData.push(studentData);
-        } catch (error) {
-          dataFetchErrorCount++;
-          console.error(
-            `Error fetching data for student ${student.id} (${student.name}):`,
-            error
-          );
-        }
-      }
+      const bulkReportData = await fetchBulkStudentReports(
+        teacherId,
+        studentIds
+      );
 
-      if (dataFetchErrorCount > 0) {
-        console.warn(
-          `Data fetch completed with ${dataFetchErrorCount} errors out of ${studentsToDownload.length} students`
-        );
-      }
-
-      if (studentsData.length === 0) {
+      if (!bulkReportData.students || bulkReportData.students.length === 0) {
         toast.error("No student data could be fetched");
         return;
       }
 
       console.log(
-        `Starting PDF generation for ${studentsData.length} students`
+        `Starting PDF generation for ${bulkReportData.students.length} students`
       );
 
-      // Generate zip file with all PDFs
       await generateBulkStudentReportsZip(
-        studentsData,
+        bulkReportData.students,
         (current, total, studentName) => {
           setDownloadingStudent(
             `Generating PDF ${current}/${total}: ${studentName}`
@@ -232,7 +184,7 @@ export default function TeacherDashboard() {
       );
 
       toast.success(
-        `Successfully generated ${studentsData.length} reports in a zip file`
+        `Successfully generated ${bulkReportData.students.length} reports in a zip file`
       );
     } catch (error: any) {
       console.error("Bulk download error:", error);

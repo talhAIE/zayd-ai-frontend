@@ -267,10 +267,10 @@ export const generateStudentReportPDFBlob = async (
       }
     });
 
-    // Apply -mt-4 classes for better PDF positioning
-    if (studentNameDiv) (studentNameDiv as HTMLElement).classList.add("-mt-4");
-    if (classDiv) (classDiv as HTMLElement).classList.add("-mt-4");
-    if (schoolDiv) (schoolDiv as HTMLElement).classList.add("-mt-4");
+    // Apply -mt-3 classes for better PDF positioning (same as StudentReportModal)
+    if (studentNameDiv) (studentNameDiv as HTMLElement).classList.add("-mt-3");
+    if (classDiv) (classDiv as HTMLElement).classList.add("-mt-3");
+    if (schoolDiv) (schoolDiv as HTMLElement).classList.add("-mt-3");
 
     achievementSpans.forEach((span) => {
       (span as HTMLElement).classList.add("-mt-4");

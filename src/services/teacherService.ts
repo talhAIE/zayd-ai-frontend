@@ -98,6 +98,27 @@ export interface TeacherDashboardFilterValues {
   sortOrderOptions: FilterOption[];
 }
 
+export interface BulkReportStudent {
+  id: string;
+  studentName: string;
+  class: string;
+  schoolName: string;
+  cefrLevel: string;
+  totalPoints: number;
+  usage: number;
+  currentStreak: number;
+  longestStreak: number;
+  totalLoginDays: number;
+  usageGraphData: UsageGraphData[];
+  achievements: Achievement[];
+  topicsByMode: TopicsCompletedPerMode;
+}
+
+export interface BulkReportData {
+  teacherInfo: TeacherInfo;
+  students: BulkReportStudent[];
+}
+
 export const fetchTeacherStudents = async (
   teacherId: string, 
   filters?: TeacherDashboardFilters
@@ -187,10 +208,10 @@ export const fetchTeacherDashboardFilters = async (
   }
 };
 
-export const downloadBulkStudentReports = async (
+export const fetchBulkStudentReports = async (
   teacherId: string,
   studentIds?: string[]
-): Promise<Blob> => {
+): Promise<BulkReportData> => {
   try {
     const params = new URLSearchParams();
     if (studentIds && studentIds.length > 0) {
@@ -200,16 +221,18 @@ export const downloadBulkStudentReports = async (
     const queryString = params.toString();
     const url = `/teacher-dashboard/${teacherId}/students/bulk-report${queryString ? `?${queryString}` : ''}`;
     
-    const response = await apiClient.get(url, {
-      responseType: 'blob',
-    });
+    const response = await apiClient.get(url);
     
-    return response.data;
+    if (response.data.status && response.data.data) {
+      return response.data.data as BulkReportData;
+    } else {
+      throw new Error('Invalid response format');
+    }
   } catch (error: any) {
     if (error.response && error.response.data) {
-      throw new Error(error.response.data.message || 'Failed to download bulk reports');
+      throw new Error(error.response.data.message || 'Failed to fetch bulk reports');
     }
-    throw new Error(error.message || 'Failed to download bulk reports');
+    throw new Error(error.message || 'Failed to fetch bulk reports');
   }
 };
 
