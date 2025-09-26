@@ -73,7 +73,7 @@ export default function StudentReportModal({
 
       allDivs.forEach((div: Element) => {
         const text = div.textContent || "";
-        if (text.includes("Class") && text.includes("Class ")) {
+        if (text.includes("Class") && !text.includes("School Name")) {
           classDiv = div as HTMLElement;
         }
         if (text.includes("School Name") && !text.includes("Class")) {
@@ -420,7 +420,7 @@ export default function StudentReportModal({
             {/* Rewards */}
             <Card>
               <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-blue-600">
+                <h3 className="text-lg font-semibold mb-2 flex items-center gap-2 text-blue-600">
                   REWARDS
                 </h3>
                 <hr />
