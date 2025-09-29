@@ -98,25 +98,35 @@ export interface TeacherDashboardFilterValues {
   sortOrderOptions: FilterOption[];
 }
 
-export interface BulkReportStudent {
-  id: string;
+
+export interface BulkPdfGenerationResult {
+  studentId: string;
   studentName: string;
-  class: string;
-  schoolName: string;
-  cefrLevel: string;
-  totalPoints: number;
-  usage: number;
-  currentStreak: number;
-  longestStreak: number;
-  totalLoginDays: number;
-  usageGraphData: UsageGraphData[];
-  achievements: Achievement[];
-  topicsByMode: TopicsCompletedPerMode;
+  success: boolean;
+  blobUrl?: string;
+  blobName?: string;
+  error?: string;
+  method?: string;
 }
 
-export interface BulkReportData {
-  teacherInfo: TeacherInfo;
-  students: BulkReportStudent[];
+export interface BulkPdfGenerationSummary {
+  totalStudents: number;
+  successfulGenerations: number;
+  failedGenerations: number;
+  processingTimeMs: number;
+  methodsUsed: string[];
+}
+
+export interface BulkPdfGenerationResponse {
+  status: boolean;
+  data?: {
+    zipUrl?: string;
+    zipName?: string;
+    results: BulkPdfGenerationResult[];
+    summary: BulkPdfGenerationSummary;
+  };
+  message?: string;
+  error?: string;
 }
 
 export const fetchTeacherStudents = async (
@@ -208,33 +218,6 @@ export const fetchTeacherDashboardFilters = async (
   }
 };
 
-export const fetchBulkStudentReports = async (
-  teacherId: string,
-  studentIds?: string[]
-): Promise<BulkReportData> => {
-  try {
-    const params = new URLSearchParams();
-    if (studentIds && studentIds.length > 0) {
-      params.append('studentIds', studentIds.join(','));
-    }
-    
-    const queryString = params.toString();
-    const url = `/teacher-dashboard/${teacherId}/students/bulk-report${queryString ? `?${queryString}` : ''}`;
-    
-    const response = await apiClient.get(url);
-    
-    if (response.data.status && response.data.data) {
-      return response.data.data as BulkReportData;
-    } else {
-      throw new Error('Invalid response format');
-    }
-  } catch (error: any) {
-    if (error.response && error.response.data) {
-      throw new Error(error.response.data.message || 'Failed to fetch bulk reports');
-    }
-    throw new Error(error.message || 'Failed to fetch bulk reports');
-  }
-};
 
 export const fetchAllTeacherStudents = async (
   teacherId: string, 
@@ -321,5 +304,62 @@ export const downloadIndividualStudentReport = async (
       throw new Error(error.response.data.message || 'Failed to fetch student profile');
     }
     throw new Error(error.message || 'Failed to fetch student profile');
+  }
+};
+
+export const generateBulkPdfReports = async (
+  teacherId: string,
+  studentIds?: string[]
+): Promise<BulkPdfGenerationResponse> => {
+  try {
+    const requestBody: any = {
+      format: 'zip'
+    };
+
+    // Add studentIds if provided
+    if (studentIds && studentIds.length > 0) {
+      requestBody.studentIds = studentIds;
+    }
+
+    const response = await apiClient.post(
+      `/teacher/${teacherId}/bulk/generate`,
+      requestBody
+    );
+    
+    return response.data as BulkPdfGenerationResponse;
+  } catch (error: any) {
+    if (error.response && error.response.data) {
+      throw new Error(error.response.data.message || error.response.data.error || 'Failed to generate bulk PDF reports');
+    }
+    throw new Error(error.message || 'Failed to generate bulk PDF reports');
+  }
+};
+
+export const generateIndividualStudentPdf = async (
+  teacherId: string,
+  studentId: string
+): Promise<{ blobUrl: string; filename: string }> => {
+  try {
+    const response = await apiClient.post(
+      `/teacher/${teacherId}/bulk/generate`,
+      {
+        studentIds: [studentId],
+        format: 'zip'
+      }
+    );
+    
+    if (response.data.status && response.data.data) {
+      return {
+        blobUrl: response.data.data.zipUrl!,
+        filename: response.data.data.zipName || `${studentId}_report.zip`
+      };
+    } else {
+      throw new Error(response.data.message || response.data.error || 'Failed to generate individual PDF');
+    }
+  } catch (error: any) {
+    if (error.response && error.response.data) {
+      throw new Error(error.response.data.message || error.response.data.error || 'Failed to generate individual PDF');
+    }
+    throw new Error(error.message || 'Failed to generate individual PDF');
   }
 };
