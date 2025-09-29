@@ -37,10 +37,9 @@ import {
 // import { useDebounce } from "@/hooks/useDebounce";
 import {
   TeacherDashboardFilters,
-  fetchBulkStudentReports,
   fetchAllTeacherStudents,
+  generateBulkPdfReports,
 } from "@/services/teacherService";
-import { generateBulkStudentReportsZip } from "@/utils/pdfGenerator";
 import { toast } from "sonner";
 
 const convertSecondsToMinutes = (seconds: number): string => {
@@ -158,34 +157,40 @@ export default function TeacherDashboard() {
         return;
       }
 
-      setDownloadingStudent("Fetching bulk report data...");
+      setDownloadingStudent("Generating bulk PDF reports...");
 
-      const bulkReportData = await fetchBulkStudentReports(
-        teacherId,
-        studentIds
-      );
+      const response = await generateBulkPdfReports(teacherId, studentIds);
 
-      if (!bulkReportData.students || bulkReportData.students.length === 0) {
-        toast.error("No student data could be fetched");
-        return;
+      if (!response.status || !response.data) {
+        throw new Error(
+          response.error || response.message || "Failed to generate reports"
+        );
       }
 
-      console.log(
-        `Starting PDF generation for ${bulkReportData.students.length} students`
-      );
+      const { zipUrl, zipName, summary } = response.data;
 
-      await generateBulkStudentReportsZip(
-        bulkReportData.students,
-        (current, total, studentName) => {
-          setDownloadingStudent(
-            `Generating PDF ${current}/${total}: ${studentName}`
-          );
-        }
-      );
+      if (!zipUrl) {
+        throw new Error("No download URL received from server");
+      }
 
-      toast.success(
-        `Successfully generated ${bulkReportData.students.length} reports in a zip file`
-      );
+      // Download the ZIP file
+      const link = document.createElement("a");
+      link.href = zipUrl;
+      link.download = zipName || "student_reports.zip";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Show success message with summary
+      const successMessage = `Successfully generated ${summary.successfulGenerations} out of ${summary.totalStudents} reports`;
+      if (summary.failedGenerations > 0) {
+        toast.warning(
+          `${successMessage} (${summary.failedGenerations} failed)`
+        );
+      } else {
+        toast.success(successMessage);
+      }
+
     } catch (error: any) {
       console.error("Bulk download error:", error);
       toast.error(error.message || "Failed to download reports");

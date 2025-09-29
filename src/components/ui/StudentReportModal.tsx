@@ -5,12 +5,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
-import { User, Download } from "lucide-react";
-import { StudentProfileData } from "@/services/teacherService";
+import { User, Download, Loader2 } from "lucide-react";
+import {
+  StudentProfileData,
+  generateIndividualStudentPdf,
+} from "@/services/teacherService";
 import { Button } from "@/components/ui/button";
-import { useRef } from "react";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+import { useRef, useState } from "react";
+import { toast } from "sonner";
 
 interface StudentReportModalProps {
   isOpen: boolean;
@@ -24,6 +26,7 @@ export default function StudentReportModal({
   studentData,
 }: StudentReportModalProps) {
   const reportRef = useRef<HTMLDivElement>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   if (!studentData) {
     return null;
@@ -59,159 +62,38 @@ export default function StudentReportModal({
     ) || [];
 
   const downloadReport = async () => {
-    if (!reportRef.current) return;
+    if (!studentData) return;
 
+    setIsDownloading(true);
     try {
-      // Add -mt-3 to specific divs only during PDF generation to avoid position issues on the pdf
-      const studentNameDiv = reportRef.current.querySelector(
-        ".bg-blue-600 .flex > div:last-child"
+      // Get teacher ID from localStorage
+      const myUser = localStorage.getItem("AiTutorUser");
+      const parsedUser = JSON.parse(myUser || "{}");
+      const teacherId = parsedUser?.id;
+
+      if (!teacherId) {
+        throw new Error("Teacher ID not found");
+      }
+
+      const result = await generateIndividualStudentPdf(
+        teacherId,
+        studentData.id
       );
 
-      const allDivs = reportRef.current.querySelectorAll("div");
-      let classDiv: HTMLElement | null = null;
-      let schoolDiv: HTMLElement | null = null;
+      // Download the PDF file
+      const link = document.createElement("a");
+      link.href = result.blobUrl;
+      link.download = result.filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
 
-      allDivs.forEach((div: Element) => {
-        const text = div.textContent || "";
-        if (text.includes("Class") && !text.includes("School Name")) {
-          classDiv = div as HTMLElement;
-        }
-        if (text.includes("School Name") && !text.includes("Class")) {
-          schoolDiv = div as HTMLElement;
-        }
-      });
-
-      const achievementSpans = reportRef.current.querySelectorAll(
-        ".space-y-3 > div.flex.items-center.gap-3 > span.text-sm"
-      );
-
-      const allPElements = reportRef.current.querySelectorAll("p");
-      let totalPointsP: Element | null = null;
-      let totalUsageP: Element | null = null;
-      let totalPointsValueP: Element | null = null;
-      let totalUsageValueP: Element | null = null;
-
-      allPElements.forEach((p: Element) => {
-        const text = p.textContent || "";
-        if (text.includes("TOTAL POINTS") && !text.includes("TOTAL USAGE")) {
-          totalPointsP = p;
-        }
-        if (text.includes("TOTAL USAGE") && !text.includes("TOTAL POINTS")) {
-          totalUsageP = p;
-        }
-        if (
-          text === data.totalPoints.toString() &&
-          p.classList.contains("text-lg") &&
-          p.classList.contains("font-bold") &&
-          p.classList.contains("text-blue-600")
-        ) {
-          totalPointsValueP = p;
-        }
-        if (
-          text === totalUsageDisplay &&
-          p.classList.contains("text-lg") &&
-          p.classList.contains("font-bold") &&
-          p.classList.contains("text-blue-600")
-        ) {
-          totalUsageValueP = p;
-        }
-      });
-
-      console.log("Found elements:", {
-        studentNameDiv,
-        classDiv,
-        schoolDiv,
-        achievementSpans: achievementSpans.length,
-        totalPointsP,
-        totalUsageP,
-        totalPointsValueP,
-        totalUsageValueP,
-      });
-
-      if (studentNameDiv)
-        (studentNameDiv as HTMLElement).classList.add("-mt-3");
-      if (classDiv) (classDiv as HTMLElement).classList.add("-mt-3");
-      if (schoolDiv) (schoolDiv as HTMLElement).classList.add("-mt-3");
-
-      achievementSpans.forEach((span) => {
-        (span as HTMLElement).classList.add("-mt-3");
-      });
-      if (totalPointsP) (totalPointsP as HTMLElement).classList.add("-mt-3");
-      if (totalUsageP) (totalUsageP as HTMLElement).classList.add("-mt-3");
-      if (totalPointsValueP)
-        (totalPointsValueP as HTMLElement).classList.add("-mt-3");
-      if (totalUsageValueP)
-        (totalUsageValueP as HTMLElement).classList.add("-mt-3");
-
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      const maxWidth = 1200;
-      const elementWidth = reportRef.current.scrollWidth;
-      const elementHeight = reportRef.current.scrollHeight;
-      const scale = Math.min(1.25, maxWidth / elementWidth);
-
-      const canvas = await html2canvas(reportRef.current, {
-        scale: scale,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: "#ffffff",
-        width: elementWidth,
-        height: elementHeight,
-        logging: false,
-        imageTimeout: 0,
-      });
-
-      // Remove -mt-3 after capture to avoid position issues on viewing the report
-      if (studentNameDiv)
-        (studentNameDiv as HTMLElement).classList.remove("-mt-3");
-      if (classDiv) (classDiv as HTMLElement).classList.remove("-mt-3");
-      if (schoolDiv) (schoolDiv as HTMLElement).classList.remove("-mt-3");
-
-      achievementSpans.forEach((span) => {
-        (span as HTMLElement).classList.remove("-mt-3");
-      });
-
-      if (totalPointsP) (totalPointsP as HTMLElement).classList.remove("-mt-3");
-      if (totalUsageP) (totalUsageP as HTMLElement).classList.remove("-mt-3");
-      if (totalPointsValueP)
-        (totalPointsValueP as HTMLElement).classList.remove("-mt-3");
-      if (totalUsageValueP)
-        (totalUsageValueP as HTMLElement).classList.remove("-mt-3");
-
-      const imgData = canvas.toDataURL("image/jpeg");
-      const pdf = new jsPDF("p", "mm", "a4");
-
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-      const imgX = (pdfWidth - imgWidth * ratio) / 4;
-      const imgY = 0;
-
-      pdf.addImage(
-        imgData,
-        "JPEG",
-        imgX,
-        imgY,
-        imgWidth * ratio,
-        imgHeight * ratio
-      );
-
-      const currentDate = new Date().toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      });
-      const filename = `${data.studentName.replace(
-        /\s+/g,
-        "_"
-      )}_Report_${currentDate.replace(/\//g, "-")}.pdf`;
-
-      pdf.save(filename);
-    } catch (error) {
+      toast.success("PDF report downloaded successfully!");
+    } catch (error: any) {
       console.error("Error generating PDF:", error);
-      alert("Failed to generate PDF. Please try again.");
+      toast.error(error.message || "Failed to generate PDF. Please try again.");
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -221,10 +103,21 @@ export default function StudentReportModal({
         <Button
           className="absolute left-2 sm:left-1/2 sm:-translate-x-1/2 top-2 sm:top-4 text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2"
           onClick={downloadReport}
+          disabled={isDownloading}
         >
-          <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-          <span className="hidden sm:inline">Download Report</span>
-          <span className="sm:hidden">Download</span>
+          {isDownloading ? (
+            <>
+              <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 animate-spin" />
+              <span className="hidden sm:inline">Generating...</span>
+              <span className="sm:hidden">Generating...</span>
+            </>
+          ) : (
+            <>
+              <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Download Report</span>
+              <span className="sm:hidden">Download</span>
+            </>
+          )}
         </Button>
         <DialogHeader className="mt-12 sm:mt-16">
           <DialogTitle className="text-lg sm:text-2xl font-bold text-center mb-2">
