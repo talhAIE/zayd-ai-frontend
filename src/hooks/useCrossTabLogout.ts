@@ -19,7 +19,11 @@ export const useCrossTabLogout = () => {
         dispatch(crossTabLogout());
       }
       
-      if (e.key === 'token' && e.newValue === null) {
+      if (e.key === 'accessToken' && e.newValue === null) {
+        dispatch(crossTabLogout());
+      }
+      
+      if (e.key === 'refreshToken' && e.newValue === null) {
         dispatch(crossTabLogout());
       }
     };

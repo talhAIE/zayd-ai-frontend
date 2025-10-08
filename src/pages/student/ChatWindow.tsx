@@ -397,10 +397,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     }
 
     logger.info("Initializing Socket.IO connection...");
+    const accessToken = localStorage.getItem("accessToken");
     const socket = io(SOCKET_URL, {
       reconnectionAttempts: 5,
       reconnectionDelay: 5000,
-      query: { userId: userId },
+      auth: {
+        token: accessToken,
+        userId: userId,
+      },
       extraHeaders: { "ngrok-skip-browser-warning": "true" },
     });
     socketRef.current = socket;
@@ -488,7 +492,30 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
     socket.on("connect_error", (err) => {
       logger.error("Socket connection error:", err);
+
+      // Handle authentication errors
+      if (err.message.includes("401") || err.message.includes("Unauthorized")) {
+        toast.error("Authentication failed. Please log in again.");
+        // Clear auth data and redirect to login
+        localStorage.removeItem("AiTutorUser");
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        navigate("/login");
+        return;
+      }
+
       toast.error(`Connection failed: ${err.message}`);
+    });
+
+    // Handle authentication errors from server
+    socket.on("auth_error", (error) => {
+      logger.error("WebSocket authentication error:", error);
+      toast.error("Authentication failed. Please log in again.");
+      // Clear auth data and redirect to login
+      localStorage.removeItem("AiTutorUser");
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      navigate("/login");
     });
 
     socket.on(ChatEvents.CHAT_HISTORY, (payload: any) => {
