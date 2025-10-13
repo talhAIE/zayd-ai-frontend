@@ -87,7 +87,7 @@ export function RevenueGraph({ usageData }: RevenueGraphProps) {
     <Card className="w-full bg-white shadow-sm">
       <CardHeader className="pb-4">
         <CardTitle className="text-lg font-semibold text-gray-800">
-          Usage Graph: {totalMinutes}min Total
+          Usage Graph: {totalMinutes}min Total (This Month)
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4">
