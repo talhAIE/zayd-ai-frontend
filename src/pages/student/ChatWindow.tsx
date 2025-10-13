@@ -264,6 +264,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     audioUrl: string;
   } | null>(null);
   const [isContentExpanded, setIsContentExpanded] = useState(false);
+  const [shouldShowExpandButton, setShouldShowExpandButton] = useState(false);
+  const contentRef = useRef<HTMLParagraphElement>(null);
 
   const [unlockedBadgeInfo, setUnlockedBadgeInfo] = useState<{
     name: string;
@@ -372,6 +374,33 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     unlockAudio();
   }, [unlockAudio]);
   // --- END MODIFICATION
+
+  // Check if content needs expansion button
+  useEffect(() => {
+    if (contentPayload && contentRef.current) {
+      // Reset expansion state when content changes
+      setIsContentExpanded(false);
+
+      // Temporarily remove line-clamp to measure full height
+      const element = contentRef.current;
+      const originalClass = element.className;
+      element.className = originalClass.replace(
+        "line-clamp-3",
+        "line-clamp-none"
+      );
+
+      const fullHeight = element.scrollHeight;
+
+      // Restore original class
+      element.className = originalClass;
+
+      // Calculate height of 3 lines (approximate)
+      const lineHeight = parseFloat(getComputedStyle(element).lineHeight) || 24;
+      const maxHeight = lineHeight * 3;
+
+      setShouldShowExpandButton(fullHeight > maxHeight);
+    }
+  }, [contentPayload]);
 
   const getSupportedMimeType = () => {
     const types = [
@@ -1626,6 +1655,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             {contentPayload && (
               <div className="p-4 rounded-lg shadow-sm bg-white border border-gray-200">
                 <p
+                  ref={contentRef}
                   className={`text-gray-800 text-base leading-relaxed whitespace-pre-wrap transition-all duration-300 ${
                     !isContentExpanded ? "line-clamp-3" : "line-clamp-none"
                   }`}
@@ -1662,17 +1692,19 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                       )}
                     </Button>
                   )}
-                  <Button
-                    variant="link"
-                    size="sm"
-                    onClick={() => {
-                      setIsContentExpanded(!isContentExpanded);
-                      resetInactivityTimer();
-                    }}
-                    className="text-sm text-blue-600 p-0 h-auto"
-                  >
-                    {isContentExpanded ? "See Less" : "See More"}
-                  </Button>
+                  {shouldShowExpandButton && (
+                    <Button
+                      variant="link"
+                      size="sm"
+                      onClick={() => {
+                        setIsContentExpanded(!isContentExpanded);
+                        resetInactivityTimer();
+                      }}
+                      className="text-sm text-blue-600 p-0 h-auto"
+                    >
+                      {isContentExpanded ? "See Less" : "See More"}
+                    </Button>
+                  )}
                 </div>
               </div>
             )}
