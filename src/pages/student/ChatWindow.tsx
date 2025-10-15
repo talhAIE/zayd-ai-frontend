@@ -264,6 +264,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     audioUrl: string;
   } | null>(null);
   const [isContentExpanded, setIsContentExpanded] = useState(false);
+  const [shouldShowExpandButton, setShouldShowExpandButton] = useState(false);
+  const contentRef = useRef<HTMLParagraphElement>(null);
 
   const [unlockedBadgeInfo, setUnlockedBadgeInfo] = useState<{
     name: string;
@@ -373,6 +375,33 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   }, [unlockAudio]);
   // --- END MODIFICATION
 
+  // Check if content needs expansion button
+  useEffect(() => {
+    if (contentPayload && contentRef.current) {
+      // Reset expansion state when content changes
+      setIsContentExpanded(false);
+
+      // Temporarily remove line-clamp to measure full height
+      const element = contentRef.current;
+      const originalClass = element.className;
+      element.className = originalClass.replace(
+        "line-clamp-3",
+        "line-clamp-none"
+      );
+
+      const fullHeight = element.scrollHeight;
+
+      // Restore original class
+      element.className = originalClass;
+
+      // Calculate height of 3 lines (approximate)
+      const lineHeight = parseFloat(getComputedStyle(element).lineHeight) || 24;
+      const maxHeight = lineHeight * 3;
+
+      setShouldShowExpandButton(fullHeight > maxHeight);
+    }
+  }, [contentPayload]);
+
   const getSupportedMimeType = () => {
     const types = [
       "audio/mp4",
@@ -397,10 +426,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     }
 
     logger.info("Initializing Socket.IO connection...");
+    const accessToken = localStorage.getItem("accessToken");
     const socket = io(SOCKET_URL, {
       reconnectionAttempts: 5,
       reconnectionDelay: 5000,
-      query: { userId: userId },
+      auth: {
+        token: accessToken,
+        userId: userId,
+      },
       extraHeaders: { "ngrok-skip-browser-warning": "true" },
     });
     socketRef.current = socket;
@@ -488,7 +521,30 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
     socket.on("connect_error", (err) => {
       logger.error("Socket connection error:", err);
+
+      // Handle authentication errors
+      if (err.message.includes("401") || err.message.includes("Unauthorized")) {
+        toast.error("Authentication failed. Please log in again.");
+        // Clear auth data and redirect to login
+        localStorage.removeItem("AiTutorUser");
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        navigate("/login");
+        return;
+      }
+
       toast.error(`Connection failed: ${err.message}`);
+    });
+
+    // Handle authentication errors from server
+    socket.on("auth_error", (error) => {
+      logger.error("WebSocket authentication error:", error);
+      toast.error("Authentication failed. Please log in again.");
+      // Clear auth data and redirect to login
+      localStorage.removeItem("AiTutorUser");
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      navigate("/login");
     });
 
     socket.on(ChatEvents.CHAT_HISTORY, (payload: any) => {
@@ -1599,6 +1655,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             {contentPayload && (
               <div className="p-4 rounded-lg shadow-sm bg-white border border-gray-200">
                 <p
+                  ref={contentRef}
                   className={`text-gray-800 text-base leading-relaxed whitespace-pre-wrap transition-all duration-300 ${
                     !isContentExpanded ? "line-clamp-3" : "line-clamp-none"
                   }`}
@@ -1635,17 +1692,19 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                       )}
                     </Button>
                   )}
-                  <Button
-                    variant="link"
-                    size="sm"
-                    onClick={() => {
-                      setIsContentExpanded(!isContentExpanded);
-                      resetInactivityTimer();
-                    }}
-                    className="text-sm text-blue-600 p-0 h-auto"
-                  >
-                    {isContentExpanded ? "See Less" : "See More"}
-                  </Button>
+                  {shouldShowExpandButton && (
+                    <Button
+                      variant="link"
+                      size="sm"
+                      onClick={() => {
+                        setIsContentExpanded(!isContentExpanded);
+                        resetInactivityTimer();
+                      }}
+                      className="text-sm text-blue-600 p-0 h-auto"
+                    >
+                      {isContentExpanded ? "See Less" : "See More"}
+                    </Button>
+                  )}
                 </div>
               </div>
             )}

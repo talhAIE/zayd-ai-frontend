@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { User } from '@/types/auth';
+import { clearAuthData } from '@/utils/tokenUtils';
 
 export type UserRole = 'student' | 'teacher';
 
@@ -8,7 +9,8 @@ export interface AuthResponse {
   status: string;
   message: string;
   user: User;
-  token?: string; // Optional token if API provides it
+  accessToken: string; // JWT access token
+  refreshToken: string; // JWT refresh token
 }
 
 export interface LoginCredentials {
@@ -22,7 +24,8 @@ export interface PhoneNumberCredentials {
 
 interface AuthState {
   user: User | null;
-  token: string | null;
+  accessToken: string | null;
+  refreshToken: string | null;
   isLoading: boolean;
   error: string | null;
   isAuthenticated: boolean;
@@ -31,7 +34,8 @@ interface AuthState {
 // Initialize state from localStorage
 const initialState: AuthState = {
   user: JSON.parse(localStorage.getItem('AiTutorUser') || 'null'),
-  token: localStorage.getItem('token'),
+  accessToken: localStorage.getItem('accessToken'),
+  refreshToken: localStorage.getItem('refreshToken'),
   isLoading: false,
   error: null,
   isAuthenticated: Boolean(localStorage.getItem('AiTutorUser')),
@@ -52,16 +56,16 @@ export const login = createAsyncThunk(
       
       localStorage.setItem('AiTutorUser', JSON.stringify(userWithRole));
       
-      if (data.token) {
-        localStorage.setItem('token', data.token);
-      }
+      localStorage.setItem('accessToken', data.accessToken);
+      localStorage.setItem('refreshToken', data.refreshToken);
       
       localStorage.setItem('loginEvent', Date.now().toString());
       localStorage.removeItem('loginEvent');
       
       return {
         user: userWithRole,
-        token: data.token || null,
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
         message: data.message
       };
     } catch (error: any) {
@@ -96,16 +100,16 @@ export const addPhoneNumber = createAsyncThunk(
       
       localStorage.setItem('AiTutorUser', JSON.stringify(userWithRole));
       
-      if (data.token) {
-        localStorage.setItem('token', data.token);
-      }
+      localStorage.setItem('accessToken', data.accessToken);
+      localStorage.setItem('refreshToken', data.refreshToken);
       
       localStorage.setItem('loginEvent', Date.now().toString());
       localStorage.removeItem('loginEvent');
       
       return {
         user: userWithRole,
-        token: data.token || null,
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
         message: data.message
       };
     } catch (error: any) {
@@ -118,14 +122,119 @@ export const addPhoneNumber = createAsyncThunk(
   }
 );
 
+// Refresh token thunk
+export const refreshToken = createAsyncThunk(
+  'auth/refreshToken',
+  async (_, { rejectWithValue }) => {
+    try {
+      const refreshTokenValue = localStorage.getItem('refreshToken');
+      if (!refreshTokenValue) {
+        throw new Error('No refresh token available');
+      }
+
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/api/v1/auth/refresh`,
+        { refreshToken: refreshTokenValue }
+      );
+      
+      const data = response.data as { accessToken: string; refreshToken: string };
+      
+      // Store new tokens
+      localStorage.setItem('accessToken', data.accessToken);
+      localStorage.setItem('refreshToken', data.refreshToken);
+      
+      return {
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken
+      };
+    } catch (error: any) {
+      // If refresh fails, clear tokens and redirect to login
+      clearAuthData();
+      window.location.href = '/login';
+      
+      if (error.response && error.response.data) {
+        return rejectWithValue(error.response.data.message || 'Token refresh failed');
+      }
+      return rejectWithValue(error.message || 'Token refresh failed');
+    }
+  }
+);
+
+// Get current user thunk (validate token)
+export const getCurrentUser = createAsyncThunk(
+  'auth/getCurrentUser',
+  async (_, { rejectWithValue }) => {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+      if (!accessToken) {
+        throw new Error('No access token available');
+      }
+
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/api/v1/auth/me`,
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      const userData = response.data;
+      
+      // Update localStorage with fresh user data
+      const userWithRole = {
+        ...userData,
+        role: userData.role.toLowerCase() as UserRole
+      };
+      
+      localStorage.setItem('AiTutorUser', JSON.stringify(userWithRole));
+      
+      return userWithRole;
+    } catch (error: any) {
+      // If token validation fails, clear auth data
+      if (error.response?.status === 401) {
+        clearAuthData();
+        window.location.href = '/login';
+      }
+      
+      if (error.response && error.response.data) {
+        return rejectWithValue(error.response.data.message || 'Token validation failed');
+      }
+      return rejectWithValue(error.message || 'Token validation failed');
+    }
+  }
+);
+
 // Logout thunk
 export const logout = createAsyncThunk('auth/logout', async (_, { }) => {
-  // Clear localStorage
-  localStorage.removeItem('AiTutorUser');
-  localStorage.removeItem('token');
-  
-  localStorage.setItem('logoutEvent', Date.now().toString());
-  localStorage.removeItem('logoutEvent');
+  try {
+    const accessToken = localStorage.getItem('accessToken');
+    const refreshToken = localStorage.getItem('refreshToken');
+    
+    // Call logout API endpoint if we have tokens
+    if (accessToken && refreshToken) {
+      await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/api/v1/auth/logout`,
+        { refreshToken },
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+    }
+  } catch (error: any) {
+    // Even if logout API fails, we should still clear local data
+    console.warn('Logout API call failed:', error.message);
+  } finally {
+    // Always clear localStorage regardless of API call result
+    clearAuthData();
+    
+    localStorage.setItem('logoutEvent', Date.now().toString());
+    localStorage.removeItem('logoutEvent');
+  }
   
   return null;
 });
@@ -140,7 +249,8 @@ const authSlice = createSlice({
     },
     crossTabLogout: (state) => {
       state.user = null;
-      state.token = null;
+      state.accessToken = null;
+      state.refreshToken = null;
       state.isAuthenticated = false;
       state.error = null;
     },
@@ -155,7 +265,8 @@ const authSlice = createSlice({
       .addCase(login.fulfilled, (state, action) => {
         state.isLoading = false;
         state.user = action.payload.user;
-        state.token = action.payload.token;
+        state.accessToken = action.payload.accessToken;
+        state.refreshToken = action.payload.refreshToken;
         state.isAuthenticated = true;
         state.error = null;
       })
@@ -173,7 +284,8 @@ const authSlice = createSlice({
       .addCase(addPhoneNumber.fulfilled, (state, action) => {
         state.isLoading = false;
         state.user = action.payload.user;
-        state.token = action.payload.token;
+        state.accessToken = action.payload.accessToken;
+        state.refreshToken = action.payload.refreshToken;
         state.isAuthenticated = true;
         state.error = null;
       })
@@ -182,10 +294,45 @@ const authSlice = createSlice({
         state.error = action.payload as string;
       })
       
+      // Refresh token
+      .addCase(refreshToken.fulfilled, (state, action) => {
+        state.accessToken = action.payload.accessToken;
+        state.refreshToken = action.payload.refreshToken;
+        state.error = null;
+      })
+      .addCase(refreshToken.rejected, (state, action) => {
+        state.user = null;
+        state.accessToken = null;
+        state.refreshToken = null;
+        state.isAuthenticated = false;
+        state.error = action.payload as string;
+      })
+      
+      // Get current user
+      .addCase(getCurrentUser.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getCurrentUser.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload;
+        state.isAuthenticated = true;
+        state.error = null;
+      })
+      .addCase(getCurrentUser.rejected, (state, action) => {
+        state.isLoading = false;
+        state.user = null;
+        state.accessToken = null;
+        state.refreshToken = null;
+        state.isAuthenticated = false;
+        state.error = action.payload as string;
+      })
+      
       // Logout
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
-        state.token = null;
+        state.accessToken = null;
+        state.refreshToken = null;
         state.isAuthenticated = false;
       });
   },

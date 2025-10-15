@@ -585,7 +585,7 @@ const Rewards = (): JSX.Element => {
             </div>
           )}
 
-          <div className="flex justify-center gap-2 flex-wrap">
+          <div className="flex justify-center gap-2 flex-wrap items-center">
             <span
               className={`text-xs font-medium px-2 py-1 rounded-full ${
                 isEarned

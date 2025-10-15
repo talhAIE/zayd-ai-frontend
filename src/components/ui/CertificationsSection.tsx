@@ -33,13 +33,13 @@ export function CertificationsSection({
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger
               value="certifications"
-              className="text-xs sm:text-sm truncate"
+              className="truncate text-xs sm:text-sm [@media(min-width:1023px)_and_(max-width:1380px)]:text-[12px]"
             >
               Certifications
             </TabsTrigger>
             <TabsTrigger
               value="rewards"
-              className="text-xs sm:text-sm truncate"
+              className="truncate text-xs sm:text-sm [@media(min-width:1023px)_and_(max-width:1380px)]:text-[12px]"
             >
               Rewards
             </TabsTrigger>

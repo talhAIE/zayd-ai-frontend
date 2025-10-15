@@ -140,19 +140,12 @@ export default function TeacherDashboard() {
       let studentIds: string[] | undefined;
 
       if (selectedStudents.size > 0) {
-        const filters = buildFilters();
-        const { page, limit, ...allStudentsFilters } = filters;
-        const allStudentsData = await fetchAllTeacherStudents(
-          teacherId,
-          allStudentsFilters
-        );
-
-        studentIds = allStudentsData
-          .filter((s) => selectedStudents.has(s.id))
-          .map((student) => student.id);
+        studentIds = Array.from(selectedStudents);
+      } else {
+        studentIds = allStudents.map((student) => student.id);
       }
 
-      if (studentIds && studentIds.length === 0) {
+      if (studentIds.length === 0) {
         toast.error("No students found to download reports");
         return;
       }
@@ -190,7 +183,7 @@ export default function TeacherDashboard() {
       } else {
         toast.success(successMessage);
       }
-
+      
     } catch (error: any) {
       console.error("Bulk download error:", error);
       toast.error(error.message || "Failed to download reports");
@@ -645,7 +638,7 @@ export default function TeacherDashboard() {
                   <Download className="h-4 w-4 mr-2" />
                   {selectedStudents.size > 0
                     ? `Download Selected Reports (${selectedStudents.size})`
-                    : `Download All Reports (${totalStudents})`}
+                    : `Download All Reports (${allStudents.length})`}
                 </>
               )}
             </Button>
