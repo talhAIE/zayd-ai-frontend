@@ -585,9 +585,9 @@ const Rewards = (): JSX.Element => {
             </div>
           )}
 
-          <div className="flex justify-center items-center gap-2 mt-2">
+          <div className="flex justify-center gap-2 flex-wrap items-center">
             <span
-              className={`inline-flex items-center justify-center text-xs font-medium px-2 py-1 rounded-full ${
+              className={`text-xs font-medium px-2 py-1 rounded-full ${
                 isEarned
                   ? "bg-blue-100 text-blue-700"
                   : "bg-gray-100 text-gray-600"
@@ -596,7 +596,7 @@ const Rewards = (): JSX.Element => {
               {achievement.pointValue} points
             </span>
             {isEarned && achievement.awardedAt && (
-              <span className="text-xs text-gray-500 leading-none">
+              <span className="text-xs text-gray-500">
                 Earned {new Date(achievement.awardedAt).toLocaleDateString()}
               </span>
             )}
