@@ -1,0 +1,189 @@
+import pointingNeutralImg from "@/assets/images/landingpage/pointingNeutral.svg";
+import stripImg from "@/assets/images/landingpage/strip.png";
+
+const ConversationSection = () => {
+  const features = [
+    {
+      title: "Culturally Relevant",
+      description: "Built for Arab students, respecting local values.",
+    },
+    {
+      title: "Engaging & Fun",
+      description: "Students practice with games, challenges, and role-play.",
+    },
+    {
+      title: "School-Ready",
+      description: "Already tested in classrooms and trusted by teachers.",
+    },
+    {
+      title: "Instant Progress Reports",
+      description: "AI tracks speaking, listening, and vocabulary growth.",
+    },
+    {
+      title: "Affordable & Scalable",
+      description: "Schools save money and time compared to hiring teachers.",
+    },
+    {
+      title: "Future-Proof Learning",
+      description: "Builds skills for study abroad, jobs, and communication.",
+    },
+  ];
+
+  return (
+    <section
+      id="conversation"
+      className="relative py-20 px-4 overflow-hidden bg-white"
+    >
+      <div className="max-w-7xl mx-auto relative z-10">
+        {/* Header */}
+        <div className="text-center mb-16">
+          <div className="inline-block bg-white border border-gray-300 rounded-full px-6 py-2 mb-6 shadow-sm">
+            <p className="text-gray-600 text-sm font-medium">
+              Why choose Zayd AI
+            </p>
+          </div>
+
+          <div className="relative">
+            {/* Falcon Image */}
+            <div className="absolute left-[9rem] top-[7rem] -translate-y-1/2 hidden lg:block">
+              <img
+                src={pointingNeutralImg}
+                alt="Zayd AI Mascot"
+                width={200}
+                height={200}
+                className="object-contain scale-x-[-1]"
+              />
+            </div>
+
+            <h2 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+              Experience{" "}
+              <span className="bg-gradient-to-r from-[#058BF4] to-[#63B3F6] bg-clip-text text-transparent">
+                Humanlike
+              </span>
+              <br />
+              Conversations
+            </h2>
+          </div>
+
+          <p className="text-gray-600 text-lg max-w-3xl mx-auto">
+            Advanced AI technology designed specifically for Arab learners,
+            providing
+            <br />
+            culturally relevant and engaging English education.
+          </p>
+        </div>
+
+        {/* Features Grid */}
+        <div className="relative">
+          {/* Strip background image */}
+          <div className="absolute right-[20rem] -top-[6rem] bottom-50 sm:flex hidden items-center justify-start pointer-events-none">
+            <img
+              src={stripImg}
+              alt="Background decoration"
+              width={1400}
+              height={1800}
+              className="object-contain opacity-60 -ml-96"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto relative z-10">
+            {features.map((feature, index) => (
+              <div
+                key={index}
+                className="bg-white/20 backdrop-blur-md rounded-2xl p-8 transition-all duration-300 border border-[#E5E7EB]"
+              >
+                {/* Checkmark Icon */}
+                <div className="mb-4">
+                  <svg
+                    width="45"
+                    height="43"
+                    viewBox="0 0 45 43"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M44.9167 21.3558L39.935 15.68L40.6292 8.16667L33.2588 6.4925L29.4 0L22.4583 2.98083L15.5167 0L11.6579 6.4925L4.2875 8.14625L4.98167 15.6596L0 21.3558L4.98167 27.0317L4.2875 34.5654L11.6579 36.2396L15.5167 42.7321L22.4583 39.7308L29.4 42.7117L33.2588 36.2192L40.6292 34.545L39.935 27.0317L44.9167 21.3558ZM18.375 31.5642L10.2083 23.3975L13.0871 20.5187L18.375 25.7862L31.8296 12.3317L34.7083 15.2308L18.375 31.5642Z"
+                      fill="#058BF4"
+                    />
+                  </svg>
+                </div>
+
+                <h3 className="text-xl font-bold text-gray-900 mb-3">
+                  {feature.title}
+                </h3>
+
+                <p className="text-gray-600 leading-relaxed">
+                  {feature.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Auto-scrolling horizontal cards */}
+      {/* <div className="sm:mt-40 mt-12 overflow-hidden">
+        <div className="flex animate-scroll">
+          <div className="flex space-x-4 shrink-0">
+            <div className="bg-white/20 backdrop-blur-md rounded-2xl px-6 py-4 transition-all duration-300 border border-[#E5E7EB] whitespace-nowrap">
+              <span className="text-blue-600 font-medium">Workout plan</span>
+            </div>
+            <div className="bg-white/20 backdrop-blur-md rounded-2xl px-6 py-4 transition-all duration-300 border border-[#E5E7EB] whitespace-nowrap">
+              <span className="text-blue-600 font-medium">
+                Transcribe my class notes
+              </span>
+            </div>
+            <div className="bg-white/20 backdrop-blur-md rounded-2xl px-6 py-4 transition-all duration-300 border border-[#E5E7EB] whitespace-nowrap">
+              <span className="text-blue-600 font-medium">
+                Create a pros and cons list
+              </span>
+            </div>
+            <div className="bg-white/20 backdrop-blur-md rounded-2xl px-6 py-4 transition-all duration-300 border border-[#E5E7EB] whitespace-nowrap">
+              <span className="text-blue-600 font-medium">
+                Morning Productivity Plan
+              </span>
+            </div>
+            <div className="bg-white/20 backdrop-blur-md rounded-2xl px-6 py-4 transition-all duration-300 border border-[#E5E7EB] whitespace-nowrap">
+              <span className="text-blue-600 font-medium">
+                Experience Tokyo like a local
+              </span>
+            </div>
+            <div className="bg-white/20 backdrop-blur-md rounded-2xl px-6 py-4 transition-all duration-300 border border-[#E5E7EB] whitespace-nowrap">
+              <span className="text-blue-600 font-medium">Translate</span>
+            </div>
+          </div>
+          <div className="flex space-x-4 shrink-0 ml-8">
+            <div className="bg-white/20 backdrop-blur-md rounded-2xl px-6 py-4 transition-all duration-300 border border-[#E5E7EB] whitespace-nowrap">
+              <span className="text-blue-600 font-medium">Workout plan</span>
+            </div>
+            <div className="bg-white/20 backdrop-blur-md rounded-2xl px-6 py-4 transition-all duration-300 border border-[#E5E7EB] whitespace-nowrap">
+              <span className="text-blue-600 font-medium">
+                Transcribe my class notes
+              </span>
+            </div>
+            <div className="bg-white/20 backdrop-blur-md rounded-2xl px-6 py-4 transition-all duration-300 border border-[#E5E7EB] whitespace-nowrap">
+              <span className="text-blue-600 font-medium">
+                Create a pros and cons list
+              </span>
+            </div>
+            <div className="bg-white/20 backdrop-blur-md rounded-2xl px-6 py-4 transition-all duration-300 border border-[#E5E7EB] whitespace-nowrap">
+              <span className="text-blue-600 font-medium">
+                Morning Productivity Plan
+              </span>
+            </div>
+            <div className="bg-white/20 backdrop-blur-md rounded-2xl px-6 py-4 transition-all duration-300 border border-[#E5E7EB] whitespace-nowrap">
+              <span className="text-blue-600 font-medium">
+                Experience Tokyo like a local
+              </span>
+            </div>
+            <div className="bg-white/20 backdrop-blur-md rounded-2xl px-6 py-4 transition-all duration-300 border border-[#E5E7EB] whitespace-nowrap">
+              <span className="text-blue-600 font-medium">Translate</span>
+            </div>
+          </div>
+        </div>
+      </div> */}
+    </section>
+  );
+};
+
+export default ConversationSection;
