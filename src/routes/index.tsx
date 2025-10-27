@@ -2,14 +2,11 @@ import { Routes, Route, Navigate } from "react-router-dom";
 // import { useAppSelector } from '@/redux/hooks';
 
 // Layouts
-import { PublicLayout } from "@/components/layouts/public-layout";
 import { StudentLayout } from "@/components/layouts/student-layout";
 import { TeacherLayout } from "@/components/layouts/teacher-layout";
 
 // Public Pages
-// import HomePage from '@/pages/public/home';
-import AboutPage from "@/pages/public/about";
-import ContactPage from "@/pages/public/contact";
+import Main from "@/pages/public/Main";
 
 // Student Pages
 import LearningModes from "@/pages/student/learning-modes";
@@ -20,18 +17,17 @@ import TeacherDashboard from "@/pages/teacher/dashboard";
 import StudentProfile from "@/pages/teacher/student-profile";
 
 // Auth Pages
-import { AuthLayout } from '@/components/layouts/auth-layout';
-import LoginPage from '@/pages/auth/login';
-import ChatModeTopics from '@/pages/student/topics/ChatModeTopics';
-import PhotoModeTopics from '@/pages/student/topics/PhotoModeTopics';
-import DebateModeTopics from '@/pages/student/topics/DebateModeTopics';
-import Leaderboard from '@/pages/student/Leaderboard';
-import Chat from '@/pages/student/ChatPage';
-import Rewards from '@/pages/student/Rewards';
-import ReadingModeTopics from '@/pages/student/topics/ReadingModeTopics';
-import RolePlayModeTopics from '@/pages/student/topics/RolePlayModeTopics';
-import ListeningModeTopics from '@/pages/student/topics/ListeningModeTopics';
-
+import { AuthLayout } from "@/components/layouts/auth-layout";
+import LoginPage from "@/pages/auth/login";
+import ChatModeTopics from "@/pages/student/topics/ChatModeTopics";
+import PhotoModeTopics from "@/pages/student/topics/PhotoModeTopics";
+import DebateModeTopics from "@/pages/student/topics/DebateModeTopics";
+import Leaderboard from "@/pages/student/Leaderboard";
+import Chat from "@/pages/student/ChatPage";
+import Rewards from "@/pages/student/Rewards";
+import ReadingModeTopics from "@/pages/student/topics/ReadingModeTopics";
+import RolePlayModeTopics from "@/pages/student/topics/RolePlayModeTopics";
+import ListeningModeTopics from "@/pages/student/topics/ListeningModeTopics";
 
 const AppRoutes = () => {
   // const { user } = useAppSelector((state) => state.auth);
@@ -52,30 +48,7 @@ const AppRoutes = () => {
   return (
     <Routes>
       {/* Public Routes */}
-      <Route
-        path="/"
-        element={
-          <PublicLayout>
-            <Navigate to={"/login"} />
-          </PublicLayout>
-        }
-      />
-      <Route
-        path="/about"
-        element={
-          <PublicLayout>
-            <AboutPage />
-          </PublicLayout>
-        }
-      />
-      <Route
-        path="/contact"
-        element={
-          <PublicLayout>
-            <ContactPage />
-          </PublicLayout>
-        }
-      />
+      <Route path="/" element={<Main />} />
       <Route
         path="/teacher/dashboard"
         element={

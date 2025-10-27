@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100;200;300;400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -99,4 +100,96 @@ body {
 
 .gradientText {
   color: linear-gradient(90deg, #6250E9 0%, #69BDFF 100%);
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-scroll {
+  animation: scroll 20s linear infinite;
+}
+
+/* Custom gradient classes */
+.bg-linear-to-r {
+  background: linear-gradient(to right, var(--tw-gradient-stops));
+}
+
+.bg-linear-to-b {
+  background: linear-gradient(to bottom, var(--tw-gradient-stops));
+}
+
+.bg-linear-to-l {
+  background: linear-gradient(to left, var(--tw-gradient-stops));
+}
+
+.bg-linear-to-t {
+  background: linear-gradient(to top, var(--tw-gradient-stops));
+}
+
+.bg-linear-to-br {
+  background: linear-gradient(to bottom right, var(--tw-gradient-stops));
+}
+
+.bg-linear-to-bl {
+  background: linear-gradient(to bottom left, var(--tw-gradient-stops));
+}
+
+.bg-linear-to-tr {
+  background: linear-gradient(to top right, var(--tw-gradient-stops));
+}
+
+.bg-linear-to-tl {
+  background: linear-gradient(to top left, var(--tw-gradient-stops));
+}
+
+.testimonials-slider {
+  overflow: hidden;
+  padding-bottom: 50px;
+}
+
+.testimonials-slider .slick-dots {
+  bottom: 0px;
+  position: relative;
+  margin-top: 30px;
+}
+
+.testimonials-slider .slick-dots li button:before {
+  font-size: 8px;
+  color: #4b5563;
+  opacity: 1;
+  transition: all 0.3s ease;
+}
+
+.testimonials-slider .slick-dots li.slick-active button:before {
+  color: #ffffff;
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+.testimonials-slider .slick-dots li button:hover:before {
+  color: #9ca3af;
+}
+
+.testimonials-slider .slick-slide {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.testimonials-slider .slick-slide>div {
+  height: 100%;
+}
+
+.testimonials-slider .slick-track {
+  display: flex;
+  align-items: stretch;
+}
+
+.testimonials-slider .slick-list {
+  overflow: visible;
 }

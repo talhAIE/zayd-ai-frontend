@@ -1,104 +1,140 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  darkMode: ['class'],
+  darkMode: ["class"],
   content: [
-    './pages/**/*.{ts,tsx}',
-    './components/**/*.{ts,tsx}',
-    './app/**/*.{ts,tsx}',
-    './src/**/*.{ts,tsx}',
+    "./pages/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
   ],
   theme: {
     container: {
       center: true,
       padding: {
         sm: "0.15rem",
-        md: "2rem"
+        md: "2rem",
       },
       screens: {
-        sm: '640px',
-        md: '768px',
-        lg: '1400px',
-        xl: '1680px',
+        sm: "640px",
+        md: "768px",
+        lg: "1400px",
+        xl: "1680px",
       },
     },
     extend: {
-
       fontFamily: {
-        sans: ['Outfit', 'sans-serif'], // use Outfit as the default
+        sans: ["Outfit", "sans-serif"], // use Outfit as the default
+        "geist-sans": ["Geist", "sans-serif"], // Geist font for public pages
       },
 
       borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
       },
       colors: {
-        background: 'hsl(var(--background))',
-        foreground: 'hsl(var(--foreground))',
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
         card: {
-          DEFAULT: 'hsl(var(--card))',
-          foreground: 'hsl(var(--card-foreground))',
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
         },
         popover: {
-          DEFAULT: 'hsl(var(--popover))',
-          foreground: 'hsl(var(--popover-foreground))',
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
         },
         primary: {
-          DEFAULT: 'hsl(var(--primary))',
-          foreground: 'hsl(var(--primary-foreground))',
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
         },
         secondary: {
-          DEFAULT: 'hsl(var(--secondary))',
-          foreground: 'hsl(var(--secondary-foreground))',
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
         },
         muted: {
-          DEFAULT: 'hsl(var(--muted))',
-          foreground: 'hsl(var(--muted-foreground))',
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
         },
         accent: {
-          DEFAULT: 'hsl(var(--accent))',
-          foreground: 'hsl(var(--accent-foreground))',
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
         },
         destructive: {
-          DEFAULT: 'hsl(var(--destructive))',
-          foreground: 'hsl(var(--destructive-foreground))',
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
         },
-        border: 'hsl(var(--border))',
-        input: 'hsl(var(--input))',
-        ring: 'hsl(var(--ring))',
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
         chart: {
-          1: 'hsl(var(--chart-1))',
-          2: 'hsl(var(--chart-2))',
-          3: 'hsl(var(--chart-3))',
-          4: 'hsl(var(--chart-4))',
-          5: 'hsl(var(--chart-5))',
+          1: "hsl(var(--chart-1))",
+          2: "hsl(var(--chart-2))",
+          3: "hsl(var(--chart-3))",
+          4: "hsl(var(--chart-4))",
+          5: "hsl(var(--chart-5))",
         },
       },
       keyframes: {
-        'accordion-down': {
+        "accordion-down": {
           from: {
-            height: '0',
+            height: "0",
           },
           to: {
-            height: 'var(--radix-accordion-content-height)',
+            height: "var(--radix-accordion-content-height)",
           },
         },
-        'accordion-up': {
+        "accordion-up": {
           from: {
-            height: 'var(--radix-accordion-content-height)',
+            height: "var(--radix-accordion-content-height)",
           },
           to: {
-            height: '0',
+            height: "0",
           },
         },
       },
       animation: {
-        'accordion-down': 'accordion-down 0.2s ease-out',
-        'accordion-up': 'accordion-up 0.2s ease-out',
-        'spin-slow': 'spin 3s linear infinite',
-        'spin-fast': 'spin 0.5s linear infinite',
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
+        "spin-slow": "spin 3s linear infinite",
+        "spin-fast": "spin 0.5s linear infinite",
+        slideInFromRight: "slideInFromRight 0.8s ease-out forwards",
+        dotPulse: "dotPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+      },
+      keyframes: {
+        slideInFromRight: {
+          from: {
+            opacity: "0",
+            transform: "translateX(100px)",
+          },
+          to: {
+            opacity: "1",
+            transform: "translateX(0)",
+          },
+        },
+        dotPulse: {
+          "0%, 100%": {
+            transform: "scale(1)",
+          },
+          "50%": {
+            transform: "scale(1.5)",
+          },
+        },
+      },
+      backgroundImage: {
+        "linear-to-r": "linear-gradient(to right, var(--tw-gradient-stops))",
+        "linear-to-b": "linear-gradient(to bottom, var(--tw-gradient-stops))",
+        "linear-to-l": "linear-gradient(to left, var(--tw-gradient-stops))",
+        "linear-to-t": "linear-gradient(to top, var(--tw-gradient-stops))",
+        "linear-to-br":
+          "linear-gradient(to bottom right, var(--tw-gradient-stops))",
+        "linear-to-bl":
+          "linear-gradient(to bottom left, var(--tw-gradient-stops))",
+        "linear-to-tr":
+          "linear-gradient(to top right, var(--tw-gradient-stops))",
+        "linear-to-tl":
+          "linear-gradient(to top left, var(--tw-gradient-stops))",
       },
     },
   },
-  plugins: [require('tailwindcss-animate')],
+  plugins: [require("tailwindcss-animate")],
 };
