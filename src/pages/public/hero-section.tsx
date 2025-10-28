@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import pointingSvg from "@/assets/images/landingpage/pointing.svg";
-import parrotTailPng from "@/assets/images/landingpage/parrottail.png";
+import { motion } from "framer-motion";
+import pointingSvg from "@/assets/images/landingpage/malewithfalcon.png";
 
 export default function HeroSection() {
   return (
@@ -13,13 +13,12 @@ export default function HeroSection() {
         Zayd AI — Unleash the Power of AI
       </p>
 
-      {/* Relative container for parrot and tail */}
-      <div className="relative inline-block">
+      <div className="relative inline-block z-50">
         <h1 className="text-7xl font-bold text-gray-900 mb-6 inline-block">
           Unlock the Future <br />
           of English{" "}
           <span
-            className="bg-gradient-to-r from-[#76ABF8] via-[#058BF4] to-[#63B3F6] bg-clip-text text-transparent sm:inline-flex hidden items-center"
+            className="bg-gradient-to-r from-[#76ABF8] via-[#058BF4] to-[#63B3F6] bg-clip-text text-transparent sm:inline-flex hidden items-center underline decoration-[#058BF4] decoration-4 underline-offset-[12px]"
             style={{ lineHeight: "1.2" }}
           >
             Learning
@@ -27,17 +26,18 @@ export default function HeroSection() {
         </h1>
       </div>
 
-      <div className="absolute top-[12rem] right-[13rem] sm:flex hidden">
-        <img src={pointingSvg} alt="Pointing" width={200} height={200} />
-        {/* Tail image */}
-        <img
-          className="absolute top-[7rem] left-[10rem]"
-          src={parrotTailPng}
-          alt="Parrot Tail"
-          width={400}
-          height={400}
-        />
-      </div>
+      <motion.div
+        className="absolute top-[9.5rem] right-[13rem] sm:flex hidden z-10"
+        initial={{ x: 100, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{
+          duration: 0.8,
+          ease: "easeOut",
+          delay: 0.5,
+        }}
+      >
+        <img src={pointingSvg} alt="Pointing" width={250} height={250} />
+      </motion.div>
 
       <p className="font-normal text-[20px] leading-[24px] tracking-[0px] text-gray-600 text-center mx-auto mb-10 max-w-2xl">
         AI-powered English courses designed for Arab learners. <br />

@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { motion } from "framer-motion";
+import Female from "@/assets/images/landingpage/femalethinking.png";
 
 export default function FAQSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
@@ -59,6 +61,20 @@ export default function FAQSection() {
 
       {/* === Main FAQ Content === */}
       <div className="relative z-10 max-w-7xl w-full mx-auto flex flex-col md:flex-row md:items-start md:justify-between gap-16 px-6 md:px-20">
+        <motion.div
+          className="absolute left-[25rem] top-[3rem] -translate-y-1/2 hidden lg:block"
+          initial={{ y: 100, opacity: 0 }}
+          whileInView={{ y: 0, opacity: 1 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{
+            duration: 0.8,
+            ease: "easeOut",
+            delay: 0.3,
+          }}
+        >
+          <img src={Female} alt="Female" width={200} height={200} />
+        </motion.div>
+
         {/* Left Side — Title */}
         <div className="w-full md:w-1/2 flex items-center md:items-start justify-center md:justify-start">
           <h2
