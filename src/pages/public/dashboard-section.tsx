@@ -1,5 +1,15 @@
 import flyingImg from "@/assets/images/landingpage/flying.svg";
 import dashboardImg from "@/assets/images/landingpage/dashboard.png";
+import { motion, Variants } from "framer-motion";
+
+const fadeInScale: Variants = {
+  hidden: { opacity: 0, scale: 0.95 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: { duration: 0.6, ease: [0.25, 0.1, 0.25, 1] },
+  },
+};
 
 const DashboardSection = () => {
   return (
@@ -22,7 +32,13 @@ const DashboardSection = () => {
       <div className="relative z-10 container mx-auto px-4 py-16">
         <div className="max-w-6xl mx-auto">
           {/* Dashboard Image */}
-          <div className="flex justify-center">
+          <motion.div
+            className="flex justify-center"
+            variants={fadeInScale}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+          >
             <img
               src={dashboardImg}
               alt="Student Dashboard"
@@ -30,7 +46,7 @@ const DashboardSection = () => {
               height={500}
               className="rounded-3xl shadow-2xl"
             />
-          </div>
+          </motion.div>
 
           {/* Footer text */}
           <div className="text-center mt-12">

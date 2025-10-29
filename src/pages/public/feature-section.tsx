@@ -245,24 +245,67 @@ export default function FeatureSection() {
       <div className="relative z-10 max-w-7xl mx-auto px-4">
         {/* Header Section */}
         <div className="text-center mb-16">
-          <div className="inline-block bg-white border border-gray-300 rounded-full px-6 py-2 mb-6 shadow-sm">
+          <motion.div
+            className="inline-block bg-white border border-gray-300 rounded-full px-6 py-2 mb-6 shadow-sm"
+            initial={{ opacity: 0, y: 20, scale: 0.8 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+          >
             <p className="text-gray-600 text-sm font-medium">
               Advanced features
             </p>
-          </div>
+          </motion.div>
 
           <div className="relative flex items-center justify-center mb-8">
-            <div className="w-80 text-center">
+            <motion.div
+              className="w-80 text-center"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+            >
               <h2 className="text-5xl font-bold">
-                <span className="bg-gradient-to-r from-[#76ABF8] via-[#058BF4] to-[#63B3F6] bg-clip-text text-transparent">
+                <motion.span
+                  className="bg-gradient-to-r from-[#76ABF8] via-[#058BF4] to-[#63B3F6] bg-clip-text text-transparent"
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
+                >
                   Features
-                </span>{" "}
-                <span className="text-gray-900">that Stand out</span>
+                </motion.span>{" "}
+                <motion.span
+                  className="text-gray-900"
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
+                >
+                  that Stand out
+                </motion.span>
               </h2>
-            </div>
+            </motion.div>
 
             {/* Bird illustration - positioned absolutely so it doesn't affect text centering */}
-            <div className="sm:flex hidden absolute right-[18rem] top-1/2 transform -translate-y-1/2 w-24 h-24">
+            <motion.div
+              className="sm:flex hidden absolute right-[18rem] top-[0rem] transform -translate-y-1/2 w-24 h-24"
+              initial={{ opacity: 0, x: -50, scale: 0.5 }}
+              whileInView={{ opacity: 1, x: 0, scale: 1 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{
+                duration: 0.8,
+                ease: "easeOut",
+                delay: 0.8,
+                type: "spring",
+                stiffness: 100,
+              }}
+              whileHover={{
+                scale: 1.1,
+                rotate: [0, -5, 5, 0],
+                transition: { duration: 0.3 },
+              }}
+            >
               <img
                 className="scale-[200%]"
                 src={teachImg}
@@ -270,43 +313,86 @@ export default function FeatureSection() {
                 width={100}
                 height={100}
               />
-            </div>
+            </motion.div>
           </div>
         </div>
 
         {/* Feature Icons Row */}
-        <div className="border border-[#E5E7EB] bg-transparent rounded-2xl p-2 mb-16">
+        <motion.div
+          className="border border-[#E5E7EB] bg-transparent rounded-2xl p-2 mb-16"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.8, ease: "easeOut", delay: 0.6 }}
+        >
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
             {features.map((feature, index) => (
-              <div
+              <motion.div
                 key={index}
-                className={`text-center cursor-pointer transition-all duration-300 hover:scale-105 ${
-                  selectedFeature === index ? "transform scale-105" : ""
-                }`}
+                className="text-center cursor-pointer"
+                initial={{ opacity: 0, y: 20, scale: 0.8 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{
+                  duration: 0.6,
+                  ease: "easeOut",
+                  delay: 0.7 + index * 0.1,
+                }}
+                whileHover={{
+                  scale: 1.05,
+                  y: -5,
+                  transition: { duration: 0.2 },
+                }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setSelectedFeature(index)}
               >
-                <div
+                <motion.div
                   className={`w-16 h-16 mx-auto mb-4 flex items-center justify-center transition-all duration-300 ${
                     selectedFeature === index ? "bg-blue-50 rounded-xl" : ""
                   }`}
+                  animate={{
+                    scale: selectedFeature === index ? 1.1 : 1,
+                    backgroundColor:
+                      selectedFeature === index ? "#EFF6FF" : "transparent",
+                  }}
+                  transition={{ duration: 0.3 }}
                 >
-                  {typeof feature.svg === "function"
-                    ? feature.svg(selectedFeature === index)
-                    : feature.svg}
-                </div>
-                <p
+                  <motion.div
+                    animate={{
+                      scale: selectedFeature === index ? 1.1 : 1,
+                      rotate: selectedFeature === index ? [0, -5, 5, 0] : 0,
+                    }}
+                    transition={{
+                      scale: { duration: 0.3 },
+                      rotate: {
+                        duration: 0.6,
+                        repeat: selectedFeature === index ? Infinity : 0,
+                        repeatDelay: 2,
+                      },
+                    }}
+                  >
+                    {typeof feature.svg === "function"
+                      ? feature.svg(selectedFeature === index)
+                      : feature.svg}
+                  </motion.div>
+                </motion.div>
+                <motion.p
                   className={`text-sm font-medium transition-colors duration-300 ${
                     selectedFeature === index
                       ? "text-blue-500"
                       : "text-gray-600"
                   }`}
+                  animate={{
+                    color: selectedFeature === index ? "#3B82F6" : "#6B7280",
+                  }}
+                  transition={{ duration: 0.3 }}
                 >
                   {feature.title}
-                </p>
-              </div>
+                </motion.p>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
 
         {/* Dynamic Character Image - Positioned absolutely like before */}
         {selectedFeature === 2 && features[selectedFeature].multipleImages ? (
@@ -369,33 +455,79 @@ export default function FeatureSection() {
         ) : null}
 
         {/* Bottom Section with Chat Interface */}
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <motion.div
+          className="grid lg:grid-cols-2 gap-12 items-center"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut", delay: 1.0 }}
+        >
           {/* Left Side - Dynamic Feature Description */}
           <motion.div
             className="space-y-6"
             key={selectedFeature}
-            initial={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
           >
-            <div className="flex items-center gap-2">
-              <span className="text-blue-500 font-medium">
+            <motion.div
+              className="flex items-center gap-2"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              <motion.span
+                className="text-blue-500 font-medium"
+                animate={{
+                  color: ["#3B82F6", "#1D4ED8", "#3B82F6"],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              >
                 {features[selectedFeature].category}
-              </span>
-              <div className="ms-1 w-1 h-1 bg-blue-300 rounded-full"></div>
-            </div>
+              </motion.span>
+              <motion.div
+                className="ms-1 w-1 h-1 bg-blue-300 rounded-full"
+                animate={{
+                  scale: [1, 1.5, 1],
+                  opacity: [0.5, 1, 0.5],
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              ></motion.div>
+            </motion.div>
 
-            <h3 className="w-80 text-4xl font-bold text-gray-900">
+            <motion.h3
+              className="w-80 text-4xl font-bold text-gray-900"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
               {features[selectedFeature].heading}
-            </h3>
+            </motion.h3>
 
-            <p className="w-80 text-lg text-gray-600 leading-relaxed">
+            <motion.p
+              className="w-80 text-lg text-gray-600 leading-relaxed"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
               {features[selectedFeature].description}
-            </p>
+            </motion.p>
           </motion.div>
 
           {/* Right Side - Dynamic Content */}
-          <div className="relative">
+          <motion.div
+            className="relative"
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
             {selectedFeature === 4 ? (
               // Special case for Safe & Secure - show character image on right
               <div className="flex items-center justify-center sm:h-[30rem] h-[20rem]">
@@ -413,19 +545,39 @@ export default function FeatureSection() {
               </div>
             ) : (
               // Default case - show chat interface
-              <div className="bg-gradient-to-b from-blue-100 via-blue-300 to-blue-400 rounded-2xl p-8 shadow-lg sm:h-[30rem] h-[20rem] flex items-center justify-center">
-                <img
+              <motion.div
+                className="bg-gradient-to-b from-blue-100 via-blue-300 to-blue-400 rounded-2xl p-8 shadow-lg sm:h-[30rem] h-[20rem] flex items-center justify-center"
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.5 }}
+                whileHover={{
+                  scale: 1.02,
+                  boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+                  transition: { duration: 0.3 },
+                }}
+              >
+                <motion.img
                   src={chatmodeImg}
                   alt="Chat Mode Interface"
                   width={500}
                   height={400}
                   className="sm:w-4/5 w-full h-auto rounded-xl mx-auto"
                   style={{ objectFit: "contain" }}
+                  animate={{
+                    y: [0, -5, 0],
+                  }}
+                  transition={{
+                    y: {
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    },
+                  }}
                 />
-              </div>
+              </motion.div>
             )}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
     </section>
   );

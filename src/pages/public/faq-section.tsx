@@ -32,7 +32,7 @@ export default function FAQSection() {
       className="relative w-full h-screen flex items-center justify-center bg-gradient-to-r from-[#F6FAFF] to-white overflow-hidden"
     >
       {/* === Gradient Circle: Top-Right === */}
-      <div
+      <motion.div
         className="absolute rounded-full"
         style={{
           width: "576px",
@@ -43,10 +43,19 @@ export default function FAQSection() {
           filter: "blur(240px)",
           zIndex: 0,
         }}
+        animate={{
+          scale: [1, 1.1, 1],
+          opacity: [0.3, 0.5, 0.3],
+        }}
+        transition={{
+          duration: 8,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
       />
 
       {/* === Gradient Circle: Bottom-Left === */}
-      <div
+      <motion.div
         className="absolute rounded-full"
         style={{
           width: "576px",
@@ -56,6 +65,16 @@ export default function FAQSection() {
           background: "#3764B452",
           filter: "blur(240px)",
           zIndex: 0,
+        }}
+        animate={{
+          scale: [1, 1.2, 1],
+          opacity: [0.2, 0.4, 0.2],
+        }}
+        transition={{
+          duration: 10,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: 2,
         }}
       />
 
@@ -76,8 +95,14 @@ export default function FAQSection() {
         </motion.div>
 
         {/* Left Side — Title */}
-        <div className="w-full md:w-1/2 flex items-center md:items-start justify-center md:justify-start">
-          <h2
+        <motion.div
+          className="w-full md:w-1/2 flex items-center md:items-start justify-center md:justify-start"
+          initial={{ opacity: 0, x: -50 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+        >
+          <motion.h2
             className="font-bold text-center md:text-left"
             style={{
               fontFamily: "Geist, sans-serif",
@@ -87,19 +112,55 @@ export default function FAQSection() {
               letterSpacing: "-0.01em",
               color: "#058BF4",
             }}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
           >
-            Frequently Asked <br />
-            Questions
-          </h2>
-        </div>
+            <motion.span
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
+            >
+              Frequently Asked
+            </motion.span>
+            <br />
+            <motion.span
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
+            >
+              Questions
+            </motion.span>
+          </motion.h2>
+        </motion.div>
 
         {/* Right Side — Accordion */}
-        <div className="w-full md:w-1/2 border-t border-gray-200 pt-2">
+        <motion.div
+          className="w-full md:w-1/2 border-t border-gray-200 pt-2"
+          initial={{ opacity: 0, x: 50 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.8, ease: "easeOut", delay: 0.5 }}
+        >
           {faqs.map((faq, index) => (
-            <div key={index} className="border-b border-gray-200 py-5">
-              <button
+            <motion.div
+              key={index}
+              className="border-b border-gray-200 py-5"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{
+                duration: 0.6,
+                ease: "easeOut",
+                delay: 0.6 + index * 0.2,
+              }}
+            >
+              <motion.button
                 onClick={() => toggleFAQ(index)}
-                className="w-full flex justify-between items-center text-left focus:outline-none"
+                className="w-full flex justify-between items-center text-left focus:outline-none group"
                 style={{
                   fontFamily: "Source Serif 4, serif",
                   fontWeight: 500,
@@ -108,22 +169,49 @@ export default function FAQSection() {
                   color: "#000000",
                   maxWidth: "644px",
                 }}
+                whileHover={{
+                  scale: 1.02,
+                  transition: { duration: 0.2 },
+                }}
+                whileTap={{ scale: 0.98 }}
               >
-                {faq.question}
-                {openIndex === index ? (
-                  <ChevronUp className="text-gray-600 w-5 h-5 shrink-0" />
-                ) : (
-                  <ChevronDown className="text-gray-600 w-5 h-5 shrink-0" />
-                )}
-              </button>
+                <motion.span
+                  animate={{
+                    color: openIndex === index ? "#058BF4" : "#000000",
+                  }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {faq.question}
+                </motion.span>
+                <motion.div
+                  animate={{
+                    rotate: openIndex === index ? 180 : 0,
+                    color: openIndex === index ? "#058BF4" : "#6B7280",
+                  }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {openIndex === index ? (
+                    <ChevronUp className="w-5 h-5 shrink-0" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 shrink-0" />
+                  )}
+                </motion.div>
+              </motion.button>
 
               {/* Answer */}
-              <div
-                className={`overflow-hidden transition-all duration-300 ${
-                  openIndex === index ? "max-h-40 mt-2" : "max-h-0"
-                }`}
+              <motion.div
+                initial={false}
+                animate={{
+                  height: openIndex === index ? "auto" : 0,
+                  opacity: openIndex === index ? 1 : 0,
+                }}
+                transition={{
+                  duration: 0.4,
+                  ease: "easeInOut",
+                }}
+                className="overflow-hidden"
               >
-                <p
+                <motion.p
                   style={{
                     fontFamily: "Source Serif 4, serif",
                     fontWeight: 500,
@@ -132,13 +220,22 @@ export default function FAQSection() {
                     color: "#555555",
                     maxWidth: "644px",
                   }}
+                  initial={{ y: -10, opacity: 0 }}
+                  animate={{
+                    y: openIndex === index ? 0 : -10,
+                    opacity: openIndex === index ? 1 : 0,
+                  }}
+                  transition={{
+                    duration: 0.3,
+                    delay: openIndex === index ? 0.1 : 0,
+                  }}
                 >
                   {faq.answer}
-                </p>
-              </div>
-            </div>
+                </motion.p>
+              </motion.div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );
