@@ -1,7 +1,12 @@
+import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
 import pointingNeutralImg from "@/assets/images/landingpage/pointingNeutral.svg";
 import stripImg from "@/assets/images/landingpage/strip.png";
 
 const ConversationSection = () => {
+  const [isInView, setIsInView] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
+
   const features = [
     {
       title: "Culturally Relevant",
@@ -29,8 +34,33 @@ const ConversationSection = () => {
     },
   ];
 
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+        }
+      },
+      {
+        threshold: 0.2,
+        rootMargin: "-50px 0px",
+      }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => {
+      if (sectionRef.current) {
+        observer.unobserve(sectionRef.current);
+      }
+    };
+  }, []);
+
   return (
     <section
+      ref={sectionRef}
       id="conversation"
       className="relative py-20 px-4 overflow-hidden bg-white"
     >
@@ -45,7 +75,24 @@ const ConversationSection = () => {
 
           <div className="relative">
             {/* Falcon Image */}
-            <div className="absolute left-[9rem] top-[7rem] -translate-y-1/2 hidden lg:block">
+            <motion.div
+              className="absolute left-[9rem] top-[3rem] -translate-y-1/2 hidden lg:block"
+              initial={{ opacity: 0, x: -50, scale: 0.5 }}
+              whileInView={{ opacity: 1, x: 0, scale: 1 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{
+                duration: 0.8,
+                ease: "easeOut",
+                delay: 0.8,
+                type: "spring",
+                stiffness: 100,
+              }}
+              whileHover={{
+                scale: 1.1,
+                rotate: [0, -5, 5, 0],
+                transition: { duration: 0.3 },
+              }}
+            >
               <img
                 src={pointingNeutralImg}
                 alt="Zayd AI Mascot"
@@ -53,7 +100,7 @@ const ConversationSection = () => {
                 height={200}
                 className="object-contain scale-x-[-1]"
               />
-            </div>
+            </motion.div>
 
             <h2 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
               Experience{" "}
@@ -90,7 +137,13 @@ const ConversationSection = () => {
             {features.map((feature, index) => (
               <div
                 key={index}
-                className="bg-white/20 backdrop-blur-md rounded-2xl p-8 transition-all duration-300 border border-[#E5E7EB]"
+                className={`bg-white/20 backdrop-blur-md rounded-2xl p-8 transition-all duration-300 border border-[#E5E7EB] ${
+                  isInView ? "animate-scale-in" : ""
+                }`}
+                style={{
+                  animationDelay: isInView ? `${index * 150}ms` : "0ms",
+                  animationFillMode: "both",
+                }}
               >
                 {/* Checkmark Icon */}
                 <div className="mb-4">

@@ -1,8 +1,18 @@
 import dashPng from "@/assets/images/landingpage/dash.png";
+import { motion, Variants } from "framer-motion";
 
 type Feature = {
   name: string;
   values: boolean[];
+};
+
+const fadeInScale: Variants = {
+  hidden: { opacity: 0, scale: 0.95 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: { duration: 0.6, ease: [0.25, 0.1, 0.25, 1] },
+  },
 };
 
 export default function PricingTable() {
@@ -28,7 +38,13 @@ export default function PricingTable() {
       <div className="absolute bottom-[-150px] left-[-250px] w-[500px] h-[500px] bg-[#3764B452] rounded-full blur-[240px] opacity-80" />
 
       {/* Table */}
-      <div className="overflow-x-auto w-full max-w-5xl relative z-10 rounded-xl border border-[#058BF4]">
+      <motion.div
+        className="overflow-x-auto w-full max-w-5xl relative z-10 rounded-xl border border-[#058BF4]"
+        variants={fadeInScale}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.3 }}
+      >
         <table className="min-w-full rounded-xl overflow-hidden text-center bg-white shadow-sm">
           {/* Header */}
           <thead>
@@ -122,7 +138,7 @@ export default function PricingTable() {
             ))}
           </tbody>
         </table>
-      </div>
+      </motion.div>
     </section>
   );
 }
