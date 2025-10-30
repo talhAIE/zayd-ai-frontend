@@ -88,7 +88,7 @@ export const addPhoneNumber = createAsyncThunk(
         credentials
       );
       
-      const data = response.data as AuthResponse;
+      const data = response.data as Partial<AuthResponse> & { user: User };
       
       const existingUserData = JSON.parse(localStorage.getItem('AiTutorUser') || '{}');
       
@@ -100,16 +100,16 @@ export const addPhoneNumber = createAsyncThunk(
       
       localStorage.setItem('AiTutorUser', JSON.stringify(userWithRole));
       
-      localStorage.setItem('accessToken', data.accessToken);
-      localStorage.setItem('refreshToken', data.refreshToken);
+      const accessToken = localStorage.getItem('accessToken') || '';
+      const refreshToken = localStorage.getItem('refreshToken') || '';
       
       localStorage.setItem('loginEvent', Date.now().toString());
       localStorage.removeItem('loginEvent');
       
       return {
         user: userWithRole,
-        accessToken: data.accessToken,
-        refreshToken: data.refreshToken,
+        accessToken,
+        refreshToken,
         message: data.message
       };
     } catch (error: any) {
