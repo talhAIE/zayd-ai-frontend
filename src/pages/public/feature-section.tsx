@@ -1,4 +1,3 @@
-import featureBgImg from "@/assets/images/landingpage/feature-bg.jpg";
 import teachImg from "@/assets/images/landingpage/teach.svg";
 import chatmodeImg from "@/assets/images/landingpage/chatmode.png";
 import { motion } from "framer-motion";
@@ -234,10 +233,6 @@ export default function FeatureSection() {
     <section
       id="features"
       className="relative py-20 bg-cover bg-center bg-no-repeat overflow-hidden"
-      style={{
-        backgroundImage: `url(${featureBgImg})`,
-        backgroundPosition: "center",
-      }}
     >
       {/* Overlay for better text readability */}
       <div className="absolute inset-0 bg-white/20"></div>

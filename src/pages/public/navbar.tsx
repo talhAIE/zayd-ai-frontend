@@ -68,8 +68,8 @@ export default function Navbar() {
           <img
             src={navLogoPng}
             alt="Zayd AI Logo"
-            width={111}
-            height={49}
+            width={50}
+            height={50}
             style={{ objectFit: "contain" }}
           />
         </div>
@@ -150,8 +150,8 @@ export default function Navbar() {
               <img
                 src={navLogoPng}
                 alt="Zayd AI Logo"
-                width={111}
-                height={49}
+                width={50}
+                height={50}
                 style={{ objectFit: "contain" }}
               />
             </div>

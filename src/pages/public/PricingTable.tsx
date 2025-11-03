@@ -31,12 +31,8 @@ export default function PricingTable() {
   return (
     <section
       id="pricing"
-      className="relative w-full flex flex-col items-center py-24 px-6 md:px-20 bg-linear-to-r from-[#F6FAFF] to-white overflow-hidden"
+      className="relative w-full flex flex-col items-center py-24 px-6 md:px-20 overflow-hidden"
     >
-      {/* Decorative Blur Circles */}
-      <div className="absolute top-[-200px] right-[150px] w-[500px] h-[500px] bg-[#3764B452] rounded-full blur-[240px] opacity-80" />
-      <div className="absolute bottom-[-150px] left-[-250px] w-[500px] h-[500px] bg-[#3764B452] rounded-full blur-[240px] opacity-80" />
-
       {/* Table */}
       <motion.div
         className="overflow-x-auto w-full max-w-5xl relative z-10 rounded-xl border border-[#058BF4]"

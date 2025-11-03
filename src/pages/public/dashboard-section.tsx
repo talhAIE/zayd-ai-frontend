@@ -15,7 +15,7 @@ const DashboardSection = () => {
   return (
     <div
       id="dashboard"
-      className="pt-10 relative min-h-screen bg-linear-to-b from-blue-50 via-white to-blue-50 overflow-hidden"
+      className="mt-20 pt-10 relative bg-linear-to-b overflow-hidden"
     >
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden">
@@ -23,14 +23,13 @@ const DashboardSection = () => {
         <div className="absolute top-0 right-0 w-96 h-96 bg-blue-100 opacity-20 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
       </div>
 
-      {/* Flying bird decoration */}
-      <div className="sm:flex hidden absolute top-[3rem] right-[11rem] z-[100]">
-        <img src={flyingImg} alt="Flying bird" width={150} height={150} />
-      </div>
-
       {/* Main dashboard container */}
       <div className="relative z-10 container mx-auto px-4 py-16">
-        <div className="max-w-6xl mx-auto">
+        <div className="relative max-w-6xl mx-auto">
+          {/* Flying bird decoration */}
+          <div className="sm:flex hidden absolute top-[-3rem] right-[1rem] z-[100]">
+            <img src={flyingImg} alt="Flying bird" width={150} height={150} />
+          </div>
           {/* Dashboard Image */}
           <motion.div
             className="flex justify-center"
