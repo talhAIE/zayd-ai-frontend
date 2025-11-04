@@ -232,7 +232,7 @@ export default function FeatureSection() {
   return (
     <section
       id="features"
-      className="relative py-20 bg-cover bg-center bg-no-repeat overflow-hidden"
+      className="relative sm:py-20 py-4 bg-cover bg-center bg-no-repeat overflow-hidden"
     >
       {/* Overlay for better text readability */}
       <div className="absolute inset-0 bg-white/20"></div>

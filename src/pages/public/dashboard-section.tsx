@@ -15,16 +15,16 @@ const DashboardSection = () => {
   return (
     <div
       id="dashboard"
-      className="mt-20 pt-10 relative bg-linear-to-b overflow-hidden"
+      className="sm:mt-20 mt-0 sm:pt-10 pt-0 relative bg-linear-to-b overflow-hidden"
     >
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-100 opacity-20 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2"></div>
-        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-100 opacity-20 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 opacity-20 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 opacity-20 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
       </div>
 
       {/* Main dashboard container */}
-      <div className="relative z-10 container mx-auto px-4 py-16">
+      <div className="relative z-10 container mx-auto px-4 sm:py-16 py-4">
         <div className="relative max-w-6xl mx-auto">
           {/* Flying bird decoration */}
           <div className="lg:flex hidden absolute top-[-3rem] right-[1rem] z-[100]">

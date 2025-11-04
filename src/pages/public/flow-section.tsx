@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 export default function FlowSection() {
   return (
-    <section id="how-it-works" className="bg-white py-24 px-6">
+    <section id="how-it-works" className="bg-white sm:py-24 py-12 px-6">
       <div className="container mx-auto max-w-6xl">
         {/* Top Section with Bird Illustration and Pill Button */}
         <motion.div

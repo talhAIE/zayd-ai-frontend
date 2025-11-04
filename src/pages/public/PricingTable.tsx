@@ -31,7 +31,7 @@ export default function PricingTable() {
   return (
     <section
       id="pricing"
-      className="relative w-full flex flex-col items-center py-24 px-6 md:px-20 overflow-hidden"
+      className="relative w-full flex flex-col items-center sm:py-24 py-14 px-6 md:px-20 overflow-hidden"
     >
       {/* Table */}
       <motion.div
