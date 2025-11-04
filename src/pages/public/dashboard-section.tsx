@@ -27,7 +27,7 @@ const DashboardSection = () => {
       <div className="relative z-10 container mx-auto px-4 py-16">
         <div className="relative max-w-6xl mx-auto">
           {/* Flying bird decoration */}
-          <div className="sm:flex hidden absolute top-[-3rem] right-[1rem] z-[100]">
+          <div className="lg:flex hidden absolute top-[-3rem] right-[1rem] z-[100]">
             <img src={flyingImg} alt="Flying bird" width={150} height={150} />
           </div>
           {/* Dashboard Image */}

@@ -32,7 +32,7 @@ export default function HeroSection() {
       <div className="relative max-w-7xl mx-auto">
         <div className="relative inline-block z-50">
           <motion.h1
-            className="text-7xl font-bold text-gray-900 mb-6 inline-block"
+            className="sm:text-7xl text-5xl font-bold text-gray-900 mb-6 inline-block"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
@@ -59,7 +59,7 @@ export default function HeroSection() {
               of English{" "}
             </motion.span>
             <motion.span
-              className="sm:inline hidden relative"
+              className="lg:inline hidden relative"
               style={{
                 lineHeight: "1.2",
                 display: "inline-block",
@@ -103,7 +103,7 @@ export default function HeroSection() {
         </div>
 
         <motion.div
-          className="absolute top-[2.5rem] right-[-13rem] sm:flex hidden z-10"
+          className="absolute top-[2.5rem] right-[-13rem] lg:flex hidden z-10"
           initial={{ x: 100, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{
@@ -129,7 +129,7 @@ export default function HeroSection() {
 
       {/* Buttons with icons */}
       <motion.div
-        className="flex flex-col sm:flex-row justify-center gap-4 mb-4"
+        className="flex flex-col lg:flex-row justify-center gap-4 mb-4"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: "easeOut", delay: 0.8 }}
@@ -143,7 +143,7 @@ export default function HeroSection() {
         >
           <Link to="/login">
             <Button
-              className="w-full sm:w-auto rounded-full px-6 py-5 text-base text-white flex items-center gap-2 hover:opacity-90 transition-opacity duration-300"
+              className="w-full lg:w-auto rounded-full px-6 py-5 text-base text-white flex items-center gap-2 hover:opacity-90 transition-opacity duration-300"
               style={{
                 background:
                   "linear-gradient(90deg, #76ABF8 0%, #058BF4 48.56%, #63B3F6 80%)",
@@ -183,7 +183,7 @@ export default function HeroSection() {
           >
             <Button
               variant="outline"
-              className="w-full sm:w-auto rounded-full px-6 py-5 text-base flex items-center gap-2 border-[#058BF4] text-[#058BF4] hover:text-[border-[#058BF4]]"
+              className="w-full lg:w-auto rounded-full px-6 py-5 text-base flex items-center gap-2 border-[#058BF4] text-[#058BF4] hover:text-[border-[#058BF4]]"
             >
               View Guide
               <svg
