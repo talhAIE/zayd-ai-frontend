@@ -1,13 +1,24 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";
 import pointingSvg from "@/assets/images/landingpage/malewithfalcon.png";
 
 export default function HeroSection() {
+  const words = ["Learning", "Fluency", "Progress", "Skills", "Growth"];
+  const [currentWordIndex, setCurrentWordIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentWordIndex((prev) => (prev + 1) % words.length);
+    }, 2500); // Change word every 2.5 seconds
+
+    return () => clearInterval(interval);
+  }, [words.length]);
   return (
     <section
       id="home"
-      className="h-screen text-center py-20 relative px-3 bg-white"
+      className="sm:py-32 py-12 flex flex-col items-center justify-center text-center relative px-3 bg-white"
     >
       <motion.p
         className="uppercase text-sm text-gray-500 font-semibold tracking-wide mb-3"
@@ -18,58 +29,92 @@ export default function HeroSection() {
         Zayd AI — Unleash the Power of AI
       </motion.p>
 
-      <div className="relative inline-block z-50">
-        <motion.h1
-          className="text-7xl font-bold text-gray-900 mb-6 inline-block"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-        >
-          <motion.span
+      <div className="relative max-w-7xl mx-auto">
+        <div className="relative inline-block z-50">
+          <motion.h1
+            className="sm:text-7xl text-5xl font-bold text-gray-900 mb-6 inline-block"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
           >
-            Unlock the Future
-          </motion.span>
-          <br />
-          <motion.span
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
-          >
-            of English{" "}
-          </motion.span>
-          <motion.span
-            className="bg-gradient-to-r from-[#76ABF8] via-[#058BF4] to-[#63B3F6] bg-clip-text text-transparent sm:inline-flex hidden items-center underline decoration-[#058BF4] decoration-4 underline-offset-[12px]"
-            style={{ lineHeight: "1.2" }}
-            initial={{ opacity: 0, y: 30, scale: 0.8 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{
-              duration: 0.8,
-              ease: "easeOut",
-              delay: 0.5,
-              type: "spring",
-              stiffness: 100,
-            }}
-          >
-            Learning
-          </motion.span>
-        </motion.h1>
-      </div>
+            <motion.span
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
+            >
+              Unlock the Future
+            </motion.span>
+            <br />
+            <motion.span
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
+              style={{
+                display: "inline-block",
+                verticalAlign: "top",
+                lineHeight: "1.2",
+                marginRight: "1rem",
+              }}
+            >
+              of English{" "}
+            </motion.span>
+            <motion.span
+              className="lg:inline hidden relative"
+              style={{
+                lineHeight: "1.2",
+                display: "inline-block",
+                overflow: "hidden",
+                verticalAlign: "top",
+                maxWidth: "320px",
+                whiteSpace: "nowrap",
+              }}
+              layout
+              transition={{
+                duration: 0.4,
+                ease: [0.25, 0.1, 0.25, 1],
+              }}
+            >
+              <AnimatePresence initial={false}>
+                <motion.span
+                  key={currentWordIndex}
+                  className="bg-gradient-to-r from-[#76ABF8] via-[#058BF4] to-[#63B3F6] bg-clip-text text-transparent underline decoration-[#058BF4] decoration-4 underline-offset-[12px] inline-block whitespace-nowrap"
+                  initial={{ opacity: 0, x: 100 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{
+                    opacity: 0,
+                    x: -60,
+                    transition: {
+                      duration: 0.3,
+                      ease: [0.4, 0.0, 0.2, 1],
+                    },
+                  }}
+                  transition={{
+                    duration: 0.4,
+                    ease: [0.25, 0.1, 0.25, 1],
+                  }}
+                  layout
+                  style={{ display: "inline-block" }}
+                >
+                  {words[currentWordIndex]}
+                </motion.span>
+              </AnimatePresence>
+            </motion.span>
+          </motion.h1>
+        </div>
 
-      <motion.div
-        className="absolute top-[9.5rem] right-[13rem] sm:flex hidden z-10"
-        initial={{ x: 100, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        transition={{
-          duration: 0.8,
-          ease: "easeOut",
-          delay: 0.5,
-        }}
-      >
-        <img src={pointingSvg} alt="Pointing" width={250} height={250} />
-      </motion.div>
+        <motion.div
+          className="absolute top-[2.5rem] right-[-13rem] lg:flex hidden z-10"
+          initial={{ x: 100, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{
+            duration: 0.8,
+            ease: "easeOut",
+            delay: 0.5,
+          }}
+        >
+          <img src={pointingSvg} alt="Pointing" width={250} height={250} />
+        </motion.div>
+      </div>
 
       <motion.p
         className="font-normal text-[20px] leading-[24px] tracking-[0px] text-gray-600 text-center mx-auto mb-10 max-w-2xl"
@@ -84,7 +129,7 @@ export default function HeroSection() {
 
       {/* Buttons with icons */}
       <motion.div
-        className="flex flex-col sm:flex-row justify-center gap-4 mb-4"
+        className="flex flex-col lg:flex-row justify-center gap-4 mb-4"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: "easeOut", delay: 0.8 }}
@@ -98,7 +143,7 @@ export default function HeroSection() {
         >
           <Link to="/login">
             <Button
-              className="w-full sm:w-auto rounded-full px-6 py-5 text-base text-white flex items-center gap-2 hover:opacity-90 transition-opacity duration-300"
+              className="w-full lg:w-auto rounded-full px-6 py-5 text-base text-white flex items-center gap-2 hover:opacity-90 transition-opacity duration-300"
               style={{
                 background:
                   "linear-gradient(90deg, #76ABF8 0%, #058BF4 48.56%, #63B3F6 80%)",
@@ -138,7 +183,7 @@ export default function HeroSection() {
           >
             <Button
               variant="outline"
-              className="w-full sm:w-auto rounded-full px-6 py-5 text-base flex items-center gap-2 border-[#058BF4] text-[#058BF4] hover:text-[border-[#058BF4]]"
+              className="w-full lg:w-auto rounded-full px-6 py-5 text-base flex items-center gap-2 border-[#058BF4] text-[#058BF4] hover:text-[border-[#058BF4]]"
             >
               View Guide
               <svg

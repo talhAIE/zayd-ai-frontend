@@ -1,4 +1,3 @@
-import featureBgImg from "@/assets/images/landingpage/feature-bg.jpg";
 import teachImg from "@/assets/images/landingpage/teach.svg";
 import chatmodeImg from "@/assets/images/landingpage/chatmode.png";
 import { motion } from "framer-motion";
@@ -233,11 +232,7 @@ export default function FeatureSection() {
   return (
     <section
       id="features"
-      className="relative py-20 bg-cover bg-center bg-no-repeat overflow-hidden"
-      style={{
-        backgroundImage: `url(${featureBgImg})`,
-        backgroundPosition: "center",
-      }}
+      className="relative sm:py-20 py-4 bg-cover bg-center bg-no-repeat overflow-hidden"
     >
       {/* Overlay for better text readability */}
       <div className="absolute inset-0 bg-white/20"></div>
@@ -289,7 +284,7 @@ export default function FeatureSection() {
 
             {/* Bird illustration - positioned absolutely so it doesn't affect text centering */}
             <motion.div
-              className="sm:flex hidden absolute right-[18rem] top-[0rem] transform -translate-y-1/2 w-24 h-24"
+              className="lg:flex hidden absolute right-[18rem] top-[0rem] transform -translate-y-1/2 w-24 h-24"
               initial={{ opacity: 0, x: -50, scale: 0.5 }}
               whileInView={{ opacity: 1, x: 0, scale: 1 }}
               viewport={{ once: true, amount: 0.3 }}

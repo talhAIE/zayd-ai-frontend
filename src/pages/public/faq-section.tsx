@@ -29,54 +29,8 @@ export default function FAQSection() {
   return (
     <section
       id="faq"
-      className="relative w-full h-screen flex items-center justify-center bg-gradient-to-r from-[#F6FAFF] to-white overflow-hidden"
+      className="relative w-full pt-[3%] pb-32 md:pb-40 lg:pb-52 xl:pb-64 flex items-center justify-center overflow-hidden"
     >
-      {/* === Gradient Circle: Top-Right === */}
-      <motion.div
-        className="absolute rounded-full"
-        style={{
-          width: "576px",
-          height: "576px",
-          top: "-238px",
-          left: "996px",
-          background: "#3764B452",
-          filter: "blur(240px)",
-          zIndex: 0,
-        }}
-        animate={{
-          scale: [1, 1.1, 1],
-          opacity: [0.3, 0.5, 0.3],
-        }}
-        transition={{
-          duration: 8,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-      />
-
-      {/* === Gradient Circle: Bottom-Left === */}
-      <motion.div
-        className="absolute rounded-full"
-        style={{
-          width: "576px",
-          height: "576px",
-          top: "365px",
-          left: "-301px",
-          background: "#3764B452",
-          filter: "blur(240px)",
-          zIndex: 0,
-        }}
-        animate={{
-          scale: [1, 1.2, 1],
-          opacity: [0.2, 0.4, 0.2],
-        }}
-        transition={{
-          duration: 10,
-          repeat: Infinity,
-          ease: "easeInOut",
-          delay: 2,
-        }}
-      />
 
       {/* === Main FAQ Content === */}
       <div className="relative z-10 max-w-7xl w-full mx-auto flex flex-col md:flex-row md:items-start md:justify-between gap-16 px-6 md:px-20">
