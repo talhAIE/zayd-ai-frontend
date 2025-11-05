@@ -15,6 +15,7 @@ import {
   X,
   LoaderPinwheel,
   Award,
+  AlertTriangle,
 } from "lucide-react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -97,6 +98,8 @@ const ChatEvents = {
   MCQ_RESULT: "mcq_result",
   CONTENT_PAYLOAD: "content_payload",
   NEXT_STAGE: "next_stage",
+  ACCOUNT_BLOCKED: "account_blocked",
+  CONTENT_FILTER_WARNING: "content_filter_warning",
 } as const;
 
 interface ServerToClientEvents {
@@ -146,6 +149,18 @@ interface ServerToClientEvents {
       content: string;
       contentAudioUrl: string;
     };
+  }) => void;
+  [ChatEvents.ACCOUNT_BLOCKED]: (payload: {
+    message: string;
+    violationCount: number;
+    accountStatus: string;
+  }) => void;
+  [ChatEvents.CONTENT_FILTER_WARNING]: (payload: {
+    message: string;
+    violationType: string;
+    severity: string;
+    violationCount: number;
+    remainingWarnings: number;
   }) => void;
   next_stage: (payload: {
     userId: string;
@@ -276,6 +291,21 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
   const [isDuplicateConnectionModalOpen, setIsDuplicateConnectionModalOpen] =
     useState(false);
+  const [isContentFilterWarningOpen, setIsContentFilterWarningOpen] =
+    useState(false);
+  const [contentFilterWarningData, setContentFilterWarningData] = useState<{
+    message: string;
+    violationType: string;
+    severity: string;
+    violationCount: number;
+    remainingWarnings: number;
+  } | null>(null);
+  const [isAccountBlockedOpen, setIsAccountBlockedOpen] = useState(false);
+  const [accountBlockedData, setAccountBlockedData] = useState<{
+    message: string;
+    violationCount: number;
+    accountStatus: string;
+  } | null>(null);
 
   // --- Listening Mode State ---
   const [progress, setProgress] = React.useState(30);
@@ -830,6 +860,28 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       });
       setIsBadgeModalOpen(true);
       toast.success(`🎉 New Badge Unlocked: ${payload.name}!`);
+    });
+
+    socket.on(ChatEvents.ACCOUNT_BLOCKED, (payload) => {
+      logger.receiving(ChatEvents.ACCOUNT_BLOCKED, payload);
+      setAccountBlockedData({
+        message: payload.message,
+        violationCount: payload.violationCount,
+        accountStatus: payload.accountStatus,
+      });
+      setIsAccountBlockedOpen(true);
+    });
+
+    socket.on(ChatEvents.CONTENT_FILTER_WARNING, (payload) => {
+      logger.receiving(ChatEvents.CONTENT_FILTER_WARNING, payload);
+      setContentFilterWarningData({
+        message: payload.message,
+        violationType: payload.violationType,
+        severity: payload.severity,
+        violationCount: payload.violationCount,
+        remainingWarnings: payload.remainingWarnings,
+      });
+      setIsContentFilterWarningOpen(true);
     });
 
     return () => {
@@ -1444,6 +1496,17 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     onShowFeedback({ type: "assessment", content: assessments });
   };
 
+  const handleLogout = () => {
+    logger.info("Logging out user due to account block.");
+    localStorage.removeItem("AiTutorUser");
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    if (socketRef.current) {
+      socketRef.current.disconnect();
+    }
+    window.location.href = "/login";
+  };
+
   const formatTime = (sec: number) =>
     `${String(Math.floor(sec / 60)).padStart(2, "0")}:${String(
       sec % 60
@@ -1993,6 +2056,87 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          <Dialog
+            open={isContentFilterWarningOpen}
+            onOpenChange={setIsContentFilterWarningOpen}
+          >
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+                  <AlertTriangle className="h-7 w-7" />
+                  Content Policy Warning
+                </DialogTitle>
+                <DialogDescription className="text-center pt-2">
+                  Your message has been flagged for policy violation.
+                </DialogDescription>
+              </DialogHeader>
+              {contentFilterWarningData && (
+                <div className="flex flex-col gap-4 p-4 my-4 bg-orange-50 rounded-lg border border-orange-200">
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-gray-800">
+                      {contentFilterWarningData.message}
+                    </p>
+                    <div className="grid grid-cols-2 gap-3 pt-2 border-t border-orange-200">
+                      <div>
+                        <p className="text-xs text-gray-600 font-medium">
+                          Violation Type
+                        </p>
+                        <p className="text-sm font-semibold text-orange-700">
+                          {contentFilterWarningData.violationType}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-600 font-medium">
+                          Severity
+                        </p>
+                        <p
+                          className={`text-sm font-semibold ${
+                            contentFilterWarningData.severity === "High"
+                              ? "text-red-600"
+                              : contentFilterWarningData.severity === "Medium"
+                              ? "text-orange-600"
+                              : "text-yellow-600"
+                          }`}
+                        >
+                          {contentFilterWarningData.severity}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-600 font-medium">
+                          Total Violations
+                        </p>
+                        <p className="text-sm font-semibold text-gray-800">
+                          {contentFilterWarningData.violationCount}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-600 font-medium">
+                          Warnings Remaining
+                        </p>
+                        <p className="text-sm font-semibold text-orange-700">
+                          {contentFilterWarningData.remainingWarnings}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-yellow-50 border border-yellow-200 rounded p-3 mt-2">
+                    <p className="text-xs text-yellow-800">
+                      ⚠️ Please review our content policy. Continued violations
+                      may result in account suspension.
+                    </p>
+                  </div>
+                </div>
+              )}
+              <DialogFooter className="sm:justify-center">
+                <Button
+                  onClick={() => setIsContentFilterWarningOpen(false)}
+                  className="w-full"
+                >
+                  I Understand
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
           <QuestionnaireModal
             open={isQueationnaireOpen}
             onClose={() => setIsQuestionnaireOpen(false)}
@@ -2001,6 +2145,71 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           />
         </div>
       )}
+
+      <Dialog
+        open={isAccountBlockedOpen}
+        onOpenChange={(open) => {
+          // Prevent closing the modal by clicking outside or pressing ESC
+          // Only allow closing via the OK button which calls handleLogout
+          if (!open) {
+            // User tried to close, but we prevent it
+            return;
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md [&>button]:hidden">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-7 w-7" />
+              Account Blocked
+            </DialogTitle>
+            <DialogDescription className="text-center pt-2">
+              Your account has been suspended due to policy violations.
+            </DialogDescription>
+          </DialogHeader>
+          {accountBlockedData && (
+            <div className="flex flex-col gap-4 p-4 my-4 bg-red-50 rounded-lg border border-red-200">
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-gray-800">
+                  {accountBlockedData.message}
+                </p>
+                <div className="grid grid-cols-2 gap-3 pt-2 border-t border-red-200">
+                  <div>
+                    <p className="text-xs text-gray-600 font-medium">
+                      Total Violations
+                    </p>
+                    <p className="text-sm font-semibold text-red-700">
+                      {accountBlockedData.violationCount}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 font-medium">
+                      Account Status
+                    </p>
+                    <p className="text-sm font-semibold text-red-700 uppercase">
+                      {accountBlockedData.accountStatus}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-red-100 border border-red-300 rounded p-3 mt-2">
+                <p className="text-xs text-red-800 font-medium">
+                  ⛔ Your account access has been revoked. Please contact
+                  support if you believe this is an error.
+                </p>
+              </div>
+            </div>
+          )}
+          <DialogFooter className="sm:justify-center">
+            <Button
+              onClick={handleLogout}
+              className="w-full bg-red-600 hover:bg-red-700 text-white"
+            >
+              OK
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {mode === "listening-mode" && (
         <div>
