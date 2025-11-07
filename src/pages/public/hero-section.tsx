@@ -18,7 +18,7 @@ export default function HeroSection() {
   return (
     <section
       id="home"
-      className="sm:py-32 py-12 flex flex-col items-center justify-center text-center relative px-3 bg-white"
+      className="pt-12 pb-12 min-[639px]:pt-10 min-[639px]:pb-0 max-[1024px]:pt-10 max-[1024px]:pb-0 min-[1025px]:pt-12 min-[1025px]:pb-12 flex flex-col items-center justify-center text-center relative px-3 bg-white"
     >
       <motion.p
         className="uppercase text-sm text-gray-500 font-semibold tracking-wide mb-3"

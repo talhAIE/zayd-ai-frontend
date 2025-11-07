@@ -22,6 +22,9 @@ export default {
       },
     },
     extend: {
+      screens: {
+        md: "882px",
+      },
       fontFamily: {
         sans: ["Outfit", "sans-serif"], // use Outfit as the default
         "geist-sans": ["Geist", "sans-serif"], // Geist font for public pages
