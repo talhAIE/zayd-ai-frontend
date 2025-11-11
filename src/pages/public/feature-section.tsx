@@ -284,7 +284,7 @@ export default function FeatureSection() {
 
             {/* Bird illustration - positioned absolutely so it doesn't affect text centering */}
             <motion.div
-              className="lg:flex hidden absolute right-[18rem] top-[0rem] transform -translate-y-1/2 w-24 h-24"
+              className="lg:flex hidden absolute right-[18rem] top-[0rem] max-[1280px]:right-[17vw] transform -translate-y-1/2 w-24 h-24"
               initial={{ opacity: 0, x: -50, scale: 0.5 }}
               whileInView={{ opacity: 1, x: 0, scale: 1 }}
               viewport={{ once: true, amount: 0.3 }}

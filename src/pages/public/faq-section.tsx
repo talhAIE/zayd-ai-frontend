@@ -35,7 +35,7 @@ export default function FAQSection() {
       {/* === Main FAQ Content === */}
       <div className="relative z-10 max-w-7xl w-full mx-auto flex flex-col md:flex-row md:items-start md:justify-between gap-16 px-6 md:px-20">
         <motion.div
-          className="absolute left-[25rem] top-[3rem] -translate-y-1/2 hidden lg:block"
+          className="absolute left-[25rem] top-[3rem] max-[1080px]:left-[22rem] -translate-y-1/2 hidden lg:block"
           initial={{ y: 100, opacity: 0 }}
           whileInView={{ y: 0, opacity: 1 }}
           viewport={{ once: true, amount: 0.3 }}

@@ -15,7 +15,7 @@ const DashboardSection = () => {
   return (
     <div
       id="dashboard"
-      className="sm:mt-20 mt-0 sm:pt-10 pt-0 relative bg-linear-to-b overflow-hidden"
+      className="mt-0 sm:pt-10 pt-0 min-[639px]:mt-0 max-[1024px]:mt-0 min-[1025px]:mt-20 relative bg-linear-to-b overflow-hidden"
     >
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden">
@@ -27,7 +27,7 @@ const DashboardSection = () => {
       <div className="relative z-10 container mx-auto px-4 sm:py-16 py-4">
         <div className="relative max-w-6xl mx-auto">
           {/* Flying bird decoration */}
-          <div className="lg:flex hidden absolute top-[-3rem] right-[1rem] z-[100]">
+          <div className="lg:flex hidden absolute top-[-3rem] right-[1rem] max-[1400px]:right-[-5rem] z-[100]">
             <img src={flyingImg} alt="Flying bird" width={150} height={150} />
           </div>
           {/* Dashboard Image */}

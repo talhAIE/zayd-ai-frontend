@@ -8,20 +8,35 @@ import PricingTable from "./PricingTable";
 import FAQSection from "./faq-section";
 // import TestimonialsSection from "./testimonials";
 import Footer from "./Footer";
+import { ReactLenis } from "@/components/lenis";
 
 export default function Main() {
   return (
-    <div className="min-h-screen font-geist-sans">
-      <Navbar />
-      <HeroSection />
-      <DashboardSection />
-      <ConversationSection />
-      <FeatureSection />
-      <FlowSection />
-      {/* <TestimonialsSection /> */}
-      <PricingTable />
-      <FAQSection />
-      <Footer />
-    </div>
+    <>
+      <ReactLenis
+        root
+        options={{
+          lerp: 0.05,
+          smoothWheel: true,
+          duration: 1.2,
+          wheelMultiplier: 1.2,
+          touchMultiplier: 1.2,
+          syncTouch: true,
+        }}
+      >
+        <div className="min-h-screen font-geist-sans">
+          <Navbar />
+          <HeroSection />
+          <DashboardSection />
+          <ConversationSection />
+          <FeatureSection />
+          <FlowSection />
+          {/* <TestimonialsSection /> */}
+          <PricingTable />
+          <FAQSection />
+          <Footer />
+        </div>
+      </ReactLenis>
+    </>
   );
 }

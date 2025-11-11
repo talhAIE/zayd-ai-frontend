@@ -76,7 +76,7 @@ const ConversationSection = () => {
           <div className="relative">
             {/* Falcon Image */}
             <motion.div
-              className="absolute left-[9rem] top-[3rem] -translate-y-1/2 hidden lg:block"
+              className="absolute left-[9rem] top-[3rem] max-[1310px]:left-[3vw] -translate-y-1/2 hidden lg:block"
               initial={{ opacity: 0, x: -50, scale: 0.5 }}
               whileInView={{ opacity: 1, x: 0, scale: 1 }}
               viewport={{ once: true, amount: 0.3 }}
