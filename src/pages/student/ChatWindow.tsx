@@ -864,6 +864,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
     socket.on(ChatEvents.ACCOUNT_BLOCKED, (payload) => {
       logger.receiving(ChatEvents.ACCOUNT_BLOCKED, payload);
+      removeLoadingMessage();
       setAccountBlockedData({
         message: payload.message,
         violationCount: payload.violationCount,
@@ -874,6 +875,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
     socket.on(ChatEvents.CONTENT_FILTER_WARNING, (payload) => {
       logger.receiving(ChatEvents.CONTENT_FILTER_WARNING, payload);
+      removeLoadingMessage();
+      logger.info("Content filter warning received. Disconnecting socket.");
+      socketRef.current?.disconnect();
       setContentFilterWarningData({
         message: payload.message,
         violationType: payload.violationType,
@@ -1491,6 +1495,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     }
   };
 
+  const handleContentFilterWarningAcknowledge = () => {
+    logger.info(
+      "User acknowledged content filter warning. Reconnecting socket."
+    );
+    setIsContentFilterWarningOpen(false);
+    socketRef.current?.connect();
+  };
+
   const handleShowAssessment = (assessments: any) => {
     logger.info("Showing assessment.", { assessments });
     onShowFeedback({ type: "assessment", content: assessments });
@@ -2058,7 +2070,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           </Dialog>
           <Dialog
             open={isContentFilterWarningOpen}
-            onOpenChange={setIsContentFilterWarningOpen}
+            onOpenChange={(open) => {
+              // Prevent closing the modal by clicking outside or pressing ESC
+              // Only allow closing via the "I Understand" button which reconnects the socket
+              if (!open) {
+                return;
+              }
+            }}
           >
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
@@ -2129,7 +2147,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               )}
               <DialogFooter className="sm:justify-center">
                 <Button
-                  onClick={() => setIsContentFilterWarningOpen(false)}
+                  onClick={handleContentFilterWarningAcknowledge}
                   className="w-full"
                 >
                   I Understand
