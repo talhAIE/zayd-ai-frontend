@@ -2,23 +2,14 @@ import { ReactNode, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 // import { useAppSelector } from '@/redux/hooks';
 import { Link, useLocation } from "react-router-dom";
-import { Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import learningMode from "@/assets/images/sidebar/learningMode.png";
-import learderBoard from "@/assets/images/sidebar/leaderBoard.png";
-const LearningModeIcon = () => (
-  <img src={learningMode} alt="Learning Mode" className="h-5 w-5" />
-);
-const LeaderboardIcon = () => (
-  <img src={learderBoard} alt="Learning Mode" className="h-5 w-5" />
-);
+import dashboardIcon from "@/assets/sidebar/dashboard.svg";
+import achievementsIcon from "@/assets/sidebar/achievements.svg";
+import leaderboardIcon from "@/assets/sidebar/leaderboard.svg";
+import learningModeIcon from "@/assets/sidebar/learningMode.svg";
+import Logo from "@/assets/sidebar/Logo.png";
 
 import {
-  LayoutDashboard,
-  // BookOpen,
-  // BarChart2,
-  // LogOut,
-  // Bell,
   Menu,
   X,
   // Brain,
@@ -27,7 +18,6 @@ import {
   // Settings,
   // ChevronDown,
   // Languages,
-  LogOut,
 } from "lucide-react";
 // import { ThemeToggle } from '@/components/theme-toggle';
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -114,16 +104,20 @@ export function StudentLayout({ children }: StudentLayoutProps) {
   };
 
   const sidebarItems = [
-    { path: "/student/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+    { path: "/student/dashboard", icon: dashboardIcon, label: "Dashboard" },
     {
       path: "/student/learning-modes",
-      icon: LearningModeIcon,
+      icon: learningModeIcon,
       label: "Learning Modes",
     },
-    { path: "/student/achievements", icon: Gift, label: "Achievements" },
+    {
+      path: "/student/achievements",
+      icon: achievementsIcon,
+      label: "Achievements",
+    },
     {
       path: "/student/leaderboard",
-      icon: LeaderboardIcon,
+      icon: leaderboardIcon,
       label: "Leaderboard",
     },
     // { path: '/student/support', icon: BookOpen, label: 'Support' },
@@ -140,19 +134,19 @@ export function StudentLayout({ children }: StudentLayoutProps) {
           className="fixed inset-0 bg-black/50"
           onClick={() => setSidebarOpen(false)}
         ></div>
-        <nav className="fixed top-0 left-0 bottom-0 w-72 bg-[#065FF0] p-8 rounded-3xl my-6">
-          <div className="flex items-center justify-between mb-8 text-white">
+        <nav className="fixed top-0 left-0 bottom-0 w-72 p-8 rounded-3xl my-6">
+          <div className="flex items-center justify-between mb-8 text-black">
             <Link
               to="/student/dashboard"
               className="flex items-center gap-2 text-2xl font-bold"
             >
-              AI Tutor.
+              <img src={Logo} alt="Logo" className="h-10 w-10" />
             </Link>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setSidebarOpen(false)}
-              className="text-white hover:bg-blue-600"
+              className="text-black hover:bg-blue-600"
             >
               <X className="h-5 w-5" />
             </Button>
@@ -160,19 +154,26 @@ export function StudentLayout({ children }: StudentLayoutProps) {
           <ScrollArea className="h-[calc(100vh-8rem)] mt-16">
             <div className="space-y-8">
               {sidebarItems.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-md text-md font-bold transition-colors ${
-                    isActive(item.path)
-                      ? "bg-[#065FF0]/10 text-white"
-                      : "text-white hover:bg-white/10 hover:text-white"
-                  }`}
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  <item.icon className="h-5 w-5 text-white font-bold" />
-                  {item.label}
-                </Link>
+                <div key={item.path} className="flex items-center">
+                  <Link
+                    to={item.path}
+                    className={`flex items-center gap-3 rounded-md font-bold transition-colors flex-1 ${
+                      isActive(item.path)
+                        ? "bg-[#CCEAFF] text-black"
+                        : "text-black hover:bg-white/10 hover:text-black"
+                    }`}
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    <div className="w-6 h-5 flex-shrink-0">
+                      <img
+                        src={item.icon}
+                        alt={item.label}
+                        className="h-5 w-5"
+                      />
+                    </div>
+                    <span className="text-xl">{item.label}</span>
+                  </Link>
+                </div>
               ))}
             </div>
           </ScrollArea>
@@ -181,30 +182,33 @@ export function StudentLayout({ children }: StudentLayoutProps) {
       {/* )} */}
 
       {/* Sidebar for desktop */}
-      <nav className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:bg-[#065FF0] my-6 rounded-3xl mr-2">
+      <nav className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 my-6 rounded-3xl mr-2">
         <div className="p-6">
           <Link
             to="/student/dashboard"
-            className="flex items-center gap-2 text-2xl font-bold text-white"
+            className="flex items-center justify-center gap-2 text-2xl font-bold text-black"
           >
-            AI Tutor.
+            <img src={Logo} alt="Logo" className="w-[70px]" />
           </Link>
         </div>
-        <ScrollArea className="flex-1 px-4 mt-16">
-          <div className="space-y-8">
+        <ScrollArea className="flex-1 mt-16">
+          <div className="space-y-8 flex flex-col items-center pl-8">
             {sidebarItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex items-center gap-3 px-3 py-2 rounded-md text-md font-medium transition-colors ${
-                  isActive(item.path)
-                    ? "bg-white/10 text-white font-bold"
-                    : "text-white hover:bg-white/10 hover:text-white"
-                }`}
-              >
-                <item.icon className="h-5 w-5 font-bold" />
-                {item.label}
-              </Link>
+              <div key={item.path} className="flex items-center w-full">
+                <Link
+                  to={item.path}
+                  className={`flex items-center justify-start gap-3 py-2 px-4 rounded-md font-medium transition-colors flex-1 ${
+                    isActive(item.path)
+                      ? "bg-[#CCEAFF] text-black font-bold"
+                      : "text-black hover:bg-white/10 hover:text-black"
+                  }`}
+                >
+                  <div className="w-6 h-5 flex-shrink-0">
+                    <img src={item.icon} alt={item.label} className="h-5 w-5" />
+                  </div>
+                  <span className="text-xl">{item.label}</span>
+                </Link>
+              </div>
             ))}
           </div>
         </ScrollArea>
@@ -230,9 +234,32 @@ export function StudentLayout({ children }: StudentLayoutProps) {
             onClick={handleLogout}
             size="sm"
             variant="ghost"
-            className="rounded-full bg-[#F8F9FD] h-10 w-10 p-0 flex items-center justify-center"
+            className="group h-10 w-10 p-0 flex items-center justify-center border-0 outline-none focus:outline-none focus:ring-0 hover:border-0 active:border-0 bg-transparent hover:bg-transparent overflow-hidden"
+            style={{ border: "none", boxShadow: "none" }}
           >
-            <LogOut className="w-5 h-5" />
+            <svg
+              width="38"
+              height="38"
+              viewBox="0 0 38 38"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <rect
+                width="38"
+                height="38"
+                rx="10.2"
+                fill="#FFE3E3"
+                className="group-hover:fill-[#ffb3b3] transition-colors duration-200"
+              />
+              <path
+                d="M20.3573 16.1959C20.1589 13.8912 18.9745 12.9501 16.3817 12.9501H16.2985C13.4368 12.9501 12.2908 14.096 12.2908 16.9577V21.1318C12.2908 23.9935 13.4368 25.1394 16.2985 25.1394H16.3817C18.9553 25.1394 20.1397 24.2112 20.3509 21.9449M16.4521 19.0384H23.7376M22.3099 16.8937L24.4546 19.0384L22.3099 21.183"
+                stroke="#D70004"
+                strokeWidth="0.960297"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="group-hover:stroke-[#a00003] transition-colors duration-200"
+              />
+            </svg>
           </Button>
         </header>
         <header className="sticky top-0 z-10 hidden lg:flex items-center justify-between h-16 bg-background py-10 px-8 ">
@@ -281,9 +308,32 @@ export function StudentLayout({ children }: StudentLayoutProps) {
               onClick={handleLogout}
               size="sm"
               variant="ghost"
-              className="rounded-full bg-[#F8F9FD] h-10 w-10 p-0 flex items-center justify-center"
+              className="group h-10 w-10 p-0 flex items-center justify-center border-0 outline-none focus:outline-none focus:ring-0 hover:border-0 active:border-0 bg-transparent hover:bg-transparent overflow-hidden"
+              style={{ border: "none", boxShadow: "none" }}
             >
-              <LogOut className="w-5 h-5" />
+              <svg
+                width="38"
+                height="38"
+                viewBox="0 0 38 38"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect
+                  width="37.4098"
+                  height="37.4098"
+                  rx="10.0205"
+                  fill="#FFE3E3"
+                  className="group-hover:fill-[#ffb3b3] transition-colors duration-200"
+                />
+                <path
+                  d="M20.3573 16.1959C20.1589 13.8912 18.9745 12.9501 16.3817 12.9501H16.2985C13.4368 12.9501 12.2908 14.096 12.2908 16.9577V21.1318C12.2908 23.9935 13.4368 25.1394 16.2985 25.1394H16.3817C18.9553 25.1394 20.1397 24.2112 20.3509 21.9449M16.4521 19.0384H23.7376M22.3099 16.8937L24.4546 19.0384L22.3099 21.183"
+                  stroke="#D70004"
+                  strokeWidth="0.960297"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="group-hover:stroke-[#a00003] transition-colors duration-200"
+                />
+              </svg>
             </Button>
           </div>
         </header>
