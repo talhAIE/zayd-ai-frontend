@@ -86,6 +86,12 @@ const LearningModes: React.FC = () => {
     );
   }
 
+  if (schoolCategory === "demo-flow") {
+    filteredModes = modes.filter(
+      (mode) => mode.title === "Reading Mode" || mode.title === "Role Play Mode" || mode.title === "Listening Mode"
+    );
+  }
+
   // const [isQueationnaireOpen, setIsQuestionnaireOpen] = React.useState(true);
 
   const handleStartButton = (route: string) => {
