@@ -50,17 +50,12 @@ const QuestionnaireModal: React.FC<QuestionnaireModalProps> = ({
       }
     });
 
-    const minCorrectRequired = 4;
-    const hasMinimumCorrect = correctAnswers >= minCorrectRequired;
-
     return {
       allAnswered,
       correctAnswers,
       totalQuestions,
       answeredQuestions,
-      hasMinimumCorrect,
-      minCorrectRequired,
-      canSubmit: allAnswered && hasMinimumCorrect,
+      canSubmit: allAnswered,
     };
   }, [selectedOptions, mcqs]);
 
@@ -105,7 +100,7 @@ const QuestionnaireModal: React.FC<QuestionnaireModalProps> = ({
   const shouldShowHint = showHints[question.id];
   const isLastQuestion = currentQuestionIndex === mcqs.length - 1;
   const canGoNext = isAnswered && isCorrect;
-  const canSubmitNow = validationStatus.canSubmit && canGoNext;
+  const canSubmitNow = validationStatus.canSubmit;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -245,11 +240,6 @@ const QuestionnaireModal: React.FC<QuestionnaireModalProps> = ({
             >
               {!validationStatus.allAnswered
                 ? `Answer All Questions (${validationStatus.answeredQuestions}/${validationStatus.totalQuestions})`
-                : !validationStatus.hasMinimumCorrect
-                ? `Need ${
-                    validationStatus.minCorrectRequired -
-                    validationStatus.correctAnswers
-                  } More Correct`
                 : "Submit"}
             </button>
           ) : (
