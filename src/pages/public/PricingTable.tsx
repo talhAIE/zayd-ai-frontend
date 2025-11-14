@@ -1,8 +1,12 @@
 import dashPng from "@/assets/images/landingpage/dash.png";
 import { motion, Variants } from "framer-motion";
+import { useLanguage } from "@/components/language-provider";
 
 type Feature = {
-  name: string;
+  name: {
+    en: string;
+    ar: string;
+  };
   values: boolean[];
 };
 
@@ -16,16 +20,59 @@ const fadeInScale: Variants = {
 };
 
 export default function PricingTable() {
+  const { language } = useLanguage();
   const plans = ["Free Plan", "School", "Premium"];
 
   const features: Feature[] = [
-    { name: "AI Feedback", values: [true, true, true] },
-    { name: "Personalized Lessons", values: [true, true, true] },
-    { name: "Certificates", values: [false, true, true] },
-    { name: "Support", values: [false, true, true] },
-    { name: "Classroom Management", values: [false, true, true] },
-    { name: "First Month Free", values: [false, false, true] },
-    { name: "Access to All Features", values: [false, false, true] },
+    {
+      name: {
+        en: "AI Feedback",
+        ar: "تغذية راجعة من الذكاء الاصطناعي",
+      },
+      values: [true, true, true],
+    },
+    {
+      name: {
+        en: "Personalized Lessons",
+        ar: "دروس مخصصة حسب مستواك",
+      },
+      values: [true, true, true],
+    },
+    {
+      name: {
+        en: "Certificates",
+        ar: "شهادات",
+      },
+      values: [false, true, true],
+    },
+    {
+      name: {
+        en: "Support",
+        ar: "دعم مستمر",
+      },
+      values: [false, true, true],
+    },
+    {
+      name: {
+        en: "Classroom Management",
+        ar: "ادارة صفية",
+      },
+      values: [false, true, true],
+    },
+    {
+      name: {
+        en: "First Month Free",
+        ar: "اول شهر مجانا",
+      },
+      values: [false, false, true],
+    },
+    {
+      name: {
+        en: "Access to All Features",
+        ar: "الحصول على جميع المميزات",
+      },
+      values: [false, false, true],
+    },
   ];
 
   return (
@@ -63,13 +110,13 @@ export default function PricingTable() {
           <tbody>
             {features.map((feature, rowIndex) => (
               <tr
-                key={feature.name}
+                key={feature.name.en}
                 className={`${
                   rowIndex % 2 === 0 ? "bg-[#F9FBFF]" : "bg-white"
                 } border-t border-[#D6E6FF]`}
               >
                 <td className="py-4 px-6 text-left text-gray-800 text-base font-medium">
-                  {feature.name}
+                  {feature.name[language]}
                 </td>
 
                 {feature.values.map((available, i) => (

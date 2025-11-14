@@ -9,10 +9,11 @@ import FAQSection from "./faq-section";
 // import TestimonialsSection from "./testimonials";
 import Footer from "./Footer";
 import { ReactLenis } from "@/components/lenis";
+import { LanguageProvider } from "@/components/language-provider";
 
 export default function Main() {
   return (
-    <>
+    <LanguageProvider>
       <ReactLenis
         root
         options={{
@@ -37,6 +38,6 @@ export default function Main() {
           <Footer />
         </div>
       </ReactLenis>
-    </>
+    </LanguageProvider>
   );
 }

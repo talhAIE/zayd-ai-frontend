@@ -2,24 +2,42 @@ import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { motion } from "framer-motion";
 import Female from "@/assets/images/landingpage/femalethinking.png";
+import { useLanguage } from "@/components/language-provider";
 
 export default function FAQSection() {
+  const { language } = useLanguage();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   const faqs = [
     {
-      question: "Is Zayd suitable for beginners?",
-      answer: "Yes, from A1 to C1 levels.",
+      question: {
+        en: "Is Zayd suitable for beginners?",
+        ar: "هل زيد مناسب للمبتدئين؟",
+      },
+      answer: {
+        en: "Yes, from A1 to C1 levels.",
+        ar: "نعم، المنصة تغطي جميع المستويات من المبتدئ إلى المتقدم.",
+      },
     },
     {
-      question: "Do teachers or students need training?",
-      answer:
-        "No formal training is required — Zayd AI is designed to be intuitive and teacher-friendly.",
+      question: {
+        en: "Do teachers or students need training?",
+        ar: "هل يحتاج المعلمون أو الطلاب إلى تدريب خاص؟",
+      },
+      answer: {
+        en: "No formal training is required — Zayd AI is designed to be intuitive and teacher-friendly.",
+        ar: "لا، فواجهة المنصة سهلة الاستخدام وصُممت لتكون مريحة ومناسبة للمعلمين والطلاب.",
+      },
     },
     {
-      question: "Is Zayd safe for children?",
-      answer:
-        "Absolutely. Zayd complies with strict data safety and privacy standards.",
+      question: {
+        en: "Is Zayd safe for children?",
+        ar: "هل زيد آمن للأطفال؟",
+      },
+      answer: {
+        en: "Absolutely. Zayd complies with strict data safety and privacy standards.",
+        ar: "بالتأكيد. زيد يلتزم بمعايير صارمة لحماية البيانات والخصوصية.",
+      },
     },
   ];
 
@@ -31,7 +49,6 @@ export default function FAQSection() {
       id="faq"
       className="relative w-full pt-[3%] pb-32 md:pb-40 lg:pb-52 xl:pb-64 flex items-center justify-center overflow-hidden"
     >
-
       {/* === Main FAQ Content === */}
       <div className="relative z-10 max-w-7xl w-full mx-auto flex flex-col md:flex-row md:items-start md:justify-between gap-16 px-6 md:px-20">
         <motion.div
@@ -71,23 +88,36 @@ export default function FAQSection() {
             viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
           >
-            <motion.span
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.3 }}
-              transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
-            >
-              Frequently Asked
-            </motion.span>
-            <br />
-            <motion.span
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.3 }}
-              transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
-            >
-              Questions
-            </motion.span>
+            {language === "ar" ? (
+              <motion.span
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
+              >
+                الأسئلة الشائعة
+              </motion.span>
+            ) : (
+              <>
+                <motion.span
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
+                >
+                  Frequently Asked
+                </motion.span>
+                <br />
+                <motion.span
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
+                >
+                  Questions
+                </motion.span>
+              </>
+            )}
           </motion.h2>
         </motion.div>
 
@@ -135,7 +165,7 @@ export default function FAQSection() {
                   }}
                   transition={{ duration: 0.3 }}
                 >
-                  {faq.question}
+                  {faq.question[language]}
                 </motion.span>
                 <motion.div
                   animate={{
@@ -184,7 +214,7 @@ export default function FAQSection() {
                     delay: openIndex === index ? 0.1 : 0,
                   }}
                 >
-                  {faq.answer}
+                  {faq.answer[language]}
                 </motion.p>
               </motion.div>
             </motion.div>
