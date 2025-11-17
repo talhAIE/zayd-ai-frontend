@@ -9,35 +9,48 @@ import FAQSection from "./faq-section";
 // import TestimonialsSection from "./testimonials";
 import Footer from "./Footer";
 import { ReactLenis } from "@/components/lenis";
-import { LanguageProvider } from "@/components/language-provider";
+import { LanguageProvider, useLanguage } from "@/components/language-provider";
 
 export default function Main() {
   return (
     <LanguageProvider>
-      <ReactLenis
-        root
-        options={{
-          lerp: 0.05,
-          smoothWheel: true,
-          duration: 1.2,
-          wheelMultiplier: 1.2,
-          touchMultiplier: 1.2,
-          syncTouch: true,
-        }}
-      >
-        <div className="min-h-screen font-geist-sans">
-          <Navbar />
-          <HeroSection />
-          <DashboardSection />
-          <ConversationSection />
-          <FeatureSection />
-          <FlowSection />
-          {/* <TestimonialsSection /> */}
-          <PricingTable />
-          <FAQSection />
-          <Footer />
-        </div>
-      </ReactLenis>
+      <PublicLanding />
     </LanguageProvider>
+  );
+}
+
+function PublicLanding() {
+  const { language } = useLanguage();
+  const direction = language === "ar" ? "rtl" : "ltr";
+
+  return (
+    <ReactLenis
+      root
+      options={{
+        lerp: 0.05,
+        smoothWheel: true,
+        duration: 1.2,
+        wheelMultiplier: 1.2,
+        touchMultiplier: 1.2,
+        syncTouch: true,
+      }}
+    >
+      <div
+        className="min-h-screen font-geist-sans"
+        dir={direction}
+        lang={language}
+      >
+        <Navbar />
+        <HeroSection />
+        <DashboardSection />
+        <ConversationSection />
+        <FeatureSection />
+        <FlowSection />
+        {/* <TestimonialsSection /> */}
+        <PricingTable />
+        <FAQSection />
+        <Footer />
+      </div>
+    </ReactLenis>
   );
 }

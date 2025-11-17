@@ -16,6 +16,9 @@ export default function FeatureSection() {
   const { language } = useLanguage();
   const [selectedFeature, setSelectedFeature] = useState(0);
 
+  const adjustTopForLanguage = (top: string) =>
+    language === "ar" ? `calc(${top} + 2rem)` : top;
+
   const features = [
     {
       title: {
@@ -497,8 +500,10 @@ export default function FeatureSection() {
                 key={`roleplay-left-${index}`}
                 className="absolute -translate-y-1/2 hidden lg:block"
                 style={{
-                  left: imgData.position.left,
-                  top: imgData.position.top,
+                  ...(language === "ar"
+                    ? { right: imgData.position.left }
+                    : { left: imgData.position.left }),
+                  top: adjustTopForLanguage(imgData.position.top),
                 }}
               >
                 <motion.img
@@ -506,6 +511,7 @@ export default function FeatureSection() {
                   alt={imgData.alt}
                   width={imgData.size.width}
                   height={imgData.size.height}
+                  style={{ scaleX: language === "ar" ? -1 : 1 }}
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{
                     opacity: 1,
@@ -531,8 +537,12 @@ export default function FeatureSection() {
           <div
             className="absolute -translate-y-1/2 hidden lg:block"
             style={{
-              left: features[selectedFeature].imagePosition.left,
-              top: features[selectedFeature].imagePosition.top,
+              ...(language === "ar"
+                ? { right: features[selectedFeature].imagePosition.left }
+                : { left: features[selectedFeature].imagePosition.left }),
+              top: adjustTopForLanguage(
+                features[selectedFeature].imagePosition.top
+              ),
             }}
           >
             <motion.img
@@ -541,6 +551,7 @@ export default function FeatureSection() {
               alt={features[selectedFeature].title[language]}
               width={features[selectedFeature].imageSize.width}
               height={features[selectedFeature].imageSize.height}
+              style={{ scaleX: language === "ar" ? -1 : 1 }}
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
@@ -632,6 +643,7 @@ export default function FeatureSection() {
                   width={features[selectedFeature].imageSize.width}
                   height={features[selectedFeature].imageSize.height}
                   className="w-auto h-auto max-w-full max-h-full"
+                  style={{ scaleX: 1 }}
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.5 }}

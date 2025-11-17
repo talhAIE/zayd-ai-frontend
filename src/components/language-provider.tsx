@@ -33,14 +33,7 @@ export function LanguageProvider({
 
   useEffect(() => {
     const root = window.document.documentElement;
-
-    if (language === "ar") {
-      root.setAttribute("dir", "rtl");
-      root.setAttribute("lang", "ar");
-    } else {
-      root.setAttribute("dir", "ltr");
-      root.setAttribute("lang", "en");
-    }
+    root.setAttribute("lang", language);
   }, [language]);
 
   const value = {
