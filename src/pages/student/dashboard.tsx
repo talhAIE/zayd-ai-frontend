@@ -1,633 +1,406 @@
-// import { useEffect } from 'react';
-// import {
-//     Card,
-//     CardContent,
-//     CardDescription,
-//     CardHeader,
-//     CardTitle,
-// } from '@/components/ui/card';
-// // import { Button } from '@/components/ui/button';
-// import { Badge } from '@/components/ui/badge';
-// // import { Progress } from '@/components/ui/progress';
-// import {
-//     // Clock,
-//     // MessageCircle,
-//     // ChevronRight,
-//     // Trophy,
-//     BarChart2,
-//     Activity,
-//     CheckSquare,
-// } from 'lucide-react';
-
-// import { Calendar } from "@/components/ui/calendar"
-// import Badge_04 from "@/assets/images/Badge_04.png"
-// import DashboardProfile from '@/components/ui/DashboardProfile';
-// // import { BarChartComponent } from '@/components/ui/barChartComponent';
-// import { useAppDispatch, useAppSelector } from '@/redux/hooks';
-// import { fetchDashboardData } from '@/redux/slices/dashboardSlice';
-// import { Skeleton } from "@/components/ui/skeleton";
-
-// export default function LanguageLearningDashboard() {
-//     const myUser = localStorage.getItem("AiTutorUser");
-//     let parsedUser = JSON.parse(myUser || '{}');
-//     const currentUserId = parsedUser?.id;
-
-//     const dispatch = useAppDispatch();
-//     const { data, isLoading } = useAppSelector(state => state.dashboard);
-
-//     useEffect(() => {
-//         dispatch(fetchDashboardData(currentUserId));
-//     }, []);
-
-//     const user = data?.userInfo;
-//     const usageRecords = data?.usageRecords;
-
-
-
-//     // const myTopics = {
-//     //     "chat-mode": 3,
-//     //     "Dialogue-mode": 3,
-//     //     "funny-mode": 3,
-//     //     "photo-mode": 5
-//     // }
-
-
-//     return (
-//         <div className="flex flex-col  border border-[var(--border-light)] rounded-3xl container p-4">
-//             <div className="grid grid-cols-1 md:grid-cols-3 md:gap-6 mb-6 w-full mx-auto">
-//                 {isLoading ? (
-//                     // Profile Skeleton
-//                     <div className="col-span-1 border rounded-lg shadow p-4">
-//                         <div className="flex items-center space-x-4">
-//                             <Skeleton className="h-16 w-16 rounded-full" />
-//                             <div className="space-y-2">
-//                                 <Skeleton className="h-5 w-36" />
-//                                 <Skeleton className="h-4 w-24" />
-//                             </div>
-//                         </div>
-//                         <div className="mt-4 space-y-3">
-//                             <Skeleton className="h-4 w-full" />
-//                             <Skeleton className="h-4 w-3/4" />
-//                         </div>
-//                     </div>
-//                 ) : (
-
-//                     <DashboardProfile user={user} />
-//                 )}
-
-//                 {isLoading ? (
-//                     // Calendar Skeleton
-//                     <div className="min-w-[350px] col-span-2 border rounded-lg shadow p-4">
-//                         <div className="space-y-2">
-//                             <Skeleton className="h-6 w-48" />
-//                             <div className="grid grid-cols-7 gap-2 mt-2">
-//                                 {Array.from({ length: 7 }).map((_, index) => (
-//                                     <Skeleton key={index} className="h-4 w-8" />
-//                                 ))}
-//                             </div>
-//                             <div className="grid grid-cols-7 gap-2 mt-4">
-//                                 {Array.from({ length: 35 }).map((_, index) => (
-//                                     <Skeleton key={index} className="h-10 w-10 rounded-md" />
-//                                 ))}
-//                             </div>
-//                         </div>
-//                     </div>
-//                 ) : (
-//                     <div className='min-w-[300px] col-span-2 border rounded-lg shadow'>
-//                         <Calendar
-//                             mode="single"
-//                             usageRecords={usageRecords}
-//                         />
-//                     </div>
-//                 )}
-//             </div>
-
-//             {/* Stats Cards */}
-//             <div className="flex flex-col md:flex-row gap-4 mb-6">
-//                 {isLoading ? (
-//                     <>
-//                         {/* Stats Card Skeletons */}
-//                         <div className="flex flex-1 gap-4">
-//                             <Card className="flex-1 shadow-sm">
-//                                 <CardContent className="p-4">
-//                                     <Skeleton className="h-12 w-12 mb-2" />
-//                                     <Skeleton className="h-4 w-16 mb-2" />
-//                                     <Skeleton className="h-10 w-24" />
-//                                 </CardContent>
-//                             </Card>
-
-//                             <Card className="flex-1 shadow-sm">
-//                                 <CardContent className="p-4">
-//                                     <Skeleton className="h-12 w-12 mb-2" />
-//                                     <Skeleton className="h-4 w-16 mb-2" />
-//                                     <Skeleton className="h-10 w-24" />
-//                                 </CardContent>
-//                             </Card>
-//                         </div>
-
-//                         {/* Level Card Skeleton */}
-//                         <div className="flex-1 bg-gray-100 rounded-lg p-4">
-//                             <div className="flex items-center gap-4 mb-4">
-//                                 <Skeleton className="h-12 w-12 rounded" />
-//                                 <div>
-//                                     <Skeleton className="h-6 w-24 mb-2" />
-//                                     <Skeleton className="h-4 w-48" />
-//                                 </div>
-//                             </div>
-//                             <Skeleton className="h-4 w-full rounded-full" />
-//                             <Skeleton className="h-4 w-32 mt-2" />
-//                         </div>
-//                     </>
-//                 ) : (
-//                     <>
-//                         {/* Left Side: Two Cards */}
-//                         <div className="flex flex-1 gap-4">
-//                             <Card className="bg-orange-400 text-white shadow-sm flex-1  ">
-//                                 <CardContent className="p-4 flex flex-col justify-evenly h-full">
-//                                     <div className="flex flex-col items-start">
-//                                         <BarChart2 className="h-auto w-12" />
-//                                     </div>
-//                                     <h4 className="text-md font-medium mt-2">Streak</h4>
-
-//                                     <div className="text-4xl font-bold mt-2 text-start">{data?.streak}</div>
-//                                 </CardContent>
-//                             </Card>
-
-//                             <Card className="bg-purple-500 text-white shadow-sm flex-1">
-//                                 <CardContent className="p-4 flex flex-col justify-evenly h-full">
-//                                     <div className="flex flex-col items-start">
-//                                         <Activity className="h-auto w-12" />
-//                                     </div>
-//                                     <h4 className="text-md font-medium mt-2">Daily Usage</h4>
-//                                     <div className="text-4xl font-bold mt-2 text-start">{data?.dailyUsage}</div>
-//                                 </CardContent>
-//                             </Card>
-
-//                             {/* <Card className="bg-blue-400 text-white shadow-sm flex-1">
-//                                 <CardContent className="p-4 flex flex-col justify-start h-full">
-//                                     <h4 className="text-md font-medium mt-2">Completed Topics</h4>
-
-//                                     <div className="mt-4 space-y-2">
-//                                         {data?.completedTopics &&
-//                                             Object.entries(data.completedTopics).map(([mode, count]) => (
-//                                                 <div key={mode} className="flex justify-between text-lg font-semibold">
-//                                                     <span className="capitalize">{mode.replace(/-/g, ' ')}</span>
-//                                                     <span>{count}</span>
-//                                                 </div>
-//                                             ))}
-//                                     </div>
-//                                 </CardContent>
-//                             </Card> */}
-
-
-//                         </div>
-
-//                         {/* Right Side: Levels */}
-//                         <div className="flex-1 gradientBg rounded-lg p-4 flex flex-col gap-4">
-//                             <div className="flex items-center gap-4">
-//                                 <img src={Badge_04} alt="Streak Badge" className="w-12 h-12" />
-//                                 <div>
-//                                     <h4 className="text-xl font-bold">Longest Streak</h4>
-//                                     <p className="text-sm mt-1 text-gray-500">Your highest consecutive days</p>
-//                                 </div>
-//                             </div>
-
-//                             <div className="flex items-center justify-center h-32 bg-white rounded-lg shadow-inner">
-//                                 <span className="text-5xl font-extrabold text-blue-600">{data?.longestStreak}</span>
-//                                 <span className="text-lg ml-2 text-gray-600">days</span>
-//                             </div>
-
-//                             <p className="text-sm text-gray-500 text-center mt-2">Keep up the momentum!</p>
-//                         </div>
-
-//                     </>
-//                 )}
-//             </div>
-
-//             <div className="w-full">
-//                 <Card className="shadow-md border-slate-200">
-//                     <CardHeader className="bg-gradient-to-r gradientBg pb-4 border-b border-slate-100">
-//                         <div className="flex items-center justify-between">
-//                             <div>
-//                                 {isLoading ? (
-//                                     <div className="space-y-2">
-//                                         <Skeleton className="h-6 w-48" />
-//                                         <Skeleton className="h-4 w-64" />
-//                                     </div>
-//                                 ) : (
-//                                     <>
-//                                         <CardTitle className="text-xl md:text-2xl font-bold text-slate-800">
-//                                             Completed Topics
-//                                         </CardTitle>
-//                                         <CardDescription className="text-slate-600">
-//                                             Your progress across learning modules
-//                                         </CardDescription>
-//                                     </>
-//                                 )}
-//                             </div>
-
-//                             {isLoading ? (
-//                                 <Skeleton className="h-8 w-24 rounded-full" />
-//                             ) : (
-//                                 <Badge className="bg-blue-500 hover:bg-blue-600  px-2 py-2 md:px-4 md:py-3">
-//                                     {data?.completedTopics
-//                                         ? Object.keys(data.completedTopics).length
-//                                         : 0}{' '}
-//                                     Modes
-//                                 </Badge>
-//                             )}
-//                         </div>
-//                     </CardHeader>
-
-//                     <CardContent className="pt-6">
-//                         {isLoading ? (
-//                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-//                                 {Array.from({ length: 4 }).map((_, index) => (
-//                                     <div
-//                                         key={index}
-//                                         className="flex items-center justify-between p-4 bg-white rounded-lg border border-slate-300 shadow-sm"
-//                                     >
-//                                         <div className="flex items-center gap-3">
-//                                             <Skeleton className="w-10 h-10 rounded-full" />
-//                                             <div>
-//                                                 <Skeleton className="h-4 w-40 mb-2" />
-//                                                 <Skeleton className="h-3 w-24" />
-//                                             </div>
-//                                         </div>
-//                                         <Skeleton className="h-8 w-8 rounded-full" />
-//                                     </div>
-//                                 ))}
-//                             </div>
-//                         ) : data?.completedTopics &&
-//                             Object.keys(data.completedTopics).length > 0 ? (
-//                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-//                                 {Object.entries(data?.completedTopics).map(([topic, count]) => (
-//                                     <div
-//                                         key={topic}
-//                                         className="flex flex-wrap items-center justify-between p-4 bg-white rounded-lg border border-slate-300 shadow-sm"
-//                                     >
-//                                         <div className="flex items-center">
-//                                             <div className="w-10 h-10 rounded-full flex items-center justify-center bg-green-50 text-green-600 mr-3">
-//                                                 <CheckSquare size={20} />
-//                                             </div>
-//                                             <div>
-//                                                 <h3 className="font-medium text-slate-800">
-//                                                     {topic
-//                                                         .split('-')
-//                                                         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-//                                                         .join(' ')}
-//                                                 </h3>
-//                                                 <p className="text-sm text-slate-500">
-//                                                     {count} completed {count === 1 ? 'item' : 'items'}
-//                                                 </p>
-//                                             </div>
-//                                         </div>
-//                                         <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border border-green-200">
-//                                             {count}
-//                                         </Badge>
-//                                     </div>
-//                                 ))}
-//                             </div>
-//                         ) : (
-//                             <div className="text-center text-slate-500 text-sm py-8">
-//                                 No completed topics yet. Keep learning and your progress will show up
-//                                 here!
-//                             </div>
-//                         )}
-//                     </CardContent>
-//                 </Card>
-//             </div>
-
-
-//             {/* Bar Chart */}
-//             {/* {isLoading ? (
-//                 <div className="w-full h-64 bg-white rounded-lg p-4">
-//                     <Skeleton className="h-6 w-32 mb-4" />
-//                     <div className="flex items-end justify-between h-40 w-full">
-//                         {Array.from({ length: 7 }).map((_, index) => (
-//                             <Skeleton key={index} className="w-12 h-32" style={{ height: `${Math.random() * 100 + 20}%` }} />
-//                         ))}
-//                     </div>
-//                     <div className="flex justify-between mt-2">
-//                         {Array.from({ length: 7 }).map((_, index) => (
-//                             <Skeleton key={index} className="w-12 h-4" />
-//                         ))}
-//                     </div>
-//                 </div>
-//             ) : (
-//                 <div>
-//                     <BarChartComponent />
-//                 </div>
-//             )} */}
-
-//         </div>
-//     );
-// }
-import { useEffect } from 'react';
+import { useEffect } from "react";
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
-// import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-// import { Progress } from '@/components/ui/progress';
-import {
-    // Clock,
-    // MessageCircle,
-    // ChevronRight,
-    // Trophy,
-    BarChart2,
-    Activity,
-    CheckSquare,
-} from 'lucide-react';
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { CheckSquare, ArrowUpRight } from "lucide-react";
 
-import { Calendar } from "@/components/ui/calendar"
-import Badge_04 from "@/assets/images/Badge_04.png"
-import DashboardProfile from '@/components/ui/DashboardProfile';
+import { Calendar } from "@/components/ui/calendar";
+import DashboardBadge from "@/assets/svgs/dashboard_badge.svg";
+import TeachBird from "@/assets/svgs/dashboardTeach.svg";
+import DashboardProfile from "@/components/ui/DashboardProfile";
 // import { BarChartComponent } from '@/components/ui/barChartComponent';
-import { useAppDispatch, useAppSelector } from '@/redux/hooks';
-import { fetchDashboardData } from '@/redux/slices/dashboardSlice';
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { fetchDashboardData } from "@/redux/slices/dashboardSlice";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function LanguageLearningDashboard() {
-    const myUser = localStorage.getItem("AiTutorUser");
-    let parsedUser = JSON.parse(myUser || '{}');
-    const currentUserId = parsedUser?.id;
+  const myUser = localStorage.getItem("AiTutorUser");
+  let parsedUser = JSON.parse(myUser || "{}");
+  const currentUserId = parsedUser?.id;
 
-    const dispatch = useAppDispatch();
-    const { data, isLoading, error } = useAppSelector(state => state.dashboard);
+  const dispatch = useAppDispatch();
+  const { data, isLoading, error } = useAppSelector((state) => state.dashboard);
 
-    useEffect(() => {
-        // Only fetch if we have a valid user ID
-        if (currentUserId) {
-            dispatch(fetchDashboardData(currentUserId));
-        }
-    }, [currentUserId, dispatch]);
-
-    const user = data?.userInfo;
-    const usageRecords = data?.usageRecords;
-
-    // Show error state if there's an error
-    if (error) {
-        return (
-            <div className="flex flex-col border border-[var(--border-light)] rounded-3xl p-4">
-                <div className="flex items-center justify-center h-64">
-                    <div className="text-center">
-                        <h3 className="text-lg font-medium text-red-600 mb-2">Error Loading Dashboard</h3>
-                        <p className="text-sm text-gray-500">{error}</p>
-                        <button 
-                            onClick={() => currentUserId && dispatch(fetchDashboardData(currentUserId))}
-                            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                        >
-                            Retry
-                        </button>
-                    </div>
-                </div>
-            </div>
-        );
+  useEffect(() => {
+    // Only fetch if we have a valid user ID
+    if (currentUserId) {
+      dispatch(fetchDashboardData(currentUserId));
     }
+  }, [currentUserId, dispatch]);
 
-    // Show message if no user ID
-    if (!currentUserId) {
-        return (
-            <div className="flex flex-col border border-[var(--border-light)] rounded-3xl p-4">
-                <div className="flex items-center justify-center h-64">
-                    <div className="text-center">
-                        <h3 className="text-lg font-medium text-gray-600 mb-2">No User Found</h3>
-                        <p className="text-sm text-gray-500">Please log in to view your dashboard.</p>
-                    </div>
-                </div>
-            </div>
-        );
-    }
+  const user = data?.userInfo;
+  const usageRecords = data?.usageRecords;
 
+  // Show error state if there's an error
+  if (error) {
     return (
-        <div className="flex flex-col border border-[var(--border-light)] rounded-3xl p-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 md:gap-6 mb-6 w-full mx-auto">
-                {isLoading ? (
-                    // Profile Skeleton
-                    <div className="col-span-1 border rounded-lg shadow p-4">
-                        <div className="flex items-center space-x-4">
-                            <Skeleton className="h-16 w-16 rounded-full" />
-                            <div className="space-y-2">
-                                <Skeleton className="h-5 w-36" />
-                                <Skeleton className="h-4 w-24" />
-                            </div>
-                        </div>
-                        <div className="mt-4 space-y-3">
-                            <Skeleton className="h-4 w-full" />
-                            <Skeleton className="h-4 w-3/4" />
-                        </div>
-                    </div>
-                ) : (
-                    <DashboardProfile user={user} />
-                )}
-
-                {isLoading ? (
-                    // Calendar Skeleton
-                    <div className="min-w-[350px] col-span-2 border rounded-lg shadow p-4">
-                        <div className="space-y-2">
-                            <Skeleton className="h-6 w-48" />
-                            <div className="grid grid-cols-7 gap-2 mt-2">
-                                {Array.from({ length: 7 }).map((_, index) => (
-                                    <Skeleton key={index} className="h-4 w-8" />
-                                ))}
-                            </div>
-                            <div className="grid grid-cols-7 gap-2 mt-4">
-                                {Array.from({ length: 35 }).map((_, index) => (
-                                    <Skeleton key={index} className="h-10 w-10 rounded-md" />
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                ) : (
-                    <div className='min-w-[300px] col-span-2 border rounded-lg shadow'>
-                        <Calendar
-                            mode="single"
-                            usageRecords={usageRecords}
-                        />
-                    </div>
-                )}
-            </div>
-
-            {/* Stats Cards */}
-            <div className="flex flex-col md:flex-row gap-4 mb-6">
-                {isLoading ? (
-                    <>
-                        {/* Stats Card Skeletons */}
-                        <div className="flex flex-1 gap-4">
-                            <Card className="flex-1 shadow-sm">
-                                <CardContent className="p-4">
-                                    <Skeleton className="h-12 w-12 mb-2" />
-                                    <Skeleton className="h-4 w-16 mb-2" />
-                                    <Skeleton className="h-10 w-24" />
-                                </CardContent>
-                            </Card>
-
-                            <Card className="flex-1 shadow-sm">
-                                <CardContent className="p-4">
-                                    <Skeleton className="h-12 w-12 mb-2" />
-                                    <Skeleton className="h-4 w-16 mb-2" />
-                                    <Skeleton className="h-10 w-24" />
-                                </CardContent>
-                            </Card>
-                        </div>
-
-                        {/* Level Card Skeleton */}
-                        <div className="flex-1 bg-gray-100 rounded-lg p-4">
-                            <div className="flex items-center gap-4 mb-4">
-                                <Skeleton className="h-12 w-12 rounded" />
-                                <div>
-                                    <Skeleton className="h-6 w-24 mb-2" />
-                                    <Skeleton className="h-4 w-48" />
-                                </div>
-                            </div>
-                            <Skeleton className="h-4 w-full rounded-full" />
-                            <Skeleton className="h-4 w-32 mt-2" />
-                        </div>
-                    </>
-                ) : (
-                    <>
-                        {/* Left Side: Two Cards */}
-                        <div className="flex flex-1 gap-4">
-                            <Card className="bg-orange-400 text-white shadow-sm flex-1">
-                                <CardContent className="p-4 flex flex-col justify-evenly h-full">
-                                    <div className="flex flex-col items-start">
-                                        <BarChart2 className="h-auto w-12" />
-                                    </div>
-                                    <h4 className="text-md font-medium mt-2">Streak</h4>
-                                    <div className="text-4xl font-bold mt-2 text-start">{data?.streak ?? 0}</div>
-                                </CardContent>
-                            </Card>
-
-                            <Card className="bg-purple-500 text-white shadow-sm flex-1">
-                                <CardContent className="p-4 flex flex-col justify-evenly h-full">
-                                    <div className="flex flex-col items-start">
-                                        <Activity className="h-auto w-12" />
-                                    </div>
-                                    <h4 className="text-md font-medium mt-2">Daily Usage</h4>
-                                    <div className="text-4xl font-bold mt-2 text-start">{data?.dailyUsage ?? 0}</div>
-                                </CardContent>
-                            </Card>
-                        </div>
-
-                        {/* Right Side: Levels */}
-                        <div className="flex-1 gradientBg rounded-lg p-4 flex flex-col gap-4">
-                            <div className="flex items-center gap-4">
-                                <img src={Badge_04} alt="Streak Badge" className="w-12 h-12" />
-                                <div>
-                                    <h4 className="text-xl font-bold">Longest Streak</h4>
-                                    <p className="text-sm mt-1 text-gray-500">Your highest consecutive days</p>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center justify-center h-32 bg-white rounded-lg shadow-inner">
-                                <span className="text-5xl font-extrabold text-blue-600">{data?.longestStreak ?? 0}</span>
-                                <span className="text-lg ml-2 text-gray-600">days</span>
-                            </div>
-
-                            <p className="text-sm text-gray-500 text-center mt-2">Keep up the momentum!</p>
-                        </div>
-                    </>
-                )}
-            </div>
-
-            <div className="w-full">
-                <Card className="shadow-md border-slate-200">
-                    <CardHeader className="bg-gradient-to-r gradientBg pb-4 border-b border-slate-100">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                {isLoading ? (
-                                    <div className="space-y-2">
-                                        <Skeleton className="h-6 w-48" />
-                                        <Skeleton className="h-4 w-64" />
-                                    </div>
-                                ) : (
-                                    <>
-                                        <CardTitle className="text-xl md:text-2xl font-bold text-slate-800">
-                                            Completed Topics
-                                        </CardTitle>
-                                        <CardDescription className="text-slate-600">
-                                            Your progress across learning modules
-                                        </CardDescription>
-                                    </>
-                                )}
-                            </div>
-
-                            {isLoading ? (
-                                <Skeleton className="h-8 w-24 rounded-full" />
-                            ) : (
-                                <Badge className="bg-blue-500 hover:bg-blue-600 px-2 py-2 md:px-4 md:py-3">
-                                    {data?.completedTopics
-                                        ? Object.keys(data.completedTopics).length
-                                        : 0}{' '}
-                                    Modes
-                                </Badge>
-                            )}
-                        </div>
-                    </CardHeader>
-
-                    <CardContent className="pt-6">
-                        {isLoading ? (
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                {Array.from({ length: 4 }).map((_, index) => (
-                                    <div
-                                        key={index}
-                                        className="flex items-center justify-between p-4 bg-white rounded-lg border border-slate-300 shadow-sm"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <Skeleton className="w-10 h-10 rounded-full" />
-                                            <div>
-                                                <Skeleton className="h-4 w-40 mb-2" />
-                                                <Skeleton className="h-3 w-24" />
-                                            </div>
-                                        </div>
-                                        <Skeleton className="h-8 w-8 rounded-full" />
-                                    </div>
-                                ))}
-                            </div>
-                        ) : data?.completedTopics &&
-                            Object.keys(data.completedTopics).length > 0 ? (
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                {Object.entries(data.completedTopics).map(([topic, count]) => (
-                                    <div
-                                        key={topic}
-                                        className="flex flex-wrap items-center justify-between p-4 bg-white rounded-lg border border-slate-300 shadow-sm"
-                                    >
-                                        <div className="flex items-center">
-                                            <div className="w-10 h-10 rounded-full flex items-center justify-center bg-green-50 text-green-600 mr-3">
-                                                <CheckSquare size={20} />
-                                            </div>
-                                            <div>
-                                                <h3 className="font-medium text-slate-800">
-                                                    {topic
-                                                        .split('-')
-                                                        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-                                                        .join(' ')}
-                                                </h3>
-                                                <p className="text-sm text-slate-500">
-                                                    {count} completed {count === 1 ? 'item' : 'items'}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border border-green-200">
-                                            {count}
-                                        </Badge>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="text-center text-slate-500 text-sm py-8">
-                                No completed topics yet. Keep learning and your progress will show up
-                                here!
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
-            </div>
+      <div className="flex flex-col border border-[var(--border-light)] rounded-3xl p-4">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <h3 className="text-lg font-medium text-red-600 mb-2">
+              Error Loading Dashboard
+            </h3>
+            <p className="text-sm text-gray-500">{error}</p>
+            <button
+              onClick={() =>
+                currentUserId && dispatch(fetchDashboardData(currentUserId))
+              }
+              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+            >
+              Retry
+            </button>
+          </div>
         </div>
+      </div>
     );
+  }
+
+  // Show message if no user ID
+  if (!currentUserId) {
+    return (
+      <div className="flex flex-col border border-[var(--border-light)] rounded-3xl p-4">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <h3 className="text-lg font-medium text-gray-600 mb-2">
+              No User Found
+            </h3>
+            <p className="text-sm text-gray-500">
+              Please log in to view your dashboard.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col border border-[var(--border-light)] rounded-3xl p-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 md:gap-6 mb-6 w-full mx-auto items-start">
+        {isLoading ? (
+          // Profile Skeleton
+          <div className="col-span-1 border rounded-lg shadow p-4">
+            <div className="flex items-center space-x-4">
+              <Skeleton className="h-16 w-16 rounded-full" />
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-36" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+            </div>
+            <div className="mt-4 space-y-3">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+            </div>
+          </div>
+        ) : (
+          <DashboardProfile user={user} />
+        )}
+
+        {/* Three Cards: Streak, Daily Usage, and Longest Streak */}
+        {isLoading ? (
+          // Cards Skeleton
+          <div className="col-span-1 flex flex-row gap-4">
+            <Card className="flex-1 shadow-sm">
+              <CardContent className="p-4">
+                <Skeleton className="h-12 w-12 mb-2" />
+                <Skeleton className="h-4 w-16 mb-2" />
+                <Skeleton className="h-10 w-24" />
+              </CardContent>
+            </Card>
+            <Card className="flex-1 shadow-sm">
+              <CardContent className="p-4">
+                <Skeleton className="h-12 w-12 mb-2" />
+                <Skeleton className="h-4 w-16 mb-2" />
+                <Skeleton className="h-10 w-24" />
+              </CardContent>
+            </Card>
+            <Card className="flex-1 shadow-sm">
+              <CardContent className="p-4">
+                <Skeleton className="h-12 w-12 mb-2" />
+                <Skeleton className="h-4 w-16 mb-2" />
+                <Skeleton className="h-10 w-24" />
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+          <div
+            className="col-span-1 grid grid-cols-2 grid-rows-2 gap-5"
+            style={{ gridTemplateRows: "auto auto" }}
+          >
+            <Card
+              className="text-white shadow-sm rounded-2xl overflow-hidden border-0 self-start"
+              style={{
+                background: "linear-gradient(to bottom, #6EBDFB, #5C9DFF)",
+              }}
+            >
+              <CardContent className="p-4 flex flex-col">
+                {/* Top Row: Streak label and Arrow icon */}
+                <div className="flex items-start justify-between mb-auto">
+                  <h4 className="text-sm font-medium text-white">Streak</h4>
+                  <div className="w-7 h-7 rounded-full bg-white bg-opacity-10 flex items-center justify-center flex-shrink-0">
+                    <ArrowUpRight className="w-3.5 h-3.5 text-white" />
+                  </div>
+                </div>
+
+                {/* Bottom Row: Number and Flame icon */}
+                <div className="flex items-end justify-between mt-[1rem]">
+                  <div className="text-4xl font-bold text-white leading-none">
+                    {data?.streak ?? 0}
+                  </div>
+                  <div className="w-12 h-12 rounded-xl bg-white bg-opacity-10 flex items-center justify-center flex-shrink-0">
+                    <svg
+                      width="32"
+                      height="32"
+                      viewBox="0 0 40 40"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="w-8 h-8"
+                    >
+                      <path
+                        d="M19.9998 9.61542C20.769 12.6923 22.3075 15.1923 24.6152 17.1154C26.9228 19.0385 28.0767 21.1539 28.0767 23.4616C28.0767 25.6037 27.2257 27.6581 25.711 29.1728C24.1963 30.6875 22.1419 31.5385 19.9998 31.5385C17.8576 31.5385 15.8032 30.6875 14.2885 29.1728C12.7738 27.6581 11.9229 25.6037 11.9229 23.4616C11.9229 22.2133 12.3277 20.9987 13.0767 20C13.0767 20.7651 13.3806 21.4988 13.9216 22.0398C14.4626 22.5807 15.1963 22.8846 15.9613 22.8846C16.7264 22.8846 17.4601 22.5807 18.001 22.0398C18.542 21.4988 18.8459 20.7651 18.8459 20C18.8459 17.6923 17.1152 16.5385 17.1152 14.2308C17.1152 12.6923 18.0767 11.1539 19.9998 9.61542Z"
+                        stroke="white"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card
+              className="text-white shadow-sm rounded-2xl overflow-hidden border-0 self-start"
+              style={{
+                background: "linear-gradient(to bottom, #6EBDFB, #5C9DFF)",
+              }}
+            >
+              <CardContent className="p-4 flex flex-col">
+                {/* Top Row: Daily Usage label and Arrow icon */}
+                <div className="flex items-start justify-between mb-auto">
+                  <h4 className="text-sm font-medium text-white">
+                    Daily Usage
+                  </h4>
+                  <div className="w-7 h-7 rounded-full bg-white bg-opacity-10 flex items-center justify-center flex-shrink-0">
+                    <ArrowUpRight className="w-3.5 h-3.5 text-white" />
+                  </div>
+                </div>
+
+                {/* Bottom Row: Number and Activity icon */}
+                <div className="flex items-end justify-between mt-[1rem]">
+                  <div className="text-4xl font-bold text-white leading-none">
+                    {data?.dailyUsage ?? 0}
+                  </div>
+                  <div className="w-12 h-12 rounded-xl bg-white bg-opacity-10 flex items-center justify-center flex-shrink-0">
+                    <svg
+                      width="32"
+                      height="32"
+                      viewBox="0 0 40 40"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="w-8 h-8"
+                    >
+                      <path
+                        d="M31.5383 20H28.6768C28.1725 19.9989 27.6818 20.1631 27.2796 20.4673C26.8775 20.7715 26.586 21.1991 26.4499 21.6846L23.7383 31.3308C23.7209 31.3907 23.6844 31.4433 23.6345 31.4808C23.5846 31.5182 23.5238 31.5385 23.4614 31.5385C23.399 31.5385 23.3383 31.5182 23.2883 31.4808C23.2384 31.4433 23.202 31.3907 23.1845 31.3308L16.8153 8.66924C16.7978 8.60932 16.7614 8.55669 16.7114 8.51924C16.6615 8.48179 16.6008 8.46155 16.5383 8.46155C16.4759 8.46155 16.4152 8.48179 16.3653 8.51924C16.3153 8.55669 16.2789 8.60932 16.2614 8.66924L13.5499 18.3154C13.4143 18.799 13.1246 19.2252 12.7247 19.5293C12.3249 19.8333 11.8368 19.9986 11.3345 20H8.46143"
+                        stroke="white"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-sm col-span-2 rounded-2xl overflow-hidden border-0 relative bg-[#89CBFC2B]">
+              <CardContent className="p-4 flex flex-row items-center gap-4 relative">
+                {/* Left Section: Badge and Text */}
+                <div className="flex flex-col items-start gap-2 flex-shrink-0">
+                  {/* Badge Icon */}
+                  <div className="flex-shrink-0">
+                    <img
+                      src={DashboardBadge}
+                      alt="Badge"
+                      className="w-20 h-20"
+                    />
+                  </div>
+
+                  {/* Text Section */}
+                  <div className="flex flex-col gap-0.5">
+                    <h4
+                      className="text-lg font-bold leading-tight"
+                      style={{
+                        background: "linear-gradient(135deg, #6250E9, #69BDFF)",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                        backgroundClip: "text",
+                      }}
+                    >
+                      Longest Streak
+                    </h4>
+                    <p className="text-[10px] text-gray-500 leading-tight">
+                      here is the level of your progress
+                    </p>
+                  </div>
+                </div>
+
+                {/* Center Section: Streak Number */}
+                <div className="flex-1 flex items-center justify-center relative mt-20 ms-4">
+                  <div
+                    className="absolute w-14 h-10 rounded-full opacity-10"
+                    style={{ backgroundColor: "#9E9E9E" }}
+                  />
+                  <div
+                    className="text-2xl font-bold leading-none relative z-10"
+                    style={{
+                      background: "linear-gradient(135deg, #6250E9, #69BDFF)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      backgroundClip: "text",
+                    }}
+                  >
+                    {data?.longestStreak ?? 0}
+                  </div>
+                </div>
+
+                {/* Right Section: Bird Illustration */}
+                <div className="flex-shrink-0 flex items-end justify-end -mr-14">
+                  <img
+                    src={TeachBird}
+                    alt="Bird"
+                    className="h-[9.5rem] w-auto object-contain"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {isLoading ? (
+          // Calendar Skeleton
+          <div className="col-span-1 border rounded-lg shadow p-4">
+            <div className="space-y-2">
+              <Skeleton className="h-6 w-48" />
+              <div className="grid grid-cols-7 gap-2 mt-2">
+                {Array.from({ length: 7 }).map((_, index) => (
+                  <Skeleton key={index} className="h-4 w-8" />
+                ))}
+              </div>
+              <div className="grid grid-cols-7 gap-2 mt-4">
+                {Array.from({ length: 35 }).map((_, index) => (
+                  <Skeleton key={index} className="h-10 w-10 rounded-md" />
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-8 sm:mt-0 col-span-1 border rounded-lg shadow">
+            <Calendar mode="single" usageRecords={usageRecords} />
+          </div>
+        )}
+      </div>
+
+      <div className="w-full">
+        <Card className="shadow-md border-slate-200">
+          <CardHeader className="bg-gradient-to-r gradientBg pb-4 border-b border-slate-100">
+            <div className="flex items-center justify-between">
+              <div>
+                {isLoading ? (
+                  <div className="space-y-2">
+                    <Skeleton className="h-6 w-48" />
+                    <Skeleton className="h-4 w-64" />
+                  </div>
+                ) : (
+                  <>
+                    <CardTitle className="text-xl md:text-2xl font-bold text-slate-800">
+                      Completed Topics
+                    </CardTitle>
+                    <CardDescription className="text-slate-600">
+                      Your progress across learning modules
+                    </CardDescription>
+                  </>
+                )}
+              </div>
+
+              {isLoading ? (
+                <Skeleton className="h-8 w-24 rounded-full" />
+              ) : (
+                <Badge className="bg-blue-500 hover:bg-blue-600 px-2 py-2 md:px-4 md:py-3">
+                  {data?.completedTopics
+                    ? Object.keys(data.completedTopics).length
+                    : 0}{" "}
+                  Modes
+                </Badge>
+              )}
+            </div>
+          </CardHeader>
+
+          <CardContent className="pt-6">
+            {isLoading ? (
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-4 bg-white rounded-lg border border-slate-300 shadow-sm"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="w-10 h-10 rounded-full" />
+                      <div>
+                        <Skeleton className="h-4 w-40 mb-2" />
+                        <Skeleton className="h-3 w-24" />
+                      </div>
+                    </div>
+                    <Skeleton className="h-8 w-8 rounded-full" />
+                  </div>
+                ))}
+              </div>
+            ) : data?.completedTopics &&
+              Object.keys(data.completedTopics).length > 0 ? (
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {Object.entries(data.completedTopics).map(([topic, count]) => (
+                  <div
+                    key={topic}
+                    className="flex flex-wrap items-center justify-between p-4 bg-white rounded-lg border border-slate-300 shadow-sm"
+                  >
+                    <div className="flex items-center">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-green-50 text-green-600 mr-3">
+                        <CheckSquare size={20} />
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-slate-800">
+                          {topic
+                            .split("-")
+                            .map(
+                              (word) =>
+                                word.charAt(0).toUpperCase() + word.slice(1)
+                            )
+                            .join(" ")}
+                        </h3>
+                        <p className="text-sm text-slate-500">
+                          {count} completed {count === 1 ? "item" : "items"}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border border-green-200">
+                      {count}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center text-slate-500 text-sm py-8">
+                No completed topics yet. Keep learning and your progress will
+                show up here!
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
 }
