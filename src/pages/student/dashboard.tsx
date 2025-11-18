@@ -6,8 +6,23 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { CheckSquare, ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, ChevronRight } from "lucide-react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+} from "recharts";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { Calendar } from "@/components/ui/calendar";
 import DashboardBadge from "@/assets/svgs/dashboard_badge.svg";
@@ -82,20 +97,44 @@ export default function LanguageLearningDashboard() {
     <div className="flex flex-col border border-[var(--border-light)] rounded-3xl p-4">
       <div className="grid grid-cols-1 md:grid-cols-3 md:gap-6 mb-6 w-full mx-auto items-start">
         {isLoading ? (
-          // Profile Skeleton
-          <div className="col-span-1 border rounded-lg shadow p-4">
-            <div className="flex items-center space-x-4">
-              <Skeleton className="h-16 w-16 rounded-full" />
-              <div className="space-y-2">
-                <Skeleton className="h-5 w-36" />
-                <Skeleton className="h-4 w-24" />
+          // Profile Skeleton aligned with DashboardProfile layout
+          <Card className="col-span-1 w-full my-10 md:my-0 bg-slate-50 pt-[7px] pb-[7px] shadow-sm border-none">
+            <CardContent className="p-4">
+              <div className="flex justify-center mb-4">
+                <div className="relative">
+                  <div
+                    className="w-32 h-32 rounded-full p-1"
+                    style={{
+                      background:
+                        "linear-gradient(to bottom, #5DA0FE8C, #00FFF230)",
+                    }}
+                  >
+                    <div className="w-full h-full rounded-full overflow-hidden bg-white flex items-center justify-center">
+                      <Skeleton className="w-full h-full rounded-full" />
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="mt-4 space-y-3">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-3/4" />
-            </div>
-          </div>
+
+              <div className="text-center mb-4">
+                <Skeleton className="h-6 w-40 mx-auto" />
+              </div>
+
+              <div className="mb-3">
+                <div className="bg-gray-200 rounded-lg px-4 py-2.5 flex items-center justify-between">
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-10" />
+                </div>
+              </div>
+
+              <div>
+                <div className="bg-gray-200 rounded-lg px-4 py-2.5 flex items-center justify-between">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-28" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         ) : (
           <DashboardProfile user={user} />
         )}
@@ -103,26 +142,59 @@ export default function LanguageLearningDashboard() {
         {/* Three Cards: Streak, Daily Usage, and Longest Streak */}
         {isLoading ? (
           // Cards Skeleton
-          <div className="col-span-1 flex flex-row gap-4">
-            <Card className="flex-1 shadow-sm">
-              <CardContent className="p-4">
-                <Skeleton className="h-12 w-12 mb-2" />
-                <Skeleton className="h-4 w-16 mb-2" />
-                <Skeleton className="h-10 w-24" />
+          <div
+            className="col-span-1 grid grid-cols-2 grid-rows-2 gap-5"
+            style={{ gridTemplateRows: "auto auto" }}
+          >
+            <Card
+              className="text-white shadow-sm rounded-2xl overflow-hidden border-0 self-start"
+              style={{
+                background: "linear-gradient(to bottom, #6EBDFB, #5C9DFF)",
+              }}
+            >
+              <CardContent className="p-4 flex flex-col">
+                <div className="flex items-start justify-between mb-auto">
+                  <Skeleton className="h-4 w-16 bg-white/20" />
+                  <Skeleton className="h-7 w-7 rounded-full bg-white/20" />
+                </div>
+                <div className="flex items-end justify-between mt-[1rem]">
+                  <Skeleton className="h-10 w-20 bg-white/20" />
+                  <Skeleton className="h-12 w-12 rounded-xl bg-white/20" />
+                </div>
               </CardContent>
             </Card>
-            <Card className="flex-1 shadow-sm">
-              <CardContent className="p-4">
-                <Skeleton className="h-12 w-12 mb-2" />
-                <Skeleton className="h-4 w-16 mb-2" />
-                <Skeleton className="h-10 w-24" />
+            <Card
+              className="text-white shadow-sm rounded-2xl overflow-hidden border-0 self-start"
+              style={{
+                background: "linear-gradient(to bottom, #6EBDFB, #5C9DFF)",
+              }}
+            >
+              <CardContent className="p-4 flex flex-col">
+                <div className="flex items-start justify-between mb-auto">
+                  <Skeleton className="h-4 w-20 bg-white/20" />
+                  <Skeleton className="h-7 w-7 rounded-full bg-white/20" />
+                </div>
+                <div className="flex items-end justify-between mt-[1rem]">
+                  <Skeleton className="h-10 w-20 bg-white/20" />
+                  <Skeleton className="h-12 w-12 rounded-xl bg-white/20" />
+                </div>
               </CardContent>
             </Card>
-            <Card className="flex-1 shadow-sm">
-              <CardContent className="p-4">
-                <Skeleton className="h-12 w-12 mb-2" />
-                <Skeleton className="h-4 w-16 mb-2" />
-                <Skeleton className="h-10 w-24" />
+            <Card className="shadow-sm col-span-2 rounded-2xl overflow-hidden border-0 relative bg-[#89CBFC2B]">
+              <CardContent className="p-4 flex flex-row items-center gap-4 relative">
+                <div className="flex flex-col items-start gap-2 flex-shrink-0">
+                  <Skeleton className="w-20 h-20 rounded-lg" />
+                  <div className="flex flex-col gap-0.5">
+                    <Skeleton className="h-5 w-32" />
+                    <Skeleton className="h-3 w-48" />
+                  </div>
+                </div>
+                <div className="flex-1 flex items-center justify-center relative mt-20 ms-4">
+                  <Skeleton className="h-8 w-16" />
+                </div>
+                <div className="flex-shrink-0 flex items-end justify-end -mr-14">
+                  <Skeleton className="h-[9.5rem] w-32" />
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -305,9 +377,10 @@ export default function LanguageLearningDashboard() {
         )}
       </div>
 
-      <div className="w-full">
+      <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Completed Topics Section */}
         <Card className="shadow-md border-slate-200">
-          <CardHeader className="bg-gradient-to-r gradientBg pb-4 border-b border-slate-100">
+          <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <div>
                 {isLoading ? (
@@ -330,46 +403,74 @@ export default function LanguageLearningDashboard() {
               {isLoading ? (
                 <Skeleton className="h-8 w-24 rounded-full" />
               ) : (
-                <Badge className="bg-blue-500 hover:bg-blue-600 px-2 py-2 md:px-4 md:py-3">
+                <button className="flex items-center gap-1 px-4 py-2 rounded-full bg-[#F8F8F8] text-blue-600 hover:text-blue-700 font-medium text-sm">
                   {data?.completedTopics
                     ? Object.keys(data.completedTopics).length
                     : 0}{" "}
-                  Modes
-                </Badge>
+                  modes <ChevronRight className="w-4 h-4" />
+                </button>
               )}
             </div>
           </CardHeader>
 
           <CardContent className="pt-6">
             {isLoading ? (
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                {Array.from({ length: 4 }).map((_, index) => (
+              <div className="space-y-4">
+                {Array.from({ length: 3 }).map((_, index) => (
                   <div
                     key={index}
                     className="flex items-center justify-between p-4 bg-white rounded-lg border border-slate-300 shadow-sm"
                   >
                     <div className="flex items-center gap-3">
-                      <Skeleton className="w-10 h-10 rounded-full" />
+                      <Skeleton className="w-12 h-12 rounded-full" />
                       <div>
-                        <Skeleton className="h-4 w-40 mb-2" />
-                        <Skeleton className="h-3 w-24" />
+                        <Skeleton className="h-4 w-32 mb-2" />
+                        <Skeleton className="h-3 w-40" />
                       </div>
                     </div>
-                    <Skeleton className="h-8 w-8 rounded-full" />
+                    <Skeleton className="h-8 w-12" />
                   </div>
                 ))}
               </div>
             ) : data?.completedTopics &&
               Object.keys(data.completedTopics).length > 0 ? (
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="space-y-4">
                 {Object.entries(data.completedTopics).map(([topic, count]) => (
                   <div
                     key={topic}
-                    className="flex flex-wrap items-center justify-between p-4 bg-white rounded-lg border border-slate-300 shadow-sm"
+                    className="flex items-center justify-between p-4 rounded-lg border border-[#F4F4F4] bg-gradient-to-r from-[#89cafc27] to-[#FFFFFF]"
                   >
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-green-50 text-green-600 mr-3">
-                        <CheckSquare size={20} />
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full flex items-center justify-center bg-blue-100 relative">
+                        <svg
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M10 9L7 12L10 15"
+                            stroke="#065FF0"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                          <path
+                            d="M14 15L17 12L14 9"
+                            stroke="#065FF0"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                          <path
+                            d="M2.99218 16.3419C3.13922 16.7129 3.17195 17.1193 3.08618 17.5089L2.02118 20.7989C1.98686 20.9658 1.99574 21.1386 2.04696 21.3011C2.09817 21.4635 2.19004 21.6102 2.31385 21.7272C2.43765 21.8442 2.58929 21.9276 2.75438 21.9696C2.91947 22.0115 3.09254 22.0106 3.25718 21.9669L6.67018 20.9689C7.0379 20.896 7.41871 20.9279 7.76918 21.0609C9.90457 22.0582 12.3235 22.2691 14.5993 21.6567C16.8751 21.0442 18.8614 19.6476 20.2079 17.7133C21.5543 15.779 22.1743 13.4313 21.9585 11.0845C21.7427 8.73763 20.7049 6.54241 19.0282 4.88613C17.3516 3.22986 15.1439 2.21898 12.7946 2.03183C10.4452 1.84469 8.10531 2.49332 6.18762 3.86328C4.26993 5.23323 2.89771 7.23648 2.31307 9.51958C1.72843 11.8027 1.96895 14.2189 2.99218 16.3419Z"
+                            stroke="#065FF0"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                        </svg>
                       </div>
                       <div>
                         <h3 className="font-medium text-slate-800">
@@ -386,9 +487,9 @@ export default function LanguageLearningDashboard() {
                         </p>
                       </div>
                     </div>
-                    <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border border-green-200">
+                    <div className="text-blue-600 font-bold text-lg">
                       {count}
-                    </Badge>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -397,6 +498,167 @@ export default function LanguageLearningDashboard() {
                 No completed topics yet. Keep learning and your progress will
                 show up here!
               </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* My Performance Section */}
+        <Card className="shadow-md border-slate-200">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <div>
+                {isLoading ? (
+                  <Skeleton className="h-6 w-40" />
+                ) : (
+                  <CardTitle className="text-xl md:text-2xl font-bold text-slate-800">
+                    My Performance
+                  </CardTitle>
+                )}
+              </div>
+
+              {isLoading ? (
+                <Skeleton className="h-9 w-24" />
+              ) : (
+                <Select defaultValue="weekly">
+                  <SelectTrigger className="w-24">
+                    <SelectValue placeholder="Weekly" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="weekly">Weekly</SelectItem>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+          </CardHeader>
+
+          <CardContent className="pt-6">
+            {isLoading ? (
+              <div className="space-y-4">
+                <div className="flex gap-4">
+                  <Skeleton className="h-8 w-20" />
+                  <Skeleton className="h-8 w-24" />
+                  <Skeleton className="h-8 w-20" />
+                </div>
+                <Skeleton className="h-64 w-full" />
+              </div>
+            ) : (
+              <>
+                {/* Performance Labels */}
+                <div className="grid grid-cols-3 gap-2 md:gap-4 mb-4 md:mb-6">
+                  <button className="px-2 md:px-4 py-2 bg-blue-100 text-blue-700 rounded-lg font-medium text-xs md:text-sm hover:bg-blue-200 transition-colors w-full">
+                    Accuracy
+                  </button>
+                  <button className="px-2 md:px-4 py-2 text-green-600 rounded-lg font-medium text-xs md:text-sm hover:bg-green-50 transition-colors w-full">
+                    Pronunciation
+                  </button>
+                  <button className="px-2 md:px-4 py-2 text-orange-600 rounded-lg font-medium text-xs md:text-sm hover:bg-orange-50 transition-colors w-full">
+                    Fluency
+                  </button>
+                </div>
+
+                {/* Performance Graph */}
+                <div className="h-48 md:h-64 w-full overflow-x-auto">
+                  <ResponsiveContainer
+                    width="100%"
+                    height="100%"
+                    minHeight={192}
+                  >
+                    <LineChart
+                      data={[
+                        {
+                          week: "WEEK 1",
+                          accuracy: 75,
+                          pronunciation: 60,
+                          fluency: 25,
+                        },
+                        {
+                          week: "WEEK 2",
+                          accuracy: 80,
+                          pronunciation: 55,
+                          fluency: 30,
+                        },
+                        {
+                          week: "WEEK 3",
+                          accuracy: 70,
+                          pronunciation: 70,
+                          fluency: 20,
+                        },
+                        {
+                          week: "WEEK 4",
+                          accuracy: 85,
+                          pronunciation: 65,
+                          fluency: 35,
+                        },
+                        {
+                          week: "WEEK 5",
+                          accuracy: 82,
+                          pronunciation: 75,
+                          fluency: 28,
+                        },
+                      ]}
+                      margin={{
+                        top: 5,
+                        right: 10,
+                        left: -10,
+                        bottom: 5,
+                      }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                      <XAxis
+                        dataKey="week"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 10, fill: "#666" }}
+                        tickMargin={15}
+                        padding={{ left: 20, right: 20 }}
+                      />
+                      <YAxis
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 10, fill: "#666" }}
+                        domain={[0, 100]}
+                        tickFormatter={(value) => `${value}%`}
+                        width={35}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "#fff",
+                          border: "1px solid #e5e7eb",
+                          borderRadius: "8px",
+                        }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="accuracy"
+                        stroke="#3B82F6"
+                        strokeWidth={2}
+                        dot={{ r: 4 }}
+                        activeDot={{ r: 6 }}
+                        name="Accuracy"
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="pronunciation"
+                        stroke="#10B981"
+                        strokeWidth={2}
+                        dot={{ r: 4 }}
+                        activeDot={{ r: 6 }}
+                        name="Pronunciation"
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="fluency"
+                        stroke="#F97316"
+                        strokeWidth={2}
+                        dot={{ r: 4 }}
+                        activeDot={{ r: 6 }}
+                        name="Fluency"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
