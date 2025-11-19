@@ -30,10 +30,10 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="bg-[#0A0A0E] text-white py-14">
-      <div className="container mx-auto px-6 max-w-6xl">
+    <footer className="bg-[#0A0A0E] text-white py-14 overflow-hidden">
+      <div className="container mx-auto px-6 max-w-6xl overflow-hidden">
         <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-24 gap-8 lg:gap-0">
-          <div>
+          <div className="min-w-0 flex-1">
             <div className="flex flex-col lg:flex-row lg:justify-start lg:items-center gap-2 lg:gap-4 mb-4">
               <div className="bg-[#2a2a2a] px-4 py-2 rounded-full inline-block w-fit">
                 <span className="text-white text-xs font-medium tracking-wide">
@@ -48,7 +48,7 @@ export default function Footer() {
             </div>
 
             <div className="mb-8">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-semibold leading-tight mb-6 relative">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-semibold leading-tight mb-6 relative break-words">
                 {language === "ar" ? (
                   <span className="relative inline-block">
                     صُمم من أجل الطلاب... وبدعم من خبراء التعليم
@@ -161,10 +161,10 @@ export default function Footer() {
             </Link>
           </div>
 
-          <div className="relative flex items-center justify-center order-first lg:order-last">
+          <div className="relative flex items-center justify-center order-first lg:order-last overflow-visible">
             {/* Softer/lighter background green circle shade at the top right */}
             <span
-              className="lg:flex hidden pointer-events-none absolute -top-8 -right-20"
+              className="lg:flex hidden pointer-events-none absolute -top-8 -right-8 lg:-right-12"
               aria-hidden="true"
               style={{
                 width: 180,

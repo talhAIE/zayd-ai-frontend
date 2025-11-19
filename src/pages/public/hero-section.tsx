@@ -187,7 +187,7 @@ export default function HeroSection() {
         </div>
 
         <motion.div
-          className="absolute top-[2.5rem] right-[-13rem] lg:flex hidden z-10"
+          className="absolute top-[2.5rem] right-[-13rem] xl:flex hidden z-10"
           initial={{ x: 100, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{

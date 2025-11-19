@@ -154,14 +154,15 @@ export default function FAQSection() {
             >
               <motion.button
                 onClick={() => toggleFAQ(index)}
-                className="w-full flex justify-between items-center text-left focus:outline-none group"
+                className={`w-full flex justify-between items-center focus:outline-none group ${
+                  language === "ar" ? "text-right" : "text-left"
+                }`}
                 style={{
                   fontFamily: "Source Serif 4, serif",
                   fontWeight: 500,
                   fontSize: "17px",
                   lineHeight: "24px",
                   color: "#000000",
-                  maxWidth: "644px",
                 }}
                 whileHover={{
                   scale: 1.02,
@@ -174,6 +175,10 @@ export default function FAQSection() {
                     color: openIndex === index ? "#058BF4" : "#000000",
                   }}
                   transition={{ duration: 0.3 }}
+                  className="flex-1"
+                  style={{
+                    textAlign: language === "ar" ? "right" : "left",
+                  }}
                 >
                   {faq.question[language]}
                 </motion.span>
@@ -213,6 +218,7 @@ export default function FAQSection() {
                     lineHeight: "24px",
                     color: "#555555",
                     maxWidth: "644px",
+                    textAlign: language === "ar" ? "right" : "left",
                   }}
                   initial={{ y: -10, opacity: 0 }}
                   animate={{

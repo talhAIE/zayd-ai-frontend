@@ -416,7 +416,7 @@ export default function FeatureSection() {
 
         {/* Feature Icons Row */}
         <motion.div
-          className="border border-[#E5E7EB] bg-transparent rounded-2xl p-2 mb-16"
+          className="border border-[#E5E7EB] bg-transparent rounded-2xl pt-5 pb-4 mb-16"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.3 }}

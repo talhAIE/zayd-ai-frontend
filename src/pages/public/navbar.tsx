@@ -61,10 +61,11 @@ export default function Navbar() {
   }, []);
 
   return (
-    <nav className="w-full py-4 shadow-sm sticky top-0 bg-white z-[9999]">
-      <div className="flex items-center w-full px-4">
+    <nav className="w-full sm:py-4 py-8 shadow-sm sticky top-0 bg-white z-[9999]">
+      <div className="flex items-center w-full px-4 relative">
         <div
-          className="relative w-20 h-8 md:w-28 md:h-12 flex items-center cursor-pointer"
+          className="absolute left-4 md:relative md:left-auto w-20 h-8 md:w-28 md:h-12 flex items-center cursor-pointer z-10"
+          dir="ltr"
           onClick={() => scrollToSection("#home")}
         >
           <img
@@ -150,9 +151,10 @@ export default function Navbar() {
           }`}
         >
           {/* Mobile header with logo and close button */}
-          <div className="flex justify-between items-center p-4 border-b">
+          <div className="flex justify-between items-center p-4 border-b relative">
             <div
-              className="relative w-20 h-8 md:w-28 md:h-12 flex items-center cursor-pointer"
+              className="absolute left-4 w-20 h-8 md:w-28 md:h-12 flex items-center cursor-pointer z-10"
+              dir="ltr"
               onClick={() => scrollToSection("#home")}
             >
               <img
