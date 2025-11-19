@@ -47,13 +47,27 @@ export default function PerformanceGraph({
       return new Date(a.date).getTime() - new Date(b.date).getTime();
     });
 
-    return sortedData.map((item, index) => {
+    // Create placeholder data point at 0% for all metrics
+    const placeholderPoint = {
+      label: "", // Invisible label for Day 0/Week 0
+      date: "",
+      accuracy: 0,
+      pronunciation: 0,
+      fluency: 0,
+    };
+
+    // Map actual data points
+    const dataPoints = sortedData.map((item, index) => {
       let label = "";
 
       switch (timeFilter) {
         case "weekly":
-          // Weekly filter: Show days (Day 1, Day 2, etc.)
-          label = `Day ${index + 1}`;
+          // Weekly filter: Show actual dates (e.g., "19 Nov")
+          const date = new Date(item.date);
+          label = date.toLocaleDateString("en-US", {
+            day: "numeric",
+            month: "short",
+          });
           break;
         case "monthly":
           // Monthly filter: Show weeks (Week 1, Week 2, etc.)
@@ -62,7 +76,11 @@ export default function PerformanceGraph({
           label = `Week ${weekNumber}`;
           break;
         default:
-          label = `Day ${index + 1}`;
+          const defaultDate = new Date(item.date);
+          label = defaultDate.toLocaleDateString("en-US", {
+            day: "numeric",
+            month: "short",
+          });
       }
 
       return {
@@ -73,6 +91,9 @@ export default function PerformanceGraph({
         fluency: Math.round(item.averageFluency * 10) / 10,
       };
     });
+
+    // Return placeholder point followed by actual data points
+    return [placeholderPoint, ...dataPoints];
   };
 
   const graphData = formatGraphData();
@@ -182,6 +203,7 @@ export default function PerformanceGraph({
                       tick={{ fontSize: 10, fill: "#666" }}
                       tickMargin={15}
                       padding={{ left: 20, right: 20 }}
+                      tickFormatter={(value) => (value === "" ? "" : value)}
                     />
                     <YAxis
                       axisLine={false}
@@ -212,7 +234,20 @@ export default function PerformanceGraph({
                           ? 1
                           : 0.3
                       }
-                      dot={{ r: 4 }}
+                      dot={(props: any) => {
+                        // Hide dot for placeholder point (empty label)
+                        if (props.payload?.label === "") {
+                          return <g />;
+                        }
+                        return (
+                          <circle
+                            cx={props.cx}
+                            cy={props.cy}
+                            r={4}
+                            fill="#3B82F6"
+                          />
+                        );
+                      }}
                       activeDot={{ r: 6 }}
                       name="Accuracy"
                     />
@@ -232,7 +267,20 @@ export default function PerformanceGraph({
                           ? 1
                           : 0.3
                       }
-                      dot={{ r: 4 }}
+                      dot={(props: any) => {
+                        // Hide dot for placeholder point (empty label)
+                        if (props.payload?.label === "") {
+                          return <g />;
+                        }
+                        return (
+                          <circle
+                            cx={props.cx}
+                            cy={props.cy}
+                            r={4}
+                            fill="#10B981"
+                          />
+                        );
+                      }}
                       activeDot={{ r: 6 }}
                       name="Pronunciation"
                     />
@@ -250,7 +298,20 @@ export default function PerformanceGraph({
                           ? 1
                           : 0.3
                       }
-                      dot={{ r: 4 }}
+                      dot={(props: any) => {
+                        // Hide dot for placeholder point (empty label)
+                        if (props.payload?.label === "") {
+                          return <g />;
+                        }
+                        return (
+                          <circle
+                            cx={props.cx}
+                            cy={props.cy}
+                            r={4}
+                            fill="#F97316"
+                          />
+                        );
+                      }}
                       activeDot={{ r: 6 }}
                       name="Fluency"
                     />
