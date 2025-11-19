@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -7,27 +7,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ArrowUpRight, ChevronRight } from "lucide-react";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-} from "recharts";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
 import { Calendar } from "@/components/ui/calendar";
 import DashboardBadge from "@/assets/svgs/dashboard_badge.svg";
 import TeachBird from "@/assets/svgs/dashboardTeach.svg";
 import DashboardProfile from "@/components/ui/DashboardProfile";
+import PerformanceGraph from "@/components/ui/PerformanceGraph";
 // import { BarChartComponent } from '@/components/ui/barChartComponent';
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { fetchDashboardData } from "@/redux/slices/dashboardSlice";
@@ -40,16 +24,18 @@ export default function LanguageLearningDashboard() {
 
   const dispatch = useAppDispatch();
   const { data, isLoading, error } = useAppSelector((state) => state.dashboard);
+  const [timeFilter, setTimeFilter] = useState<"weekly" | "monthly">("weekly");
 
   useEffect(() => {
     // Only fetch if we have a valid user ID
     if (currentUserId) {
-      dispatch(fetchDashboardData(currentUserId));
+      dispatch(fetchDashboardData({ userId: currentUserId, timeFilter }));
     }
-  }, [currentUserId, dispatch]);
+  }, [currentUserId, timeFilter, dispatch]);
 
   const user = data?.userInfo;
   const usageRecords = data?.usageRecords;
+  const assessmentGraphData = data?.assessmentGraphData || [];
 
   // Show error state if there's an error
   if (error) {
@@ -63,7 +49,10 @@ export default function LanguageLearningDashboard() {
             <p className="text-sm text-gray-500">{error}</p>
             <button
               onClick={() =>
-                currentUserId && dispatch(fetchDashboardData(currentUserId))
+                currentUserId &&
+                dispatch(
+                  fetchDashboardData({ userId: currentUserId, timeFilter })
+                )
               }
               className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
             >
@@ -503,165 +492,12 @@ export default function LanguageLearningDashboard() {
         </Card>
 
         {/* My Performance Section */}
-        <Card className="shadow-md border-slate-200">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <div>
-                {isLoading ? (
-                  <Skeleton className="h-6 w-40" />
-                ) : (
-                  <CardTitle className="text-xl md:text-2xl font-bold text-slate-800">
-                    My Performance
-                  </CardTitle>
-                )}
-              </div>
-
-              {isLoading ? (
-                <Skeleton className="h-9 w-24" />
-              ) : (
-                <Select defaultValue="weekly">
-                  <SelectTrigger className="w-24">
-                    <SelectValue placeholder="Weekly" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="weekly">Weekly</SelectItem>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
-          </CardHeader>
-
-          <CardContent className="pt-6">
-            {isLoading ? (
-              <div className="space-y-4">
-                <div className="flex gap-4">
-                  <Skeleton className="h-8 w-20" />
-                  <Skeleton className="h-8 w-24" />
-                  <Skeleton className="h-8 w-20" />
-                </div>
-                <Skeleton className="h-64 w-full" />
-              </div>
-            ) : (
-              <>
-                {/* Performance Labels */}
-                <div className="grid grid-cols-3 gap-2 md:gap-4 mb-4 md:mb-6">
-                  <button className="px-2 md:px-4 py-2 bg-blue-100 text-blue-700 rounded-lg font-medium text-xs md:text-sm hover:bg-blue-200 transition-colors w-full">
-                    Accuracy
-                  </button>
-                  <button className="px-2 md:px-4 py-2 text-green-600 rounded-lg font-medium text-xs md:text-sm hover:bg-green-50 transition-colors w-full">
-                    Pronunciation
-                  </button>
-                  <button className="px-2 md:px-4 py-2 text-orange-600 rounded-lg font-medium text-xs md:text-sm hover:bg-orange-50 transition-colors w-full">
-                    Fluency
-                  </button>
-                </div>
-
-                {/* Performance Graph */}
-                <div className="h-48 md:h-64 w-full overflow-x-auto">
-                  <ResponsiveContainer
-                    width="100%"
-                    height="100%"
-                    minHeight={192}
-                  >
-                    <LineChart
-                      data={[
-                        {
-                          week: "WEEK 1",
-                          accuracy: 75,
-                          pronunciation: 60,
-                          fluency: 25,
-                        },
-                        {
-                          week: "WEEK 2",
-                          accuracy: 80,
-                          pronunciation: 55,
-                          fluency: 30,
-                        },
-                        {
-                          week: "WEEK 3",
-                          accuracy: 70,
-                          pronunciation: 70,
-                          fluency: 20,
-                        },
-                        {
-                          week: "WEEK 4",
-                          accuracy: 85,
-                          pronunciation: 65,
-                          fluency: 35,
-                        },
-                        {
-                          week: "WEEK 5",
-                          accuracy: 82,
-                          pronunciation: 75,
-                          fluency: 28,
-                        },
-                      ]}
-                      margin={{
-                        top: 5,
-                        right: 10,
-                        left: -10,
-                        bottom: 5,
-                      }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                      <XAxis
-                        dataKey="week"
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 10, fill: "#666" }}
-                        tickMargin={15}
-                        padding={{ left: 20, right: 20 }}
-                      />
-                      <YAxis
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 10, fill: "#666" }}
-                        domain={[0, 100]}
-                        tickFormatter={(value) => `${value}%`}
-                        width={35}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "#fff",
-                          border: "1px solid #e5e7eb",
-                          borderRadius: "8px",
-                        }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="accuracy"
-                        stroke="#3B82F6"
-                        strokeWidth={2}
-                        dot={{ r: 4 }}
-                        activeDot={{ r: 6 }}
-                        name="Accuracy"
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="pronunciation"
-                        stroke="#10B981"
-                        strokeWidth={2}
-                        dot={{ r: 4 }}
-                        activeDot={{ r: 6 }}
-                        name="Pronunciation"
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="fluency"
-                        stroke="#F97316"
-                        strokeWidth={2}
-                        dot={{ r: 4 }}
-                        activeDot={{ r: 6 }}
-                        name="Fluency"
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+        <PerformanceGraph
+          assessmentGraphData={assessmentGraphData}
+          timeFilter={timeFilter}
+          onTimeFilterChange={setTimeFilter}
+          isLoading={isLoading}
+        />
       </div>
     </div>
   );

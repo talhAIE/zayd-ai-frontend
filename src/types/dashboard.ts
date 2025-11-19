@@ -16,6 +16,27 @@ export interface CompletedTopics {
   [key: string]: number;
 }
 
+export interface TopicsByMode {
+  completed: number;
+  incomplete: number;
+  total: number;
+}
+
+export interface AssessmentAverages {
+  averageAccuracy: number;
+  averageFluency: number;
+  averagePronunciation: number;
+  totalAssessmentScore: number;
+}
+
+export interface AssessmentGraphData {
+  date: string;
+  averageAccuracy: number;
+  averageFluency: number;
+  averagePronunciation: number;
+  totalAssessmentScore: number;
+}
+
 export interface DashboardData {
   userInfo: UserInfo;
   dailyUsage: number;
@@ -23,6 +44,11 @@ export interface DashboardData {
   streak: number;
   longestStreak: number;
   completedTopics: CompletedTopics;
+  topicsByMode?: {
+    [key: string]: TopicsByMode;
+  };
+  assessmentAverages?: AssessmentAverages;
+  assessmentGraphData?: AssessmentGraphData[];
 }
 
 export interface DashboardState {
