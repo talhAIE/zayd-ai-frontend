@@ -1,4 +1,5 @@
 import apiClient from '@/config/ApiConfig';
+import { AssessmentGraphData } from '@/types/dashboard';
 
 export interface TeacherInfo {
   id: string;
@@ -68,6 +69,7 @@ export interface StudentProfileData {
   longestStreak: number;
   totalLoginDays: number;
   usageGraphData: UsageGraphData[];
+  assessmentGraphData?: AssessmentGraphData[];
   achievements: Achievement[];
   topicsByMode: TopicsCompletedPerMode;
 }

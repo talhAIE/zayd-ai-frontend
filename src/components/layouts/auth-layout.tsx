@@ -28,7 +28,6 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           </div>
         </div>
       </header>
-      
       {/* Main Content */}
       <main className="flex-1">{children}</main>
     </div>

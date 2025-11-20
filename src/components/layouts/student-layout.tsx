@@ -125,17 +125,22 @@ export function StudentLayout({ children }: StudentLayoutProps) {
 
   return (
     <div className="flex min-h-screen bg-background ">
-      <div
-        className={`fixed inset-0 z-50 transform transition-transform duration-300 ease-in-out lg:hidden ${
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        ></div>
+      )}
+
+      {/* Mobile Sidebar */}
+      <nav
+        className={`fixed top-0 left-0 bottom-0 w-72 bg-white z-50 transform transition-transform duration-300 ease-in-out lg:hidden ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div
-          className="fixed inset-0 bg-black/50"
-          onClick={() => setSidebarOpen(false)}
-        ></div>
-        <nav className="fixed top-0 left-0 bottom-0 w-72 p-8 rounded-3xl my-6">
-          <div className="flex items-center justify-between mb-8 text-black">
+        <div className="h-full flex flex-col p-6">
+          <div className="flex items-center justify-between mb-8">
             <Link
               to="/student/dashboard"
               className="flex items-center gap-2 text-2xl font-bold"
@@ -146,39 +151,34 @@ export function StudentLayout({ children }: StudentLayoutProps) {
               variant="ghost"
               size="icon"
               onClick={() => setSidebarOpen(false)}
-              className="text-black hover:bg-blue-600"
+              className="text-black hover:bg-gray-100 rounded-full"
             >
               <X className="h-5 w-5" />
             </Button>
           </div>
-          <ScrollArea className="h-[calc(100vh-8rem)] mt-16">
-            <div className="space-y-8">
+          <ScrollArea className="flex-1">
+            <div className="space-y-2 pr-4">
               {sidebarItems.map((item) => (
-                <div key={item.path} className="flex items-center">
-                  <Link
-                    to={item.path}
-                    className={`flex items-center gap-3 rounded-md font-bold transition-colors flex-1 ${
-                      isActive(item.path)
-                        ? "bg-[#CCEAFF] text-black"
-                        : "text-black hover:bg-white/10 hover:text-black"
-                    }`}
-                    onClick={() => setSidebarOpen(false)}
-                  >
-                    <div className="w-6 h-5 flex-shrink-0">
-                      <img
-                        src={item.icon}
-                        alt={item.label}
-                        className="h-5 w-5"
-                      />
-                    </div>
-                    <span className="text-xl">{item.label}</span>
-                  </Link>
-                </div>
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`flex items-center gap-3 py-3 px-4 rounded-lg font-medium transition-colors ${
+                    isActive(item.path)
+                      ? "bg-[#CCEAFF] text-black font-bold"
+                      : "text-black hover:bg-gray-50"
+                  }`}
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  <div className="w-6 h-5 flex-shrink-0">
+                    <img src={item.icon} alt={item.label} className="h-5 w-5" />
+                  </div>
+                  <span className="text-lg">{item.label}</span>
+                </Link>
               ))}
             </div>
           </ScrollArea>
-        </nav>
-      </div>
+        </div>
+      </nav>
       {/* )} */}
 
       {/* Sidebar for desktop */}

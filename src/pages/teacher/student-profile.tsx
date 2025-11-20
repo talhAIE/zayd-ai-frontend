@@ -1,7 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import TeacherDashboardProfile from "@/components/ui/TeacherDashboardProfile";
 import { RevenueGraph } from "@/components/ui/UsageGraph";
+import PerformanceGraph from "@/components/ui/PerformanceGraph";
 import { RoleplayModeCards } from "@/components/ui/RoleplayModeCards";
 import { CertificationsSection } from "@/components/ui/CertificationsSection";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,6 +19,8 @@ export default function StudentProfile() {
   const { data, isLoading, error } = useAppSelector(
     (state) => state.studentProfile
   );
+
+  const [timeFilter, setTimeFilter] = useState<"weekly" | "monthly">("weekly");
 
   useEffect(() => {
     if (teacherId && studentId) {
@@ -134,7 +137,20 @@ export default function StudentProfile() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
                   <div className="lg:col-span-2">
-                    <RevenueGraph usageData={data?.usageGraphData} />
+                    <div className="max-h-[430px] overflow-y-auto space-y-4 pr-2 snap-y snap-mandatory">
+                      <div className="snap-start min-h-[400px]">
+                        <RevenueGraph usageData={data?.usageGraphData} />
+                      </div>
+                      <div className="snap-start min-h-[400px]">
+                        <PerformanceGraph
+                          assessmentGraphData={data?.assessmentGraphData}
+                          timeFilter={timeFilter}
+                          onTimeFilterChange={setTimeFilter}
+                          isLoading={isLoading}
+                          title="Performance"
+                        />
+                      </div>
+                    </div>
                   </div>
                   <div className="lg:col-span-1">
                     <CertificationsSection achievements={data?.achievements} />
