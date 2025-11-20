@@ -13,7 +13,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader2, Eye, X, Download } from "lucide-react";
+import {
+  Loader2,
+  Eye,
+  X,
+  Download,
+  Users,
+  Clock,
+  UserCheck,
+  UserX,
+} from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -59,6 +68,7 @@ export default function TeacherDashboard() {
     filterValuesError,
     pagination,
     totalStudents,
+    summary,
   } = useAppSelector((state) => state.teacher);
 
   // Local state for form inputs
@@ -183,7 +193,6 @@ export default function TeacherDashboard() {
       } else {
         toast.success(successMessage);
       }
-      
     } catch (error: any) {
       console.error("Bulk download error:", error);
       toast.error(error.message || "Failed to download reports");
@@ -404,8 +413,97 @@ export default function TeacherDashboard() {
     );
   }
 
+  const formatUsageHours = (totalMinutes: number): string => {
+    // Convert total minutes to hours
+    const totalHours = totalMinutes / 60;
+
+    // Format: show as whole number if it's exactly a whole number, otherwise show one decimal
+    if (totalHours % 1 === 0) {
+      return `${Math.round(totalHours)} Hrs`;
+    }
+    // Round to one decimal place for display
+    return `${Math.round(totalHours * 10) / 10} Hrs`;
+  };
+
   return (
     <div>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-1">
+                  Total Users
+                </p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {summary?.totalStudentCount ?? 0}
+                </p>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
+                <Users className="h-6 w-6 text-blue-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-1">
+                  Total Usage
+                </p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {summary?.averageStudentUsageMinutes !== undefined
+                    ? formatUsageHours(summary.averageStudentUsageMinutes)
+                    : "0 Hrs"}
+                </p>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
+                <Clock className="h-6 w-6 text-green-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-1">
+                  Logged in
+                </p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {summary?.activeStudentsCount ?? 0}
+                </p>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-purple-100 flex items-center justify-center">
+                <UserCheck className="h-6 w-6 text-purple-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-1">
+                  Yet to Log-in
+                </p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {summary?.inactiveStudentsCount ?? 0}
+                </p>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-orange-100 flex items-center justify-center">
+                <UserX className="h-6 w-6 text-orange-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <div className="flex flex-wrap items-center gap-4 mb-6">
         <div className="flex justify-between items-center w-full flex-wrap gap-4">
           {/* Filter Values Error */}

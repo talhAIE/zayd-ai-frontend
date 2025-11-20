@@ -27,11 +27,19 @@ export interface PaginationInfo {
   hasPrevious: boolean;
 }
 
+export interface TeacherDashboardSummary {
+  totalStudentCount: number;
+  averageStudentUsageMinutes: number;
+  activeStudentsCount: number;
+  inactiveStudentsCount: number;
+}
+
 export interface TeacherDashboardData {
   teacherInfo: TeacherInfo;
   students: TeacherStudent[];
   totalStudents: number;
   pagination: PaginationInfo;
+  summary?: TeacherDashboardSummary;
 }
 
 export interface UsageGraphData {
