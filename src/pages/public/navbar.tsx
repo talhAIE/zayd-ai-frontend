@@ -2,10 +2,12 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import navLogoPng from "@/assets/images/landingpage/nav-logo.png";
+import { useLanguage } from "@/components/language-provider";
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
+  const { language, setLanguage } = useLanguage();
 
   const menuItems = [
     { name: "Home", href: "#home" },
@@ -59,10 +61,11 @@ export default function Navbar() {
   }, []);
 
   return (
-    <nav className="w-full py-4 shadow-sm sticky top-0 bg-white z-[9999]">
-      <div className="flex items-center w-full px-4">
+    <nav className="w-full sm:py-4 py-8 shadow-sm sticky top-0 bg-white z-[9999]">
+      <div className="flex items-center w-full px-4 relative">
         <div
-          className="relative w-20 h-8 md:w-28 md:h-12 flex items-center cursor-pointer"
+          className="absolute left-4 md:relative md:left-auto w-20 h-8 md:w-28 md:h-12 flex items-center cursor-pointer z-10"
+          dir="ltr"
           onClick={() => scrollToSection("#home")}
         >
           <img
@@ -94,7 +97,13 @@ export default function Navbar() {
         </ul>
 
         {/* Desktop buttons - far right */}
-        <div className="hidden md:flex gap-2">
+        <div className="hidden md:flex gap-2 items-center">
+          <button
+            onClick={() => setLanguage(language === "ar" ? "en" : "ar")}
+            className="text-sm text-gray-700 hover:text-[#058BF4] transition-colors px-2 py-1"
+          >
+            العربية | English
+          </button>
           <Link to="/login">
             <Button
               variant="outline"
@@ -142,9 +151,10 @@ export default function Navbar() {
           }`}
         >
           {/* Mobile header with logo and close button */}
-          <div className="flex justify-between items-center p-4 border-b">
+          <div className="flex justify-between items-center p-4 border-b relative">
             <div
-              className="relative w-20 h-8 md:w-28 md:h-12 flex items-center cursor-pointer"
+              className="absolute left-4 w-20 h-8 md:w-28 md:h-12 flex items-center cursor-pointer z-10"
+              dir="ltr"
               onClick={() => scrollToSection("#home")}
             >
               <img
@@ -205,6 +215,15 @@ export default function Navbar() {
               transitionDelay: isMobileMenuOpen ? "400ms" : "0ms",
             }}
           >
+            <button
+              onClick={() => {
+                setLanguage(language === "ar" ? "en" : "ar");
+                setIsMobileMenuOpen(false);
+              }}
+              className="text-sm text-gray-700 hover:text-[#058BF4] transition-colors px-4 py-2 text-center"
+            >
+              العربية | English
+            </button>
             <Link to="/login">
               <Button
                 variant="outline"

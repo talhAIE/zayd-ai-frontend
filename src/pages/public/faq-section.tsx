@@ -2,24 +2,42 @@ import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { motion } from "framer-motion";
 import Female from "@/assets/images/landingpage/femalethinking.png";
+import { useLanguage } from "@/components/language-provider";
 
 export default function FAQSection() {
+  const { language } = useLanguage();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   const faqs = [
     {
-      question: "Is Zayd suitable for beginners?",
-      answer: "Yes, from A1 to C1 levels.",
+      question: {
+        en: "Is Zayd suitable for beginners?",
+        ar: "هل زيد مناسب للمبتدئين؟",
+      },
+      answer: {
+        en: "Yes, from A1 to C1 levels.",
+        ar: "نعم، المنصة تغطي جميع المستويات من المبتدئ إلى المتقدم.",
+      },
     },
     {
-      question: "Do teachers or students need training?",
-      answer:
-        "No formal training is required — Zayd AI is designed to be intuitive and teacher-friendly.",
+      question: {
+        en: "Do teachers or students need training?",
+        ar: "هل يحتاج المعلمون أو الطلاب إلى تدريب خاص؟",
+      },
+      answer: {
+        en: "No formal training is required — Zayd AI is designed to be intuitive and teacher-friendly.",
+        ar: "لا، فواجهة المنصة سهلة الاستخدام وصُممت لتكون مريحة ومناسبة للمعلمين والطلاب.",
+      },
     },
     {
-      question: "Is Zayd safe for children?",
-      answer:
-        "Absolutely. Zayd complies with strict data safety and privacy standards.",
+      question: {
+        en: "Is Zayd safe for children?",
+        ar: "هل زيد آمن للأطفال؟",
+      },
+      answer: {
+        en: "Absolutely. Zayd complies with strict data safety and privacy standards.",
+        ar: "بالتأكيد. زيد يلتزم بمعايير صارمة لحماية البيانات والخصوصية.",
+      },
     },
   ];
 
@@ -31,11 +49,14 @@ export default function FAQSection() {
       id="faq"
       className="relative w-full pt-[3%] pb-32 md:pb-40 lg:pb-52 xl:pb-64 flex items-center justify-center overflow-hidden"
     >
-
       {/* === Main FAQ Content === */}
       <div className="relative z-10 max-w-7xl w-full mx-auto flex flex-col md:flex-row md:items-start md:justify-between gap-16 px-6 md:px-20">
         <motion.div
-          className="absolute left-[25rem] top-[3rem] max-[1080px]:left-[22rem] -translate-y-1/2 hidden lg:block"
+          className={`absolute top-[3rem] -translate-y-1/2 hidden lg:block ${
+            language === "ar"
+              ? "right-[25rem] max-[1080px]:right-[22rem]"
+              : "left-[25rem] max-[1080px]:left-[22rem]"
+          }`}
           initial={{ y: 100, opacity: 0 }}
           whileInView={{ y: 0, opacity: 1 }}
           viewport={{ once: true, amount: 0.3 }}
@@ -45,7 +66,13 @@ export default function FAQSection() {
             delay: 0.3,
           }}
         >
-          <img src={Female} alt="Female" width={200} height={200} />
+          <img
+            src={Female}
+            alt="Female"
+            width={200}
+            height={200}
+            className={language === "ar" ? "-scale-x-100" : ""}
+          />
         </motion.div>
 
         {/* Left Side — Title */}
@@ -71,23 +98,36 @@ export default function FAQSection() {
             viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
           >
-            <motion.span
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.3 }}
-              transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
-            >
-              Frequently Asked
-            </motion.span>
-            <br />
-            <motion.span
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.3 }}
-              transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
-            >
-              Questions
-            </motion.span>
+            {language === "ar" ? (
+              <motion.span
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
+              >
+                الأسئلة الشائعة
+              </motion.span>
+            ) : (
+              <>
+                <motion.span
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
+                >
+                  Frequently Asked
+                </motion.span>
+                <br />
+                <motion.span
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
+                >
+                  Questions
+                </motion.span>
+              </>
+            )}
           </motion.h2>
         </motion.div>
 
@@ -114,14 +154,15 @@ export default function FAQSection() {
             >
               <motion.button
                 onClick={() => toggleFAQ(index)}
-                className="w-full flex justify-between items-center text-left focus:outline-none group"
+                className={`w-full flex justify-between items-center focus:outline-none group ${
+                  language === "ar" ? "text-right" : "text-left"
+                }`}
                 style={{
                   fontFamily: "Source Serif 4, serif",
                   fontWeight: 500,
                   fontSize: "17px",
                   lineHeight: "24px",
                   color: "#000000",
-                  maxWidth: "644px",
                 }}
                 whileHover={{
                   scale: 1.02,
@@ -134,8 +175,12 @@ export default function FAQSection() {
                     color: openIndex === index ? "#058BF4" : "#000000",
                   }}
                   transition={{ duration: 0.3 }}
+                  className="flex-1"
+                  style={{
+                    textAlign: language === "ar" ? "right" : "left",
+                  }}
                 >
-                  {faq.question}
+                  {faq.question[language]}
                 </motion.span>
                 <motion.div
                   animate={{
@@ -173,6 +218,7 @@ export default function FAQSection() {
                     lineHeight: "24px",
                     color: "#555555",
                     maxWidth: "644px",
+                    textAlign: language === "ar" ? "right" : "left",
                   }}
                   initial={{ y: -10, opacity: 0 }}
                   animate={{
@@ -184,7 +230,7 @@ export default function FAQSection() {
                     delay: openIndex === index ? 0.1 : 0,
                   }}
                 >
-                  {faq.answer}
+                  {faq.answer[language]}
                 </motion.p>
               </motion.div>
             </motion.div>

@@ -17,7 +17,7 @@ import TeacherDashboard from "@/pages/teacher/dashboard";
 import StudentProfile from "@/pages/teacher/student-profile";
 
 // Auth Pages
-import { AuthLayout } from "@/components/layouts/auth-layout";
+// import { AuthLayout } from "@/components/layouts/auth-layout";
 import LoginPage from "@/pages/auth/login";
 import ChatModeTopics from "@/pages/student/topics/ChatModeTopics";
 import PhotoModeTopics from "@/pages/student/topics/PhotoModeTopics";
@@ -68,9 +68,9 @@ const AppRoutes = () => {
       <Route
         path="/login"
         element={
-          <AuthLayout>
+          // <AuthLayout>
             <LoginPage />
-          </AuthLayout>
+          // </AuthLayout>
         }
       />
       {/* <Route

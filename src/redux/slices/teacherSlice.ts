@@ -1,11 +1,12 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { fetchTeacherStudents, TeacherDashboardData, TeacherInfo, TeacherStudent, TeacherDashboardFilters, fetchTeacherDashboardFilters, TeacherDashboardFilterValues, PaginationInfo } from '@/services/teacherService';
+import { fetchTeacherStudents, TeacherDashboardData, TeacherInfo, TeacherStudent, TeacherDashboardFilters, fetchTeacherDashboardFilters, TeacherDashboardFilterValues, PaginationInfo, TeacherDashboardSummary } from '@/services/teacherService';
 
 interface TeacherState {
   teacherInfo: TeacherInfo | null;
   students: TeacherStudent[];
   totalStudents: number;
   pagination: PaginationInfo | null;
+  summary: TeacherDashboardSummary | null;
   isLoading: boolean;
   error: string | null;
   currentFilters: TeacherDashboardFilters;
@@ -19,6 +20,7 @@ const initialState: TeacherState = {
   students: [],
   totalStudents: 0,
   pagination: null,
+  summary: null,
   isLoading: false,
   error: null,
   currentFilters: {
@@ -63,6 +65,7 @@ const teacherSlice = createSlice({
       state.students = [];
       state.totalStudents = 0;
       state.pagination = null;
+      state.summary = null;
     },
     clearError: (state) => {
       state.error = null;
@@ -92,6 +95,7 @@ const teacherSlice = createSlice({
         state.students = action.payload.data.students;
         state.totalStudents = action.payload.data.totalStudents;
         state.pagination = action.payload.data.pagination;
+        state.summary = action.payload.data.summary || null;
         state.currentFilters = action.payload.filters;
         state.error = null;
       })

@@ -3,9 +3,12 @@ import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import pointingSvg from "@/assets/images/landingpage/malewithfalcon.png";
+import { useLanguage } from "@/components/language-provider";
 
 export default function HeroSection() {
+  const { language } = useLanguage();
   const words = ["Learning", "Fluency", "Progress", "Skills", "Growth"];
+  const arabicWords = ["التعلم", "الطلاقة", "التقدم", "المهارات", "النمو"];
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
 
   useEffect(() => {
@@ -15,6 +18,8 @@ export default function HeroSection() {
 
     return () => clearInterval(interval);
   }, [words.length]);
+
+  const currentWords = language === "ar" ? arabicWords : words;
   return (
     <section
       id="home"
@@ -26,7 +31,9 @@ export default function HeroSection() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
-        Zayd AI — Unleash the Power of AI
+        {language === "ar"
+          ? "زيد AI – أطلق قوة المستقبل في تعلم اللغة الإنجليزية"
+          : "Zayd AI — Unleash the Power of AI"}
       </motion.p>
 
       <div className="relative max-w-7xl mx-auto">
@@ -37,73 +44,150 @@ export default function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
           >
-            <motion.span
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
-            >
-              Unlock the Future
-            </motion.span>
-            <br />
-            <motion.span
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
-              style={{
-                display: "inline-block",
-                verticalAlign: "top",
-                lineHeight: "1.2",
-                marginRight: "1rem",
-              }}
-            >
-              of English{" "}
-            </motion.span>
-            <motion.span
-              className="lg:inline hidden relative"
-              style={{
-                lineHeight: "1.2",
-                display: "inline-block",
-                overflow: "hidden",
-                verticalAlign: "top",
-                maxWidth: "320px",
-                whiteSpace: "nowrap",
-              }}
-              layout
-              transition={{
-                duration: 0.4,
-                ease: [0.25, 0.1, 0.25, 1],
-              }}
-            >
-              <AnimatePresence initial={false}>
+            {language === "ar" ? (
+              <>
                 <motion.span
-                  key={currentWordIndex}
-                  className="bg-gradient-to-r from-[#76ABF8] via-[#058BF4] to-[#63B3F6] bg-clip-text text-transparent underline decoration-[#058BF4] decoration-4 underline-offset-[12px] inline-block whitespace-nowrap"
-                  initial={{ opacity: 0, x: 100 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{
-                    opacity: 0,
-                    x: -60,
-                    transition: {
-                      duration: 0.3,
-                      ease: [0.4, 0.0, 0.2, 1],
-                    },
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
+                >
+                  افتح آفاق المستقبل
+                </motion.span>
+                <br />
+                <motion.span
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
+                  style={{
+                    display: "inline-block",
+                    verticalAlign: "top",
+                    lineHeight: "1.2",
+                    marginLeft: "1rem",
                   }}
+                >
+                  لتعلم الإنجليزية{" "}
+                </motion.span>
+                <motion.span
+                  className="lg:inline hidden relative"
+                  style={{
+                    lineHeight: "1.2",
+                    display: "inline-block",
+                    overflow: "hidden",
+                    verticalAlign: "top",
+                    maxWidth: "320px",
+                    whiteSpace: "nowrap",
+                  }}
+                  layout
                   transition={{
                     duration: 0.4,
                     ease: [0.25, 0.1, 0.25, 1],
                   }}
-                  layout
-                  style={{ display: "inline-block" }}
                 >
-                  {words[currentWordIndex]}
+                  <AnimatePresence initial={false}>
+                    <motion.span
+                      key={currentWordIndex}
+                      className="bg-gradient-to-r from-[#76ABF8] via-[#058BF4] to-[#63B3F6] bg-clip-text text-transparent underline decoration-[#058BF4] decoration-4 underline-offset-[12px] inline-block whitespace-nowrap"
+                      initial={{ opacity: 0, x: -100 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{
+                        opacity: 0,
+                        x: 60,
+                        transition: {
+                          duration: 0.3,
+                          ease: [0.4, 0.0, 0.2, 1],
+                        },
+                      }}
+                      transition={{
+                        duration: 0.4,
+                        ease: [0.25, 0.1, 0.25, 1],
+                      }}
+                      layout
+                      style={{ display: "inline-block" }}
+                    >
+                      {currentWords[currentWordIndex]}
+                    </motion.span>
+                  </AnimatePresence>
                 </motion.span>
-              </AnimatePresence>
-            </motion.span>
+                <br />
+                <motion.span
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, ease: "easeOut", delay: 0.5 }}
+                >
+                  بطريقة ذكية وممتعة
+                </motion.span>
+              </>
+            ) : (
+              <>
+                <motion.span
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
+                >
+                  Unlock the Future
+                </motion.span>
+                <br />
+                <motion.span
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
+                  style={{
+                    display: "inline-block",
+                    verticalAlign: "top",
+                    lineHeight: "1.2",
+                    marginRight: "1rem",
+                  }}
+                >
+                  of English{" "}
+                </motion.span>
+                <motion.span
+                  className="lg:inline hidden relative"
+                  style={{
+                    lineHeight: "1.2",
+                    display: "inline-block",
+                    overflow: "hidden",
+                    verticalAlign: "top",
+                    maxWidth: "320px",
+                    whiteSpace: "nowrap",
+                  }}
+                  layout
+                  transition={{
+                    duration: 0.4,
+                    ease: [0.25, 0.1, 0.25, 1],
+                  }}
+                >
+                  <AnimatePresence initial={false}>
+                    <motion.span
+                      key={currentWordIndex}
+                      className="bg-gradient-to-r from-[#76ABF8] via-[#058BF4] to-[#63B3F6] bg-clip-text text-transparent underline decoration-[#058BF4] decoration-4 underline-offset-[12px] inline-block whitespace-nowrap"
+                      initial={{ opacity: 0, x: 100 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{
+                        opacity: 0,
+                        x: -60,
+                        transition: {
+                          duration: 0.3,
+                          ease: [0.4, 0.0, 0.2, 1],
+                        },
+                      }}
+                      transition={{
+                        duration: 0.4,
+                        ease: [0.25, 0.1, 0.25, 1],
+                      }}
+                      layout
+                      style={{ display: "inline-block" }}
+                    >
+                      {currentWords[currentWordIndex]}
+                    </motion.span>
+                  </AnimatePresence>
+                </motion.span>
+              </>
+            )}
           </motion.h1>
         </div>
 
         <motion.div
-          className="absolute top-[2.5rem] right-[-13rem] lg:flex hidden z-10"
+          className="absolute top-[2.5rem] right-[-13rem] xl:flex hidden z-10"
           initial={{ x: 100, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{
@@ -117,14 +201,27 @@ export default function HeroSection() {
       </div>
 
       <motion.p
-        className="font-normal text-[20px] leading-[24px] tracking-[0px] text-gray-600 text-center mx-auto mb-10 max-w-2xl"
+        className={`font-normal ${
+          language === "ar" ? "text-[15px]" : "text-[20px]"
+        } leading-[24px] tracking-[0px] text-gray-600 text-center mx-auto mb-10 max-w-2xl`}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: "easeOut", delay: 0.6 }}
       >
-        AI-powered English courses designed for Arab learners. <br />
-        Interactive, personalized, and culturally relevant education for
-        students grades 4-12.
+        {language === "ar" ? (
+          <>
+            دورات لغة إنجليزية مدعومة بالذكاء الاصطناعي، صُممت خصيصًا لتناسب
+            المتعلمين العرب. <br />
+            تجربة تعليمية تفاعلية، شخصية، ومتوافقة مع ثقافتنا العربية للطلاب من
+            الصف الرابع الابتدائي إلى الصف الثالث الثانوي.
+          </>
+        ) : (
+          <>
+            AI-powered English courses designed for Arab learners. <br />
+            Interactive, personalized, and culturally relevant education for
+            students grades 4-12.
+          </>
+        )}
       </motion.p>
 
       {/* Buttons with icons */}

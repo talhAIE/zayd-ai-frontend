@@ -1,8 +1,10 @@
 import repairImg from "@/assets/images/landingpage/repair.svg";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useLanguage } from "@/components/language-provider";
 
 export default function FlowSection() {
+  const { language } = useLanguage();
   return (
     <section id="how-it-works" className="bg-white sm:py-24 py-12 px-6">
       <div className="container mx-auto max-w-6xl">
@@ -22,17 +24,9 @@ export default function FlowSection() {
             viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
           >
-            <motion.button
-              className="border border-gray-300 text-black px-6 py-2 rounded-full text-sm font-medium"
-              whileHover={{
-                scale: 1.05,
-                backgroundColor: "#f3f4f6",
-                transition: { duration: 0.2 },
-              }}
-              whileTap={{ scale: 0.95 }}
-            >
+            <div className="border border-gray-300 text-black px-6 py-2 rounded-full text-sm font-medium">
               How it works
-            </motion.button>
+            </div>
           </motion.div>
 
           {/* Main Heading */}
@@ -44,7 +38,7 @@ export default function FlowSection() {
             transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
           >
             <h2 className="text-2xl font-semibold text-[#666666] mb-4">
-              So, how does it work?
+              {language === "ar" ? "كيف تعمل المنصة؟" : "So, how does it work?"}
             </h2>
           </motion.div>
         </motion.div>
@@ -147,9 +141,15 @@ export default function FlowSection() {
             transition={{ duration: 0.2, ease: "easeInOut" }}
           >
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Sign Up for Free
+              {language === "ar"
+                ? "سجّل مجانًا خلال ثوانٍ معدودة"
+                : "Sign Up for Free"}
             </h3>
-            <p className="text-gray-600">Create your account in seconds</p>
+            <p className="text-gray-600">
+              {language === "ar"
+                ? "ابدأ رحلتك التعليمية بسهولة وسرعة."
+                : "Create your account in seconds"}
+            </p>
           </motion.div>
 
           {/* Step 2 */}
@@ -159,9 +159,15 @@ export default function FlowSection() {
             transition={{ duration: 0.2, ease: "easeInOut" }}
           >
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Choose Your Learning Path
+              {language === "ar"
+                ? "اختر مسارك التعليمي المناسب"
+                : "Choose Your Learning Path"}
             </h3>
-            <p className="text-gray-600">Beginner to advanced levels (A1-C1)</p>
+            <p className="text-gray-600">
+              {language === "ar"
+                ? "من المستوى المبتدئ حتى المتقدم (A1–C1)."
+                : "Beginner to advanced levels (A1-C1)"}
+            </p>
           </motion.div>
 
           {/* Step 3 */}
@@ -171,10 +177,14 @@ export default function FlowSection() {
             transition={{ duration: 0.2, ease: "easeInOut" }}
           >
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Start Practicing
+              {language === "ar"
+                ? "ابدأ التدريب والتفاعل مع الذكاء الاصطناعي"
+                : "Start Practicing"}
             </h3>
             <p className="text-gray-600">
-              Speak, listen, debate, and play games with AI.
+              {language === "ar"
+                ? "تحدث، استمع، ناقش، وشارك في ألعاب تعليمية ممتعة"
+                : "Speak, listen, debate, and play games with AI."}
             </p>
           </motion.div>
 
@@ -185,10 +195,14 @@ export default function FlowSection() {
             transition={{ duration: 0.2, ease: "easeInOut" }}
           >
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Track Results
+              {language === "ar"
+                ? "راقب تقدمك واحصل على شهادتك"
+                : "Track Results"}
             </h3>
             <p className="text-gray-600">
-              See progress charts and get certificates.
+              {language === "ar"
+                ? "شاهد نتائجك وتطور مستواك في كل مهارة."
+                : "See progress charts and get certificates."}
             </p>
           </motion.div>
         </div>
@@ -197,8 +211,21 @@ export default function FlowSection() {
         <div className="text-center">
           <Link to="/login">
             <button className="border border-gray-300 text-black px-8 py-3 rounded-full text-lg font-normal hover:bg-gray-300 transition-colors">
-              Want to see?{" "}
-              <span className="text-[#058BF4] font-normal">Try Zayd AI</span>
+              {language === "ar" ? (
+                <>
+                  هل ترغب في التجربة؟{" "}
+                  <span className="text-[#058BF4] font-normal">
+                    جرّب زيد مجانًا الآن!
+                  </span>
+                </>
+              ) : (
+                <>
+                  Want to see?{" "}
+                  <span className="text-[#058BF4] font-normal">
+                    Try Zayd AI
+                  </span>
+                </>
+              )}
             </button>
           </Link>
         </div>

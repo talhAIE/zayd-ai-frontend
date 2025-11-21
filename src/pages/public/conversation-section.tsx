@@ -2,35 +2,73 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import pointingNeutralImg from "@/assets/images/landingpage/pointingNeutral.svg";
 import stripImg from "@/assets/images/landingpage/strip.png";
+import { useLanguage } from "@/components/language-provider";
 
 const ConversationSection = () => {
+  const { language } = useLanguage();
   const [isInView, setIsInView] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
 
   const features = [
     {
-      title: "Culturally Relevant",
-      description: "Built for Arab students, respecting local values.",
+      title: {
+        en: "Culturally Relevant",
+        ar: "جاهز للمدارس والمؤسسات التعليمية",
+      },
+      description: {
+        en: "Built for Arab students, respecting local values.",
+        ar: "تمت تجربته فعليًا داخل المدارس ونال ثقة المعلمين والطلاب.",
+      },
     },
     {
-      title: "Engaging & Fun",
-      description: "Students practice with games, challenges, and role-play.",
+      title: {
+        en: "Engaging & Fun",
+        ar: "تعلم بمتعة وحماس",
+      },
+      description: {
+        en: "Students practice with games, challenges, and role-play.",
+        ar: "يتعلم الطلاب من خلال الألعاب، والتحديات، وتمثيل الأدوار التي تجعل التعلم مغامرة مثيرة.",
+      },
     },
     {
-      title: "School-Ready",
-      description: "Already tested in classrooms and trusted by teachers.",
+      title: {
+        en: "School-Ready",
+        ar: "منصة تحترم ثقافتك وهويتك",
+      },
+      description: {
+        en: "Already tested in classrooms and trusted by teachers.",
+        ar: "منصة تعليمية تراعي قيمنا العربية وتقدم محتوى ملائمًا لبيئتنا التعليمية.",
+      },
     },
     {
-      title: "Instant Progress Reports",
-      description: "AI tracks speaking, listening, and vocabulary growth.",
+      title: {
+        en: "Instant Progress Reports",
+        ar: "تعلم اليوم... لتنجح غدًا",
+      },
+      description: {
+        en: "AI tracks speaking, listening, and vocabulary growth.",
+        ar: "يبني مهارات اللغة الضرورية للدراسة، والعمل، والتواصل في المستقبل.",
+      },
     },
     {
-      title: "Affordable & Scalable",
-      description: "Schools save money and time compared to hiring teachers.",
+      title: {
+        en: "Affordable & Scalable",
+        ar: "حل ذكي واقتصادي يناسب الجميع",
+      },
+      description: {
+        en: "Schools save money and time compared to hiring teachers.",
+        ar: "يوفر على المدارس الجهد والتكاليف مقارنة بتوظيف معلمين إضافيين.",
+      },
     },
     {
-      title: "Future-Proof Learning",
-      description: "Builds skills for study abroad, jobs, and communication.",
+      title: {
+        en: "Future-Proof Learning",
+        ar: "تابع تقدمك في أي لحظة",
+      },
+      description: {
+        en: "Builds skills for study abroad, jobs, and communication.",
+        ar: "الذكاء الاصطناعي يرصد تطور مهاراتك في التحدث، والاستماع، والمفردات بدقة.",
+      },
     },
   ];
 
@@ -69,7 +107,9 @@ const ConversationSection = () => {
         <div className="text-center mb-16">
           <div className="inline-block bg-white border border-gray-300 rounded-full px-6 py-2 mb-6 shadow-sm">
             <p className="text-gray-600 text-sm font-medium">
-              Why choose Zayd AI
+              {language === "ar"
+                ? "لماذا تختار المعلم زيد المدعوم بالذكاء الاصطناعي؟"
+                : "Why choose Zayd AI"}
             </p>
           </div>
 
@@ -103,20 +143,38 @@ const ConversationSection = () => {
             </motion.div>
 
             <h2 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-              Experience{" "}
-              <span className="bg-gradient-to-r from-[#058BF4] to-[#63B3F6] bg-clip-text text-transparent">
-                Humanlike
-              </span>
-              <br />
-              Conversations
+              {language === "ar" ? (
+                <>
+                  تحدث وكأنك تتفاعل مع <br />
+                  <span className="bg-gradient-to-r from-[#058BF4] to-[#63B3F6] bg-clip-text text-transparent">
+                    إنسان حقيقي
+                  </span>
+                  !
+                </>
+              ) : (
+                <>
+                  Experience{" "}
+                  <span className="bg-gradient-to-r from-[#058BF4] to-[#63B3F6] bg-clip-text text-transparent">
+                    Humanlike
+                  </span>
+                  <br />
+                  Conversations
+                </>
+              )}
             </h2>
           </div>
 
           <p className="text-gray-600 text-lg max-w-3xl mx-auto">
-            Advanced AI technology designed specifically for Arab learners,
-            providing
-            <br />
-            culturally relevant and engaging English education.
+            {language === "ar" ? (
+              "تقنية ذكاء اصطناعي متطورة صُممت خصيصًا لتقديم تجربة تعلم إنجليزية شيقة ومتفهمة لثقافة المتعلم العربي."
+            ) : (
+              <>
+                Advanced AI technology designed specifically for Arab learners,
+                providing
+                <br />
+                culturally relevant and engaging English education.
+              </>
+            )}
           </p>
         </div>
 
@@ -162,11 +220,11 @@ const ConversationSection = () => {
                 </div>
 
                 <h3 className="text-xl font-bold text-gray-900 mb-3">
-                  {feature.title}
+                  {feature.title[language]}
                 </h3>
 
                 <p className="text-gray-600 leading-relaxed">
-                  {feature.description}
+                  {feature.description[language]}
                 </p>
               </div>
             ))}

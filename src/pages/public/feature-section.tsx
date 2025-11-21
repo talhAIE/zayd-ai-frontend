@@ -10,17 +10,31 @@ import Male from "@/assets/images/landingpage/male.png";
 import Female from "@/assets/images/landingpage/female.png";
 import Falcon from "@/assets/images/landingpage/eagle.png";
 import { useState } from "react";
+import { useLanguage } from "@/components/language-provider";
 
 export default function FeatureSection() {
+  const { language } = useLanguage();
   const [selectedFeature, setSelectedFeature] = useState(0);
+
+  const adjustTopForLanguage = (top: string) =>
+    language === "ar" ? `calc(${top} + 2rem)` : top;
 
   const features = [
     {
-      title: "Real Conversation",
+      title: {
+        en: "Real Conversation",
+        ar: "محادثات واقعية مع الذكاء الاصطناعي",
+      },
       isActive: true,
       category: "AI Chatbot",
-      heading: "Real Conversations",
-      description: "Practice speaking with an AI tutor, anytime, anywhere.",
+      heading: {
+        en: "Real Conversations",
+        ar: "محادثات واقعية مع الذكاء الاصطناعي",
+      },
+      description: {
+        en: "Practice speaking with an AI tutor, anytime, anywhere.",
+        ar: "تحدث مع معلم ذكاء اصطناعي في أي وقت وأي مكان.",
+      },
       image: MaleThinking,
       imageSize: { width: 200, height: 200 },
       imagePosition: { left: "15rem", top: "60rem" },
@@ -66,10 +80,19 @@ export default function FeatureSection() {
       ),
     },
     {
-      title: "Reading & Listening Stories",
+      title: {
+        en: "Reading & Listening Stories",
+        ar: "قصص مشوقة للقراءة والاستماع",
+      },
       category: "AI Chatbot",
-      heading: "Reading & Listening stories",
-      description: "Practice speaking with an AI tutor, anytime, anywhere.",
+      heading: {
+        en: "Reading & Listening stories",
+        ar: "قصص مشوقة للقراءة والاستماع",
+      },
+      description: {
+        en: "Practice speaking with an AI tutor, anytime, anywhere.",
+        ar: "استمتع بقصص تفاعلية لتحسين مهارات القراءة والاستماع.",
+      },
       image: FemaleBrowsing,
       imageSize: { width: 200, height: 200 },
       imagePosition: { left: "15rem", top: "60rem" },
@@ -96,10 +119,19 @@ export default function FeatureSection() {
       ),
     },
     {
-      title: "Role Play & Debates",
+      title: {
+        en: "Role Play & Debates",
+        ar: "تمثيل أدوار ومناظرات تفاعلية",
+      },
       category: "AI Chatbot",
-      heading: "Role Play & Debates",
-      description: "Practice speaking with an AI tutor, anytime, anywhere.",
+      heading: {
+        en: "Role Play & Debates",
+        ar: "تمثيل أدوار ومناظرات تفاعلية",
+      },
+      description: {
+        en: "Practice speaking with an AI tutor, anytime, anywhere.",
+        ar: "شارك في تمثيل الأدوار والمناظرات لتحسين مهاراتك في التواصل.",
+      },
       image: MaleProfessor,
       imageSize: { width: 200, height: 200 },
       imagePosition: { left: "15rem", top: "60rem" },
@@ -139,10 +171,19 @@ export default function FeatureSection() {
       ),
     },
     {
-      title: "Certificates",
+      title: {
+        en: "Certificates",
+        ar: "شهادات إنجاز معتمدة",
+      },
       category: "AI Chatbot",
-      heading: "Certificates",
-      description: "Practice speaking with an AI tutor, anytime, anywhere.",
+      heading: {
+        en: "Certificates",
+        ar: "شهادات إنجاز معتمدة",
+      },
+      description: {
+        en: "Practice speaking with an AI tutor, anytime, anywhere.",
+        ar: "احصل على شهادات معتمدة تثبت تقدمك في تعلم اللغة الإنجليزية.",
+      },
       image: FemaleCertificate,
       imageSize: { width: 350, height: 350 },
       imagePosition: { left: "6rem", top: "61rem" },
@@ -162,10 +203,19 @@ export default function FeatureSection() {
       ),
     },
     {
-      title: "Safe & Secure",
+      title: {
+        en: "Safe & Secure",
+        ar: "بيئة تعليمية آمنة ومحفوظة الخصوصية",
+      },
       category: "AI Chatbot",
-      heading: "Safe & Secure",
-      description: "Practice speaking with an AI tutor, anytime, anywhere.",
+      heading: {
+        en: "Safe & Secure",
+        ar: "بيئة تعليمية آمنة ومحفوظة الخصوصية",
+      },
+      description: {
+        en: "Practice speaking with an AI tutor, anytime, anywhere.",
+        ar: "تعلم في بيئة آمنة تحافظ على خصوصيتك وأمان بياناتك.",
+      },
       image: MaleFemaleShield,
       imageSize: { width: 200, height: 200 },
       imagePosition: null, // No left-side positioning for shield
@@ -195,10 +245,19 @@ export default function FeatureSection() {
       ),
     },
     {
-      title: "Smart Assessments",
+      title: {
+        en: "Smart Assessments",
+        ar: "اختبارات ذكية لتحديد المستوى والتقدم",
+      },
       category: "AI Chatbot",
-      heading: "Smart Assessments",
-      description: "Practice speaking with an AI tutor, anytime, anywhere.",
+      heading: {
+        en: "Smart Assessments",
+        ar: "اختبارات ذكية لتحديد المستوى والتقدم",
+      },
+      description: {
+        en: "Practice speaking with an AI tutor, anytime, anywhere.",
+        ar: "اختبر مستواك وتابع تقدمك من خلال اختبارات ذكية متطورة.",
+      },
       image: MaleProfessor,
       imageSize: { width: 300, height: 300 },
       imagePosition: { left: "14rem", top: "56rem" },
@@ -248,7 +307,9 @@ export default function FeatureSection() {
             transition={{ duration: 0.6, ease: "easeOut" }}
           >
             <p className="text-gray-600 text-sm font-medium">
-              Advanced features
+              {language === "ar"
+                ? "مميزات ذكية تجعل زيد مختلفًا"
+                : "Advanced features"}
             </p>
           </motion.div>
 
@@ -261,24 +322,65 @@ export default function FeatureSection() {
               transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
             >
               <h2 className="text-5xl font-bold">
-                <motion.span
-                  className="bg-gradient-to-r from-[#76ABF8] via-[#058BF4] to-[#63B3F6] bg-clip-text text-transparent"
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.3 }}
-                  transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
-                >
-                  Features
-                </motion.span>{" "}
-                <motion.span
-                  className="text-gray-900"
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.3 }}
-                  transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
-                >
-                  that Stand out
-                </motion.span>
+                {language === "ar" ? (
+                  <>
+                    <motion.span
+                      className="text-[35px] bg-gradient-to-r from-[#76ABF8] via-[#058BF4] to-[#63B3F6] bg-clip-text text-transparent"
+                      initial={{ opacity: 0, y: 30 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, amount: 0.3 }}
+                      transition={{
+                        duration: 0.8,
+                        ease: "easeOut",
+                        delay: 0.3,
+                      }}
+                    >
+                      مميزات
+                    </motion.span>{" "}
+                    <motion.span
+                      className="text-[35px] text-gray-900"
+                      initial={{ opacity: 0, y: 30 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, amount: 0.3 }}
+                      transition={{
+                        duration: 0.8,
+                        ease: "easeOut",
+                        delay: 0.4,
+                      }}
+                    >
+                      تضع زيد في المقدمة
+                    </motion.span>
+                  </>
+                ) : (
+                  <>
+                    <motion.span
+                      className="bg-gradient-to-r from-[#76ABF8] via-[#058BF4] to-[#63B3F6] bg-clip-text text-transparent"
+                      initial={{ opacity: 0, y: 30 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, amount: 0.3 }}
+                      transition={{
+                        duration: 0.8,
+                        ease: "easeOut",
+                        delay: 0.3,
+                      }}
+                    >
+                      Features
+                    </motion.span>{" "}
+                    <motion.span
+                      className="text-gray-900"
+                      initial={{ opacity: 0, y: 30 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, amount: 0.3 }}
+                      transition={{
+                        duration: 0.8,
+                        ease: "easeOut",
+                        delay: 0.4,
+                      }}
+                    >
+                      that Stand out
+                    </motion.span>
+                  </>
+                )}
               </h2>
             </motion.div>
 
@@ -314,7 +416,7 @@ export default function FeatureSection() {
 
         {/* Feature Icons Row */}
         <motion.div
-          className="border border-[#E5E7EB] bg-transparent rounded-2xl p-2 mb-16"
+          className="border border-[#E5E7EB] bg-transparent rounded-2xl pt-5 pb-4 mb-16"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.3 }}
@@ -382,7 +484,7 @@ export default function FeatureSection() {
                   }}
                   transition={{ duration: 0.3 }}
                 >
-                  {feature.title}
+                  {feature.title[language]}
                 </motion.p>
               </motion.div>
             ))}
@@ -398,8 +500,10 @@ export default function FeatureSection() {
                 key={`roleplay-left-${index}`}
                 className="absolute -translate-y-1/2 hidden lg:block"
                 style={{
-                  left: imgData.position.left,
-                  top: imgData.position.top,
+                  ...(language === "ar"
+                    ? { right: imgData.position.left }
+                    : { left: imgData.position.left }),
+                  top: adjustTopForLanguage(imgData.position.top),
                 }}
               >
                 <motion.img
@@ -407,6 +511,7 @@ export default function FeatureSection() {
                   alt={imgData.alt}
                   width={imgData.size.width}
                   height={imgData.size.height}
+                  style={{ scaleX: language === "ar" ? -1 : 1 }}
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{
                     opacity: 1,
@@ -432,16 +537,21 @@ export default function FeatureSection() {
           <div
             className="absolute -translate-y-1/2 hidden lg:block"
             style={{
-              left: features[selectedFeature].imagePosition.left,
-              top: features[selectedFeature].imagePosition.top,
+              ...(language === "ar"
+                ? { right: features[selectedFeature].imagePosition.left }
+                : { left: features[selectedFeature].imagePosition.left }),
+              top: adjustTopForLanguage(
+                features[selectedFeature].imagePosition.top
+              ),
             }}
           >
             <motion.img
               key={selectedFeature}
               src={features[selectedFeature].image}
-              alt={features[selectedFeature].title}
+              alt={features[selectedFeature].title[language]}
               width={features[selectedFeature].imageSize.width}
               height={features[selectedFeature].imageSize.height}
+              style={{ scaleX: language === "ar" ? -1 : 1 }}
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
@@ -503,7 +613,7 @@ export default function FeatureSection() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              {features[selectedFeature].heading}
+              {features[selectedFeature].heading[language]}
             </motion.h3>
 
             <motion.p
@@ -512,7 +622,7 @@ export default function FeatureSection() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
             >
-              {features[selectedFeature].description}
+              {features[selectedFeature].description[language]}
             </motion.p>
           </motion.div>
 
@@ -529,10 +639,11 @@ export default function FeatureSection() {
                 <motion.img
                   key={`right-${selectedFeature}`}
                   src={features[selectedFeature].image}
-                  alt={features[selectedFeature].title}
+                  alt={features[selectedFeature].title[language]}
                   width={features[selectedFeature].imageSize.width}
                   height={features[selectedFeature].imageSize.height}
                   className="w-auto h-auto max-w-full max-h-full"
+                  style={{ scaleX: 1 }}
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.5 }}

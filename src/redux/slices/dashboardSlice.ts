@@ -14,9 +14,13 @@ const initialState: DashboardState = {
 
 export const fetchDashboardData = createAsyncThunk(
   'dashboard/fetchDashboardData',
-  async (userId: string, { rejectWithValue }) => {
+  async ({ userId, timeFilter = 'weekly' }: { userId: string; timeFilter?: 'weekly' | 'monthly' }, { rejectWithValue }) => {
     try {
-      const response = await apiClient.get(`/dashboard/${userId}`);
+      const response = await apiClient.get(`/dashboard/${userId}`, {
+        params: {
+          timeFilter
+        }
+      });
       
       // Handle the new response structure
       if (response.data.status && response.data.data) {

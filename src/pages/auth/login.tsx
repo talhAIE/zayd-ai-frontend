@@ -1,8 +1,8 @@
-import { useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '@/components/ui/button';
+import { useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -10,22 +10,26 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { toast } from 'sonner';
-import { useAppDispatch, useAppSelector } from '@/redux/hooks';
-import { login, addPhoneNumber, clearError } from '@/redux/slices/authSlice';
-import { useEffect, useState } from 'react';
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { login, addPhoneNumber, clearError } from "@/redux/slices/authSlice";
+import { useEffect, useState } from "react";
+import charactersImg from "@/assets/images/characters.png";
+import zaydLogo from "@/assets/images/zaydLogo.png";
 // import { ArrowLeft } from 'lucide-react';
 
 // Username form schema
 const usernameFormSchema = z.object({
-  username: z.string().min(1, { message: 'Username is required' }),
+  username: z.string().min(1, { message: "Username is required" }),
 });
 
 // Phone number form schema
 const phoneFormSchema = z.object({
-  phoneNumber: z.string().min(10, { message: 'Valid phone number is required' }),
+  phoneNumber: z
+    .string()
+    .min(10, { message: "Valid phone number is required" }),
 });
 
 type UsernameFormValues = z.infer<typeof usernameFormSchema>;
@@ -34,12 +38,14 @@ type PhoneFormValues = z.infer<typeof phoneFormSchema>;
 export default function LoginPage() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { error, isAuthenticated, user, isLoading } = useAppSelector((state) => state.auth);
+  const { error, isAuthenticated, user, isLoading } = useAppSelector(
+    (state) => state.auth
+  );
 
   // State to track whether we're showing the phone number input
   const [showPhoneInput, setShowPhoneInput] = useState(false);
   // Store username for later use with phone number submission
-  const [currentUsername, setCurrentUsername] = useState('');
+  const [currentUsername, setCurrentUsername] = useState("");
   // Store whether we're currently submitting the phone number
   const [isSubmittingPhone, setIsSubmittingPhone] = useState(false);
 
@@ -47,21 +53,20 @@ export default function LoginPage() {
   const usernameForm = useForm<UsernameFormValues>({
     resolver: zodResolver(usernameFormSchema),
     defaultValues: {
-      username: '',
+      username: "",
     },
   });
-
 
   // Phone number form
   const phoneForm = useForm<PhoneFormValues>({
     resolver: zodResolver(phoneFormSchema),
     defaultValues: {
-      phoneNumber: '',
+      phoneNumber: "",
     },
   });
 
   useEffect(() => {
-    console.log('Auth status:', isAuthenticated, user);
+    console.log("Auth status:", isAuthenticated, user);
     if (isAuthenticated && user) {
       // Check if user has phone number
       if (user.phoneNumber) {
@@ -70,18 +75,18 @@ export default function LoginPage() {
         // Show phone number input if no phone number exists
         setShowPhoneInput(true);
         // Clear any previous phone number in the form when switching to phone input
-        phoneForm.reset({ phoneNumber: '' });
+        phoneForm.reset({ phoneNumber: "" });
       }
     }
   }, [isAuthenticated, user, phoneForm]);
 
   const navigateUser = (user: any) => {
-    if (!user.role || user.role === 'student') {
-      navigate('/student/learning-modes');
-    } else if (user.role === 'teacher') {
-      navigate('/teacher/dashboard');
+    if (!user.role || user.role === "student") {
+      navigate("/student/learning-modes");
+    } else if (user.role === "teacher") {
+      navigate("/teacher/dashboard");
     } else {
-      navigate('/dashboard');
+      navigate("/dashboard");
     }
   };
 
@@ -97,7 +102,7 @@ export default function LoginPage() {
 
       const resultAction = await dispatch(
         login({
-          username: data.username
+          username: data.username,
         })
       );
 
@@ -105,13 +110,13 @@ export default function LoginPage() {
         // If user has phone number, will be redirected by useEffect
         // Otherwise, phone input will be shown
         if (resultAction.payload.user.phoneNumber) {
-          toast.success('Login successful');
+          toast.success("Login successful");
           navigateUser(resultAction.payload.user);
         }
       }
     } catch (error) {
-      console.error('Login failed:', error);
-      toast.error('Login failed. Please try again.');
+      console.error("Login failed:", error);
+      toast.error("Login failed. Please try again.");
     }
   };
 
@@ -121,140 +126,160 @@ export default function LoginPage() {
       const resultAction = await dispatch(
         addPhoneNumber({
           username: currentUsername,
-          phoneNumber: data.phoneNumber
+          phoneNumber: data.phoneNumber,
         })
       );
 
       if (addPhoneNumber.fulfilled.match(resultAction)) {
-        toast.success('Phone number added successfully');
+        toast.success("Phone number added successfully");
         setTimeout(() => {
           navigateUser(resultAction.payload.user);
-        })
+        });
       }
     } catch (error) {
-      console.error('Adding phone number failed:', error);
-      toast.error('Failed to add phone number. Please try again.');
+      console.error("Adding phone number failed:", error);
+      toast.error("Failed to add phone number. Please try again.");
     } finally {
       setIsSubmittingPhone(false);
     }
   };
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-64px)] justify-center">
-      <div className="flex items-center bg-white max-w-xl mx-auto rounded-2xl mb-[-5rem] shadow-sm">
-        <div className="mx-auto max-w-md w-full p-8 md:px-[64px] md:py-[44px]">
-          <div className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-sans font-medium text-[var(--font-dark)]">
-              {showPhoneInput ? 'Enter Phone Number' : 'Welcome back'}
-            </h1>
-            <p className="mt-2 text-[var(--font-light2)]">
-              {showPhoneInput
-                ? 'Please enter your phone number to continue.'
-                : 'Please enter your credentials to continue.'}
-            </p>
+    <>
+      <style>{`
+        .gradient-hover-animate {
+          background: linear-gradient(to right, #3EA4F9 0%, #0267B5 50%, #3EA4F9 100%);
+          background-size: 200% 100%;
+          background-position: 0% 50%;
+          transition: background-position 0.6s ease;
+        }
+        .gradient-hover-animate:hover {
+          background-position: 100% 50%;
+        }
+      `}</style>
+      <div className="min-h-screen bg-gradient-to-br from-[#F7FBFF] to-[#EFF3FF] flex items-center justify-center px-4 py-10">
+        <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-5 gap-10 items-center">
+          <div className="hidden lg:flex relative col-span-1 lg:col-span-3 items-center justify-center p-6 md:p-10">
+            <img
+              src={charactersImg}
+              alt="ZAYD AI mentors"
+              className="w-full max-w-xl object-contain drop-shadow-[0_25px_45px_rgba(2,103,181,0.15)]"
+            />
           </div>
 
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-600 rounded-md">
-              {error}
+          <div className="col-span-1 lg:col-span-2 p-8 md:p-12 flex flex-col">
+            <div className="flex flex-col items-center text-center mb-8">
+              <img src={zaydLogo} alt="ZAYD Logo" className="w-28 mb-4" />
+              <h1 className="text-3xl md:text-4xl font-semibold text-[#0C1B3A]">
+                {showPhoneInput ? "Verify your phone" : "Welcome Back!"}
+              </h1>
+              <p className="mt-2 text-[#5C6475] max-w-sm">
+                {showPhoneInput
+                  ? "Enter your phone number so we can complete your profile."
+                  : "Please enter your credentials to continue."}
+              </p>
             </div>
-          )}
 
-          {!showPhoneInput ? (
-            // Username Form
-            <Form {...usernameForm}>
-              <form onSubmit={usernameForm.handleSubmit(onUsernameSubmit)} className="space-y-6">
-                <FormField
-                  control={usernameForm.control}
-                  name="username"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[var(--font-dark)] font-semibold">Username</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Enter your username"
-                          className="h-14 rounded-sm"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-600 rounded-xl">
+                {error}
+              </div>
+            )}
 
-                <Button
-                  type="submit"
-                  className="w-full bg-[var(--primarybg)] hover:bg-[var(--primarybg)]/90 rounded-full h-14 text-white font-semibold flex items-center justify-center mt-2"
-                  disabled={isLoading}
-                >
-                  {isLoading ? 'Signing in...' : 'Log In'}
-                </Button>
-              </form>
-            </Form>
-          ) : (
-            // Phone Number Form
-            <>
-
-              <Form {...phoneForm}>
-                <form onSubmit={phoneForm.handleSubmit(onPhoneSubmit)} className="space-y-6">
-                  <FormField
-                    control={phoneForm.control}
-                    name="phoneNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-[var(--font-dark)] font-semibold">Phone Number</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter your phone number"
-                            className="h-14 rounded-sm"
-                            type="tel"
-                            value={field.value}
-                            onChange={(e) => {
-                              const onlyNums = e.target.value.replace(/\D/g, '');
-                              field.onChange(onlyNums);
-                            }}
-                            onBlur={field.onBlur}
-                            name={field.name}
-                          />
-
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <Button
-                    type="submit"
-                    className="w-full bg-[var(--primarybg)] hover:bg-[var(--primarybg)]/90 rounded-full h-14 text-white font-semibold flex items-center justify-center mt-2"
-                    disabled={isSubmittingPhone}
+            <div className="flex-1 flex flex-col">
+              {!showPhoneInput ? (
+                <Form {...usernameForm}>
+                  <form
+                    onSubmit={usernameForm.handleSubmit(onUsernameSubmit)}
+                    className="space-y-6"
                   >
-                    {isSubmittingPhone ? 'Adding...' : 'Add'}
-                  </Button>
-                  <Button
-                    type="submit"
-                    className="w-full bg-white hover:bg-slate-200 rounded-full h-14 text-black font-semibold flex items-center justify-center mt-2"
-                    onClick={handleBackToUsername}
-                  >
-                    Back
-                  </Button>
+                    <FormField
+                      control={usernameForm.control}
+                      name="username"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-[#0C1B3A] font-semibold">
+                            User Name
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Type your username"
+                              className="h-14 rounded-2xl border border-[#dce4f3] focus-visible:ring-2 focus-visible:ring-[#3EA4F9]"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  {/* <div className="mb-4">
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  className="flex items-center text-[var(--font-light2)] hover:text-[var(--font-dark)]"
-                  onClick={handleBackToUsername}
-                >
-                  <ArrowLeft className="mr-1 h-4 w-4" />
-                  Back to username
-                </Button>
-              </div> */}
-                </form>
-              </Form>
-            </>
-          )}
+                    <Button
+                      type="submit"
+                      className="gradient-hover-animate w-full rounded-2xl h-14 text-white font-semibold flex items-center justify-center mt-2"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Signing in..." : "Log In"}
+                    </Button>
+                  </form>
+                </Form>
+              ) : (
+                <Form {...phoneForm}>
+                  <form
+                    onSubmit={phoneForm.handleSubmit(onPhoneSubmit)}
+                    className="space-y-6"
+                  >
+                    <FormField
+                      control={phoneForm.control}
+                      name="phoneNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-[#0C1B3A] font-semibold">
+                            Phone Number
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Enter your phone number"
+                              className="h-14 rounded-2xl border border-[#dce4f3] focus-visible:ring-2 focus-visible:ring-[#3EA4F9]"
+                              type="tel"
+                              value={field.value}
+                              onChange={(e) => {
+                                const onlyNums = e.target.value.replace(
+                                  /\D/g,
+                                  ""
+                                );
+                                field.onChange(onlyNums);
+                              }}
+                              onBlur={field.onBlur}
+                              name={field.name}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button
+                      type="submit"
+                      className="gradient-hover-animate w-full rounded-2xl h-14 text-white font-semibold flex items-center justify-center mt-2"
+                      disabled={isSubmittingPhone}
+                    >
+                      {isSubmittingPhone ? "Adding..." : "Add Number"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="w-full rounded-2xl h-14 font-semibold flex items-center justify-center mt-2 border border-transparent text-[#0267B5] hover:bg-[#E8F4FF]"
+                      onClick={handleBackToUsername}
+                    >
+                      Back
+                    </Button>
+                  </form>
+                </Form>
+              )}
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

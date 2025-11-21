@@ -1,6 +1,7 @@
 import flyingImg from "@/assets/images/landingpage/flying.svg";
 import dashboardImg from "@/assets/images/landingpage/dashboard.png";
 import { motion, Variants } from "framer-motion";
+import { useLanguage } from "@/components/language-provider";
 
 const fadeInScale: Variants = {
   hidden: { opacity: 0, scale: 0.95 },
@@ -12,6 +13,7 @@ const fadeInScale: Variants = {
 };
 
 const DashboardSection = () => {
+  const { language } = useLanguage();
   return (
     <div
       id="dashboard"
@@ -51,15 +53,19 @@ const DashboardSection = () => {
           <div className="text-center mt-12">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <p className="text-[#058BF4] font-medium">
-                Trusted by the Gifted Education Department in Makkah.
+                {language === "ar"
+                  ? "مصمم خصيصًا للمتعلمين العرب بذكاء اصطناعي يفهم العادات والسياق الثقافي العربي."
+                  : "Trusted by the Gifted Education Department in Makkah."}
               </p>
               <p className="text-[#058BF4] font-medium">
-                Fun, interactive, and personalized English practice for students
-                Grades 4-12.
+                {language === "ar"
+                  ? "تعلم الإنجليزية بطريقة ممتعة وتفاعلية تناسب مختلف المراحل الدراسية من الصف الرابع الابتدائي حتى الصف الثالث الثانوي."
+                  : "Fun, interactive, and personalized English practice for students Grades 4-12."}
               </p>
               <p className="text-[#058BF4] font-medium">
-                Designed for Arab learners, with AI that understands cultural
-                context
+                {language === "ar"
+                  ? "حائز على ثقة إدارة تعليم الموهوبين في مكة المكرمة."
+                  : "Designed for Arab learners, with AI that understands cultural context"}
               </p>
             </div>
           </div>
