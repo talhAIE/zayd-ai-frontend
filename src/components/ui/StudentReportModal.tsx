@@ -52,6 +52,24 @@ export default function StudentReportModal({
     })
   );
 
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  const assessmentData =
+    data.assessmentGraphData?.map((assessment) => ({
+      date: formatDate(assessment.date),
+      averageAccuracy: `${Math.round(assessment.averageAccuracy)}%`,
+      averageFluency: `${Math.round(assessment.averageFluency)}%`,
+      averagePronunciation: `${Math.round(assessment.averagePronunciation)}%`,
+      totalAssessmentScore: `${Math.round(assessment.totalAssessmentScore)}%`,
+    })) || [];
+
   const certificates =
     data.achievements?.filter(
       (achievement) => achievement.category === "certificate"
@@ -249,6 +267,60 @@ export default function StudentReportModal({
               </div>
             </CardContent>
           </Card>
+
+          {/* Assessment Data */}
+          {assessmentData.length > 0 && (
+            <Card>
+              <CardContent className="p-3 sm:p-6">
+                <div className="overflow-x-auto -mx-3 sm:mx-0">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-3 px-4 font-semibold text-blue-600">
+                          DATE
+                        </th>
+                        <th className="text-center py-3 px-4 font-semibold text-blue-600">
+                          ACCURACY
+                        </th>
+                        <th className="text-center py-3 px-4 font-semibold text-blue-600">
+                          FLUENCY
+                        </th>
+                        <th className="text-center py-3 px-4 font-semibold text-blue-600">
+                          PRONUNCIATION
+                        </th>
+                        <th className="text-center py-3 px-4 font-semibold text-blue-600">
+                          TOTAL SCORE
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {assessmentData.map((assessment, index) => (
+                        <tr key={index} className="border-b">
+                          <td className="py-3 px-4 font-medium">
+                            {assessment.date}
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            {assessment.averageAccuracy}
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            {assessment.averageFluency}
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            {assessment.averagePronunciation}
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <span className="font-semibold text-blue-600">
+                              {assessment.totalAssessmentScore}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Awards and Recognition */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">

@@ -126,18 +126,51 @@ const ReadingModeTopics = () => {
     const unlockCountdown =
       locked && topic.unlocksAt ? getUnlockCountdown(topic.unlocksAt) : null;
 
+    const statusLabel = locked
+      ? "Locked"
+      : topic.isCompleted
+      ? "Completed"
+      : "Incomplete";
+
+    const statusClasses = topic.isCompleted ? "text-[#2DCD6B]" : "text-white";
+
     return (
-      <Card key={topic.id} className="overflow-hidden flex flex-col">
-        <div className="aspect-video w-full relative overflow-hidden">
+      <Card
+        key={topic.id}
+        className="flex flex-col rounded-[1.75rem] border border-gray-100 bg-white shadow-sm"
+      >
+        <div className="relative mx-4 mt-4 rounded-[1.5rem] overflow-hidden aspect-[1.2/1]">
           <img
             src={topic.attachmentUrl}
             alt={topic.topicName}
-            className={`absolute inset-0 w-full h-full object-cover ${
+            className={`h-full w-full object-cover transition duration-300 ${
               locked ? "filter grayscale" : ""
             }`}
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-black/5 to-transparent" />
+          <span
+            className={`absolute top-3 left-3 rounded-xl px-3 py-3 text-xs font-semibold backdrop-blur-[19.2px] bg-[#00000057] ${statusClasses}`}
+          >
+            {statusLabel}
+          </span>
+          <Link
+            to={`/student/learning-mode/${topic?.id}/${encodeURIComponent(
+              topic.topicName
+            )}?mode=reading-mode`}
+            className={`absolute bottom-3 right-3 ${
+              locked ? "pointer-events-none" : ""
+            }`}
+          >
+            <Button
+              size="sm"
+              disabled={locked}
+              className="gradient-hover-animate rounded-xl px-8 py-[1.2rem] text-sm font-semibold text-white shadow-lg shadow-blue-500/30 hover:brightness-110 disabled:opacity-60 disabled:shadow-none"
+            >
+              Start
+            </Button>
+          </Link>
           {locked && (
-            <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center text-white p-4">
+            <div className="absolute inset-0 bg-black/55 backdrop-blur-[1px] flex flex-col items-center justify-center text-white p-4">
               <Lock className="w-8 h-8 mb-2" />
               <span className="text-center font-semibold">
                 {unlockCountdown}
@@ -146,31 +179,11 @@ const ReadingModeTopics = () => {
           )}
         </div>
 
-        <CardContent className="flex-grow p-4">
-          <h3 className="font-medium text-base">{topic.topicName}</h3>
+        <CardContent className="flex-grow px-5 py-4">
+          <h3 className="font-semibold text-base text-gray-900 leading-snug">
+            {topic.topicName}
+          </h3>
         </CardContent>
-
-        <CardFooter className="flex items-center justify-between">
-          {topic.isCompleted ? (
-            <span className="inline-flex items-center rounded-md bg-green-100 px-3 py-2 text-xs font-medium text-green-800">
-              Completed
-            </span>
-          ) : (
-            <span className="inline-flex items-center rounded-md bg-gray-100 px-3 py-2 text-xs font-medium text-gray-500">
-              Incomplete
-            </span>
-          )}
-          <Link
-            to={`/student/learning-mode/${topic?.id}/${encodeURIComponent(
-              topic.topicName
-            )}?mode=reading-mode`}
-            className={locked ? "pointer-events-none" : ""}
-          >
-            <Button size="sm" disabled={locked}>
-              Start
-            </Button>
-          </Link>
-        </CardFooter>
       </Card>
     );
   };
@@ -210,6 +223,19 @@ const ReadingModeTopics = () => {
 
   return (
     <div className="mx-auto px-4 py-6">
+      <style>
+        {`
+          .gradient-hover-animate {
+            background: linear-gradient(to right, #3EA4F9 0%, #0267B5 50%, #3EA4F9 100%);
+            background-size: 200% 100%;
+            background-position: 0% 50%;
+            transition: background-position 0.6s ease;
+          }
+          .gradient-hover-animate:hover {
+            background-position: 100% 50%;
+          }
+        `}
+      </style>
       {/* <div className="flex justify-between items-center mb-6">
         <div className="flex items-center">
           <Button 
@@ -303,73 +329,14 @@ const ReadingModeTopics = () => {
                       {renderComingSoonCard()}
                     </div>
                   </div>
-                ) : []
+                ) : (
+                  []
+                )
               )
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {sortedTopics.length > 0 ? (
-                sortedTopics.map((topic: any) => {
-                  const locked = isTopicLocked(topic);
-                  const unlockCountdown =
-                    locked && topic.unlocksAt
-                      ? getUnlockCountdown(topic.unlocksAt)
-                      : null;
-
-                  return (
-                    <Card
-                      key={topic.id}
-                      className="overflow-hidden flex flex-col"
-                    >
-                      <div className="aspect-video w-full relative overflow-hidden">
-                        <img
-                          src={topic.attachmentUrl}
-                          alt={topic.topicName}
-                          className={`absolute inset-0 w-full h-full object-cover ${
-                            locked ? "filter grayscale" : ""
-                          }`}
-                        />
-                        {locked && (
-                          <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center text-white p-4">
-                            <Lock className="w-8 h-8 mb-2" />
-                            <span className="text-center font-semibold">
-                              {unlockCountdown}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      <CardContent className="flex-grow p-4">
-                        <h3 className="font-medium text-base">
-                          {topic.topicName}
-                        </h3>
-                      </CardContent>
-
-                      <CardFooter className="flex items-center justify-between">
-                        {topic.isCompleted ? (
-                          <span className="inline-flex items-center rounded-md bg-green-100 px-3 py-2 text-xs font-medium text-green-800">
-                            Completed
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center rounded-md bg-gray-100 px-3 py-2 text-xs font-medium text-gray-500">
-                            Incomplete
-                          </span>
-                        )}
-                        <Link
-                          to={`/student/learning-mode/${
-                            topic?.id
-                          }/${encodeURIComponent(
-                            topic.topicName
-                          )}?mode=reading-mode`}
-                          className={locked ? "pointer-events-none" : ""}
-                        >
-                          <Button size="sm" disabled={locked}>
-                            Start
-                          </Button>
-                        </Link>
-                      </CardFooter>
-                    </Card>
-                  );
-                })
+                sortedTopics.map((topic: any) => renderTopicCard(topic))
               ) : (
                 <div className="col-span-full text-center py-10">
                   <p className="text-muted-foreground">No topics available</p>

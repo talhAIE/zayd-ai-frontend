@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Trophy, Star, Calendar, Clock, BookOpen } from "lucide-react";
+import { Trophy, Star, Calendar, Clock, BookOpen, Lock } from "lucide-react";
 import apiClient from "@/config/ApiConfig";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -13,15 +13,13 @@ import { PDFDocument, rgb } from "pdf-lib";
 import {
   DownloadIcon,
   // ShareIcon,
-  CertificateIcon,
-  CertificateClaimableIcon,
-  CertificateLockedIcon,
 } from "@/components/Icons";
 import { Worker, Viewer } from "@react-pdf-viewer/core";
 import "@react-pdf-viewer/core/lib/styles/index.css";
 import fontkit from "@pdf-lib/fontkit";
 import certTemplateUrl from "/src/assets/Certificate_Template.pdf?url";
 import markerFontUrl from "/src/assets/fonts/lumiosbrush-regular.otf?url";
+import rewardBadgeBgUrl from "/src/assets/svgs/rewards.svg?url";
 import * as pdfjs from "pdfjs-dist";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -100,58 +98,6 @@ const Rewards = (): JSX.Element => {
   const [selectedCertificate, setSelectedCertificate] =
     useState<Certification | null>(null);
   const [generatingPDF, setGeneratingPDF] = useState<boolean>(false);
-
-  // Static data defining the level structure
-  // const levelData: Level[] = [
-  //   {
-  //     name: "Initiate",
-  //     range: "0-100",
-  //     points: 100,
-  //     color: "green",
-  //     minPoints: 0,
-  //     maxPoints: 100,
-  //   },
-  //   {
-  //     name: "Apprentice",
-  //     range: "100-250",
-  //     points: 250,
-  //     color: "green",
-  //     minPoints: 100,
-  //     maxPoints: 250,
-  //   },
-  //   {
-  //     name: "Strategist",
-  //     range: "250-500",
-  //     points: 500,
-  //     color: "teal",
-  //     minPoints: 250,
-  //     maxPoints: 500,
-  //   },
-  //   {
-  //     name: "Specialist",
-  //     range: "500-1000",
-  //     points: 1000,
-  //     color: "blue",
-  //     minPoints: 500,
-  //     maxPoints: 1000,
-  //   },
-  //   {
-  //     name: "Virtuoso",
-  //     range: "1000-2000",
-  //     points: 2000,
-  //     color: "blue",
-  //     minPoints: 1000,
-  //     maxPoints: 2000,
-  //   },
-  //   {
-  //     name: "Mastermind",
-  //     range: "2000+",
-  //     points: 2000,
-  //     color: "purple",
-  //     minPoints: 2000,
-  //     maxPoints: Infinity,
-  //   },
-  // ];
 
   useEffect(() => {
     fetchAchievements();
@@ -439,49 +385,6 @@ const Rewards = (): JSX.Element => {
     }
   };
 
-  // const getCurrentLevel = (): Level => {
-  //   return (
-  //     levelData.find(
-  //       (level) =>
-  //         totalPoints >= level.minPoints && totalPoints < level.maxPoints
-  //     ) || levelData[0]
-  //   );
-  // };
-
-  // const getNextLevel = (): Level | null => {
-  //   const currentLevel = getCurrentLevel();
-  //   const currentIndex = levelData.indexOf(currentLevel);
-  //   return currentIndex < levelData.length - 1
-  //     ? levelData[currentIndex + 1]
-  //     : null;
-  // };
-
-  // const getProgressToNextLevel = (): number => {
-  //   const currentLevel = getCurrentLevel();
-  //   const nextLevel = getNextLevel();
-  //   if (!nextLevel) return 100;
-  //   const progress =
-  //     ((totalPoints - currentLevel.minPoints) /
-  //       (nextLevel.minPoints - currentLevel.minPoints)) *
-  //     100;
-  //   return Math.min(progress, 100);
-  // };
-
-  // --- Reusable Sub-Components ---
-
-  // const LevelCard = ({ level, isActive, isUnlocked }: LevelCardProps): JSX.Element => (
-  //   <div className={`relative flex flex-col items-center p-4 rounded-2xl transition-all duration-300 ${isActive ? 'border-2 border-blue-500 bg-blue-50 shadow-lg scale-105' : isUnlocked ? 'border border-gray-200 bg-white shadow-sm' : 'border border-gray-200 bg-gray-50 opacity-60'}`}>
-  //     <div className={`relative w-16 h-16 rounded-full flex items-center justify-center mb-3 ${isActive ? 'bg-blue-500' : isUnlocked ? (level.color === 'green' ? 'bg-green-500' : level.color === 'teal' ? 'bg-teal-500' : level.color === 'blue' ? 'bg-blue-500' : 'bg-purple-500') : 'bg-gray-300'} ${!isUnlocked ? 'grayscale' : ''}`}>
-  //       {isUnlocked ? <Trophy className="w-8 h-8 text-white" /> : <Lock className="w-6 h-6 text-white" />}
-  //     </div>
-  //     <div className="text-center">
-  //       <h3 className={`text-sm font-semibold mb-1 ${isUnlocked ? 'text-gray-800' : 'text-gray-400'}`}>{level.name}</h3>
-  //       <p className={`text-xs ${isUnlocked ? 'text-gray-600' : 'text-gray-400'}`}>{level.range}</p>
-  //     </div>
-  //     {isActive && <div className="absolute -top-2 -right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center"><Star className="w-4 h-4 text-white fill-current" /></div>}
-  //   </div>
-  // );
-
   const AchievementCard = ({
     achievement,
     isEarned,
@@ -534,23 +437,31 @@ const Rewards = (): JSX.Element => {
         }`}
       >
         <div
-          className={`relative flex flex-col items-center p-2 rounded-2xl transition-all duration-300 ${
+          className={`relative flex flex-col items-center transition-all duration-300 ${
             !isEarned ? "grayscale" : ""
           }`}
         >
-          {achievement.iconUrl ? (
+          <div className="relative w-full max-w-[160px] aspect-[173/184] flex items-center justify-center">
             <img
-              src={achievement.iconUrl}
-              alt={achievement.name}
-              className="w-full h-full object-contain"
+              src={rewardBadgeBgUrl}
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 z-0 w-full h-full object-contain select-none pointer-events-none"
             />
-          ) : (
-            <Star
-              className={`w-8 h-8 ${
-                isEarned ? "text-blue-600" : "text-gray-400"
-              }`}
-            />
-          )}
+            {achievement.iconUrl ? (
+              <img
+                src={achievement.iconUrl}
+                alt={achievement.name}
+                className="relative z-10 w-[58%] h-[58%] object-contain drop-shadow-md -translate-y-[1.2rem]"
+              />
+            ) : (
+              <Star
+                className={`relative z-10 w-10 h-10 -translate-y-4 ${
+                  isEarned ? "text-blue-600" : "text-gray-400"
+                }`}
+              />
+            )}
+          </div>
         </div>
 
         <div className="flex-1 text-center">
@@ -575,7 +486,7 @@ const Rewards = (): JSX.Element => {
             <div className="mb-2">
               <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
                 <div
-                  className="bg-gradient-to-r from-blue-700 to-blue-500 h-full transition-all duration-500"
+                  className="bg-gradient-to-r from-[#6250E9] to-[#69BDFF] h-full transition-all duration-500"
                   style={{ width: `${percent}%` }}
                 />
               </div>
@@ -605,12 +516,12 @@ const Rewards = (): JSX.Element => {
 
         {canClaim && (
           <>
-            <div className="absolute inset-0 backdrop-blur-[2.5px] rounded-xl"></div>
+            <div className="absolute inset-0 z-10 backdrop-blur-[2.5px] rounded-xl"></div>
 
             <button
               onClick={() => claimReward(achievement.key)}
               disabled={claimingReward === achievement.key}
-              className="absolute z-2 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-2 px-4 rounded-full text-xs font-medium transition-colors flex items-center justify-center gap-2 shadow-md w-32 h-10 drop-shadow-sm"
+              className="absolute z-20 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 gradient-hover-animate disabled:bg-blue-400 text-white py-2 px-4 rounded-xl text-xs font-medium transition-colors flex items-center justify-center gap-2 shadow-md w-32 h-10 drop-shadow-sm"
             >
               {claimingReward === achievement.key ? (
                 <>
@@ -625,7 +536,7 @@ const Rewards = (): JSX.Element => {
         )}
 
         {isEarned && (
-          <div className="absolute -top-2 -right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+          <div className="absolute -top-2 -right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center z-30">
             <Trophy className="w-4 h-4 text-white" />
           </div>
         )}
@@ -642,75 +553,90 @@ const Rewards = (): JSX.Element => {
     const canClaim = isEarned && !certification.rewardClaimed;
 
     return (
-      <div
-        className={`relative bg-white border transition-all hover:border-blue-500 rounded-lg p-6 flex items-center cursor-pointer ${
-          !isEarned ? "opacity-60 grayscale" : ""
-        }`}
-        onClick={() => {
-          if (isEarned) {
-            handleCertificateClick(certification);
-          }
-        }}
-      >
-        <div className="me-3">
-          {isEarned && !certification.rewardClaimed ? (
-            <CertificateClaimableIcon className="w-30 h-30 text-blue-500" />
-          ) : isEarned && certification.rewardClaimed ? (
-            <CertificateIcon className="w-30 h-30 text-blue-500" />
-          ) : (
-            <CertificateLockedIcon className="w-30 h-30 text-gray-400" />
-          )}
-        </div>
-        <div className="mb-4 flex flex-col">
-          <div
-            className={`mb-4 ${isEarned ? "text-blue-500" : "text-gray-400"}`}
-          >
-            <i className="fas fa-certificate"></i>
+      <div className="relative">
+        <div
+          className={`relative bg-gradient-to-br from-[#6BBCFB] to-[#BAE1FF] rounded-2xl p-4 flex flex-col cursor-pointer shadow-lg transition-all hover:shadow-xl overflow-hidden ${
+            !isEarned ? "opacity-60 grayscale" : ""
+          }`}
+          onClick={() => {
+            if (isEarned) {
+              handleCertificateClick(certification);
+            }
+          }}
+        >
+          {/* Header with title and lock icon */}
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-sm font-bold text-white line-clamp-2">
+              {certification.title}
+            </h2>
+            {!isEarned && (
+              <Lock className="w-4 h-4 text-white flex-shrink-0 ml-1" />
+            )}
           </div>
-          <p
-            className={`text-sm ${
-              isEarned ? "text-gray-500" : "text-gray-400"
-            }`}
-          >
+
+          {/* Progress bar placeholder - can be customized based on certificate progress */}
+          <div className="w-full bg-white/30 rounded-full h-1.5 mb-2">
+            <div
+              className={`h-full rounded-full ${
+                isEarned ? "bg-white" : "bg-white/50"
+              }`}
+              style={{ width: isEarned ? "100%" : "33%" }}
+            />
+          </div>
+
+          {/* Issue date */}
+          <p className="text-white text-xs font-medium mb-2">
             {isEarned
               ? `Issue ${certification.issueDate}`
               : certification.issueDate}
           </p>
-          <h2
-            className={`text-sm font-medium mt-2 ${
-              isEarned ? "text-gray-800" : "text-gray-500"
-            }`}
-          >
-            {certification.title}
-          </h2>
+
+          {/* Certificate icon illustration at bottom */}
+          <div className="flex-1 flex items-end justify-center mt-2 min-h-[80px] relative">
+            {certification.iconUrl ? (
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-12 w-36 h-36 flex items-center justify-center">
+                <img
+                  src={certification.iconUrl}
+                  alt={certification.name}
+                  className={`w-full h-full object-contain ${
+                    !isEarned ? "grayscale" : ""
+                  }`}
+                  loading="lazy"
+                />
+              </div>
+            ) : (
+              <div className="text-xs text-white/80 text-center px-2">
+                {certification.name}
+              </div>
+            )}
+          </div>
+
+          {canClaim && (
+            <>
+              <div className="absolute inset-0 z-10 bg-blue-200/50 backdrop-blur-[2.5px] rounded-2xl"></div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  claimReward(certification.key);
+                }}
+                disabled={claimingReward === certification.key}
+                className="absolute z-20 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 gradient-hover-animate disabled:bg-blue-400 text-white py-2 px-4 rounded-xl text-xs font-medium transition-colors flex items-center justify-center gap-2 shadow-md w-32 h-10 drop-shadow-sm"
+              >
+                {claimingReward === certification.key ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Claiming...
+                  </>
+                ) : (
+                  <>Claim Certificate</>
+                )}
+              </button>
+            </>
+          )}
         </div>
-
-        {canClaim && (
-          <>
-            <div className="absolute inset-0 bg-blue-200/50 backdrop-blur-[2.5px] rounded-lg"></div>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                claimReward(certification.key);
-              }}
-              disabled={claimingReward === certification.key}
-              className="absolute z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-2 px-4 rounded-full text-xs font-medium transition-colors flex items-center justify-center gap-2 shadow-md w-32 h-10 drop-shadow-sm"
-            >
-              {claimingReward === certification.key ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Claiming...
-                </>
-              ) : (
-                <>Claim Certificate</>
-              )}
-            </button>
-          </>
-        )}
-
         {isEarned && (
-          <div className="absolute -top-2 -right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-            <Trophy className="w-4 h-4 text-white" />
+          <div className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center z-40">
+            <Trophy className="w-3 h-3 text-white" />
           </div>
         )}
       </div>
@@ -738,154 +664,173 @@ const Rewards = (): JSX.Element => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="mx-auto">
-        <Tabs
-          value={tab}
-          onValueChange={(v) => setTab(v as "rewards" | "certifications")}
-          className="w-full"
-        >
-          <TabsList className="w-full mb-8 px-2 py-4">
-            <TabsTrigger className="w-full" value="rewards">
-              Rewards
-            </TabsTrigger>
-            <TabsTrigger className="w-full" value="certifications">
-              Certifications
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="rewards">
-            <main className="space-y-8">
-              {achievements.map((category) => (
-                <section key={category.category}>
-                  <h2 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-3">
-                    {categoryIcons[category.category] || categoryIcons.Default}
-                    {category.category} Achievements
-                    <span className="text-sm font-normal text-gray-500">
-                      ({category.earned.length} earned,{" "}
-                      {category.available.length} available)
-                    </span>
-                  </h2>
-                  {(category.earned.length > 0 ||
-                    category.available.length > 0) && (
-                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
-                      {category.earned.map((achievement) => (
-                        <AchievementCard
-                          key={achievement.id}
-                          achievement={achievement}
-                          isEarned={true}
-                          userStats={userStats}
-                        />
-                      ))}
-                      {category.available.map((achievement) => (
-                        <AchievementCard
-                          key={achievement.id}
-                          achievement={achievement}
-                          isEarned={false}
-                          userStats={userStats}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </section>
-              ))}
-            </main>
-          </TabsContent>
-          <TabsContent value="certifications">
-            {certificatesLoading ? (
-              <div className="flex items-center justify-center h-64">
-                <div className="text-center">
-                  <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                  <p className="text-gray-600">
-                    Loading your certifications...
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
-                {certificates.map((cert) => (
-                  <CertificationCard key={cert.id} certification={cert} />
-                ))}
-              </div>
-            )}
-
-            {/* Certificate Dialog */}
-            {selectedCertificate && (
-              <Dialog
-                open={!!selectedCertificate}
-                onOpenChange={(open) => {
-                  if (!open) {
-                    setSelectedCertificate(null);
-                    setGeneratingPDF(false);
-                  }
-                }}
+    <>
+      <style>
+        {`
+          .gradient-hover-animate {
+            background: linear-gradient(to right, #3EA4F9 0%, #0267B5 50%, #3EA4F9 100%);
+            background-size: 200% 100%;
+            background-position: 0% 50%;
+            transition: background-position 0.6s ease;
+          }
+          .gradient-hover-animate:hover {
+            background-position: 100% 50%;
+          }
+        `}
+      </style>
+      <div className="p-6 bg-gray-50 min-h-screen">
+        <div className="mx-auto">
+          <Tabs
+            value={tab}
+            onValueChange={(v) => setTab(v as "rewards" | "certifications")}
+            className="w-full"
+          >
+            <TabsList className="w-full mb-8 px-2 py-8 gap-2 rounded-3xl">
+              <TabsTrigger
+                className="w-full data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#3EA4F9] data-[state=active]:to-[#0267B5] data-[state=active]:text-white py-3 rounded-xl"
+                value="rewards"
               >
-                <DialogContent className="max-w-full sm:max-w-lg md:max-w-2xl lg:max-w-4xl w-full p-4 sm:p-6 md:p-8 bg-white rounded-lg shadow-lg overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle className="text-lg sm:text-xl md:text-2xl font-semibold">
-                      {selectedCertificate.title}
-                    </DialogTitle>
-                  </DialogHeader>
-                  <div className="w-full h-full bg-white rounded-lg overflow-hidden">
-                    {generatingPDF ? (
-                      <div className="flex items-center justify-center h-64">
-                        <div className="text-center">
-                          <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                          <p className="text-gray-600">
-                            Generating certificate PDF...
-                          </p>
-                        </div>
-                      </div>
-                    ) : selectedCertificate.pdfUrl ? (
-                      <div>
-                        <Worker workerUrl={pdfjs.GlobalWorkerOptions.workerSrc}>
-                          <Viewer fileUrl={selectedCertificate.pdfUrl} />
-                        </Worker>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center h-64">
-                        <div className="text-center">
-                          <p className="text-gray-600">
-                            Failed to generate PDF
-                          </p>
-                        </div>
+                Rewards
+              </TabsTrigger>
+              <TabsTrigger
+                className="w-full data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#3EA4F9] data-[state=active]:to-[#0267B5] data-[state=active]:text-white py-3 rounded-xl"
+                value="certifications"
+              >
+                Certifications
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="rewards">
+              <main className="space-y-8">
+                {achievements.map((category) => (
+                  <section key={category.category}>
+                    <h2 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-3">
+                      {categoryIcons[category.category] ||
+                        categoryIcons.Default}
+                      {category.category} Achievements
+                      <span className="text-sm font-normal text-gray-500">
+                        ({category.earned.length} earned,{" "}
+                        {category.available.length} available)
+                      </span>
+                    </h2>
+                    {(category.earned.length > 0 ||
+                      category.available.length > 0) && (
+                      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+                        {category.earned.map((achievement) => (
+                          <AchievementCard
+                            key={achievement.id}
+                            achievement={achievement}
+                            isEarned={true}
+                            userStats={userStats}
+                          />
+                        ))}
+                        {category.available.map((achievement) => (
+                          <AchievementCard
+                            key={achievement.id}
+                            achievement={achievement}
+                            isEarned={false}
+                            userStats={userStats}
+                          />
+                        ))}
                       </div>
                     )}
+                  </section>
+                ))}
+              </main>
+            </TabsContent>
+            <TabsContent value="certifications">
+              {certificatesLoading ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="text-center">
+                    <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-gray-600">
+                      Loading your certifications...
+                    </p>
                   </div>
-                  {selectedCertificate.pdfUrl && (
-                    <div className="flex flex-col sm:flex-row justify-end gap-4 mt-4">
-                      <Button
-                        onClick={() => {
-                          const link = document.createElement("a");
-                          link.href = selectedCertificate.pdfUrl!;
-                          link.download = `${
-                            selectedCertificate.studentName
-                          }_${selectedCertificate.title.replace(
-                            /\s+/g,
-                            "_"
-                          )}.pdf`;
-                          document.body.appendChild(link);
-                          link.click();
-                          document.body.removeChild(link);
-                        }}
-                        className="bg-white text-[#065FF0] border border-[#065FF033] hover:bg-[#f0f6ff] hover:border-[#065FF0] transition-colors duration-200 shadow-sm p-4 sm:p-5"
-                      >
-                        <DownloadIcon className="w-4 h-4 mr-2" />
-                        Download
-                      </Button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                  {certificates.map((cert) => (
+                    <CertificationCard key={cert.id} certification={cert} />
+                  ))}
+                </div>
+              )}
 
-                      {/* <Button className="bg-[#065FF01A] text-[#065FF0] border border-[#065FF033] hover:bg-[#e6f0ff] hover:border-[#065FF0] transition-colors duration-200 shadow-sm p-4 sm:p-5">
-                        <ShareIcon className="w-4 h-4 mr-2" />
-                        Share
-                      </Button> */}
+              {/* Certificate Dialog */}
+              {selectedCertificate && (
+                <Dialog
+                  open={!!selectedCertificate}
+                  onOpenChange={(open) => {
+                    if (!open) {
+                      setSelectedCertificate(null);
+                      setGeneratingPDF(false);
+                    }
+                  }}
+                >
+                  <DialogContent className="max-w-full sm:max-w-lg md:max-w-2xl lg:max-w-4xl w-full p-4 sm:p-6 md:p-8 bg-white rounded-lg shadow-lg overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle className="text-lg sm:text-xl md:text-2xl font-semibold">
+                        {selectedCertificate.title}
+                      </DialogTitle>
+                    </DialogHeader>
+                    <div className="w-full h-full bg-white rounded-lg overflow-hidden">
+                      {generatingPDF ? (
+                        <div className="flex items-center justify-center h-64">
+                          <div className="text-center">
+                            <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                            <p className="text-gray-600">
+                              Generating certificate PDF...
+                            </p>
+                          </div>
+                        </div>
+                      ) : selectedCertificate.pdfUrl ? (
+                        <div>
+                          <Worker
+                            workerUrl={pdfjs.GlobalWorkerOptions.workerSrc}
+                          >
+                            <Viewer fileUrl={selectedCertificate.pdfUrl} />
+                          </Worker>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center h-64">
+                          <div className="text-center">
+                            <p className="text-gray-600">
+                              Failed to generate PDF
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </DialogContent>
-              </Dialog>
-            )}
-          </TabsContent>
-        </Tabs>
+                    {selectedCertificate.pdfUrl && (
+                      <div className="flex flex-col sm:flex-row justify-end gap-4 mt-4">
+                        <Button
+                          onClick={() => {
+                            const link = document.createElement("a");
+                            link.href = selectedCertificate.pdfUrl!;
+                            link.download = `${
+                              selectedCertificate.studentName
+                            }_${selectedCertificate.title.replace(
+                              /\s+/g,
+                              "_"
+                            )}.pdf`;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                          }}
+                          className="bg-white text-[#065FF0] border border-[#065FF033] hover:bg-[#f0f6ff] hover:border-[#065FF0] transition-colors duration-200 shadow-sm p-4 sm:p-5"
+                        >
+                          <DownloadIcon className="w-4 h-4 mr-2" />
+                          Download
+                        </Button>
+                      </div>
+                    )}
+                  </DialogContent>
+                </Dialog>
+              )}
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
