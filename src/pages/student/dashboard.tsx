@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -392,12 +393,15 @@ export default function LanguageLearningDashboard() {
               {isLoading ? (
                 <Skeleton className="h-8 w-24 rounded-full" />
               ) : (
-                <button className="flex items-center gap-1 px-4 py-2 rounded-full bg-[#F8F8F8] text-blue-600 hover:text-blue-700 font-medium text-sm">
+                <Link
+                  to="/student/learning-modes"
+                  className="flex items-center gap-1 px-4 py-2 rounded-full bg-[#F8F8F8] text-blue-600 hover:text-blue-700 font-medium text-sm"
+                >
                   {data?.completedTopics
                     ? Object.keys(data.completedTopics).length
                     : 0}{" "}
                   modes <ChevronRight className="w-4 h-4" />
-                </button>
+                </Link>
               )}
             </div>
           </CardHeader>

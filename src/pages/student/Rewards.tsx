@@ -574,16 +574,6 @@ const Rewards = (): JSX.Element => {
             )}
           </div>
 
-          {/* Progress bar placeholder - can be customized based on certificate progress */}
-          <div className="w-full bg-white/30 rounded-full h-1.5 mb-2">
-            <div
-              className={`h-full rounded-full ${
-                isEarned ? "bg-white" : "bg-white/50"
-              }`}
-              style={{ width: isEarned ? "100%" : "33%" }}
-            />
-          </div>
-
           {/* Issue date */}
           <p className="text-white text-xs font-medium mb-2">
             {isEarned
