@@ -57,7 +57,7 @@ export default function PerformanceGraph({
     };
 
     // Map actual data points
-    const dataPoints = sortedData.map((item, index) => {
+    const dataPoints = sortedData.map((item) => {
       let label = "";
 
       switch (timeFilter) {
@@ -70,10 +70,16 @@ export default function PerformanceGraph({
           });
           break;
         case "monthly":
-          // Monthly filter: Show weeks (Week 1, Week 2, etc.)
-          // Calculate week number from the start of the data
-          const weekNumber = Math.floor(index / 7) + 1;
-          label = `Week ${weekNumber}`;
+          // Monthly filter: Show starting date of the week
+          const itemDate = new Date(item.date);
+          // Get the start of the week (Sunday)
+          const dayOfWeek = itemDate.getDay();
+          const startOfWeek = new Date(itemDate);
+          startOfWeek.setDate(itemDate.getDate() - dayOfWeek);
+          label = startOfWeek.toLocaleDateString("en-US", {
+            day: "numeric",
+            month: "short",
+          });
           break;
         default:
           const defaultDate = new Date(item.date);

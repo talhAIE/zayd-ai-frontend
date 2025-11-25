@@ -191,9 +191,17 @@ export const fetchTeacherStudents = async (
   }
 };
 
-export const fetchStudentProfile = async (teacherId: string, studentId: string): Promise<StudentProfileData> => {
+export const fetchStudentProfile = async (
+  teacherId: string,
+  studentId: string,
+  timeFilter: 'weekly' | 'monthly' = 'weekly'
+): Promise<StudentProfileData> => {
   try {
-    const response = await apiClient.get(`/teacher-dashboard/${teacherId}/student/${studentId}`);
+    const response = await apiClient.get(`/teacher-dashboard/${teacherId}/student/${studentId}`, {
+      params: {
+        timeFilter
+      }
+    });
     
     if (response.data.status && response.data.data) {
       return response.data.data as StudentProfileData;

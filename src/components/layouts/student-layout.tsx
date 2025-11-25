@@ -9,33 +9,13 @@ import leaderboardIcon from "@/assets/sidebar/leaderboard.svg";
 import learningModeIcon from "@/assets/sidebar/learningMode.svg";
 import Logo from "@/assets/sidebar/Logo.png";
 
-import {
-  Menu,
-  X,
-  // Brain,
-  ChevronLeft,
-  // Bell,
-  // Settings,
-  // ChevronDown,
-  // Languages,
-} from "lucide-react";
+import { Menu, X, ChevronLeft } from "lucide-react";
 // import { ThemeToggle } from '@/components/theme-toggle';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { logout } from "@/redux/slices/authSlice";
 import { toast } from "sonner";
 import StudentReportModal from "../ui/StudentReportModal";
-// import {
-//   DropdownMenu,
-//   DropdownMenuContent,
-//   DropdownMenuItem,
-//   DropdownMenuLabel,
-//   DropdownMenuSeparator,
-//   DropdownMenuTrigger,
-// } from '@/components/ui/dropdown-menu';
-// import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-// import { useDispatch } from 'react-redux';
-// import { logout } from '@/redux/slices/authSlice';
 
 interface StudentLayoutProps {
   children: ReactNode;
@@ -55,12 +35,6 @@ export function StudentLayout({ children }: StudentLayoutProps) {
 
   const pathSegments = location.pathname.split("/").filter(Boolean);
   const lastSegment = pathSegments[pathSegments.length - 1] || "";
-
-  // Capitalize each word
-  // const formattedTitle = lastSegment
-  //   .split("-")
-  //   .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-  //   .join(" ");
 
   const decodeAndFormatTitle = (text: string) => {
     return decodeURIComponent(text) // Decode %20 etc.
@@ -143,9 +117,13 @@ export function StudentLayout({ children }: StudentLayoutProps) {
           <div className="flex items-center justify-between mb-8">
             <Link
               to="/student/dashboard"
-              className="flex items-center gap-2 text-2xl font-bold"
+              className="flex items-center justify-center flex-1"
             >
-              <img src={Logo} alt="Logo" className="h-10 w-10" />
+              <img
+                src={Logo}
+                alt="Logo"
+                className="h-16 w-auto object-contain"
+              />
             </Link>
             <Button
               variant="ghost"
@@ -217,7 +195,7 @@ export function StudentLayout({ children }: StudentLayoutProps) {
       {/* Main content */}
       <div className="lg:pl-64 flex flex-col flex-1">
         {/* Top header */}
-        <header className="sticky top-0 z-10 flex lg:hidden items-center justify-between h-16 px-4 bg-background lg:px-8">
+        <header className="sticky top-0 z-40 flex lg:hidden items-center justify-between h-16 px-4 bg-background lg:px-8">
           <Button
             variant="ghost"
             size="icon"
@@ -262,7 +240,7 @@ export function StudentLayout({ children }: StudentLayoutProps) {
             </svg>
           </Button>
         </header>
-        <header className="sticky top-0 z-10 hidden lg:flex items-center justify-between h-16 bg-background py-10 px-8 ">
+        <header className="sticky top-0 z-40 hidden lg:flex items-center justify-between h-16 bg-background py-10 px-8 ">
           <div className="flex items-center">
             <Button
               variant="ghost"
@@ -276,33 +254,6 @@ export function StudentLayout({ children }: StudentLayoutProps) {
           </div>
 
           <div className="flex items-center gap-3">
-            {/* <Button size="sm" variant="ghost" className="rounded-full bg-[#F8F9FD] h-10 w-10 p-0 flex items-center justify-center">
-              <Bell className="w-5 h-5" />
-            </Button> */}
-
-            {/* User Info */}
-            {/* <div className="flex items-center gap-2 bg-[#F8F9FD] px-3 py-1 rounded-full h-10">
-              
-              <img
-                src="https://i.pravatar.cc/30"
-                alt="user"
-                className="w-7 h-7 rounded-full object-cover"
-              />
-              <div className="flex flex-col justify-center">
-                <span className="text-xs font-semibold leading-tight">hanry</span>
-                <span className="text-xs text-gray-500 leading-tight">hanry463@gmail.com</span>
-              </div>
-              <Button size="icon" variant="ghost" className="rounded-full p-0 h-6 w-6 ml-1">
-                <Settings className="w-4 h-4" />
-              </Button>
-            </div> */}
-
-            {/* Language */}
-            {/* <Button variant="ghost" className="rounded-full bg-[#F8F9FD] h-10 flex items-center px-3 py-0">
-              <Languages className="w-5 h-5" />
-              <ChevronDown className="w-4 h-4 ml-1" />
-            </Button> */}
-
             {/* Logout */}
             <Button
               onClick={handleLogout}

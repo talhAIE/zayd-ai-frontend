@@ -1818,7 +1818,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   <div
                     className={`p-3 rounded-xl max-w-md shadow-sm break-words ${
                       msg.type === "sent"
-                        ? "bg-primary text-white rounded-tr-none"
+                        ? "bg-[#3EA4F9] text-white rounded-tr-none"
                         : "bg-white text-gray-800 rounded-tl-none"
                     }`}
                   >

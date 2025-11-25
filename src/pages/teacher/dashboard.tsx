@@ -428,7 +428,7 @@ export default function TeacherDashboard() {
   return (
     <div>
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -436,12 +436,12 @@ export default function TeacherDashboard() {
                 <p className="text-sm font-medium text-gray-600 mb-1">
                   Total Users
                 </p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm font-bold text-gray-900 sm:text-2xl">
                   {summary?.totalStudentCount ?? 0}
                 </p>
               </div>
-              <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
-                <Users className="h-6 w-6 text-blue-600" />
+              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-blue-100 flex items-center justify-center">
+                <Users className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
               </div>
             </div>
           </CardContent>
@@ -454,14 +454,14 @@ export default function TeacherDashboard() {
                 <p className="text-sm font-medium text-gray-600 mb-1">
                   Total Usage
                 </p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm font-bold text-gray-900 sm:text-2xl">
                   {summary?.averageStudentUsageMinutes !== undefined
                     ? formatUsageHours(summary.averageStudentUsageMinutes)
                     : "0 Hrs"}
                 </p>
               </div>
-              <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
-                <Clock className="h-6 w-6 text-green-600" />
+              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-green-100 flex items-center justify-center">
+                <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
               </div>
             </div>
           </CardContent>
@@ -474,12 +474,12 @@ export default function TeacherDashboard() {
                 <p className="text-sm font-medium text-gray-600 mb-1">
                   Logged in
                 </p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm font-bold text-gray-900 sm:text-2xl">
                   {summary?.activeStudentsCount ?? 0}
                 </p>
               </div>
-              <div className="h-12 w-12 rounded-full bg-purple-100 flex items-center justify-center">
-                <UserCheck className="h-6 w-6 text-purple-600" />
+              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-purple-100 flex items-center justify-center">
+                <UserCheck className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
               </div>
             </div>
           </CardContent>
@@ -492,12 +492,12 @@ export default function TeacherDashboard() {
                 <p className="text-sm font-medium text-gray-600 mb-1">
                   Yet to Log-in
                 </p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm font-bold text-gray-900 sm:text-2xl">
                   {summary?.inactiveStudentsCount ?? 0}
                 </p>
               </div>
-              <div className="h-12 w-12 rounded-full bg-orange-100 flex items-center justify-center">
-                <UserX className="h-6 w-6 text-orange-600" />
+              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-orange-100 flex items-center justify-center">
+                <UserX className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />
               </div>
             </div>
           </CardContent>
@@ -579,12 +579,38 @@ export default function TeacherDashboard() {
               </SelectContent>
             </Select>
 
+            {/* All Time - visible on desktop, hidden on mobile (shown in mobile flex row below) */}
+            <div className="hidden sm:block">
+              <Select
+                value={timeFilter}
+                onValueChange={setTimeFilter}
+                disabled={filterValuesLoading}
+              >
+                <SelectTrigger className="flex-1 min-w-[140px]">
+                  <SelectValue
+                    placeholder={
+                      filterValuesLoading ? "Loading..." : "Time Filter"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Time</SelectItem>
+                  <SelectItem value="daily">Daily</SelectItem>
+                  <SelectItem value="weekly">Weekly</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Time, Sort By, and Sort Order - Flex row on mobile only */}
+          <div className="flex gap-2 w-full sm:hidden">
             <Select
               value={timeFilter}
               onValueChange={setTimeFilter}
               disabled={filterValuesLoading}
             >
-              <SelectTrigger className="flex-1 min-w-[140px]">
+              <SelectTrigger className="flex-1">
                 <SelectValue
                   placeholder={
                     filterValuesLoading ? "Loading..." : "Time Filter"
@@ -598,26 +624,13 @@ export default function TeacherDashboard() {
                 <SelectItem value="monthly">Monthly</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-
-          {/* Search and Sort */}
-          <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
-            {/* <div className="relative w-full sm:w-56">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[var(--font-light2)]" />
-              <Input
-                className="pl-9 w-full"
-                placeholder="Search by student name"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div> */}
 
             <Select
               value={sortBy}
               onValueChange={setSortBy}
               disabled={filterValuesLoading}
             >
-              <SelectTrigger className="w-full sm:w-[140px]">
+              <SelectTrigger className="flex-1">
                 <SelectValue
                   placeholder={filterValuesLoading ? "Loading..." : "Sort by"}
                 />
@@ -648,7 +661,7 @@ export default function TeacherDashboard() {
               onValueChange={setSortOrder}
               disabled={filterValuesLoading}
             >
-              <SelectTrigger className="w-full sm:w-[120px]">
+              <SelectTrigger className="flex-1">
                 <SelectValue
                   placeholder={filterValuesLoading ? "Loading..." : "Order"}
                 />
@@ -668,6 +681,81 @@ export default function TeacherDashboard() {
                 )}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Search and Sort */}
+          <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
+            {/* <div className="relative w-full sm:w-56">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[var(--font-light2)]" />
+              <Input
+                className="pl-9 w-full"
+                placeholder="Search by student name"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div> */}
+
+            {/* Sort By and Sort Order - visible on desktop, hidden on mobile (shown in mobile flex row above) */}
+            <div className="hidden sm:block">
+              <Select
+                value={sortBy}
+                onValueChange={setSortBy}
+                disabled={filterValuesLoading}
+              >
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue
+                    placeholder={filterValuesLoading ? "Loading..." : "Sort by"}
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {filterValues?.sortByOptions?.length ? (
+                    filterValues.sortByOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <>
+                      <SelectItem value="name">Name</SelectItem>
+                      <SelectItem value="points">Total Points</SelectItem>
+                      <SelectItem value="streak">Streak</SelectItem>
+                      <SelectItem value="usage">Usage</SelectItem>
+                      <SelectItem value="completedTopics">
+                        Completed Topics
+                      </SelectItem>
+                    </>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="hidden sm:block">
+              <Select
+                value={sortOrder}
+                onValueChange={setSortOrder}
+                disabled={filterValuesLoading}
+              >
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue
+                    placeholder={filterValuesLoading ? "Loading..." : "Order"}
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {filterValues?.sortOrderOptions?.length ? (
+                    filterValues.sortOrderOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <>
+                      <SelectItem value="asc">Ascending</SelectItem>
+                      <SelectItem value="desc">Descending</SelectItem>
+                    </>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
 
             {/* Clear Filters Button */}
             {hasActiveFilters && (

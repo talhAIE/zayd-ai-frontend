@@ -24,9 +24,9 @@ export default function StudentProfile() {
 
   useEffect(() => {
     if (teacherId && studentId) {
-      dispatch(fetchStudentProfileData({ teacherId, studentId }));
+      dispatch(fetchStudentProfileData({ teacherId, studentId, timeFilter }));
     }
-  }, [teacherId, studentId, dispatch]);
+  }, [teacherId, studentId, timeFilter, dispatch]);
 
   if (error) {
     return (
@@ -41,7 +41,7 @@ export default function StudentProfile() {
                 onClick={() =>
                   teacherId &&
                   studentId &&
-                  dispatch(fetchStudentProfileData({ teacherId, studentId }))
+                  dispatch(fetchStudentProfileData({ teacherId, studentId, timeFilter }))
                 }
                 className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
               >

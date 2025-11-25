@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -243,7 +244,7 @@ export default function LanguageLearningDashboard() {
               <CardContent className="p-4 flex flex-col">
                 {/* Top Row: Daily Usage label and Arrow icon */}
                 <div className="flex items-start justify-between mb-auto">
-                  <h4 className="text-sm font-medium text-white">
+                  <h4 className="text-sm font-medium text-white whitespace-nowrap">
                     Daily Usage
                   </h4>
                   <div className="w-7 h-7 rounded-full bg-white bg-opacity-10 flex items-center justify-center flex-shrink-0">
@@ -392,12 +393,15 @@ export default function LanguageLearningDashboard() {
               {isLoading ? (
                 <Skeleton className="h-8 w-24 rounded-full" />
               ) : (
-                <button className="flex items-center gap-1 px-4 py-2 rounded-full bg-[#F8F8F8] text-blue-600 hover:text-blue-700 font-medium text-sm">
+                <Link
+                  to="/student/learning-modes"
+                  className="flex items-center gap-1 px-4 py-2 rounded-full bg-[#F8F8F8] text-blue-600 hover:text-blue-700 font-medium text-sm"
+                >
                   {data?.completedTopics
                     ? Object.keys(data.completedTopics).length
                     : 0}{" "}
                   modes <ChevronRight className="w-4 h-4" />
-                </button>
+                </Link>
               )}
             </div>
           </CardHeader>

@@ -15,9 +15,12 @@ const initialState: StudentProfileState = {
 
 export const fetchStudentProfileData = createAsyncThunk(
   'studentProfile/fetchStudentProfileData',
-  async ({ teacherId, studentId }: { teacherId: string; studentId: string }, { rejectWithValue }) => {
+  async (
+    { teacherId, studentId, timeFilter = 'weekly' }: { teacherId: string; studentId: string; timeFilter?: 'weekly' | 'monthly' },
+    { rejectWithValue }
+  ) => {
     try {
-      const data = await fetchStudentProfile(teacherId, studentId);
+      const data = await fetchStudentProfile(teacherId, studentId, timeFilter);
       return data;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Failed to fetch student profile data');

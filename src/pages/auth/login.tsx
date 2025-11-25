@@ -157,13 +157,13 @@ export default function LoginPage() {
           background-position: 100% 50%;
         }
       `}</style>
-      <div className="min-h-screen bg-gradient-to-br from-[#F7FBFF] to-[#EFF3FF] flex items-center justify-center px-4 py-10">
+      <div className="h-screen overflow-hidden bg-gradient-to-br from-[#F7FBFF] to-[#EFF3FF] flex items-center justify-center px-4 py-10">
         <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-5 gap-10 items-center">
-          <div className="hidden lg:flex relative col-span-1 lg:col-span-3 items-center justify-center p-6 md:p-10">
+          <div className="hidden lg:flex relative col-span-1 lg:col-span-3 h-full items-center justify-center p-6 md:p-10">
             <img
               src={charactersImg}
               alt="ZAYD AI mentors"
-              className="w-full max-w-xl object-contain drop-shadow-[0_25px_45px_rgba(2,103,181,0.15)]"
+              className="w-full max-w-5xl h-auto object-contain drop-shadow-[0_25px_45px_rgba(2,103,181,0.15)]"
             />
           </div>
 
