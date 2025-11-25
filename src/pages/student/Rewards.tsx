@@ -392,18 +392,6 @@ const Rewards = (): JSX.Element => {
     const canClaim = isEarned && !achievement.rewardClaimed;
     const nameRef = useRef<HTMLHeadingElement>(null);
     const descRef = useRef<HTMLParagraphElement>(null);
-    const [nameLines, setNameLines] = useState(1);
-    const [descLines, setDescLines] = useState(1);
-
-    useEffect(() => {
-      const getLineCount = (el: HTMLElement | null): number => {
-        if (!el) return 1;
-        const lineHeight = parseFloat(getComputedStyle(el).lineHeight || "16");
-        return Math.round(el.scrollHeight / lineHeight);
-      };
-      setNameLines(getLineCount(nameRef.current));
-      setDescLines(getLineCount(descRef.current));
-    }, [achievement.name, achievement.description]);
 
     const getProgressValue = (): number | null => {
       if (!userStats || achievement.threshold == null) return null;
@@ -465,22 +453,26 @@ const Rewards = (): JSX.Element => {
         </div>
 
         <div className="flex-1 text-center">
-          <h4
-            ref={nameRef}
-            className={`font-semibold text-sm ${
-              nameLines > 1 || descLines > 1 ? "mb-1" : "mb-6"
-            } ${isEarned ? "text-gray-800" : "text-gray-600"}`}
-          >
-            {achievement.name}
-          </h4>
-          <p
-            ref={descRef}
-            className={`text-xs ${
-              descLines >= 3 ? "mb-2" : descLines === 2 ? "mb-6" : "mb-6"
-            } ${isEarned ? "text-gray-600" : "text-gray-500"}`}
-          >
-            {achievement.description}
-          </p>
+          <div className="min-h-[2.5rem] flex items-center justify-center mb-1.5">
+            <h4
+              ref={nameRef}
+              className={`font-semibold text-sm ${
+                isEarned ? "text-gray-800" : "text-gray-600"
+              }`}
+            >
+              {achievement.name}
+            </h4>
+          </div>
+          <div className="min-h-[2.5rem] flex items-center justify-center mb-6">
+            <p
+              ref={descRef}
+              className={`text-xs ${
+                isEarned ? "text-gray-600" : "text-gray-500"
+              }`}
+            >
+              {achievement.description}
+            </p>
+          </div>
 
           {rawValue != null && achievement.threshold != null && !isEarned && (
             <div className="mb-2">

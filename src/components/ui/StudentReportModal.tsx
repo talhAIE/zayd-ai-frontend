@@ -268,6 +268,10 @@ export default function StudentReportModal({
             </CardContent>
           </Card>
 
+          <h2 className="text-xl font-bold text-blue-600 mt-8 mb-4 ms-2">
+            Speech Assessment
+          </h2>
+
           {/* Assessment Data */}
           {assessmentData.length > 0 && (
             <Card>

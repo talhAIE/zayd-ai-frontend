@@ -244,7 +244,7 @@ export default function LanguageLearningDashboard() {
               <CardContent className="p-4 flex flex-col">
                 {/* Top Row: Daily Usage label and Arrow icon */}
                 <div className="flex items-start justify-between mb-auto">
-                  <h4 className="text-sm font-medium text-white">
+                  <h4 className="text-sm font-medium text-white whitespace-nowrap">
                     Daily Usage
                   </h4>
                   <div className="w-7 h-7 rounded-full bg-white bg-opacity-10 flex items-center justify-center flex-shrink-0">
