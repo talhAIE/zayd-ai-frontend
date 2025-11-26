@@ -74,7 +74,7 @@ export default function LoginPage() {
       } else {
         // Show phone number input if no phone number exists
         setShowPhoneInput(true);
-        // Clear any previous phone number in the form when switching to phone input
+        // Reset form with empty phone number
         phoneForm.reset({ phoneNumber: "" });
       }
     }
@@ -223,7 +223,7 @@ export default function LoginPage() {
                   </form>
                 </Form>
               ) : (
-                <Form {...phoneForm}>
+                <Form {...phoneForm} key="phone-form">
                   <form
                     onSubmit={phoneForm.handleSubmit(onPhoneSubmit)}
                     className="space-y-6"
@@ -231,31 +231,37 @@ export default function LoginPage() {
                     <FormField
                       control={phoneForm.control}
                       name="phoneNumber"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-[#0C1B3A] font-semibold">
-                            Phone Number
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Enter your phone number"
-                              className="h-14 rounded-2xl border border-[#dce4f3] focus-visible:ring-2 focus-visible:ring-[#3EA4F9]"
-                              type="tel"
-                              value={field.value}
-                              onChange={(e) => {
-                                const onlyNums = e.target.value.replace(
-                                  /\D/g,
-                                  ""
-                                );
-                                field.onChange(onlyNums);
-                              }}
-                              onBlur={field.onBlur}
-                              name={field.name}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      render={({ field }) => {
+                        return (
+                          <FormItem>
+                            <FormLabel className="text-[#0C1B3A] font-semibold">
+                              Phone Number
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Enter your phone number"
+                                className="h-14 rounded-2xl border border-[#dce4f3] focus-visible:ring-2 focus-visible:ring-[#3EA4F9]"
+                                type="tel"
+                                autoFocus
+                                autoComplete="tel"
+                                disabled={isSubmittingPhone}
+                                value={field.value ?? ""}
+                                onChange={(e) => {
+                                  const onlyNums = e.target.value.replace(
+                                    /\D/g,
+                                    ""
+                                  );
+                                  field.onChange(onlyNums);
+                                }}
+                                onBlur={field.onBlur}
+                                name={field.name}
+                                ref={field.ref}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
                     />
 
                     <Button
