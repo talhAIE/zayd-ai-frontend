@@ -18,7 +18,7 @@ const TeacherDashboardProfile = ({
   studentData,
 }: TeacherDashboardProfileProps) => {
   return (
-    <Card className="w-full max-w-xs xs:max-w-sm sm:max-w-md md:max-w-lg my-4 md:my-0 bg-slate-50">
+    <Card className="w-full my-4 md:my-0 bg-slate-50">
       <CardContent className="p-2 xs:p-3 sm:p-4">
         <div className="flex justify-center items-center mb-3 xs:mb-4 rounded-3xl gradientBg">
           <div className="flex items-center justify-center">
