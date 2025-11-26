@@ -197,7 +197,7 @@ export default function PerformanceGraph({
                     margin={{
                       top: 5,
                       right: 10,
-                      left: -10,
+                      left: 5,
                       bottom: 5,
                     }}
                   >
@@ -217,7 +217,7 @@ export default function PerformanceGraph({
                       tick={{ fontSize: 10, fill: "#666" }}
                       domain={[0, 100]}
                       tickFormatter={(value) => `${value}%`}
-                      width={35}
+                      width={45}
                     />
                     <Tooltip
                       contentStyle={{
