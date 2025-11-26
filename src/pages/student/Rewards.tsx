@@ -545,9 +545,9 @@ const Rewards = (): JSX.Element => {
     const canClaim = isEarned && !certification.rewardClaimed;
 
     return (
-      <div className="relative">
+      <div className="relative h-full">
         <div
-          className={`relative bg-gradient-to-br from-[#6BBCFB] to-[#BAE1FF] rounded-2xl p-4 flex flex-col cursor-pointer shadow-lg transition-all hover:shadow-xl overflow-hidden ${
+          className={`relative bg-gradient-to-br from-[#6BBCFB] to-[#BAE1FF] rounded-2xl p-4 flex flex-col cursor-pointer shadow-lg transition-all hover:shadow-xl overflow-hidden h-full min-h-[180px] sm:min-h-[200px] md:min-h-[220px] ${
             !isEarned ? "opacity-60 grayscale" : ""
           }`}
           onClick={() => {
@@ -557,24 +557,24 @@ const Rewards = (): JSX.Element => {
           }}
         >
           {/* Header with title and lock icon */}
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-sm font-bold text-white line-clamp-2">
+          <div className="flex items-start justify-between mb-2 min-h-[2.5rem]">
+            <h2 className="text-sm font-bold text-white line-clamp-2 flex-1">
               {certification.title}
             </h2>
             {!isEarned && (
-              <Lock className="w-4 h-4 text-white flex-shrink-0 ml-1" />
+              <Lock className="w-4 h-4 text-white flex-shrink-0 ml-1 mt-0.5" />
             )}
           </div>
 
           {/* Issue date */}
-          <p className="text-white text-xs font-medium mb-2">
+          <p className="text-white text-xs font-medium mb-2 min-h-[1.25rem]">
             {isEarned
               ? `Issue ${certification.issueDate}`
               : certification.issueDate}
           </p>
 
           {/* Certificate icon illustration at bottom */}
-          <div className="flex-1 flex items-end justify-center mt-2 min-h-[80px] relative">
+          <div className="flex-1 flex items-end justify-center mt-auto min-h-[80px] relative">
             {certification.iconUrl ? (
               <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-12 w-36 h-36 flex items-center justify-center">
                 <img
@@ -730,7 +730,7 @@ const Rewards = (): JSX.Element => {
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 items-stretch">
                   {certificates.map((cert) => (
                     <CertificationCard key={cert.id} certification={cert} />
                   ))}

@@ -98,13 +98,13 @@ export function TeacherLayout({ children }: TeacherLayoutProps) {
     <div className="flex min-h-screen bg-background ">
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/50 z-40 xl:hidden"
           onClick={() => setSidebarOpen(false)}
         ></div>
       )}
 
       <nav
-        className={`fixed top-0 left-0 bottom-0 w-72 bg-white z-50 transform transition-transform duration-300 ease-in-out lg:hidden ${
+        className={`fixed top-0 left-0 bottom-0 w-72 bg-white z-50 transform transition-transform duration-300 ease-in-out xl:hidden ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -154,7 +154,7 @@ export function TeacherLayout({ children }: TeacherLayoutProps) {
       </nav>
 
       {/* Sidebar for desktop */}
-      <nav className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 my-6 rounded-3xl mr-2">
+      <nav className="hidden xl:flex xl:flex-col xl:w-64 xl:fixed xl:inset-y-0 my-6 rounded-3xl mr-2">
         <div className="p-6">
           <Link
             to="/teacher/dashboard"
@@ -187,13 +187,13 @@ export function TeacherLayout({ children }: TeacherLayoutProps) {
       </nav>
 
       {/* Main content */}
-      <div className="lg:pl-64 flex flex-col flex-1">
+      <div className="xl:pl-64 flex flex-col flex-1">
         {/* Top header */}
-        <header className="sticky top-0 z-40 flex lg:hidden items-center justify-between h-16 px-4 bg-background lg:px-8">
+        <header className="sticky top-0 z-40 flex xl:hidden items-center justify-between h-16 px-4 bg-background xl:px-8">
           <Button
             variant="ghost"
             size="icon"
-            className="lg:hidden"
+            className="xl:hidden"
             onClick={() => setSidebarOpen(true)}
           >
             <Menu className="h-6 w-6" />
@@ -238,7 +238,7 @@ export function TeacherLayout({ children }: TeacherLayoutProps) {
             </svg>
           </Button>
         </header>
-        <header className="sticky top-0 z-40 hidden lg:flex items-center justify-between h-16 bg-background py-10 px-8 ">
+        <header className="sticky top-0 z-40 hidden xl:flex items-center justify-between h-16 bg-background py-10 px-8 ">
           <div className="flex items-center">
             <Button
               variant="ghost"
@@ -320,7 +320,7 @@ export function TeacherLayout({ children }: TeacherLayoutProps) {
 
         {/* Main Content */}
         <main className="flex-1">
-          <div className="p-4 lg:p-8">{children}</div>
+          <div className="p-4 xl:p-8">{children}</div>
         </main>
       </div>
 

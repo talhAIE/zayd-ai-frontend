@@ -1,5 +1,4 @@
 import { Card, CardHeader } from "@/components/ui/card";
-import { CertificateIcon } from "@/components/Icons";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface CertificationsSectionProps {
@@ -57,9 +56,19 @@ export function CertificationsSection({
                       key={achievement.id}
                       className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                     >
-                      <div className="w-12 h-12 rounded flex-shrink-0 flex items-center justify-center">
-                        <CertificateIcon className="w-12 h-12" />
-                      </div>
+                      {achievement.iconUrl ? (
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#6BBCFB] to-[#BAE1FF] flex items-center justify-center flex-shrink-0 p-1.5">
+                          <img
+                            src={achievement.iconUrl}
+                            alt={achievement.name}
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#6BBCFB] to-[#BAE1FF] flex-shrink-0 flex items-center justify-center">
+                          <span className="text-xs text-white">No icon</span>
+                        </div>
+                      )}
                       <div className="flex-1 min-w-0">
                         <p className="text-xs text-gray-500">
                           Awarded {formatDate(achievement.awardedAt)}
@@ -93,16 +102,18 @@ export function CertificationsSection({
                       key={achievement.id}
                       className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                     >
-                      {achievement.category === "certificate" ? (
-                        <div className="w-12 h-12 rounded flex-shrink-0 flex items-center justify-center">
-                          <CertificateIcon className="w-12 h-12" />
+                      {achievement.iconUrl ? (
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#6BBCFB] to-[#BAE1FF] flex items-center justify-center flex-shrink-0 p-1.5">
+                          <img
+                            src={achievement.iconUrl}
+                            alt={achievement.name}
+                            className="w-full h-full object-contain"
+                          />
                         </div>
                       ) : (
-                        <img
-                          src={achievement.iconUrl}
-                          alt={achievement.name}
-                          className="w-12 h-12 rounded object-cover flex-shrink-0"
-                        />
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#6BBCFB] to-[#BAE1FF] flex-shrink-0 flex items-center justify-center">
+                          <span className="text-xs text-white">No icon</span>
+                        </div>
                       )}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-gray-800 break-words">
