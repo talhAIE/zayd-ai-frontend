@@ -452,7 +452,7 @@ export default function TeacherDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600 mb-1">
-                  Total Usage
+                  Average Usage
                 </p>
                 <p className="text-sm font-bold text-gray-900 sm:text-2xl">
                   {summary?.averageStudentUsageMinutes !== undefined
