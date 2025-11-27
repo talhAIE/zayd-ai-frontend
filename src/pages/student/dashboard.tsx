@@ -85,7 +85,7 @@ export default function LanguageLearningDashboard() {
 
   return (
     <div className="flex flex-col border border-[var(--border-light)] rounded-3xl p-4">
-      <div className="grid grid-cols-1 md:grid-cols-3 md:gap-6 mb-6 w-full mx-auto items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-3 md:gap-6 mb-6 w-full mx-auto items-start">
         {isLoading ? (
           // Profile Skeleton aligned with DashboardProfile layout
           <Card className="col-span-1 w-full my-10 md:my-0 bg-slate-50 pt-[7px] pb-[7px] shadow-sm border-none">
@@ -280,22 +280,89 @@ export default function LanguageLearningDashboard() {
             </Card>
 
             <Card className="shadow-sm col-span-2 rounded-2xl overflow-hidden border-0 relative bg-[#89CBFC2B]">
+              <style>{`
+                @media (min-width: 545px) and (max-width: 1023px) {
+                  .streak-badge-container {
+                    flex-direction: row !important;
+                    align-items: center !important;
+                    gap: 1rem !important;
+                  }
+                  .streak-badge-wrapper {
+                    width: 10rem !important;
+                    height: 10rem !important;
+                    flex-shrink: 0;
+                  }
+                  .streak-badge-img {
+                    width: 100% !important;
+                    height: 100% !important;
+                  }
+                  .streak-text-overlay {
+                    display: none !important;
+                  }
+                  .streak-text-below {
+                    display: flex !important;
+                    flex-direction: column;
+                    gap: 0.125rem;
+                  }
+                  .streak-text-title {
+                    font-size: 2rem !important;
+                    line-height: 2.75rem !important;
+                  }
+                  .streak-text-subtitle {
+                    font-size: 1rem !important;
+                    line-height: 1rem !important;
+                  }
+                  .streak-number-container {
+                    margin-top: 0 !important;
+                    margin-left: 0 !important;
+                  }
+                  .streak-number-value {
+                    font-size: 3rem !important;
+                    line-height: 1 !important;
+                  }
+                  .streak-bird-container {
+                    margin-right: -5rem;
+                    margin-bottom: -3rem;
+                  }
+                  .streak-bird-img {
+                    height: 15rem !important;
+                  }
+                }
+              `}</style>
               <CardContent className="p-4 flex flex-row items-center gap-4 relative">
                 {/* Left Section: Badge and Text */}
-                <div className="flex flex-col items-start gap-2 flex-shrink-0">
-                  {/* Badge Icon */}
-                  <div className="flex-shrink-0">
+                <div className="flex flex-col items-start gap-2 flex-shrink-0 streak-badge-container">
+                  {/* Badge Icon - Made bigger */}
+                  <div className="flex-shrink-0 streak-badge-wrapper">
                     <img
                       src={DashboardBadge}
                       alt="Badge"
-                      className="w-20 h-20"
+                      className="w-20 h-20 streak-badge-img"
                     />
+                    {/* Text overlapping the badge - Hidden in media query */}
+                    <div className="hidden streak-text-overlay">
+                      <h4
+                        className="text-lg font-bold leading-tight"
+                        style={{
+                          background:
+                            "linear-gradient(135deg, #6250E9, #69BDFF)",
+                          WebkitBackgroundClip: "text",
+                          WebkitTextFillColor: "transparent",
+                          backgroundClip: "text",
+                        }}
+                      >
+                        Longest Streak
+                      </h4>
+                      <p className="text-[10px] text-gray-500 leading-tight">
+                        here is the level of your progress
+                      </p>
+                    </div>
                   </div>
 
-                  {/* Text Section */}
-                  <div className="flex flex-col gap-0.5">
+                  {/* Text Section - Shown to the right of badge in media query */}
+                  <div className="flex flex-col gap-0.5 streak-text-below">
                     <h4
-                      className="text-lg font-bold leading-tight"
+                      className="text-lg font-bold leading-tight streak-text-title"
                       style={{
                         background: "linear-gradient(135deg, #6250E9, #69BDFF)",
                         WebkitBackgroundClip: "text",
@@ -305,20 +372,20 @@ export default function LanguageLearningDashboard() {
                     >
                       Longest Streak
                     </h4>
-                    <p className="text-[10px] text-gray-500 leading-tight">
+                    <p className="text-[10px] text-gray-500 leading-tight streak-text-subtitle">
                       here is the level of your progress
                     </p>
                   </div>
                 </div>
 
                 {/* Center Section: Streak Number */}
-                <div className="flex-1 flex items-center justify-center relative mt-20 ms-4">
+                <div className="flex-1 flex items-center justify-center relative mt-20 ms-4 streak-number-container">
                   <div
                     className="absolute w-14 h-10 rounded-full opacity-10"
                     style={{ backgroundColor: "#9E9E9E" }}
                   />
                   <div
-                    className="text-2xl font-bold leading-none relative z-10"
+                    className="text-2xl font-bold leading-none relative z-10 streak-number-value"
                     style={{
                       background: "linear-gradient(135deg, #6250E9, #69BDFF)",
                       WebkitBackgroundClip: "text",
@@ -330,12 +397,12 @@ export default function LanguageLearningDashboard() {
                   </div>
                 </div>
 
-                {/* Right Section: Bird Illustration */}
-                <div className="flex-shrink-0 flex items-end justify-end -mr-14">
+                {/* Right Section: Bird Illustration - Made bigger */}
+                <div className="flex-shrink-0 flex items-end justify-end -mr-14 streak-bird-container">
                   <img
                     src={TeachBird}
                     alt="Bird"
-                    className="h-[9.5rem] w-auto object-contain"
+                    className="h-[9.5rem] w-auto object-contain streak-bird-img"
                   />
                 </div>
               </CardContent>
@@ -370,6 +437,25 @@ export default function LanguageLearningDashboard() {
       <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Completed Topics Section */}
         <Card className="shadow-md border-slate-200">
+          <style>{`
+            @media (max-width: 457px) and (min-width: 412px) {
+              .modes-link {
+                width: 8rem !important;
+              }
+            }
+
+            @media (max-width: 412px) and (min-width: 375px) {
+              .modes-link {
+                width: 9rem !important;
+              }
+            }
+            
+            @media (max-width: 375px) {
+              .modes-link {
+                width: 12rem !important;
+              }
+            }
+          `}</style>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <div>
@@ -395,7 +481,7 @@ export default function LanguageLearningDashboard() {
               ) : (
                 <Link
                   to="/student/learning-modes"
-                  className="flex items-center gap-1 px-4 py-2 rounded-full bg-[#F8F8F8] text-blue-600 hover:text-blue-700 font-medium text-sm"
+                  className="flex items-center gap-1 px-4 py-2 rounded-full bg-[#F8F8F8] text-blue-600 hover:text-blue-700 font-medium text-sm modes-link"
                 >
                   {data?.completedTopics
                     ? Object.keys(data.completedTopics).length
