@@ -61,7 +61,7 @@ export default function Navbar() {
   }, []);
 
   return (
-    <nav className="w-full sm:py-4 py-8 shadow-sm sticky top-0 bg-white z-[9999]">
+    <nav className="w-full md:py-4 py-8 shadow-sm sticky top-0 bg-white z-[9999]">
       <div className="flex items-center w-full px-4 relative">
         <div
           className="absolute left-4 md:relative md:left-auto w-20 h-8 md:w-28 md:h-12 flex items-center cursor-pointer z-10"
@@ -75,6 +75,16 @@ export default function Navbar() {
             height={50}
             style={{ objectFit: "contain" }}
           />
+        </div>
+
+        {/* Mobile language toggle centered between logo and menu */}
+        <div className="md:hidden absolute left-1/2 -translate-x-1/2">
+          <button
+            onClick={() => setLanguage(language === "ar" ? "en" : "ar")}
+            className="text-sm text-gray-700 hover:text-[#058BF4] transition-colors px-2 py-1"
+          >
+            العربية | English
+          </button>
         </div>
 
         {/* Centered blue background menu */}
@@ -215,15 +225,6 @@ export default function Navbar() {
               transitionDelay: isMobileMenuOpen ? "400ms" : "0ms",
             }}
           >
-            <button
-              onClick={() => {
-                setLanguage(language === "ar" ? "en" : "ar");
-                setIsMobileMenuOpen(false);
-              }}
-              className="text-sm text-gray-700 hover:text-[#058BF4] transition-colors px-4 py-2 text-center"
-            >
-              العربية | English
-            </button>
             <Link to="/login">
               <Button
                 variant="outline"
