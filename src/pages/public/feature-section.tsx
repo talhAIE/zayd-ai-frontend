@@ -9,6 +9,9 @@ import FemaleBrowsing from "@/assets/images/landingpage/femalebrowsing.png";
 import Male from "@/assets/images/landingpage/male.png";
 import Female from "@/assets/images/landingpage/female.png";
 import Falcon from "@/assets/images/landingpage/eagle.png";
+import ListeningMode from "@/assets/images/landingpage/listeningMode.png";
+import Certificate from "@/assets/images/landingpage/Certificate.png";
+import Mcqs from "@/assets/images/landingpage/mcqs.png";
 import { useState } from "react";
 import { useLanguage } from "@/components/language-provider";
 
@@ -680,16 +683,26 @@ export default function FeatureSection() {
                 }}
               >
                 <motion.img
-                  src={chatmodeImg}
+                  key={selectedFeature}
+                  src={
+                    selectedFeature === 1
+                      ? ListeningMode
+                      : selectedFeature === 3
+                      ? Certificate
+                      : selectedFeature === 5
+                      ? Mcqs
+                      : chatmodeImg
+                  }
                   alt="Chat Mode Interface"
                   width={800}
                   height={800}
                   className="sm:w-[90%] w-full h-auto rounded-xl mx-auto"
                   style={{ objectFit: "contain" }}
-                  animate={{
-                    y: [0, -5, 0],
-                  }}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1, y: [0, -5, 0] }}
                   transition={{
+                    opacity: { duration: 0.5 },
+                    scale: { duration: 0.5 },
                     y: {
                       duration: 2,
                       repeat: Infinity,

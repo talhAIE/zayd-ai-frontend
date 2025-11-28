@@ -187,8 +187,10 @@ export default function HeroSection() {
         </div>
 
         <motion.div
-          className="absolute top-[2.5rem] right-[-13rem] xl:flex hidden z-10"
-          initial={{ x: 100, opacity: 0 }}
+          className={`absolute top-[3.2rem] xl:flex hidden z-10 ${
+            language === "ar" ? "left-[-13.5rem]" : "right-[-13.5rem]"
+          }`}
+          initial={{ x: language === "ar" ? -100 : 100, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{
             duration: 0.8,
@@ -196,7 +198,15 @@ export default function HeroSection() {
             delay: 0.5,
           }}
         >
-          <img src={pointingSvg} alt="Pointing" width={250} height={250} />
+          <img
+            src={pointingSvg}
+            alt="Pointing"
+            width={250}
+            height={250}
+            style={{
+              transform: language === "ar" ? "scaleX(-1)" : "none",
+            }}
+          />
         </motion.div>
       </div>
 
