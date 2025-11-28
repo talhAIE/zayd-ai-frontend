@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -169,7 +169,9 @@ export default function LoginPage() {
 
           <div className="col-span-1 lg:col-span-2 p-8 md:p-12 flex flex-col">
             <div className="flex flex-col items-center text-center mb-8">
-              <img src={zaydLogo} alt="ZAYD Logo" className="w-28 mb-4" />
+              <Link to="/" className="cursor-pointer">
+                <img src={zaydLogo} alt="ZAYD Logo" className="w-28 mb-4" />
+              </Link>
               <h1 className="text-3xl md:text-4xl font-semibold text-[#0C1B3A]">
                 {showPhoneInput ? "Verify your phone" : "Welcome Back!"}
               </h1>
