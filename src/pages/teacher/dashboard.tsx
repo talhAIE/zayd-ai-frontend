@@ -22,6 +22,10 @@ import {
   Clock,
   UserCheck,
   UserX,
+  BookOpen,
+  CheckCircle,
+  TrendingUp,
+  TrendingDown,
 } from "lucide-react";
 import {
   Select,
@@ -51,9 +55,20 @@ import {
 } from "@/services/teacherService";
 import { toast } from "sonner";
 
-const convertSecondsToMinutes = (seconds: number): string => {
-  const minutes = Math.round(seconds / 60);
-  return `${minutes} min`;
+const formatHours = (hours: number): string => {
+  if (hours % 1 === 0) {
+    return `${Math.round(hours)} Hrs`;
+  }
+  return `${Math.round(hours * 10) / 10} Hrs`;
+};
+
+const formatStudentUsage = (usageInSeconds: number): string => {
+  // Convert seconds to hours
+  const hours = usageInSeconds / 3600;
+  if (hours % 1 === 0) {
+    return `${Math.round(hours)} Hrs`;
+  }
+  return `${Math.round(hours * 10) / 10} Hrs`;
 };
 
 export default function TeacherDashboard() {
@@ -413,18 +428,6 @@ export default function TeacherDashboard() {
     );
   }
 
-  const formatUsageHours = (totalMinutes: number): string => {
-    // Convert total minutes to hours
-    const totalHours = totalMinutes / 60;
-
-    // Format: show as whole number if it's exactly a whole number, otherwise show one decimal
-    if (totalHours % 1 === 0) {
-      return `${Math.round(totalHours)} Hrs`;
-    }
-    // Round to one decimal place for display
-    return `${Math.round(totalHours * 10) / 10} Hrs`;
-  };
-
   return (
     <div>
       {/* Summary Cards */}
@@ -452,11 +455,11 @@ export default function TeacherDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600 mb-1">
-                  Average Usage
+                  Total Usage
                 </p>
                 <p className="text-sm font-bold text-gray-900 sm:text-2xl">
-                  {summary?.averageStudentUsageMinutes !== undefined
-                    ? formatUsageHours(summary.averageStudentUsageMinutes)
+                  {summary?.totalUsageHours !== undefined
+                    ? formatHours(summary.totalUsageHours)
                     : "0 Hrs"}
                 </p>
               </div>
@@ -502,6 +505,78 @@ export default function TeacherDashboard() {
             </div>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-1">
+                  Total Topics
+                </p>
+                <p className="text-sm font-bold text-gray-900 sm:text-2xl">
+                  {summary?.totalTopics ?? 0}
+                </p>
+              </div>
+              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-indigo-100 flex items-center justify-center">
+                <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-1">
+                  Completed Topics
+                </p>
+                <p className="text-sm font-bold text-gray-900 sm:text-2xl">
+                  {summary?.completedTopics ?? 0}
+                </p>
+              </div>
+              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-teal-100 flex items-center justify-center">
+                <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-teal-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex-1 min-w-0 pr-2">
+                <p className="text-sm font-medium text-gray-600 mb-1">
+                  Most Used Mode
+                </p>
+                <p className="text-sm font-bold text-gray-900 sm:text-lg break-words">
+                  {summary?.mostUsedMode ?? "N/A"}
+                </p>
+              </div>
+              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex-1 min-w-0 pr-2">
+                <p className="text-sm font-medium text-gray-600 mb-1">
+                  Least Used Mode
+                </p>
+                <p className="text-sm font-bold text-gray-900 sm:text-lg break-words">
+                  {summary?.leastUsedMode ?? "N/A"}
+                </p>
+              </div>
+              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-rose-100 flex items-center justify-center flex-shrink-0">
+                <TrendingDown className="h-5 w-5 sm:h-6 sm:w-6 text-rose-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="flex flex-wrap items-center gap-4 mb-6">
@@ -533,7 +608,7 @@ export default function TeacherDashboard() {
               onValueChange={setClassFilter}
               disabled={filterValuesLoading}
             >
-              <SelectTrigger className="flex-1 min-w-[140px]">
+              <SelectTrigger className="flex-1 min-w-[120px] sm:min-w-[140px]">
                 <SelectValue
                   placeholder={filterValuesLoading ? "Loading..." : "Class"}
                 />
@@ -555,7 +630,7 @@ export default function TeacherDashboard() {
               onValueChange={setTopicStatusFilter}
               disabled={filterValuesLoading}
             >
-              <SelectTrigger className="flex-1 min-w-[140px]">
+              <SelectTrigger className="flex-1 min-w-[120px] sm:min-w-[140px]">
                 <SelectValue
                   placeholder={
                     filterValuesLoading ? "Loading..." : "Topic Status"
@@ -586,7 +661,7 @@ export default function TeacherDashboard() {
                 onValueChange={setTimeFilter}
                 disabled={filterValuesLoading}
               >
-                <SelectTrigger className="flex-1 min-w-[140px]">
+                <SelectTrigger className="flex-1 min-w-[120px] sm:min-w-[140px]">
                   <SelectValue
                     placeholder={
                       filterValuesLoading ? "Loading..." : "Time Filter"
@@ -947,7 +1022,7 @@ export default function TeacherDashboard() {
                         <TableCell className="text-center px-6 py-4">
                           <div className="flex items-center justify-center">
                             <span className="font-medium">
-                              {convertSecondsToMinutes(student.usage)}
+                              {formatStudentUsage(student.usage)}
                             </span>
                           </div>
                         </TableCell>
@@ -1075,7 +1150,7 @@ export default function TeacherDashboard() {
                     {visibleColumns.usage && (
                       <p>
                         <strong>Usage:</strong>{" "}
-                        {convertSecondsToMinutes(student.usage)}
+                        {formatStudentUsage(student.usage)}
                       </p>
                     )}
                     {visibleColumns.totalPoints && (

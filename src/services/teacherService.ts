@@ -29,9 +29,13 @@ export interface PaginationInfo {
 
 export interface TeacherDashboardSummary {
   totalStudentCount: number;
-  averageStudentUsageMinutes: number;
+  totalUsageHours: number;
   activeStudentsCount: number;
   inactiveStudentsCount: number;
+  totalTopics: number;
+  completedTopics: number;
+  mostUsedMode: string;
+  leastUsedMode: string;
 }
 
 export interface TeacherDashboardData {
