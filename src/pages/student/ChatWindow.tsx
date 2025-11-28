@@ -1536,8 +1536,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               <span className="font-medium text-blue-700">
                 Step {listeningSteps}/3
               </span>
-              <span className="flex items-center gap-1 text-blue-700">
-                <Clock className="h-4 w-4" />
+              <span className="flex items-center gap-1 px-3 py-1.5 rounded-lg border-2 border-[#3EA4F9] bg-white text-blue-700">
+                <Clock className="h-6 w-6 text-[#3EA4F9]" />
                 <span>
                   {sessionTimeRemaining
                     ? formatTime(sessionTimeRemaining)
@@ -1694,8 +1694,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   ? "Debate Mode"
                   : "Chat Mode"}
               </h2>
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <Clock className="h-4 w-4" />
+              <div className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border-2 border-[#3EA4F9] bg-white text-gray-500">
+                <Clock className="h-6 w-6 text-[#3EA4F9]" />
                 <span>
                   {sessionTimeRemaining
                     ? formatTime(sessionTimeRemaining)

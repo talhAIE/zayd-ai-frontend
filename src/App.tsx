@@ -19,7 +19,7 @@ function App() {
         <Router>
           <CrossTabLogoutHandler />
           <AppRoutes />
-          <Toaster position="top-right" />
+          <Toaster position="top-right" offset={{ right: 85, top: 16 }} />
         </Router>
       </ThemeProvider>
     </Provider>

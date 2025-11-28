@@ -1,4 +1,5 @@
-import flyingImg from "@/assets/images/landingpage/flying.svg";
+import dashboardFalcon from "@/assets/images/landingpage/dashboardfalcon.png";
+import dashboardFalconWing from "@/assets/images/landingpage/dashboardfalconwing.png";
 import dashboardImg from "@/assets/images/landingpage/dashboard.png";
 import { motion, Variants } from "framer-motion";
 import { useLanguage } from "@/components/language-provider";
@@ -29,12 +30,27 @@ const DashboardSection = () => {
       <div className="relative z-10 container mx-auto px-4 sm:py-16 py-4">
         <div className="relative max-w-6xl mx-auto">
           {/* Flying bird decoration */}
-          <div className="lg:flex hidden absolute top-[-3rem] right-[1rem] max-[1400px]:right-[-5rem] z-[100]">
-            <img src={flyingImg} alt="Flying bird" width={150} height={150} />
+          <div className="lg:flex hidden absolute top-[-5rem] left-1/2 -translate-x-1/2 z-[1]">
+            <img
+              src={dashboardFalcon}
+              alt="Flying bird"
+              width={150}
+              height={150}
+            />
+          </div>
+          {/* Falcon wing - on top of dashboard */}
+          <div className="lg:flex hidden absolute top-[-1.05rem] left-[39.3rem] -translate-x-1/2 z-20">
+            <img
+              src={dashboardFalconWing}
+              alt="Falcon wing"
+              width={50}
+              height={50}
+              className="rotate-[6deg]"
+            />
           </div>
           {/* Dashboard Image */}
           <motion.div
-            className="flex justify-center"
+            className="flex justify-center relative z-10"
             variants={fadeInScale}
             initial="hidden"
             whileInView="visible"

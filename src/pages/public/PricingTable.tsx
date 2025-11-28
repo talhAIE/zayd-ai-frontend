@@ -95,7 +95,11 @@ export default function PricingTable() {
             {/* Header */}
             <thead>
               <tr className="bg-white">
-                <th className="py-6 px-6 text-left text-gray-900 font-semibold text-lg w-1/2"></th>
+                <th
+                  className={`py-6 px-6 text-gray-900 font-semibold text-lg w-1/2 ${
+                    language === "ar" ? "text-right" : "text-left"
+                  }`}
+                ></th>
                 {plans.map((plan, i) => (
                   <th
                     key={i}
@@ -118,7 +122,11 @@ export default function PricingTable() {
                     rowIndex % 2 === 0 ? "bg-[#F9FBFF]" : "bg-white"
                   } border-t border-[#D6E6FF]`}
                 >
-                  <td className="py-4 px-6 text-left text-gray-800 text-base font-medium">
+                  <td
+                    className={`py-4 px-6 text-gray-800 text-base font-medium ${
+                      language === "ar" ? "text-right" : "text-left"
+                    }`}
+                  >
                     {feature.name[language]}
                   </td>
 
