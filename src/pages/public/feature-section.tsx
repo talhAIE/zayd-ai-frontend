@@ -81,7 +81,7 @@ export default function FeatureSection() {
         ar: "قصص مشوقة للقراءة والاستماع",
       },
       description: {
-        en: "Practice speaking with an AI tutor, anytime, anywhere.",
+        en: "Boost your reading skills with fun stories.",
         ar: "استمتع بقصص تفاعلية لتحسين مهارات القراءة والاستماع.",
       },
       image: FemaleBrowsing,
@@ -121,7 +121,7 @@ export default function FeatureSection() {
         ar: "تمثيل أدوار ومناظرات تفاعلية",
       },
       description: {
-        en: "Practice speaking with an AI tutor, anytime, anywhere.",
+        en: "Step into any character and roleplay with AI.",
         ar: "شارك في تمثيل الأدوار والمناظرات لتحسين مهاراتك في التواصل.",
       },
       image: MaleProfessor,
@@ -212,7 +212,7 @@ export default function FeatureSection() {
         ar: "شهادات إنجاز معتمدة",
       },
       description: {
-        en: "Practice speaking with an AI tutor, anytime, anywhere.",
+        en: "Unlock rewards & earn certificates as you progress.",
         ar: "احصل على شهادات معتمدة تثبت تقدمك في تعلم اللغة الإنجليزية.",
       },
       image: FemaleCertificate,
@@ -244,7 +244,7 @@ export default function FeatureSection() {
         ar: "بيئة تعليمية آمنة ومحفوظة الخصوصية",
       },
       description: {
-        en: "Practice speaking with an AI tutor, anytime, anywhere.",
+        en: "Learn in a safe, secure AI environment.",
         ar: "تعلم في بيئة آمنة تحافظ على خصوصيتك وأمان بياناتك.",
       },
       image: MaleFemaleShield,
@@ -276,7 +276,7 @@ export default function FeatureSection() {
         ar: "اختبارات ذكية لتحديد المستوى والتقدم",
       },
       description: {
-        en: "Practice speaking with an AI tutor, anytime, anywhere.",
+        en: "Strengthen your memory with interactive passage questions.",
         ar: "اختبر مستواك وتابع تقدمك من خلال اختبارات ذكية متطورة.",
       },
       image: MaleProfessor,
