@@ -39,7 +39,7 @@ const DashboardSection = () => {
             />
           </div>
           {/* Falcon wing - on top of dashboard */}
-          <div className="lg:flex hidden absolute top-[-1.05rem] left-[39.3rem] -translate-x-1/2 z-20">
+          <div className="lg:flex hidden absolute top-[-1.05rem] left-[39.3rem] max-[1400px]:left-[26.3rem] -translate-x-1/2 z-20">
             <img
               src={dashboardFalconWing}
               alt="Falcon wing"
