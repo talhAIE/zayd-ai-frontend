@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import navLogoPng from "@/assets/images/landingpage/nav-logo.png";
 import { useLanguage } from "@/components/language-provider";
 
@@ -8,42 +8,79 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
   const { language, setLanguage } = useLanguage();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const menuItems = [
-    { name: "Home", href: "#home" },
-    { name: "Features", href: "#features" },
-    { name: "How It Works", href: "#how-it-works" },
-    // { name: "Testimonials", href: "#testimonials" },
-    { name: "Pricing", href: "#pricing" },
-    { name: "FAQ", href: "#faq" },
+    { name: "Home", href: "#home", isRoute: false },
+    { name: "Features", href: "#features", isRoute: false },
+    { name: "How It Works", href: "#how-it-works", isRoute: false },
+    // { name: "Testimonials", href: "#testimonials", isRoute: false },
+    { name: "Pricing", href: "#pricing", isRoute: false },
+    { name: "FAQ", href: "#faq", isRoute: false },
+    { name: "Contact Us", href: "/contact-us", isRoute: true },
   ];
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
-  const scrollToSection = (href: string) => {
+  const scrollToSection = (href: string, isRoute: boolean = false) => {
+    if (isRoute) {
+      navigate(href);
+      setIsMobileMenuOpen(false);
+      return;
+    }
     if (href === "#home") {
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
-    } else {
-      const element = document.querySelector(href);
-      if (element) {
-        element.scrollIntoView({
+      if (location.pathname !== "/") {
+        navigate("/");
+        setTimeout(() => {
+          window.scrollTo({
+            top: 0,
+            behavior: "smooth",
+          });
+        }, 100);
+      } else {
+        window.scrollTo({
+          top: 0,
           behavior: "smooth",
-          block: "start",
         });
+      }
+    } else {
+      if (location.pathname !== "/") {
+        navigate("/");
+        setTimeout(() => {
+          const element = document.querySelector(href);
+          if (element) {
+            element.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }
+        }, 100);
+      } else {
+        const element = document.querySelector(href);
+        if (element) {
+          element.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }
       }
     }
     setIsMobileMenuOpen(false);
   };
 
   useEffect(() => {
+    if (location.pathname !== "/") {
+      return;
+    }
+
     const handleScroll = () => {
-      const sections = menuItems.map((item) => item.href.substring(1));
-      const scrollPosition = window.scrollY + 100; // Offset for sticky navbar
+      const sections = menuItems
+        .filter((item) => !item.isRoute)
+        .map((item) => item.href.substring(1));
+      const scrollPosition = window.scrollY + 100;
 
       for (let i = sections.length - 1; i >= 0; i--) {
         const section = document.getElementById(sections[i]);
@@ -55,10 +92,10 @@ export default function Navbar() {
     };
 
     window.addEventListener("scroll", handleScroll);
-    handleScroll(); // Check initial position
+    handleScroll();
 
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [location.pathname]);
 
   return (
     <nav className="w-full md:py-4 py-8 shadow-sm sticky top-0 bg-white z-[9999]">
@@ -91,14 +128,32 @@ export default function Navbar() {
         <ul className="hidden md:flex gap-6 bg-[#E1EEFF] px-6 py-2 rounded-full text-gray-700 font-medium mx-auto">
           {menuItems.map((item) => {
             const sectionId = item.href.substring(1);
-            const isActive = activeSection === sectionId;
+            const isActive = item.isRoute 
+              ? location.pathname === item.href
+              : location.pathname === "/" && activeSection === sectionId;
+            
+            if (item.isRoute) {
+              return (
+                <li key={item.name}>
+                  <Link
+                    to={item.href}
+                    className={`cursor-pointer px-3 py-1 rounded-full transition-colors block ${
+                      isActive ? "bg-[#058BF4] text-white" : "hover:text-blue-800"
+                    }`}
+                  >
+                    {item.name}
+                  </Link>
+                </li>
+              );
+            }
+            
             return (
               <li
                 key={item.name}
                 className={`cursor-pointer px-3 py-1 rounded-full transition-colors ${
                   isActive ? "bg-[#058BF4] text-white" : "hover:text-blue-800"
                 }`}
-                onClick={() => scrollToSection(item.href)}
+                onClick={() => scrollToSection(item.href, item.isRoute)}
               >
                 {item.name}
               </li>
@@ -188,7 +243,36 @@ export default function Navbar() {
           <div className="flex-1 flex flex-col justify-center items-center space-y-6 py-8">
             {menuItems.map((item, index) => {
               const sectionId = item.href.substring(1);
-              const isActive = activeSection === sectionId;
+              const isActive = item.isRoute 
+                ? location.pathname === item.href
+                : location.pathname === "/" && activeSection === sectionId;
+              
+              if (item.isRoute) {
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={`text-xl font-medium transition-all duration-300 ${
+                      isActive
+                        ? "text-[#058BF4]"
+                        : "text-gray-700 hover:text-[#058BF4]"
+                    } ${
+                      isMobileMenuOpen
+                        ? "opacity-100 translate-y-0"
+                        : "opacity-0 translate-y-4"
+                    }`}
+                    style={{
+                      transitionDelay: isMobileMenuOpen
+                        ? `${index * 100}ms`
+                        : "0ms",
+                    }}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {item.name}
+                  </Link>
+                );
+              }
+              
               return (
                 <button
                   key={item.name}
@@ -206,7 +290,7 @@ export default function Navbar() {
                       ? `${index * 100}ms`
                       : "0ms",
                   }}
-                  onClick={() => scrollToSection(item.href)}
+                  onClick={() => scrollToSection(item.href, item.isRoute)}
                 >
                   {item.name}
                 </button>
