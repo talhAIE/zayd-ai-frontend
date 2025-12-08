@@ -125,23 +125,26 @@ export default function Navbar() {
         </div>
 
         {/* Centered blue background menu */}
-        <ul className="hidden md:flex gap-6 bg-[#E1EEFF] px-6 py-2 rounded-full text-gray-700 font-medium mx-auto">
+        <ul className="hidden md:flex gap-4 bg-[#E1EEFF] px-4 py-2 rounded-full text-gray-700 font-medium mx-auto text-sm">
           {menuItems.map((item) => {
             const sectionId = item.href.substring(1);
             const isActive = item.isRoute 
               ? location.pathname === item.href
               : location.pathname === "/" && activeSection === sectionId;
             
+            // Shorten "Contact Us" to "Contact" for desktop menu
+            const displayName = item.name === "Contact Us" ? "Contact" : item.name;
+            
             if (item.isRoute) {
               return (
                 <li key={item.name}>
                   <Link
                     to={item.href}
-                    className={`cursor-pointer px-3 py-1 rounded-full transition-colors block ${
+                    className={`cursor-pointer px-2.5 py-1 rounded-full transition-colors block ${
                       isActive ? "bg-[#058BF4] text-white" : "hover:text-blue-800"
                     }`}
                   >
-                    {item.name}
+                    {displayName}
                   </Link>
                 </li>
               );
@@ -150,12 +153,12 @@ export default function Navbar() {
             return (
               <li
                 key={item.name}
-                className={`cursor-pointer px-3 py-1 rounded-full transition-colors ${
+                className={`cursor-pointer px-2.5 py-1 rounded-full transition-colors ${
                   isActive ? "bg-[#058BF4] text-white" : "hover:text-blue-800"
                 }`}
                 onClick={() => scrollToSection(item.href, item.isRoute)}
               >
-                {item.name}
+                {displayName}
               </li>
             );
           })}

@@ -301,10 +301,10 @@ function ContactUsPage() {
             {/* Form Card with Bird Overlay */}
             <div className="relative mt-12 md:mt-16 lg:mt-20">
               {/* Bird Image - Positioned above form*/}
-              <motion.div
+            <motion.div
                 className="absolute right-0 -top-[80px] md:-top-[120px] lg:-top-[150px] w-[150px] md:w-[250px] lg:w-[300px] h-auto z-0"
                 initial={{ opacity: 0, y: 100 }}
-                animate={{ opacity: 1, y: 0 }}
+              animate={{ opacity: 1, y: 0 }}
                 transition={{ 
                   type: "spring",
                   stiffness: 100,
@@ -313,21 +313,21 @@ function ContactUsPage() {
                   delay: 2.3,
                   ease: "easeOut"
                 }}
-              >
-                <img
+            >
+              <img
                   src={falconContactPage}
-                  alt="Falcon"
+                alt="Falcon"
                   className="w-full h-auto"
-                />
-              </motion.div>
+              />
+            </motion.div>
 
-              {/* Form Card */}
-              <motion.div
+            {/* Form Card */}
+            <motion.div
                 className="bg-white border border-gray-200 rounded-2xl shadow-lg p-8 md:p-12 relative z-10"
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.7 }}
-              >
+            >
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
