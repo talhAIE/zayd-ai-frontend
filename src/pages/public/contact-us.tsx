@@ -32,6 +32,7 @@ import Navbar from './navbar';
 import Footer from './Footer';
 import { ReactLenis } from '@/components/lenis';
 import { LanguageProvider, useLanguage } from '@/components/language-provider';
+import falconContactPage from '@/assets/images/landingpage/falcon-contactpage.svg';
 
 const contactFormSchema = z.object({
   firstName: z
@@ -229,7 +230,7 @@ function ContactUsPage() {
                 className="inline-block bg-white border border-gray-300 rounded-full px-6 py-2 mb-6 shadow-sm"
                 initial={{ opacity: 0, y: 20, scale: 0.8 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.6, ease: "easeOut" }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
               >
                 <p className="text-gray-600 text-sm font-medium">
                   {language === "ar" ? "تواصل معنا" : "Get in touch"}
@@ -240,7 +241,7 @@ function ContactUsPage() {
                 className="relative flex items-center justify-center mb-8"
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+                transition={{ duration: 0.6, ease: "easeOut", delay: 0.15 }}
               >
                 <h1 className="text-5xl md:text-6xl font-bold">
                   {language === "ar" ? (
@@ -249,7 +250,7 @@ function ContactUsPage() {
                         className="bg-gradient-to-r from-[#76ABF8] via-[#058BF4] to-[#63B3F6] bg-clip-text text-transparent"
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
+                        transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
                       >
                         تواصل
                       </motion.span>{" "}
@@ -257,7 +258,7 @@ function ContactUsPage() {
                         className="text-gray-900"
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
+                        transition={{ duration: 0.6, ease: "easeOut", delay: 0.25 }}
                       >
                         معنا
                       </motion.span>
@@ -268,7 +269,7 @@ function ContactUsPage() {
                         className="bg-gradient-to-r from-[#76ABF8] via-[#058BF4] to-[#63B3F6] bg-clip-text text-transparent"
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
+                        transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
                       >
                         Contact
                       </motion.span>{" "}
@@ -276,7 +277,7 @@ function ContactUsPage() {
                         className="text-gray-900"
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
+                        transition={{ duration: 0.6, ease: "easeOut", delay: 0.25 }}
                       >
                         Us
                       </motion.span>
@@ -289,7 +290,7 @@ function ContactUsPage() {
                 className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, ease: "easeOut", delay: 0.6 }}
+                transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
               >
                 {language === "ar" 
                   ? "لديك سؤال أو تريد معرفة المزيد؟ نحن هنا لمساعدتك. املأ النموذج أدناه وسنعاود الاتصال بك في أقرب وقت ممكن."
@@ -297,88 +298,36 @@ function ContactUsPage() {
               </motion.p>
             </div>
 
-            <div className="grid lg:grid-cols-3 gap-8 mb-16">
-              {/* Contact Info Cards */}
+            {/* Form Card with Bird Overlay */}
+            <div className="relative mt-12 md:mt-16 lg:mt-20">
+              {/* Bird Image - Positioned above form*/}
               <motion.div
-                className="p-6 bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow"
-                initial={{ opacity: 0, y: 20 }}
+                className="absolute right-0 -top-[80px] md:-top-[120px] lg:-top-[150px] w-[150px] md:w-[250px] lg:w-[300px] h-auto z-0"
+                initial={{ opacity: 0, y: 100 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ 
+                  type: "spring",
+                  stiffness: 100,
+                  damping: 15,
+                  duration: 0.8,
+                  delay: 2.3,
+                  ease: "easeOut"
+                }}
+              >
+                <img
+                  src={falconContactPage}
+                  alt="Falcon"
+                  className="w-full h-auto"
+                />
+              </motion.div>
+
+              {/* Form Card */}
+              <motion.div
+                className="bg-white border border-gray-200 rounded-2xl shadow-lg p-8 md:p-12 relative z-10"
+                initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.7 }}
-                whileHover={{ scale: 1.02, y: -5 }}
               >
-                <motion.div
-                  className="text-4xl mb-4"
-                  animate={{ y: [0, -5, 0] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                >
-                  📧
-                </motion.div>
-                <h3 className="font-semibold text-gray-900 mb-2 text-lg">
-                  {language === "ar" ? "البريد الإلكتروني" : "Email"}
-                </h3>
-                <p className="text-sm text-gray-600">
-                  {language === "ar" 
-                    ? "سنرد خلال 24 ساعة"
-                    : "We'll will respond as soon as possible"}
-                </p>
-              </motion.div>
-
-              <motion.div
-                className="p-6 bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.8 }}
-                whileHover={{ scale: 1.02, y: -5 }}
-              >
-                <motion.div
-                  className="text-4xl mb-4"
-                  animate={{ y: [0, -5, 0] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
-                >
-                  💬
-                </motion.div>
-                <h3 className="font-semibold text-gray-900 mb-2 text-lg">
-                  {language === "ar" ? "رد سريع" : "Quick Response"}
-                </h3>
-                <p className="text-sm text-gray-600">
-                  {language === "ar"
-                    ? "احصل على إجابات لأسئلتك بسرعة"
-                    : "Get answers to your questions fast"}
-                </p>
-              </motion.div>
-
-              <motion.div
-                className="p-6 bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.9 }}
-                whileHover={{ scale: 1.02, y: -5 }}
-              >
-                <motion.div
-                  className="text-4xl mb-4"
-                  animate={{ y: [0, -5, 0] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
-                >
-                  🤝
-                </motion.div>
-                <h3 className="font-semibold text-gray-900 mb-2 text-lg">
-                  {language === "ar" ? "الدعم" : "Support"}
-                </h3>
-                <p className="text-sm text-gray-600">
-                  {language === "ar"
-                    ? "نحن هنا لمساعدتك على النجاح"
-                    : "We're here to help you succeed"}
-                </p>
-              </motion.div>
-            </div>
-
-            {/* Form Card */}
-            <motion.div
-              className="bg-white border border-gray-200 rounded-2xl shadow-lg p-8 md:p-12"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 1.0 }}
-            >
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
@@ -389,7 +338,7 @@ function ContactUsPage() {
                   <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.6, delay: 1.1 }}
+                    transition={{ duration: 0.5, delay: 0.8 }}
                   >
                     <FormField
                       control={form.control}
@@ -413,7 +362,7 @@ function ContactUsPage() {
                   <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.6, delay: 1.2 }}
+                    transition={{ duration: 0.5, delay: 0.9 }}
                   >
                     <FormField
                       control={form.control}
@@ -440,7 +389,7 @@ function ContactUsPage() {
                   <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.6, delay: 1.3 }}
+                    transition={{ duration: 0.5, delay: 1.0 }}
                   >
                     <FormField
                       control={form.control}
@@ -472,7 +421,7 @@ function ContactUsPage() {
                   <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.6, delay: 1.4 }}
+                    transition={{ duration: 0.5, delay: 1.1 }}
                   >
                     <FormField
                       control={form.control}
@@ -512,7 +461,7 @@ function ContactUsPage() {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 1.5 }}
+                  transition={{ duration: 0.5, delay: 1.2 }}
                 >
                   <FormField
                     control={form.control}
@@ -538,7 +487,7 @@ function ContactUsPage() {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 1.6 }}
+                  transition={{ duration: 0.5, delay: 1.3 }}
                 >
                   <FormField
                     control={form.control}
@@ -569,7 +518,7 @@ function ContactUsPage() {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 1.7 }}
+                  transition={{ duration: 0.5, delay: 1.4 }}
                 >
                   <FormField
                     control={form.control}
@@ -595,7 +544,7 @@ function ContactUsPage() {
                   className="pt-4"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 1.2 }}
+                  transition={{ duration: 0.5, delay: 0.9 }}
                 >
                   <motion.div
                     whileHover={{ scale: 1.05 }}
@@ -621,6 +570,7 @@ function ContactUsPage() {
               </form>
             </Form>
             </motion.div>
+            </div>
           </div>
         </section>
         <Footer />
