@@ -114,8 +114,8 @@ export default function Navbar() {
           />
         </div>
 
-        {/* Mobile language toggle centered between logo and menu */}
-        <div className="md:hidden absolute left-1/2 -translate-x-1/2">
+        {/* Mobile/Tablet language toggle centered between logo and menu */}
+        <div className="lg:hidden absolute left-1/2 -translate-x-1/2">
           <button
             onClick={() => setLanguage(language === "ar" ? "en" : "ar")}
             className="text-sm text-gray-700 hover:text-[#058BF4] transition-colors px-2 py-1"
@@ -125,26 +125,23 @@ export default function Navbar() {
         </div>
 
         {/* Centered blue background menu */}
-        <ul className="hidden md:flex gap-4 bg-[#E1EEFF] px-4 py-2 rounded-full text-gray-700 font-medium mx-auto text-sm">
+        <ul className="hidden lg:flex gap-6 bg-[#E1EEFF] px-6 py-2 rounded-full text-gray-700 font-medium mx-auto">
           {menuItems.map((item) => {
             const sectionId = item.href.substring(1);
             const isActive = item.isRoute 
               ? location.pathname === item.href
               : location.pathname === "/" && activeSection === sectionId;
             
-            // Shorten "Contact Us" to "Contact" for desktop menu
-            const displayName = item.name === "Contact Us" ? "Contact" : item.name;
-            
             if (item.isRoute) {
               return (
                 <li key={item.name}>
                   <Link
                     to={item.href}
-                    className={`cursor-pointer px-2.5 py-1 rounded-full transition-colors block ${
+                    className={`cursor-pointer px-3 py-1 rounded-full transition-colors block ${
                       isActive ? "bg-[#058BF4] text-white" : "hover:text-blue-800"
                     }`}
                   >
-                    {displayName}
+                    {item.name}
                   </Link>
                 </li>
               );
@@ -153,19 +150,19 @@ export default function Navbar() {
             return (
               <li
                 key={item.name}
-                className={`cursor-pointer px-2.5 py-1 rounded-full transition-colors ${
+                className={`cursor-pointer px-3 py-1 rounded-full transition-colors ${
                   isActive ? "bg-[#058BF4] text-white" : "hover:text-blue-800"
                 }`}
                 onClick={() => scrollToSection(item.href, item.isRoute)}
               >
-                {displayName}
+                {item.name}
               </li>
             );
           })}
         </ul>
 
         {/* Desktop buttons - far right */}
-        <div className="hidden md:flex gap-2 items-center">
+        <div className="hidden lg:flex gap-2 items-center">
           <button
             onClick={() => setLanguage(language === "ar" ? "en" : "ar")}
             className="text-sm text-gray-700 hover:text-[#058BF4] transition-colors px-2 py-1"
@@ -183,9 +180,9 @@ export default function Navbar() {
           {/* <Button className="rounded-full bg-[#058BF4]">Sign Up</Button> */}
         </div>
 
-        {/* Mobile hamburger menu button */}
+        {/* Mobile/Tablet hamburger menu button */}
         <button
-          className="md:hidden flex flex-col justify-center items-center w-8 h-8 space-y-1 shrink-0 absolute right-4"
+          className="lg:hidden flex flex-col justify-center items-center w-8 h-8 space-y-1 shrink-0 absolute right-4"
           onClick={toggleMobileMenu}
           aria-label="Toggle mobile menu"
         >
@@ -207,9 +204,9 @@ export default function Navbar() {
         </button>
       </div>
 
-      {/* Mobile menu overlay */}
+      {/* Mobile/Tablet menu overlay */}
       <div
-        className={`md:hidden fixed inset-0 z-50 bg-white transition-all duration-300 ease-in-out ${
+        className={`lg:hidden fixed inset-0 z-50 bg-white transition-all duration-300 ease-in-out ${
           isMobileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"
         }`}
       >
@@ -301,7 +298,7 @@ export default function Navbar() {
             })}
           </div>
 
-          {/* Mobile buttons */}
+          {/* Mobile/Tablet buttons */}
           <div
             className={`flex flex-col gap-3 p-6 border-t transition-all duration-300 ${
               isMobileMenuOpen
@@ -312,6 +309,15 @@ export default function Navbar() {
               transitionDelay: isMobileMenuOpen ? "400ms" : "0ms",
             }}
           >
+            <button
+              onClick={() => {
+                setLanguage(language === "ar" ? "en" : "ar");
+                setIsMobileMenuOpen(false);
+              }}
+              className="text-sm text-gray-700 hover:text-[#058BF4] transition-colors px-2 py-1 text-center"
+            >
+              العربية | English
+            </button>
             <Link to="/login">
               <Button
                 variant="outline"
