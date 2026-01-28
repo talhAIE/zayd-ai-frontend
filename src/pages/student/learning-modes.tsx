@@ -107,14 +107,16 @@ const LearningModes: React.FC = () => {
     );
   }
 
-  if (schoolCategory === "bave-demo") 
+  if (schoolCategory === "Bave AI") 
     filteredModes = modes.filter(
       (mode) =>
         mode.title === "Chat Mode" ||
         mode.title === "Photo Mode" ||
         mode.title === "Debate Mode" ||
-        mode.title === "Reading Mode"
-    );
+        mode.title === "Reading Mode" ||
+        mode.title === "Role Play Mode" ||
+        mode.title === "Listening Mode"
+      );
 
   // const [isQueationnaireOpen, setIsQuestionnaireOpen] = React.useState(true);
 
