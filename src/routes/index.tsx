@@ -29,6 +29,8 @@ import Rewards from "@/pages/student/Rewards";
 import ReadingModeTopics from "@/pages/student/topics/ReadingModeTopics";
 import RolePlayModeTopics from "@/pages/student/topics/RolePlayModeTopics";
 import ListeningModeTopics from "@/pages/student/topics/ListeningModeTopics";
+import CurriculumModeTopics from "@/pages/student/topics/CurriculumModeTopics";
+import ChapterTopics from "@/pages/student/topics/ChapterTopics";
 
 const AppRoutes = () => {
   // const { user } = useAppSelector((state) => state.auth);
@@ -71,7 +73,7 @@ const AppRoutes = () => {
         path="/login"
         element={
           // <AuthLayout>
-            <LoginPage />
+          <LoginPage />
           // </AuthLayout>
         }
       />
@@ -193,6 +195,26 @@ const AppRoutes = () => {
           <StudentRoute>
             <StudentLayout>
               <DebateModeTopics />
+            </StudentLayout>
+          </StudentRoute>
+        }
+      />
+      <Route
+        path="/student/learning-modes/curriculum-mode"
+        element={
+          <StudentRoute>
+            <StudentLayout>
+              <CurriculumModeTopics />
+            </StudentLayout>
+          </StudentRoute>
+        }
+      />
+      <Route
+        path="/student/learning-modes/curriculum-mode/chapter/:chapterId"
+        element={
+          <StudentRoute>
+            <StudentLayout>
+              <ChapterTopics />
             </StudentLayout>
           </StudentRoute>
         }
