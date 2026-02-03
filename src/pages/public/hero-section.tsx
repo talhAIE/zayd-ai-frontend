@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import pointingSvg from "@/assets/images/landingpage/malewithfalcon.png";
 import { useLanguage } from "@/components/language-provider";
+import LanguageTabSwitcher from "@/components/ui/LanguageTabSwitcher";
 
 export default function HeroSection() {
   const { language } = useLanguage();
@@ -35,6 +36,8 @@ export default function HeroSection() {
           ? "زيد AI – أطلق قوة المستقبل في تعلم اللغة الإنجليزية"
           : "Zayd AI — Unleash the Power of AI"}
       </motion.p>
+
+      <LanguageTabSwitcher />
 
       <div className="relative max-w-7xl mx-auto">
         <div className="relative inline-block z-50">
