@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import flagUK from "@/assets/svgs/flag-united-kingdom.svg";
+import flagChina from "@/assets/svgs/flag-china.svg";
 
 export default function LanguageTabSwitcher() {
   const [activeTab, setActiveTab] = useState<"english" | "chinese">("english");
@@ -35,7 +37,7 @@ export default function LanguageTabSwitcher() {
           }}
           whileTap={{ scale: 0.95 }}
         >
-          <span className="text-lg">🇬🇧</span>
+          <img src={flagUK} alt="UK Flag" className="w-5 h-5" />
           English
         </motion.button>
         <motion.button
@@ -58,7 +60,7 @@ export default function LanguageTabSwitcher() {
           }}
           whileTap={{ scale: 0.95 }}
         >
-          <span className="text-lg">🇨🇳</span>
+          <img src={flagChina} alt="China Flag" className="w-5 h-5" />
           Chinese
         </motion.button>
       </div>
