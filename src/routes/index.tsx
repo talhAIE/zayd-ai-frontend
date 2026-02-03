@@ -7,6 +7,7 @@ import { TeacherLayout } from "@/components/layouts/teacher-layout";
 
 // Public Pages
 import Main from "@/pages/public/Main";
+import ContactUs from "@/pages/public/contact-us";
 
 // Student Pages
 import LearningModes from "@/pages/student/learning-modes";
@@ -49,6 +50,7 @@ const AppRoutes = () => {
     <Routes>
       {/* Public Routes */}
       <Route path="/" element={<Main />} />
+      <Route path="/contact-us" element={<ContactUs />} />
       <Route
         path="/teacher/dashboard"
         element={

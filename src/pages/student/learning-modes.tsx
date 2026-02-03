@@ -1,9 +1,9 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import chatModeAvatar from "@/assets/svgs/chatModeAvatar.svg";
-import photoModeAvatar from "@/assets/svgs/photoModeAvatar.svg";
-import debateModeAvatar from "@/assets/svgs/debateModeAvatar.svg";
+import chatModeAvatar from "@/assets/svgs/chat-mode.png";
+import photoModeAvatar from "@/assets/svgs/photo-mode.png";
+import debateModeAvatar from "@/assets/svgs/debate-mode.png";
 import roleplayModeAvatar from "@/assets/svgs/roleplay-mode.png";
 import listeningModeAvatar from "@/assets/svgs/listening-mode.png";
 import ReadingModeAvatar from "@/assets/svgs/reading-mode.png";
@@ -100,6 +100,23 @@ const LearningModes: React.FC = () => {
         mode.title === "Listening Mode"
     );
   }
+
+  if (schoolCategory === "demo-flow") {
+    filteredModes = modes.filter(
+      (mode) => mode.title === "Reading Mode" || mode.title === "Role Play Mode" || mode.title === "Listening Mode"
+    );
+  }
+
+  if (schoolCategory === "Bave AI") 
+    filteredModes = modes.filter(
+      (mode) =>
+        mode.title === "Chat Mode" ||
+        mode.title === "Photo Mode" ||
+        mode.title === "Debate Mode" ||
+        mode.title === "Reading Mode" ||
+        mode.title === "Role Play Mode" ||
+        mode.title === "Listening Mode"
+      );
 
   // const [isQueationnaireOpen, setIsQuestionnaireOpen] = React.useState(true);
 
