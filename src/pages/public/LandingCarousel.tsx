@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { useNavigation } from '@/lib/navigation';
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/components/ui/carousel';
 import { ChevronLeft, ChevronRight, MessageCircle, Signal, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -16,7 +15,6 @@ export default function LandingCarousel() {
     const [current, setCurrent] = useState(0);
     const [canScrollPrev, setCanScrollPrev] = useState(false);
     const [canScrollNext, setCanScrollNext] = useState(false);
-    const { goToOnboarding } = useNavigation();
     const { language } = useLanguage();
 
     useEffect(() => {
@@ -34,7 +32,7 @@ export default function LandingCarousel() {
     }, [api]);
 
     const slides = [
-        <HeroSlide key="hero" onStart={goToOnboarding} language={language} />,
+        <HeroSlide key="hero" onStart={() => window.location.href = "https://nihao.waaha.ai/"} language={language} />,
         <FeaturesSlide key="features" language={language} />,
         <GamificationSlide key="gamification" language={language} />,
     ];
