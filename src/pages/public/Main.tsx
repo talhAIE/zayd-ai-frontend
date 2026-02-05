@@ -6,6 +6,7 @@ import FeatureSection from "./feature-section";
 import FlowSection from "./flow-section";
 import PricingTable from "./PricingTable";
 import FAQSection from "./faq-section";
+import LandingCarousel from "./LandingCarousel";
 // import TestimonialsSection from "./testimonials";
 import Footer from "./Footer";
 import { ReactLenis } from "@/components/lenis";
@@ -45,6 +46,7 @@ function PublicLanding() {
         <DashboardSection />
         <ConversationSection />
         <FeatureSection />
+        <LandingCarousel />
         <FlowSection />
         {/* <TestimonialsSection /> */}
         <PricingTable />
