@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/components/ui/carousel';
 import { ChevronLeft, ChevronRight, MessageCircle, Signal, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/components/language-provider';
+import AutoHeight from 'embla-carousel-auto-height';
 import shiekhImage from '@/assets/images/landingpage/shiekh hero.png';
 import zaydMascot from '@/assets/images/landingpage/zaydMascot.svg';
 import Leaderboard from '@/assets/images/landingpage/Leaderboard.svg';
@@ -15,7 +16,20 @@ export default function LandingCarousel() {
     const [current, setCurrent] = useState(0);
     const [canScrollPrev, setCanScrollPrev] = useState(false);
     const [canScrollNext, setCanScrollNext] = useState(false);
+    const [isMobile, setIsMobile] = useState(() =>
+        typeof window !== 'undefined' ? window.matchMedia('(max-width: 881px)').matches : false
+    );
     const { language } = useLanguage();
+
+    const plugins = useMemo(() => isMobile ? [AutoHeight()] : [], [isMobile]);
+
+    useEffect(() => {
+        const mql = window.matchMedia('(max-width: 881px)');
+        setIsMobile(mql.matches);
+        const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+        mql.addEventListener('change', handler);
+        return () => mql.removeEventListener('change', handler);
+    }, []);
 
     useEffect(() => {
         if (!api) return;
@@ -71,8 +85,14 @@ export default function LandingCarousel() {
                 </button>
             </div>
 
-            <Carousel setApi={setApi} className="w-full" dir="ltr" opts={{ direction: "ltr" }}>
-                <CarouselContent>
+            <Carousel
+                setApi={setApi}
+                className="w-full"
+                dir="ltr"
+                opts={{ direction: "ltr" }}
+                plugins={plugins}
+            >
+                <CarouselContent className={cn(isMobile && "items-start")}>
                     {slides.map((slide, index) => (
                         <CarouselItem key={index}>
                             {slide}
@@ -167,7 +187,7 @@ function HeroSlide({ onStart, language }: { onStart: () => void; language: "ar" 
             </div>
 
             {/* Character Image */}
-            <div className="w-full md:w-1/2 flex justify-center relative order-2 mt-4 md:mt-0">
+            <div className="hidden md:flex w-full md:w-1/2 justify-center relative order-2 mt-4 md:mt-0">
                 <div className="relative w-[200px] h-[200px] sm:w-[260px] sm:h-[260px] md:w-[320px] md:h-[320px] lg:w-[400px] lg:h-[400px] xl:w-[500px] xl:h-[500px]">
                     <img
                         src={shiekhImage}
