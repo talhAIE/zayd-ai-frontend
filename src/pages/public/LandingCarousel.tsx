@@ -355,13 +355,13 @@ function FeaturesSlide({ language }: { language: "ar" | "en" }) {
             >
                 {isArabic ? (
                     <>
-                        <span className="block font-almarai">تدرب على محادثات الحياة اليومية مثل التحيات، والطعام، والسفر، والمدرسة</span>
+                        <span className="block font-bold font-almarai">تدرب على محادثات الحياة اليومية مثل التحيات، والطعام، والسفر، والمدرسة</span>
                         <span className="block hidden sm:block mt-2 font-almarai">يستمع الذكاء الاصطناعي إليك، ويصححك فورًا، ويساعدك على التحدث بشكل أكثر طبيعية — خطوة بخطوة</span>
                         <span className="block sm:hidden mt-2 font-almarai">يستمع الذكاء الاصطناعي إليك، ويصححك فورًا، ويساعدك على التحدث بشكل أكثر طبيعية</span>
                     </>
                 ) : (
                     <>
-                        <span className="block">Practice everyday conversations like greetings, food, travel, and school</span>
+                        <span className="block font-bold">Practice everyday conversations like greetings, food, travel, and school</span>
                         <span className="block hidden sm:block mt-2">AI listens to you, corrects you instantly, and helps you speak more naturally — step by step</span>
                         <span className="block sm:hidden mt-2">AI listens to you, corrects you instantly, and helps you speak more naturally</span>
                     </>
@@ -449,15 +449,15 @@ function GamificationSlide({ language }: { language: "ar" | "en" }) {
                 >
                     {isArabic ? (
                         <>
-                            <span className="block font-almarai">تتبع سلاسل تعلمك وشاهد تحسنك مع مرور الوقت</span>
-                            <span className="block hidden sm:block mt-2 font-almarai">افتح الإنجازات، واحصل على الشارات، وتنافس مع الأصدقاء لتبقى متحفزًا ومواظبًا</span>
-                            <span className="block sm:hidden mt-2 font-almarai">افتح الإنجازات، واحصل على الشارات، وتنافس مع الأصدقاء</span>
+                            <span className="block font-bold font-almarai">تتبع سلاسل تعلمك وشاهد تحسنك مع مرور الوقت</span>
+                            <span className="block font-regular hidden sm:block mt-2 font-almarai">افتح الإنجازات، واحصل على الشارات، وتنافس مع الأصدقاء لتبقى متحفزًا ومواظبًا</span>
+                            <span className="block font-regular sm:hidden mt-2 font-almarai">افتح الإنجازات، واحصل على الشارات، وتنافس مع الأصدقاء</span>
                         </>
                     ) : (
                         <>
-                            <span className="block">Track your learning streaks and watch your progress over time</span>
-                            <span className="block hidden sm:block mt-2">Unlock achievements, earn badges, and compete with friends to stay motivated and consistent</span>
-                            <span className="block sm:hidden mt-2">Unlock achievements, earn badges, and compete with friends</span>
+                            <span className="font-bold block">Track your learning streaks and watch your progress over time</span>
+                            <span className="block font-regular hidden sm:block mt-2">Unlock achievements, earn badges, and compete with friends to stay motivated and consistent</span>
+                            <span className="block font-regular sm:hidden mt-2">Unlock achievements, earn badges, and compete with friends</span>
                         </>
                     )}
                 </motion.p>
