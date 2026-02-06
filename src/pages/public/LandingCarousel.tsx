@@ -58,7 +58,7 @@ export default function LandingCarousel() {
 
     return (
         <motion.div
-            className="relative top-20 w-full max-w-7xl mx-auto px-4 py-8 md:py-12 font-sans mb-20"
+            className="relative top-20 w-full max-w-7xl mx-auto px-4 py-8 md:py-12 mb-20"
             dir="ltr"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -130,7 +130,7 @@ export default function LandingCarousel() {
 
                 {/* Dots (Absolutely positioned at bottom) */}
                 <motion.div
-                    className="absolute bottom-0 left-0 right-0 flex justify-center items-center gap-2"
+                    className="absolute -bottom-10 left-0 right-0 flex justify-center items-center gap-2"
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, amount: 0.3 }}
@@ -220,7 +220,7 @@ function HeroSlide({ onStart, language }: { onStart: () => void; language: "ar" 
                 </motion.h1>
 
                 <motion.p
-                    className="text-[14px] sm:text-[16px] md:text-[18px] lg:text-[20px] text-gray-600 mb-6 sm:mb-8 md:mb-10 max-w-lg leading-relaxed font-medium"
+                    className="text-[14px] sm:text-[16px] md:text-[18px] lg:text-[20px] text-gray-600 mb-6 sm:mb-8 md:mb-10 max-w-lg leading-relaxed"
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, amount: 0.3 }}
@@ -347,7 +347,7 @@ function FeaturesSlide({ language }: { language: "ar" | "en" }) {
                 )}
             </motion.h2>
             <motion.p
-                className="text-[14px] sm:text-[16px] md:text-[18px] lg:text-[20px] text-gray-600 text-center max-w-4xl mb-6 sm:mb-8 md:mb-12 lg:mb-16 leading-relaxed font-medium px-4"
+                className="text-[14px] sm:text-[16px] md:text-[18px] lg:text-[20px] text-gray-600 text-center max-w-4xl mb-6 sm:mb-8 md:mb-12 lg:mb-16 leading-relaxed px-4"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.3 }}
@@ -386,7 +386,7 @@ function FeaturesSlide({ language }: { language: "ar" | "en" }) {
                             {card.icon}
                         </div>
                         <h3 className="text-[16px] sm:text-[18px] md:text-[20px] lg:text-[24px] font-[800] text-gray-900 mb-2 sm:mb-3 md:mb-4">{card.title}</h3>
-                        <p className="text-[12px] sm:text-[14px] md:text-[16px] text-gray-600 leading-relaxed font-medium">
+                        <p className="text-[12px] sm:text-[14px] md:text-[16px] text-gray-600 leading-relaxed">
                             {card.description}
                         </p>
                     </motion.div>
@@ -401,10 +401,10 @@ function GamificationSlide({ language }: { language: "ar" | "en" }) {
     const isArabic = language === "ar";
 
     return (
-        <div className={cn("flex flex-col md:flex-row items-center justify-between gap-6 sm:gap-8 md:gap-12 py-6 sm:py-10")} dir={direction}>
+        <div className={cn("flex flex-col min-[620px]:flex-row items-center justify-between gap-8 min-[620px]:gap-12 py-6 sm:py-10")} dir={direction}>
             {/* Text Content */}
             <div className={cn(
-                "w-full md:w-[40%] px-4 sm:px-0",
+                "w-full min-[620px]:w-1/2 px-4 sm:px-0",
                 isArabic ? "text-right" : "text-left",
                 "order-1"
             )}>
@@ -441,7 +441,7 @@ function GamificationSlide({ language }: { language: "ar" | "en" }) {
                 </div>
 
                 <motion.p
-                    className="text-[14px] sm:text-[16px] md:text-[18px] lg:text-[20px] text-gray-600 mb-6 sm:mb-8 md:mb-12 leading-relaxed font-medium"
+                    className="text-[14px] sm:text-[16px] md:text-[18px] lg:text-[20px] text-gray-600 mb-6 sm:mb-8 md:mb-12 leading-relaxed"
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, amount: 0.3 }}
@@ -456,8 +456,8 @@ function GamificationSlide({ language }: { language: "ar" | "en" }) {
                     ) : (
                         <>
                             <span className="font-bold block">Track your learning streaks and watch your progress over time</span>
-                            <span className="block font-regular hidden sm:block mt-2">Unlock achievements, earn badges, and compete with friends to stay motivated and consistent</span>
-                            <span className="block font-regular sm:hidden mt-2">Unlock achievements, earn badges, and compete with friends</span>
+                            <span className="block hidden sm:block mt-2">Unlock achievements, earn badges, and compete with friends to stay motivated and consistent</span>
+                            <span className="block sm:hidden mt-2">Unlock achievements, earn badges, and compete with friends</span>
                         </>
                     )}
                 </motion.p>
@@ -465,22 +465,17 @@ function GamificationSlide({ language }: { language: "ar" | "en" }) {
 
             {/* Visual Mockups */}
             <motion.div
-                className="w-full md:w-[60%] relative flex justify-center order-2 mt-4 md:mt-0"
+                className="w-full min-[620px]:w-1/2 relative flex justify-center order-2 mt-4 min-[620px]:mt-0"
                 initial={{ opacity: 0, scale: 0.9 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true, amount: 0.3 }}
                 transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
             >
-                <div className="relative w-full aspect-[4/3] max-w-[400px] sm:max-w-[500px] md:max-w-[600px]">
-                    {/* Main Visuals from slides */}
-                    <div className="absolute top-0 left-0 w-[90%] sm:w-[80%] md:w-[70%] z-10 px-4 sm:px-0">
-                        <img
-                            src={Leaderboard}
-                            alt="Leaderboard"
-                            className="rounded-[12px] sm:rounded-[16px] md:rounded-[24px] w-full h-auto"
-                        />
-                    </div>
-                </div>
+                <img
+                    src={Leaderboard}
+                    alt="Leaderboard"
+                    className="rounded-[12px] sm:rounded-[16px] md:rounded-[24px] w-full h-auto"
+                />
             </motion.div>
         </div>
     );
