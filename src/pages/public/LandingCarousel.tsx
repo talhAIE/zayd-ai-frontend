@@ -1,12 +1,11 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/components/ui/carousel';
 import { ChevronLeft, ChevronRight, MessageCircle, Signal, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/components/language-provider';
-import AutoHeight from 'embla-carousel-auto-height';
 import { motion } from 'framer-motion';
 import shiekhImage from '@/assets/images/landingpage/shiekh hero.png';
 import zaydMascot from '@/assets/images/landingpage/zaydMascot.svg';
@@ -25,8 +24,8 @@ export default function LandingCarousel() {
         typeof window !== 'undefined' ? window.matchMedia('(max-width: 881px)').matches : false
     );
     const { language } = useLanguage();
-
-    const plugins = useMemo(() => isMobile ? [AutoHeight()] : [], [isMobile]);
+    const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
+    const [slideHeights, setSlideHeights] = useState<number[]>([0, 0, 0]);
 
     useEffect(() => {
         const mql = window.matchMedia('(max-width: 881px)');
@@ -49,6 +48,25 @@ export default function LandingCarousel() {
         api.on('select', onSelect);
         api.on('reInit', onSelect);
     }, [api]);
+
+    // Measure slide heights
+    useEffect(() => {
+        const measureHeights = () => {
+            const heights = slideRefs.current.map(ref => ref?.offsetHeight || 0);
+            setSlideHeights(heights);
+        };
+
+        // Measure after a short delay to ensure content is rendered
+        const timer = setTimeout(measureHeights, 100);
+        
+        // Re-measure on window resize
+        window.addEventListener('resize', measureHeights);
+        
+        return () => {
+            clearTimeout(timer);
+            window.removeEventListener('resize', measureHeights);
+        };
+    }, [isMobile]);
 
     const slides = [
         <HeroSlide key="hero" onStart={() => window.location.href = "https://nihao.waaha.ai/"} language={language} />,
@@ -116,21 +134,25 @@ export default function LandingCarousel() {
                         className="w-full"
                         dir="ltr"
                         opts={{ direction: "ltr" }}
-                        plugins={plugins}
                     >
                         <CarouselContent className={cn(isMobile && "items-start")}>
                             {slides.map((slide, index) => (
                                 <CarouselItem key={index}>
-                                    {slide}
+                                    <div ref={el => slideRefs.current[index] = el}>
+                                        {slide}
+                                    </div>
                                 </CarouselItem>
                             ))}
                         </CarouselContent>
                     </Carousel>
                 </motion.div>
 
-                {/* Dots (Absolutely positioned at bottom) */}
+                {/* Dots (Dynamically positioned underneath carousel content based on current slide height) */}
                 <motion.div
-                    className="absolute -bottom-10 left-0 right-0 flex justify-center items-center gap-2"
+                    className="absolute left-0 right-0 flex justify-center items-center gap-2 transition-all duration-300"
+                    style={{ 
+                        top: slideHeights[current] ? `${slideHeights[current] + 24}px` : 'auto'
+                    }}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, amount: 0.3 }}
