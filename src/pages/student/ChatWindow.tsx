@@ -31,6 +31,7 @@ import {
 import QuestionnaireModal from "@/components/ui/QuestionaireModal";
 import { Progress } from "@/components/ui/progress";
 import AudioPlayer from "./AudioPlayer";
+import ReadingPassageCard from "@/components/ui/ReadingPassageCard";
 
 interface McqAnswer {
   questionId: string;
@@ -1727,7 +1728,17 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             </div>
           )}
           <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
-            {contentPayload && (
+            {contentPayload && mode === "reading-mode" && (
+              <ReadingPassageCard
+                content={contentPayload.content}
+                audioUrl={contentPayload.audioUrl}
+                isPlaying={playingAudioId === "content-payload-audio" && isCurrentlyPlaying}
+                onToggleAudio={() =>
+                  toggleAudio("content-payload-audio", contentPayload.audioUrl)
+                }
+              />
+            )}
+            {contentPayload && mode !== "reading-mode" && (
               <div className="p-4 rounded-lg shadow-sm bg-white border border-gray-200">
                 <p
                   ref={contentRef}
