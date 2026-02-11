@@ -323,6 +323,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
   const [isContextCompleted, setIsContextCompleted] = useState(false);
   const [hasStartedContextAudio, setHasStartedContextAudio] = useState(false);
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
 
   const clickLocked = React.useRef(false);
   const onEndCalledRef = useRef(false);
@@ -1704,13 +1705,15 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                       ? "Roleplay Mode"
                       : mode === "debate-mode"
                         ? "Debate Mode"
-                        : "Chat Mode"}
+                        : mode === "curriculum-mode"
+                          ? "Curriculum Mode"
+                          : "Chat Mode"}
               </h2>
               <div className="flex items-center gap-4">
                 {mode === "curriculum-mode" && (
                   <Button
                     variant="outline"
-                    onClick={handleResetChat}
+                    onClick={() => setIsResetConfirmOpen(true)}
                     className="flex items-center gap-2 px-4 py-0 w-[132px] h-[40px] border-[#06CCB5] text-[#06CCB5] hover:text-[#06CCB5] hover:bg-[#06CCB5]/10 rounded-[10px] shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] border-[1px]"
                     style={{
                       height: "40px",
@@ -1996,6 +1999,36 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               </div>
             </form>
           )}
+          <Dialog
+            open={isResetConfirmOpen}
+            onOpenChange={setIsResetConfirmOpen}
+          >
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Reset Chat Session?</DialogTitle>
+                <DialogDescription>
+                  This will clear all current messages and restart the chat from
+                  the beginning. This action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsResetConfirmOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    setIsResetConfirmOpen(false);
+                    handleResetChat();
+                  }}
+                >
+                  Confirm Reset
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
           <Dialog
             open={isInactiveDialogOpen}
             onOpenChange={(open) => !open && handleStillThere(false)}
