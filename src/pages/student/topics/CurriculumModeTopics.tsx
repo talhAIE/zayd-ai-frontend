@@ -92,24 +92,14 @@ const CurriculumModeTopics: React.FC = () => {
                     <img
                       src={chapter.attachmentUrl}
                       alt={chapter.name}
-                      className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+                      className="h-full w-full object-cover transition-transform duration-300 scale-105"
                     />
                   </div>
                 )}
                 <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-sm font-semibold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
-                      Chapter {chapter.orderIndex}
-                    </span>
-                  </div>
                   <h3 className="font-bold text-xl text-gray-900 mb-2">
                     {chapter.name}
                   </h3>
-                  {chapter.description && (
-                    <p className="text-sm text-gray-600 line-clamp-3">
-                      {chapter.description}
-                    </p>
-                  )}
                 </div>
                 <div className="px-6 pb-6 mt-auto">
                   <button className="gradient-hover-animate w-full text-white font-semibold px-6 py-3 rounded-xl shadow-md">
