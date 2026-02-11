@@ -7,6 +7,7 @@ import debateModeAvatar from "@/assets/svgs/debate-mode.png";
 import roleplayModeAvatar from "@/assets/svgs/roleplay-mode.png";
 import listeningModeAvatar from "@/assets/svgs/listening-mode.png";
 import ReadingModeAvatar from "@/assets/svgs/reading-mode.png";
+import curriculumModeAvatar from "@/assets/svgs/curriculum-mode.webp";
 // import QuestionnaireModal from "@/components/ui/QuestionaireModal";
 
 const modes = [
@@ -48,6 +49,12 @@ const modes = [
     image: debateModeAvatar,
     route: "/student/learning-modes/debate-mode",
   },
+  {
+    title: "Curriculum Mode",
+    description: "Structured learning with chapters and topics.",
+    image: curriculumModeAvatar,
+    route: "/student/learning-modes/curriculum-mode",
+  },
 ];
 
 const LearningModes: React.FC = () => {
@@ -64,7 +71,8 @@ const LearningModes: React.FC = () => {
         mode.title === "Reading Mode" ||
         mode.title === "Role Play Mode" ||
         mode.title === "Listening Mode" ||
-        mode.title === "Debate Mode"
+        mode.title === "Debate Mode" ||
+        mode.title === "Curriculum Mode"
     );
   }
 
@@ -73,7 +81,8 @@ const LearningModes: React.FC = () => {
       (mode) =>
         mode.title === "Reading Mode" ||
         mode.title === "Role Play Mode" ||
-        mode.title === "Listening Mode"
+        mode.title === "Listening Mode" ||
+        mode.title === "Curriculum Mode"
     );
   }
 
@@ -82,13 +91,15 @@ const LearningModes: React.FC = () => {
       (mode) =>
         mode.title === "Reading Mode" ||
         mode.title === "Role Play Mode" ||
-        mode.title === "Listening Mode"
+        mode.title === "Listening Mode" ||
+        mode.title === "Curriculum Mode"
     );
   }
 
   if (schoolCategory === "american") {
     filteredModes = modes.filter(
-      (mode) => mode.title === "Chat Mode" || mode.title === "Photo Mode"
+      (mode) => mode.title === "Chat Mode" || mode.title === "Photo Mode" ||
+        mode.title === "Curriculum Mode"
     );
   }
 
@@ -97,17 +108,18 @@ const LearningModes: React.FC = () => {
       (mode) =>
         mode.title === "Reading Mode" ||
         mode.title === "Role Play Mode" ||
-        mode.title === "Listening Mode"
+        mode.title === "Listening Mode" ||
+        mode.title === "Curriculum Mode"
     );
   }
 
   if (schoolCategory === "demo-flow") {
     filteredModes = modes.filter(
-      (mode) => mode.title === "Reading Mode" || mode.title === "Role Play Mode" || mode.title === "Listening Mode"
+      (mode) => mode.title === "Reading Mode" || mode.title === "Role Play Mode" || mode.title === "Listening Mode" || mode.title === "Curriculum Mode"
     );
   }
 
-  if (schoolCategory === "Bave AI") 
+  if (schoolCategory === "Bave AI")
     filteredModes = modes.filter(
       (mode) =>
         mode.title === "Chat Mode" ||
@@ -115,8 +127,9 @@ const LearningModes: React.FC = () => {
         mode.title === "Debate Mode" ||
         mode.title === "Reading Mode" ||
         mode.title === "Role Play Mode" ||
-        mode.title === "Listening Mode"
-      );
+        mode.title === "Listening Mode" ||
+        mode.title === "Curriculum Mode"
+    );
 
   // const [isQueationnaireOpen, setIsQuestionnaireOpen] = React.useState(true);
 

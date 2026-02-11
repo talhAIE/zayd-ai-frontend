@@ -16,6 +16,7 @@ import {
   LoaderPinwheel,
   Award,
   AlertTriangle,
+  RotateCcw,
 } from "lucide-react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -48,7 +49,7 @@ const logger = {
       `%c[Socket.IO EMIT] >> %c${event}`,
       "color: #f39c12; font-weight: bold;",
       "color: #f39c12;",
-      { payload }
+      { payload },
     );
   },
   receiving: (event: string, payload: any) => {
@@ -56,7 +57,7 @@ const logger = {
       `%c[Socket.IO RECEIVE] << %c${event}`,
       "color: #2ecc71; font-weight: bold;",
       "color: #2ecc71;",
-      { payload }
+      { payload },
     );
   },
   info: (message: string, data?: any) => {
@@ -64,7 +65,7 @@ const logger = {
       `%c[INFO] %c${message}`,
       "color: #3498db; font-weight: bold;",
       "color: inherit;",
-      data || ""
+      data || "",
     );
   },
   error: (message: string, error?: any) => {
@@ -72,7 +73,7 @@ const logger = {
       `%c[ERROR] %c${message}`,
       "color: #e74c3c; font-weight: bold;",
       "color: inherit;",
-      error || ""
+      error || "",
     );
   },
 };
@@ -235,7 +236,7 @@ interface ChatWindowProps {
 
 function findLastIndex<T>(
   array: T[],
-  predicate: (value: T) => boolean
+  predicate: (value: T) => boolean,
 ): number {
   for (let i = array.length - 1; i >= 0; i--) {
     if (predicate(array[i])) return i;
@@ -322,6 +323,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
   const [isContextCompleted, setIsContextCompleted] = useState(false);
   const [hasStartedContextAudio, setHasStartedContextAudio] = useState(false);
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
 
   const clickLocked = React.useRef(false);
   const onEndCalledRef = useRef(false);
@@ -330,7 +332,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const [_hasCompletedNarration, _setHasCompletedNarration] = useState(false);
   const [_hasCompletedQuestion, _setHasCompletedQuestion] = useState(false);
   const [hasAutoplayedStage, setHasAutoplayedStage] = useState<string | null>(
-    null
+    null,
   );
   const [_hasCompletedKbAudio, _setHasCompletedKbAudio] = useState(false);
 
@@ -356,11 +358,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const SOCKET_URL = import.meta.env.VITE_API_BASE_URL;
   const resetActivityTimer = useCallback(() => {
     if (activityTimerRef.current) clearTimeout(activityTimerRef.current);
-    activityTimerRef.current = setTimeout(() => {
-      logger.info("User inactive, disconnecting socket.");
-      socketRef.current?.disconnect();
-      setIsInactiveDialogOpen(true);
-    }, 5 * 60 * 1000);
+    activityTimerRef.current = setTimeout(
+      () => {
+        logger.info("User inactive, disconnecting socket.");
+        socketRef.current?.disconnect();
+        setIsInactiveDialogOpen(true);
+      },
+      5 * 60 * 1000,
+    );
   }, []);
 
   const isIOS = () =>
@@ -417,7 +422,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       const originalClass = element.className;
       element.className = originalClass.replace(
         "line-clamp-3",
-        "line-clamp-none"
+        "line-clamp-none",
       );
 
       const fullHeight = element.scrollHeight;
@@ -831,11 +836,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         toast.info("No speech recognized. Please speak clearly.");
       } else {
         toast.error(
-          "An internal server error occurred. Please try again later."
+          "An internal server error occurred. Please try again later.",
         );
         logger.error(
           "Unhandled Internal Server Error:",
-          payload.error || payload
+          payload.error || payload,
         );
       }
     });
@@ -964,7 +969,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       if (timeSinceLast < 1000) {
         logger.info(`iOS cooldown active: waiting ${1000 - timeSinceLast}ms`);
         await new Promise((resolve) =>
-          setTimeout(resolve, 1000 - timeSinceLast)
+          setTimeout(resolve, 1000 - timeSinceLast),
         );
       }
     }
@@ -977,7 +982,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       const mimeType = getSupportedMimeType();
       if (!mimeType) {
         toast.error(
-          "Your browser does not support any of the required audio formats."
+          "Your browser does not support any of the required audio formats.",
         );
         logger.error("No supported MIME type found for MediaRecorder.");
         cleanupRecording();
@@ -1047,7 +1052,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       setIsRecording(true);
       recordTimerRef.current = setInterval(
         () => setRecordTime((t) => t + 1),
-        1000
+        1000,
       );
     } catch (err: any) {
       logger.error("CRITICAL: Error starting recording:", {
@@ -1089,7 +1094,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       ([questionId, answerIndex]) => ({
         questionId,
         answerIndex,
-      })
+      }),
     );
 
     const payload = { chatId, answers };
@@ -1155,7 +1160,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       ([questionId, answerIndex]) => ({
         questionId,
         answerIndex,
-      })
+      }),
     );
     if (!chatId) {
       console.log("Chat ID is not available. Cannot submit MCQs.");
@@ -1197,15 +1202,22 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     }
 
     clearInactivityTimer();
-    inactivityTimerRef.current = setTimeout(() => {
-      if (socketRef.current && userId && topicId && chatId) {
-        logger.info(
-          "No user response for 2 minutes, emitting no_user_response"
-        );
-        sendPlaceholder();
-        socketRef.current.emit("no_user_response", { userId, topicId, chatId });
-      }
-    }, 2 * 60 * 1000);
+    inactivityTimerRef.current = setTimeout(
+      () => {
+        if (socketRef.current && userId && topicId && chatId) {
+          logger.info(
+            "No user response for 2 minutes, emitting no_user_response",
+          );
+          sendPlaceholder();
+          socketRef.current.emit("no_user_response", {
+            userId,
+            topicId,
+            chatId,
+          });
+        }
+      },
+      2 * 60 * 1000,
+    );
     logger.info("Inactivity timer started (2 minutes)");
   };
 
@@ -1322,7 +1334,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const toggleAudio = (
     id: string,
     audioUrl: string | undefined,
-    onEnd?: () => void
+    onEnd?: () => void,
   ) => {
     if (!audioUrl) return;
 
@@ -1486,7 +1498,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const handleStillThere = (isContinuing: boolean) => {
     setIsInactiveDialogOpen(false);
     logger.info(
-      `User responded to inactivity dialog. Continuing: ${isContinuing}`
+      `User responded to inactivity dialog. Continuing: ${isContinuing}`,
     );
     if (isContinuing) {
       logger.info("Reconnecting socket due to user confirmation.");
@@ -1498,7 +1510,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
   const handleContentFilterWarningAcknowledge = () => {
     logger.info(
-      "User acknowledged content filter warning. Reconnecting socket."
+      "User acknowledged content filter warning. Reconnecting socket.",
     );
     setIsContentFilterWarningOpen(false);
     socketRef.current?.connect();
@@ -1522,7 +1534,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
   const formatTime = (sec: number) =>
     `${String(Math.floor(sec / 60)).padStart(2, "0")}:${String(
-      sec % 60
+      sec % 60,
     ).padStart(2, "0")}`;
 
   return (
@@ -1556,7 +1568,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 duration={playingAudioId === "kb-audio" ? audioDuration : 0}
                 onTogglePlay={() =>
                   toggleAudio("kb-audio", listeningData?.kbAudioUrl, () =>
-                    setIsContextCompleted(true)
+                    setIsContextCompleted(true),
                   )
                 }
               />
@@ -1594,7 +1606,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   onClick={() => {
                     if (listeningData?.kbAudioUrl) {
                       toggleAudio("kb-audio", listeningData.kbAudioUrl, () =>
-                        setIsContextCompleted(true)
+                        setIsContextCompleted(true),
                       );
                     }
                     setShowReplayPopup(false);
@@ -1664,7 +1676,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                     />
                     <span>{option}</span>
                   </Button>
-                )
+                ),
               )}
             </div>
           </div>
@@ -1688,20 +1700,38 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 {mode === "photo-mode"
                   ? "Photo Mode"
                   : mode === "reading-mode"
-                  ? "Reading Mode"
-                  : mode === "roleplay-mode"
-                  ? "Roleplay Mode"
-                  : mode === "debate-mode"
-                  ? "Debate Mode"
-                  : "Chat Mode"}
+                    ? "Reading Mode"
+                    : mode === "roleplay-mode"
+                      ? "Roleplay Mode"
+                      : mode === "debate-mode"
+                        ? "Debate Mode"
+                        : mode === "curriculum-mode"
+                          ? "Curriculum Mode"
+                          : "Chat Mode"}
               </h2>
-              <div className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border-2 border-[#3EA4F9] bg-white text-gray-500">
-                <Clock className="h-6 w-6 text-[#3EA4F9]" />
-                <span>
-                  {sessionTimeRemaining
-                    ? formatTime(sessionTimeRemaining)
-                    : "..."}
-                </span>
+              <div className="flex items-center gap-4">
+                {mode === "curriculum-mode" && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsResetConfirmOpen(true)}
+                    className="flex items-center gap-2 px-4 py-0 w-[132px] h-[40px] border-[#06CCB5] text-[#06CCB5] hover:text-[#06CCB5] hover:bg-[#06CCB5]/10 rounded-[10px] shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] border-[1px]"
+                    style={{
+                      height: "40px",
+                      boxSizing: "border-box",
+                    }}
+                  >
+                    <RotateCcw className="h-5 w-5" />
+                    <span className="font-medium">Reset Chat</span>
+                  </Button>
+                )}
+                <div className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border-2 border-[#3EA4F9] bg-white text-gray-500">
+                  <Clock className="h-6 w-6 text-[#3EA4F9]" />
+                  <span>
+                    {sessionTimeRemaining
+                      ? formatTime(sessionTimeRemaining)
+                      : "..."}
+                  </span>
+                </div>
               </div>
             </header>
           )}
@@ -1732,7 +1762,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               <ReadingPassageCard
                 content={contentPayload.content}
                 audioUrl={contentPayload.audioUrl}
-                isPlaying={playingAudioId === "content-payload-audio" && isCurrentlyPlaying}
+                isPlaying={
+                  playingAudioId === "content-payload-audio" &&
+                  isCurrentlyPlaying
+                }
                 onToggleAudio={() =>
                   toggleAudio("content-payload-audio", contentPayload.audioUrl)
                 }
@@ -1755,7 +1788,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                         </span>
                       ) : (
                         part
-                      )
+                      ),
                     )}
                 </p>
                 <div className="flex items-center gap-4 mt-2">
@@ -1766,7 +1799,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                       onClick={() =>
                         toggleAudio(
                           "content-payload-audio",
-                          contentPayload.audioUrl
+                          contentPayload.audioUrl,
                         )
                       }
                     >
@@ -1842,7 +1875,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                             </span>
                           ) : (
                             part
-                          )
+                          ),
                         )}
                       </p>
                     )}
@@ -1966,6 +1999,36 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               </div>
             </form>
           )}
+          <Dialog
+            open={isResetConfirmOpen}
+            onOpenChange={setIsResetConfirmOpen}
+          >
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Reset Chat Session?</DialogTitle>
+                <DialogDescription>
+                  This will clear all current messages and restart the chat from
+                  the beginning. This action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsResetConfirmOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    setIsResetConfirmOpen(false);
+                    handleResetChat();
+                  }}
+                >
+                  Confirm Reset
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
           <Dialog
             open={isInactiveDialogOpen}
             onOpenChange={(open) => !open && handleStillThere(false)}
@@ -2123,8 +2186,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                             contentFilterWarningData.severity === "High"
                               ? "text-red-600"
                               : contentFilterWarningData.severity === "Medium"
-                              ? "text-orange-600"
-                              : "text-yellow-600"
+                                ? "text-orange-600"
+                                : "text-yellow-600"
                           }`}
                         >
                           {contentFilterWarningData.severity}
