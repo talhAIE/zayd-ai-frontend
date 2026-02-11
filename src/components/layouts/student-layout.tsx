@@ -30,7 +30,7 @@ export function StudentLayout({ children }: StudentLayoutProps) {
 
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
   const { data: studentProfileData } = useAppSelector(
-    (state) => state.studentProfile
+    (state) => state.studentProfile,
   );
 
   const pathSegments = location.pathname.split("/").filter(Boolean);
@@ -47,6 +47,14 @@ export function StudentLayout({ children }: StudentLayoutProps) {
   let formattedTitle;
   if (location.pathname.startsWith("/teacher/student-profile/")) {
     formattedTitle = "Student Profile";
+  } else if (location.pathname.includes("/chapter/")) {
+    const segments = location.pathname.split("/");
+    const chapterIndex = segments.indexOf("chapter");
+    if (chapterIndex > 0) {
+      formattedTitle = decodeAndFormatTitle(segments[chapterIndex - 1]);
+    } else {
+      formattedTitle = decodeAndFormatTitle(lastSegment).split(":")[0];
+    }
   } else {
     formattedTitle = decodeAndFormatTitle(lastSegment).split(":")[0];
   }
