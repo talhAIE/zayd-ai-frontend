@@ -7,6 +7,7 @@ import debateModeAvatar from "@/assets/svgs/debate-mode.png";
 import roleplayModeAvatar from "@/assets/svgs/roleplay-mode.png";
 import listeningModeAvatar from "@/assets/svgs/listening-mode.png";
 import ReadingModeAvatar from "@/assets/svgs/reading-mode.png";
+import curriculumModeAvatar from "@/assets/svgs/curriculum-mode.webp";
 // import QuestionnaireModal from "@/components/ui/QuestionaireModal";
 
 const modes = [
@@ -51,7 +52,7 @@ const modes = [
   {
     title: "Curriculum Mode",
     description: "Structured learning with chapters and topics.",
-    image: ReadingModeAvatar, // Reusing reading mode avatar for now
+    image: curriculumModeAvatar,
     route: "/student/learning-modes/curriculum-mode",
   },
 ];
@@ -97,7 +98,7 @@ const LearningModes: React.FC = () => {
 
   if (schoolCategory === "american") {
     filteredModes = modes.filter(
-      (mode) => mode.title === "Chat Mode" || mode.title === "Photo Mode" || mode.title === "Curriculum Mode"
+      (mode) => mode.title === "Chat Mode" || mode.title === "Photo Mode"
     );
   }
 

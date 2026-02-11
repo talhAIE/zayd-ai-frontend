@@ -9,6 +9,7 @@ export interface Chapter {
     schoolCategoryId: string;
     modeId: string;
     isActive: boolean;
+    attachmentUrl?: string | null;
     createdAt: Date;
     updatedAt: Date;
 }
