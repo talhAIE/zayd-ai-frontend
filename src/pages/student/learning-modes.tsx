@@ -98,7 +98,8 @@ const LearningModes: React.FC = () => {
 
   if (schoolCategory === "american") {
     filteredModes = modes.filter(
-      (mode) => mode.title === "Chat Mode" || mode.title === "Photo Mode"
+      (mode) => mode.title === "Chat Mode" || mode.title === "Photo Mode" ||
+        mode.title === "Curriculum Mode"
     );
   }
 
