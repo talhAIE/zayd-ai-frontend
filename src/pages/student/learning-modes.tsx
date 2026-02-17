@@ -71,8 +71,7 @@ const LearningModes: React.FC = () => {
         mode.title === "Reading Mode" ||
         mode.title === "Role Play Mode" ||
         mode.title === "Listening Mode" ||
-        mode.title === "Debate Mode" ||
-        mode.title === "Curriculum Mode"
+        mode.title === "Debate Mode"
     );
   }
 
@@ -81,8 +80,7 @@ const LearningModes: React.FC = () => {
       (mode) =>
         mode.title === "Reading Mode" ||
         mode.title === "Role Play Mode" ||
-        mode.title === "Listening Mode" ||
-        mode.title === "Curriculum Mode"
+        mode.title === "Listening Mode"
     );
   }
 
@@ -91,8 +89,7 @@ const LearningModes: React.FC = () => {
       (mode) =>
         mode.title === "Reading Mode" ||
         mode.title === "Role Play Mode" ||
-        mode.title === "Listening Mode" ||
-        mode.title === "Curriculum Mode"
+        mode.title === "Listening Mode"
     );
   }
 
@@ -115,7 +112,7 @@ const LearningModes: React.FC = () => {
 
   if (schoolCategory === "demo-flow") {
     filteredModes = modes.filter(
-      (mode) => mode.title === "Reading Mode" || mode.title === "Role Play Mode" || mode.title === "Listening Mode" || mode.title === "Curriculum Mode"
+      (mode) => mode.title === "Reading Mode" || mode.title === "Role Play Mode" || mode.title === "Listening Mode"
     );
   }
 
@@ -127,8 +124,7 @@ const LearningModes: React.FC = () => {
         mode.title === "Debate Mode" ||
         mode.title === "Reading Mode" ||
         mode.title === "Role Play Mode" ||
-        mode.title === "Listening Mode" ||
-        mode.title === "Curriculum Mode"
+        mode.title === "Listening Mode"
     );
 
   // const [isQueationnaireOpen, setIsQuestionnaireOpen] = React.useState(true);
