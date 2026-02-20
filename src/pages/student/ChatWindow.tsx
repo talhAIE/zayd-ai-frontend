@@ -324,6 +324,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const [isContextCompleted, setIsContextCompleted] = useState(false);
   const [hasStartedContextAudio, setHasStartedContextAudio] = useState(false);
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
+  const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
 
   const clickLocked = React.useRef(false);
   const onEndCalledRef = useRef(false);
@@ -543,6 +544,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     socket.on("disconnect", (reason: Socket.DisconnectReason) => {
       logger.error(`Socket disconnected. Reason: ${reason}`);
       setIsSocketConnected(false);
+      setIsWaitingForResponse(false);
 
       if (reason === "ping timeout" || reason === "transport close") {
         if (!isInactiveDialogOpen) {
@@ -639,9 +641,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     socket.on(ChatEvents.STREAMING_COMPLETE, (payload) => {
       logger.receiving(ChatEvents.STREAMING_COMPLETE, payload);
       const { ai_response, feedback, ttsAudioUrl, isCompleted } = payload;
+      setIsWaitingForResponse(false);
       setMessages((prev) => {
         const newMessages = [...prev];
-        const i = findLastIndex(newMessages, (msg) => msg.loading === true);
+        const i = newMessages.findIndex((msg) => msg.loading === true);
         if (i !== -1) {
           newMessages[i] = {
             ...newMessages[i],
@@ -685,9 +688,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     socket.on(ChatEvents.STREAMING_COMPLETE, (payload) => {
       logger.receiving(ChatEvents.STREAMING_COMPLETE, payload);
       const { ai_response, feedback, ttsAudioUrl, isCompleted } = payload;
+      setIsWaitingForResponse(false);
       setMessages((prev) => {
         const newMessages = [...prev];
-        const i = findLastIndex(newMessages, (msg) => msg.loading === true);
+        const i = newMessages.findIndex((msg) => msg.loading === true);
         if (i !== -1) {
           newMessages[i] = {
             id: newMessages[i].id,
@@ -811,6 +815,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
     socket.on(ChatEvents.ERROR, (payload) => {
       logger.receiving(ChatEvents.ERROR, payload);
+      setIsWaitingForResponse(false);
       removeLoadingMessage();
 
       const errorMessage = (payload.message || "").toLowerCase();
@@ -1034,6 +1039,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         ]);
 
         sendPlaceholder();
+        setIsWaitingForResponse(true);
         const audioBase64 = await blobToBase64(audioBlob);
         const format = mimeType.split("/")[1].split(";")[0];
         const payload = { userId, chatId, audioBuffer: audioBase64, format };
@@ -1255,13 +1261,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     e?.preventDefault();
     logger.info("Form submitted.");
 
-    if (!message.trim() || !isSocketConnected) {
+    if (!message.trim() || !isSocketConnected || isWaitingForResponse) {
       logger.error("Cannot send message.", {
         message: message.trim(),
         isSocketConnected,
       });
       return;
     }
+    setIsWaitingForResponse(true);
     setMessages((prev) => [
       ...prev,
       {
@@ -1949,7 +1956,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                     isRecording ||
                     chatCompleted ||
                     _sessionLimitReached ||
-                    !isSocketConnected
+                    !isSocketConnected ||
+                    isWaitingForResponse
                   }
                   className="flex-1 border-none focus:ring-0 bg-transparent"
                 />
@@ -1980,7 +1988,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                     variant="ghost"
                     size="icon"
                     className="text-primary"
-                    disabled={!isSocketConnected || chatCompleted}
+                    disabled={
+                      !isSocketConnected ||
+                      chatCompleted ||
+                      isWaitingForResponse
+                    }
                   >
                     <Send className="h-5 w-5" />
                   </Button>
@@ -1991,7 +2003,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                     size="icon"
                     className="text-primary"
                     onClick={startRecording}
-                    disabled={!isSocketConnected || chatCompleted}
+                    disabled={
+                      !isSocketConnected ||
+                      chatCompleted ||
+                      isWaitingForResponse
+                    }
                   >
                     <Mic className="h-5 w-5" />
                   </Button>
