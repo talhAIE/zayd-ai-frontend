@@ -1,16 +1,27 @@
-import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import flagUK from "@/assets/svgs/flag-united-kingdom.svg";
 import flagChina from "@/assets/svgs/flag-china.svg";
 
 export default function LanguageTabSwitcher() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<"english" | "chinese">("english");
+
+  useEffect(() => {
+    if (location.pathname === "/chinese") {
+      setActiveTab("chinese");
+    } else {
+      setActiveTab("english");
+    }
+  }, [location.pathname]);
 
   const handleTabClick = (tab: "english" | "chinese") => {
     if (tab === "chinese") {
-      window.open("https://nihao.waaha.ai/", "_blank");
+      navigate("/chinese");
     } else {
-      setActiveTab(tab);
+      navigate("/");
     }
   };
 

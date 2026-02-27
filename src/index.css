@@ -236,3 +236,8 @@ html.lenis body {
 .lenis.lenis-smooth iframe {
   pointer-events: none
 }
+
+/* CSS Flag to flip images in English (EN) mode */
+[dir="ltr"] .flip-in-en {
+  transform: scaleX(-1);
+}

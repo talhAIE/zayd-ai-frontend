@@ -73,6 +73,9 @@ const ConversationSection = () => {
   ];
 
   useEffect(() => {
+    const sectionElement = sectionRef.current;
+    if (!sectionElement) return;
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -85,14 +88,10 @@ const ConversationSection = () => {
       }
     );
 
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
+    observer.observe(sectionElement);
 
     return () => {
-      if (sectionRef.current) {
-        observer.unobserve(sectionRef.current);
-      }
+      observer.unobserve(sectionElement);
     };
   }, []);
 
@@ -138,7 +137,7 @@ const ConversationSection = () => {
                 alt="Zayd AI Mascot"
                 width={200}
                 height={200}
-                className="object-contain scale-x-[-1]"
+                className="object-contain flip-in-en"
               />
             </motion.div>
 
@@ -187,7 +186,7 @@ const ConversationSection = () => {
               alt="Background decoration"
               width={1400}
               height={1800}
-              className="object-contain opacity-60 -ml-96"
+              className="object-contain opacity-60 -ml-96 flip-in-en"
             />
           </div>
 

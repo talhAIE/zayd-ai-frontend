@@ -36,6 +36,7 @@ const DashboardSection = () => {
               alt="Flying bird"
               width={150}
               height={150}
+              className="flip-in-en"
             />
           </div>
           {/* Falcon wing - on top of dashboard */}
@@ -45,7 +46,7 @@ const DashboardSection = () => {
               alt="Falcon wing"
               width={50}
               height={50}
-              className="rotate-[6deg]"
+              className="rotate-[6deg] flip-in-en"
             />
           </div>
           {/* Dashboard Image */}

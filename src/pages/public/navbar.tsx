@@ -4,6 +4,16 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import navLogoPng from "@/assets/images/landingpage/nav-logo.png";
 import { useLanguage } from "@/components/language-provider";
 
+const menuItems = [
+  { name: "Home", href: "#home", isRoute: false },
+  { name: "Features", href: "#features", isRoute: false },
+  { name: "How It Works", href: "#how-it-works", isRoute: false },
+  // { name: "Testimonials", href: "#testimonials", isRoute: false },
+  { name: "Pricing", href: "#pricing", isRoute: false },
+  { name: "FAQ", href: "#faq", isRoute: false },
+  { name: "Contact Us", href: "/contact-us", isRoute: true },
+];
+
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
@@ -11,15 +21,7 @@ export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const menuItems = [
-    { name: "Home", href: "#home", isRoute: false },
-    { name: "Features", href: "#features", isRoute: false },
-    { name: "How It Works", href: "#how-it-works", isRoute: false },
-    // { name: "Testimonials", href: "#testimonials", isRoute: false },
-    { name: "Pricing", href: "#pricing", isRoute: false },
-    { name: "FAQ", href: "#faq", isRoute: false },
-    { name: "Contact Us", href: "/contact-us", isRoute: true },
-  ];
+  const isMainPath = location.pathname === "/" || location.pathname === "/chinese";
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -32,7 +34,7 @@ export default function Navbar() {
       return;
     }
     if (href === "#home") {
-      if (location.pathname !== "/") {
+      if (!isMainPath) {
         navigate("/");
         setTimeout(() => {
           window.scrollTo({
@@ -47,7 +49,7 @@ export default function Navbar() {
         });
       }
     } else {
-      if (location.pathname !== "/") {
+      if (!isMainPath) {
         navigate("/");
         setTimeout(() => {
           const element = document.querySelector(href);
@@ -72,7 +74,7 @@ export default function Navbar() {
   };
 
   useEffect(() => {
-    if (location.pathname !== "/") {
+    if (!isMainPath) {
       return;
     }
 
@@ -95,7 +97,7 @@ export default function Navbar() {
     handleScroll();
 
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [location.pathname]);
+  }, [isMainPath]);
 
   return (
     <nav className="w-full md:py-4 py-8 shadow-sm sticky top-0 bg-white z-[9999]">
@@ -130,7 +132,7 @@ export default function Navbar() {
             const sectionId = item.href.substring(1);
             const isActive = item.isRoute 
               ? location.pathname === item.href
-              : location.pathname === "/" && activeSection === sectionId;
+              : isMainPath && activeSection === sectionId;
             
             if (item.isRoute) {
               return (
@@ -245,7 +247,7 @@ export default function Navbar() {
               const sectionId = item.href.substring(1);
               const isActive = item.isRoute 
                 ? location.pathname === item.href
-                : location.pathname === "/" && activeSection === sectionId;
+                : isMainPath && activeSection === sectionId;
               
               if (item.isRoute) {
                 return (

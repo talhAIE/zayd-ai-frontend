@@ -75,7 +75,7 @@ export default function FlowSection() {
               alt="Bird illustration"
               width={160}
               height={160}
-              className="w-40 h-40 transform scale-x-[-1]"
+              className="w-40 h-40 flip-in-en"
             />
           </motion.div>
 

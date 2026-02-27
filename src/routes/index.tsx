@@ -7,6 +7,7 @@ import { TeacherLayout } from "@/components/layouts/teacher-layout";
 
 // Public Pages
 import Main from "@/pages/public/Main";
+import MainChinese from "@/pages/public/chinese/Main";
 import ContactUs from "@/pages/public/contact-us";
 
 // Student Pages
@@ -52,6 +53,7 @@ const AppRoutes = () => {
     <Routes>
       {/* Public Routes */}
       <Route path="/" element={<Main />} />
+      <Route path="/chinese" element={<MainChinese />} />
       <Route path="/contact-us" element={<ContactUs />} />
       <Route
         path="/teacher/dashboard"
