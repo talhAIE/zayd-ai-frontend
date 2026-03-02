@@ -68,7 +68,7 @@ export default function ChineseSafetySection() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-5xl md:text-6xl font-black text-[#121212] mb-8 leading-tight max-w-4xl mx-auto"
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-[#121212] mb-8 leading-tight max-w-4xl mx-auto"
           >
             {isAr ? "السلامة والامتثال والاستضافة المحلية في المملكة العربية السعودية" : "Safety, Compliance, and Local Hosting in Saudi Arabia"}
           </motion.h2>
@@ -77,7 +77,7 @@ export default function ChineseSafetySection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-[#6B7280] text-xl font-medium max-w-3xl mx-auto leading-relaxed"
+            className="text-[#6B7280] text-base sm:text-lg md:text-xl font-medium max-w-3xl mx-auto leading-relaxed"
           >
             {isAr 
               ? "تم بناء زيد AI من الألف إلى الياء لتلبية احتياجات التعليم السعودي. يعمل كل من زيد AI باللغة الإنجليزية وزيد AI باللغة الصينية على تكنولوجيا الذكاء الاصطناعي المعتمدة من SADAIA ويتبع معايير صارمة للسلامة وحماية البيانات."
@@ -86,7 +86,7 @@ export default function ChineseSafetySection() {
         </div>
 
         {/* Top 3 Cards */}
-        <div className="grid md:grid-cols-3 gap-8 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 mb-8 md:mb-12">
           {safetyCards.map((card, i) => (
             <motion.div
               key={i}
@@ -94,15 +94,15 @@ export default function ChineseSafetySection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="bg-white p-10 rounded-[48px] border border-gray-100 shadow-sm hover:shadow-xl transition-all text-start"
+              className="bg-white p-6 md:p-10 rounded-[24px] md:rounded-[48px] border border-gray-100 shadow-sm hover:shadow-xl transition-all text-start"
             >
-              <div className="flex items-center gap-4 mb-6">
-                <h3 className="text-2xl font-black text-[#121212] leading-none">{card.title}</h3>
-                <div className="w-10 h-10 flex items-center justify-center shrink-0">
+              <div className="flex items-center gap-3 md:gap-4 mb-6">
+                <h3 className="text-lg md:text-2xl font-black text-[#121212] leading-none">{card.title}</h3>
+                <div className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center shrink-0">
                   {card.icon}
                 </div>
               </div>
-              <p className="text-[#6B7280] font-medium leading-relaxed">
+              <p className="text-sm md:text-base text-[#6B7280] font-medium leading-relaxed">
                 {card.description}
               </p>
             </motion.div>
@@ -110,36 +110,33 @@ export default function ChineseSafetySection() {
         </div>
 
         {/* Bottom 2 Cards */}
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
           {bottomCards.map((card, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: (i + 3) * 0.1 }}
-              className="bg-white p-10 rounded-[48px] border border-gray-100 shadow-sm hover:shadow-xl transition-all text-start"
+              transition={{ delay: i * 0.1 }}
+              className="bg-white p-6 md:p-10 rounded-[24px] md:rounded-[48px] border border-gray-100 shadow-sm hover:shadow-xl transition-all text-start"
             >
-              <div className="flex items-center gap-4 mb-6">
-                <h3 className="text-2xl font-black text-[#121212] leading-none">{card.title}</h3>
-                <div className="w-10 h-10 flex items-center justify-center shrink-0">
+              <div className="flex items-center gap-3 md:gap-4 mb-6">
+                <h3 className="text-lg md:text-2xl font-black text-[#121212] leading-none">{card.title}</h3>
+                <div className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center shrink-0">
                   {card.icon}
                 </div>
               </div>
-              
               {card.points ? (
-                <div className="space-y-4">
-                  {card.points.map((pt, idx) => (
-                    <div key={idx} className="flex items-start gap-3">
-                      <CheckCircle2 className="w-5 h-5 text-[#35AB4E] mt-0.5 shrink-0" />
-                      <p className="text-[#6B7280] font-medium leading-snug flex-1">
-                        {pt}
-                      </p>
-                    </div>
+                <ul className="space-y-3">
+                  {card.points.map((point, idx) => (
+                    <li key={idx} className="flex items-start gap-3">
+                      <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-[#35AB4E] shrink-0 mt-0.5" />
+                      <span className="text-sm md:text-base text-[#374151] leading-relaxed">{point}</span>
+                    </li>
                   ))}
-                </div>
+                </ul>
               ) : (
-                <p className="text-[#6B7280] font-medium leading-relaxed">
+                <p className="text-sm md:text-base text-[#6B7280] font-medium leading-relaxed">
                   {card.description}
                 </p>
               )}

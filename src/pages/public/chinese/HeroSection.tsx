@@ -93,14 +93,14 @@ export default function ChineseHeroSection() {
         >
           <Link to="/signup">
             <Button
-              className="bg-[#35AB4E] hover:bg-[#2E9643] text-white rounded-[16px] px-12 py-8 text-xl font-bold transition-all shadow-md active:scale-95"
+              className="bg-[#35AB4E] hover:bg-[#2f9c46] text-white text-sm md:text-xl font-bold rounded-lg border-b-2 border-[#20672F] flex items-center justify-center gap-2 transition active:translate-y-[1px] active:border-b-0 px-8 md:px-12 py-6 md:py-8 shadow-md h-16 md:h-20 w-full sm:w-auto"
             >
               {isAr ? "ابدأ تجربتك المدرسية المجانية" : "Start Your Free School Trial"}
             </Button>
           </Link>
           <Button
             variant="outline"
-            className="border-2 border-gray-200 text-[#4B5563] rounded-[16px] px-12 py-8 text-xl font-bold hover:bg-gray-50 transition-all active:scale-95"
+            className="border-2 border-gray-200 text-[#4B5563] rounded-lg px-8 md:px-12 py-6 md:py-8 text-sm md:text-xl font-bold hover:bg-gray-50 transition-all active:translate-y-[1px] active:border-b-0 h-16 md:h-20 w-full sm:w-auto flex items-center justify-center"
           >
             {isAr ? "استكشف برامج الإنجليزية والصينية" : "Explore English & Chinese Programs"}
           </Button>
@@ -108,7 +108,7 @@ export default function ChineseHeroSection() {
 
         {/* Features Row */}
         <motion.div
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-7xl px-4 pb-12"
+          className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 w-full max-w-7xl px-4 pb-12"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -128,9 +128,9 @@ export default function ChineseHeroSection() {
               icon: <EmojiIcon emoji="✓" size={28} className="text-[#35AB4E]" />
             }
           ].map((item, idx) => (
-            <div key={idx} className={`flex items-center gap-4 bg-[#F9FAFB] p-8 rounded-[24px] shadow-sm border border-gray-100 hover:shadow-md transition-shadow ${isAr ? "text-right" : "text-left"}`}>
+            <div key={idx} className={`flex items-center gap-3 md:gap-4 bg-[#F9FAFB] p-4 md:p-8 rounded-[16px] md:rounded-[24px] shadow-sm border border-gray-100 hover:shadow-md transition-shadow ${isAr ? "text-right" : "text-left"}`}>
               {item.icon}
-              <p className="text-[#374151] font-bold text-lg leading-snug">
+              <p className="text-[#374151] font-bold text-sm md:text-lg leading-snug">
                 {item.text}
               </p>
             </div>

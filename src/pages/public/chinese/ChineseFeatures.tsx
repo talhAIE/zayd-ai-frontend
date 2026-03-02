@@ -101,7 +101,7 @@ export default function ChineseFeatures() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-5xl md:text-6xl font-black text-[#121212] mb-6 leading-tight"
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-[#121212] mb-6 leading-tight"
           >
             {isAr ? "تعلم الصينية مع" : "Learn Chinese with"} <span className="text-[#35AB4E]">{isAr ? "ذكاء زيد الاصطناعي" : "Zayd AI"}</span>
           </motion.h2>
@@ -111,7 +111,7 @@ export default function ChineseFeatures() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
-            className="text-[#6B7280] text-xl font-medium"
+            className="text-[#6B7280] text-base sm:text-lg md:text-xl font-medium"
           >
             {isAr ? "دروس صينية مدعومة بالذكاء الاصطناعي لطلاب المدارس المتوسطة والثانوية في السعودية" : "AI-powered Chinese lessons for middle and high school students in Saudi Arabia"}
           </motion.p>
@@ -208,29 +208,31 @@ export default function ChineseFeatures() {
           </motion.h2>
 
           {/* Toggle Tabs */}
-          <div className="flex justify-center mb-16">
-            <div className="inline-flex bg-[#F3F4F6] p-1.5 rounded-full shadow-inner">
+          <div className="flex justify-center mb-16 px-4">
+            <div className="inline-flex bg-[#F3F4F6] p-1.5 rounded-full shadow-inner w-full max-w-sm">
               <button 
                 onClick={() => setActiveTab("students")}
-                className={`flex items-center gap-2 px-10 py-3 rounded-full text-lg font-bold transition-all duration-300 ${
+                className={`flex-1 flex items-center justify-center gap-2 px-3 sm:px-10 py-3 rounded-full text-sm sm:text-lg font-bold transition-all duration-300 ${
                   activeTab === "students" 
                     ? "bg-[#35AB4E] text-white shadow-lg" 
                     : "text-[#6B7280] hover:text-[#35AB4E]"
                 }`}
               >
-                <GraduationCap className={`w-5 h-5 ${activeTab === "students" ? "text-white" : "text-[#6B7280]"}`} />
-                {isAr ? "للطلاب" : "For Students"}
+                <GraduationCap className={`w-4 h-4 sm:w-5 sm:h-5 ${activeTab === "students" ? "text-white" : "text-[#6B7280]"}`} />
+                <span className="hidden sm:inline">{isAr ? "للطلاب" : "For Students"}</span>
+                <span className="sm:hidden">{isAr ? "طلاب" : "Students"}</span>
               </button>
               <button 
                 onClick={() => setActiveTab("teachers")}
-                className={`flex items-center gap-2 px-10 py-3 rounded-full text-lg font-bold transition-all duration-300 ${
+                className={`flex-1 flex items-center justify-center gap-2 px-3 sm:px-10 py-3 rounded-full text-sm sm:text-lg font-bold transition-all duration-300 ${
                   activeTab === "teachers" 
                     ? "bg-[#35AB4E] text-white shadow-lg" 
                     : "text-[#6B7280] hover:text-[#35AB4E]"
                 }`}
               >
-                <Presentation className={`w-5 h-5 ${activeTab === "teachers" ? "text-white" : "text-[#6B7280]"}`} />
-                {isAr ? "للمعلمين" : "For Teachers"}
+                <Presentation className={`w-4 h-4 sm:w-5 sm:h-5 ${activeTab === "teachers" ? "text-white" : "text-[#6B7280]"}`} />
+                <span className="hidden sm:inline">{isAr ? "للمعلمين" : "For Teachers"}</span>
+                <span className="sm:hidden">{isAr ? "معلمون" : "Teachers"}</span>
               </button>
             </div>
           </div>
@@ -238,7 +240,7 @@ export default function ChineseFeatures() {
           {/* Features Grid */}
           <div className="relative">
             <div className="max-w-4xl mx-auto">
-              <div className="grid md:grid-cols-2 gap-8 relative z-10" dir={isAr ? "rtl" : "ltr"}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 relative z-10" dir={isAr ? "rtl" : "ltr"}>
                 {features.map((f, i) => (
                   <motion.div 
                     key={i}
@@ -246,23 +248,23 @@ export default function ChineseFeatures() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: i * 0.1 }}
-                    className={`bg-white p-8 rounded-[48px] border border-[#E5E7EB] shadow-sm hover:shadow-xl transition-all group flex flex-col items-start text-start`}
+                    className={`bg-white p-6 md:p-8 rounded-[24px] md:rounded-[48px] border border-[#E5E7EB] shadow-sm hover:shadow-xl transition-all group flex flex-col items-start text-start`}
                   >
                     {/* Header: Title + Icon row */}
-                    <div className="flex items-center gap-4 mb-4">
-                      <h4 className="text-xl font-black text-[#121212] leading-none">{f.title}</h4>
-                      <div className="w-8 h-8 flex items-center justify-center shrink-0">
+                    <div className="flex items-center gap-3 md:gap-4 mb-4">
+                      <h4 className="text-lg md:text-xl font-black text-[#121212] leading-none">{f.title}</h4>
+                      <div className="w-6 h-6 md:w-8 md:h-8 flex items-center justify-center shrink-0">
                         {f.icon}
                       </div>
                     </div>
 
-                    <p className="text-[#6B7280] text-sm font-medium mb-6 leading-relaxed">
+                    <p className="text-[#6B7280] text-xs md:text-sm font-medium mb-6 leading-relaxed">
                       {f.description}
                     </p>
 
-                    <div className={`flex items-center justify-between w-full mt-auto text-[#35AB4E] font-bold text-sm`}>
+                    <div className={`flex items-center justify-between w-full mt-auto text-[#35AB4E] font-bold text-xs md:text-sm`}>
                       <span>{f.footer}</span>
-                      <CheckCircle2 className="w-4 h-4 shrink-0" />
+                      <CheckCircle2 className="w-3 h-3 md:w-4 md:h-4 shrink-0" />
                     </div>
                   </motion.div>
                 ))}

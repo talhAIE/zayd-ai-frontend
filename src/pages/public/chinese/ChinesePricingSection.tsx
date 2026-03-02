@@ -70,7 +70,7 @@ export default function ChinesePricingSection() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-5xl md:text-6xl font-black text-[#121212] mb-8"
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-[#121212] mb-8"
           >
             {isAr ? "خطط للطلاب والمدارس" : "Plans for Students & Schools"}
           </motion.h2>
@@ -79,7 +79,7 @@ export default function ChinesePricingSection() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-[#6B7280] text-xl font-medium max-w-3xl leading-relaxed"
+            className="text-[#6B7280] text-base sm:text-lg md:text-xl font-medium max-w-3xl leading-relaxed"
           >
             {isAr 
               ? "تقدم Zayd AI خططاً مرنة للمتعلمين الأفراد ونشر المدارس بالكامل. تشمل جميع الخطط الوصول إلى منصتنا الآمنة المعتمدة من SADAIA واستضافة محلية في السعودية."
@@ -88,34 +88,34 @@ export default function ChinesePricingSection() {
         </div>
 
         {/* Pricing Grid */}
-        <div className="grid md:grid-cols-2 gap-10 mb-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 mb-20">
           {plans.map((plan, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, x: isAr ? (i === 0 ? 50 : -50) : (i === 0 ? -50 : 50) }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="bg-white p-10 md:p-12 rounded-[48px] border border-gray-100 shadow-sm hover:shadow-2xl transition-all flex flex-col items-start text-start"
+              className="bg-white p-6 md:p-10 md:p-12 rounded-[24px] md:rounded-[48px] border border-gray-100 shadow-sm hover:shadow-2xl transition-all flex flex-col items-start text-start"
             >
               {/* Logically Aligned Header: Title + Icon */}
-              <div className="flex items-center gap-4 mb-6">
-                <h3 className="text-4xl font-black text-[#121212] leading-none">{plan.title}</h3>
-                <div className="w-10 h-10 flex items-center justify-center">
+              <div className="flex items-center gap-3 md:gap-4 mb-6">
+                <h3 className="text-2xl md:text-4xl font-black text-[#121212] leading-none">{plan.title}</h3>
+                <div className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center">
                   {plan.icon}
                 </div>
               </div>
               
-              <p className="text-[#6B7280] text-lg font-medium mb-10 leading-relaxed">
+              <p className="text-[#6B7280] text-base md:text-lg font-medium mb-6 md:mb-10 leading-relaxed">
                 {plan.description}
               </p>
 
-              <div className="space-y-4 w-full px-4">
+              <div className="space-y-3 md:space-y-4 w-full px-2 md:px-4">
                 {plan.features.map((feature, idx) => (
                   <div key={idx} className={`flex items-center justify-between w-full py-1`}>
-                    <p className="text-[#121212] font-semibold text-lg leading-snug">
+                    <p className="text-[#121212] font-semibold text-sm md:text-lg leading-snug">
                       {feature}
                     </p>
-                    <CheckCircle2 className="w-6 h-6 text-[#35AB4E] shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 md:w-6 md:h-6 text-[#35AB4E] shrink-0" />
                   </div>
                 ))}
               </div>
@@ -131,25 +131,29 @@ export default function ChinesePricingSection() {
           className="bg-[#E5F3E9] rounded-[48px] p-10 md:p-20 relative overflow-hidden"
         >
           {/* Content Wrapper - Padded to avoid mascot overlap */}
-          <div className={`relative z-10 ${isAr ? "md:mr-auto md:ml-0 text-center md:text-right md:pr-64" : "md:ml-auto md:mr-0 text-center md:text-left md:pl-64"}`}>
-            <h3 className="text-3xl md:text-4xl font-black text-[#121212] mb-4">
-              {isAr ? "هل أنت مستعد للبدء؟" : "Are you ready to start?"}
-            </h3>
-            <p className="text-[#35AB4E] text-lg md:text-xl font-bold mb-10 max-w-lg mx-auto md:mx-0">
-              {isAr 
-                ? "شارك حجم مدرستك واحتياجاتك اللغوية، وسنوصي بأفضل خطة لك."
-                : "Share your school size and language needs, and we'll recommend the best plan for you."}
-            </p>
-            <button className="bg-[#35AB4E] text-white px-10 py-5 rounded-2xl text-xl font-black hover:bg-[#2D8E41] transition-all transform hover:scale-105 shadow-lg shadow-[#35AB4E]/20">
-              {isAr ? "اتصل بنا للحصول على الأسعار" : "Contact us for pricing"}
-            </button>
+          <div className={`relative z-10 ${isAr ? "md:pr-56" : "md:pl-56"}`}>
+            <div className="text-center md:text-left max-w-2xl">
+              <h3 className="text-2xl md:text-4xl font-black text-[#121212] mb-4">
+                {isAr ? "هل أنت مستعد للبدء؟" : "Are you ready to start?"}
+              </h3>
+              <p className="text-[#35AB4E] text-base md:text-lg md:text-xl font-bold mb-6 md:mb-8">
+                {isAr 
+                  ? "شارك حجم مدرستك واحتياجاتك اللغوية، وسنوصي بأفضل خطة لك."
+                  : "Share your school size and language needs, and we'll recommend the best plan for you."}
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+                <button className="bg-[#35AB4E] hover:bg-[#2f9c46] text-white px-6 md:px-10 py-3 md:py-5 rounded-lg text-base md:text-xl font-black border-b-2 border-[#20672F] flex items-center justify-center gap-2 transition active:translate-y-[1px] active:border-b-0 shadow-lg shadow-[#35AB4E]/20 w-full sm:w-auto">
+                  {isAr ? "اتصل بنا للحصول على الأسعار" : "Contact us for pricing"}
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Absolute Mascot - Centered on edge */}
           <motion.img
             src={birdSide}
             alt="Owl Mascot"
-            className={`absolute top-1/2 -translate-y-1/2 ${isAr ? "right-0" : "left-0"} w-32 md:w-48 h-auto object-contain pointer-events-none`}
+            className={`hidden md:block absolute top-1/2 -translate-y-1/2 ${isAr ? "right-0" : "left-0"} w-48 h-auto object-contain pointer-events-none`}
             initial={{ opacity: 0, x: isAr ? 50 : -50, y: "-50%", scaleX: isAr ? 1 : -1 }}
             whileInView={{ opacity: 1, x: 0, y: "-50%", scaleX: isAr ? 1 : -1 }}
             viewport={{ once: true }}
