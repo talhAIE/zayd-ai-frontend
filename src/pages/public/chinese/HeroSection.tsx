@@ -1,11 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import guyImage from "@/assets/images/chinese-landingpage/guy 1.png";
 import heroBookImage from "@/assets/images/chinese-landingpage/hero book 1.png";
 import LanguageTabSwitcher from "@/components/ui/LanguageTabSwitcher";
 import EmojiIcon from "@/components/ui/emoji-icon";
 import { useLanguage } from "@/components/language-provider";
+import { Link } from "react-router-dom";
 
 export default function ChineseHeroSection() {
   const { language } = useLanguage();
@@ -19,8 +19,8 @@ export default function ChineseHeroSection() {
       {/* SADAIA Badge */}
       <motion.div
         className="bg-[#E4F2E7] text-[#35AB4E] px-4 py-1.5 rounded-full text-sm font-extrabold mb-6"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, y: 20, scale: 0.8 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
         {isAr ? "معتمد من سدايا (SADAIA)" : "Certified by SADAIA"}
@@ -77,7 +77,7 @@ export default function ChineseHeroSection() {
           className="text-[#6B7280] text-lg sm:text-[20px] font-medium max-w-[800px] leading-relaxed mb-10"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
+          transition={{ duration: 0.8, ease: "easeOut", delay: 0.6 }}
         >
           {isAr 
             ? "منصة تعلّم لغات بالذكاء الاصطناعي للغة الإنجليزية والصينية، مصممة خصيصًا لطلاب ومدارس وأسر المملكة العربية السعودية – باستخدام تقنية معتمدة من الهيئة السعودية للبيانات والذكاء الاصطناعي سدايا وتوفر حماية بيانات كاملة."
@@ -89,21 +89,41 @@ export default function ChineseHeroSection() {
           className="flex flex-col sm:flex-row gap-6 mb-20"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut", delay: 0.6 }}
+          transition={{ duration: 0.8, ease: "easeOut", delay: 0.8 }}
         >
-          <Link to="/signup">
-            <Button
-              className="bg-[#35AB4E] hover:bg-[#2f9c46] text-white text-sm md:text-xl font-bold rounded-lg border-b-2 border-[#20672F] flex items-center justify-center gap-2 transition active:translate-y-[1px] active:border-b-0 px-8 md:px-12 py-6 md:py-8 shadow-md h-16 md:h-20 w-full sm:w-auto"
-            >
-              {isAr ? "ابدأ تجربتك المدرسية المجانية" : "Start Your Free School Trial"}
-            </Button>
-          </Link>
-          <Button
-            variant="outline"
-            className="border-2 border-gray-200 text-[#4B5563] rounded-lg px-8 md:px-12 py-6 md:py-8 text-sm md:text-xl font-bold hover:bg-gray-50 transition-all active:translate-y-[1px] active:border-b-0 h-16 md:h-20 w-full sm:w-auto flex items-center justify-center"
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut", delay: 0.9 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="w-full sm:w-auto"
           >
-            {isAr ? "استكشف برامج الإنجليزية والصينية" : "Explore English & Chinese Programs"}
-          </Button>
+            <a href="https://nihao.waaha.ai/register">
+              <Button
+                className="bg-[#35AB4E] hover:bg-[#2f9c46] text-white text-sm md:text-xl font-bold rounded-lg border-b-2 border-[#20672F] flex items-center justify-center gap-2 transition active:translate-y-[1px] active:border-b-0 px-8 md:px-12 py-6 md:py-8 shadow-md h-16 md:h-20 w-full sm:w-auto"
+              >
+                {isAr ? "ابدأ تجربتك المدرسية المجانية" : "Start Your Free School Trial"}
+              </Button>
+            </a>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut", delay: 1.0 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="w-full sm:w-auto"
+          >
+            <Link to="/">
+            <Button
+              variant="outline"
+              className="border-2 border-gray-200 text-[#4B5563] rounded-lg px-8 md:px-12 py-6 md:py-8 text-sm md:text-xl font-bold hover:bg-gray-50 transition-all active:translate-y-[1px] active:border-b-0 h-16 md:h-20 w-full sm:w-auto flex items-center justify-center"
+            >
+              {isAr ? "استكشف برامج الإنجليزية والصينية" : "Explore English & Chinese Programs"}
+            </Button>
+            </Link>
+          </motion.div>
         </motion.div>
 
         {/* Features Row */}
@@ -111,8 +131,8 @@ export default function ChineseHeroSection() {
           className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 w-full max-w-7xl px-4 pb-12"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, ease: "easeOut", delay: 0.8 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.8, ease: "easeOut", delay: 1.1 }}
         >
           {[
             {

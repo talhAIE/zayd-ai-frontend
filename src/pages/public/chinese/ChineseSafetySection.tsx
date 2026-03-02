@@ -65,9 +65,10 @@ export default function ChineseSafetySection() {
         {/* Header */}
         <div className="text-center mb-20">
           <motion.h2 
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
             className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-[#121212] mb-8 leading-tight max-w-4xl mx-auto"
           >
             {isAr ? "السلامة والامتثال والاستضافة المحلية في المملكة العربية السعودية" : "Safety, Compliance, and Local Hosting in Saudi Arabia"}
@@ -75,8 +76,8 @@ export default function ChineseSafetySection() {
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 }}
             className="text-[#6B7280] text-base sm:text-lg md:text-xl font-medium max-w-3xl mx-auto leading-relaxed"
           >
             {isAr 
@@ -92,8 +93,9 @@ export default function ChineseSafetySection() {
               key={i}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.3 }}
               transition={{ delay: i * 0.1 }}
+              whileHover={{ scale: 1.02 }}
               className="bg-white p-6 md:p-10 rounded-[24px] md:rounded-[48px] border border-gray-100 shadow-sm hover:shadow-xl transition-all text-start"
             >
               <div className="flex items-center gap-3 md:gap-4 mb-6">
@@ -116,8 +118,9 @@ export default function ChineseSafetySection() {
               key={i}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.3 }}
               transition={{ delay: i * 0.1 }}
+              whileHover={{ scale: 1.02 }}
               className="bg-white p-6 md:p-10 rounded-[24px] md:rounded-[48px] border border-gray-100 shadow-sm hover:shadow-xl transition-all text-start"
             >
               <div className="flex items-center gap-3 md:gap-4 mb-6">

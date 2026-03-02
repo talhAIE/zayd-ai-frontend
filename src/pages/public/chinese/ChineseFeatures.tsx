@@ -85,9 +85,10 @@ export default function ChineseFeatures() {
         {/* Header Section */}
         <div className="text-center mb-24 relative">
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            initial={{ opacity: 0, y: 20, scale: 0.8 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
             className="inline-flex items-center gap-2 bg-[#E5F3E9] px-6 py-2 rounded-full border border-[#D1EBD9] mb-8"
           >
             <Globe className="w-5 h-5 text-[#35AB4E]" />
@@ -97,10 +98,10 @@ export default function ChineseFeatures() {
           </motion.div>
 
           <motion.h2 
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
             className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-[#121212] mb-6 leading-tight"
           >
             {isAr ? "تعلم الصينية مع" : "Learn Chinese with"} <span className="text-[#35AB4E]">{isAr ? "ذكاء زيد الاصطناعي" : "Zayd AI"}</span>
@@ -109,8 +110,8 @@ export default function ChineseFeatures() {
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
             className="text-[#6B7280] text-base sm:text-lg md:text-xl font-medium"
           >
             {isAr ? "دروس صينية مدعومة بالذكاء الاصطناعي لطلاب المدارس المتوسطة والثانوية في السعودية" : "AI-powered Chinese lessons for middle and high school students in Saudi Arabia"}
@@ -123,7 +124,14 @@ export default function ChineseFeatures() {
             className={`absolute -top-10 ${isAr ? "-right-20" : "-left-20"} w-48 h-auto hidden xl:block`}
             initial={{ opacity: 0, x: isAr ? 50 : -50, rotate: isAr ? 10 : -10, scaleX: isAr ? 1 : -1 }}
             whileInView={{ opacity: 1, x: 0, rotate: 0, scaleX: isAr ? 1 : -1 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{
+              duration: 0.8,
+              ease: "easeOut",
+              delay: 0.6,
+              type: "spring",
+              stiffness: 100,
+            }}
           />
         </div>
 
@@ -134,7 +142,8 @@ export default function ChineseFeatures() {
             <motion.div 
               initial={{ opacity: 0, x: isAr ? 50 : -50 }}
               whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
               className="flex items-center gap-3"
             >
               <h3 className="text-4xl font-black text-[#121212]">
@@ -146,8 +155,8 @@ export default function ChineseFeatures() {
             <motion.p 
               initial={{ opacity: 0, x: isAr ? 50 : -50 }}
               whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
               className="text-[#6B7280] text-lg leading-relaxed font-medium"
             >
               {isAr 
@@ -181,7 +190,8 @@ export default function ChineseFeatures() {
           <motion.div 
             initial={{ opacity: 0, x: isAr ? -50 : 50 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
             className="relative"
           >
             <img src={booksImg} alt="Learning Books" className="w-full h-auto max-w-[400px] mx-auto flip-in-en" />
@@ -191,17 +201,19 @@ export default function ChineseFeatures() {
         {/* Tabbed Features Section */}
         <div className="text-center">
           <motion.span 
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
             className="text-[#35AB4E] font-bold text-lg mb-4 block"
           >
             {isAr ? "استكشاف الميزات" : "Explore Features"}
           </motion.span>
           <motion.h2 
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
             className="text-5xl font-black text-[#121212] mb-12"
           >
             {isAr ? "كل ما تحتاجه لإتقان اللغة الصينية" : "Everything You Need to Master Chinese"}
@@ -209,30 +221,36 @@ export default function ChineseFeatures() {
 
           {/* Toggle Tabs */}
           <div className="flex justify-center mb-16 px-4">
-            <div className="inline-flex bg-[#F3F4F6] p-1.5 rounded-full shadow-inner w-full max-w-sm">
+            <div className="relative inline-flex bg-[#F3F4F6] p-1.5 rounded-full shadow-inner w-full max-w-md border border-gray-100">
+              {/* Sliding Background */}
+              <motion.div
+                className="absolute top-1.5 bottom-1.5 rounded-full bg-[#35AB4E] shadow-lg"
+                initial={false}
+                animate={{
+                  left: activeTab === "students" ? "0.375rem" : "50%",
+                  width: "calc(50% - 0.375rem)",
+                }}
+                transition={{ type: "spring", stiffness: 400, damping: 35 }}
+              />
+
               <button 
                 onClick={() => setActiveTab("students")}
-                className={`flex-1 flex items-center justify-center gap-2 px-3 sm:px-10 py-3 rounded-full text-sm sm:text-lg font-bold transition-all duration-300 ${
-                  activeTab === "students" 
-                    ? "bg-[#35AB4E] text-white shadow-lg" 
-                    : "text-[#6B7280] hover:text-[#35AB4E]"
+                className={`relative flex-1 flex items-center justify-center gap-3 px-4 sm:px-8 py-3.5 rounded-full text-sm sm:text-lg font-bold transition-colors duration-300 z-10 ${
+                  activeTab === "students" ? "text-white" : "text-[#6B7280] hover:text-[#35AB4E]"
                 }`}
               >
-                <GraduationCap className={`w-4 h-4 sm:w-5 sm:h-5 ${activeTab === "students" ? "text-white" : "text-[#6B7280]"}`} />
-                <span className="hidden sm:inline">{isAr ? "للطلاب" : "For Students"}</span>
-                <span className="sm:hidden">{isAr ? "طلاب" : "Students"}</span>
+                <GraduationCap className="w-5 h-5" />
+                <span className="whitespace-nowrap">{isAr ? "للطلاب" : "For Students"}</span>
               </button>
+
               <button 
                 onClick={() => setActiveTab("teachers")}
-                className={`flex-1 flex items-center justify-center gap-2 px-3 sm:px-10 py-3 rounded-full text-sm sm:text-lg font-bold transition-all duration-300 ${
-                  activeTab === "teachers" 
-                    ? "bg-[#35AB4E] text-white shadow-lg" 
-                    : "text-[#6B7280] hover:text-[#35AB4E]"
+                className={`relative flex-1 flex items-center justify-center gap-3 px-4 sm:px-8 py-3.5 rounded-full text-sm sm:text-lg font-bold transition-colors duration-300 z-10 ${
+                  activeTab === "teachers" ? "text-white" : "text-[#6B7280] hover:text-[#35AB4E]"
                 }`}
               >
-                <Presentation className={`w-4 h-4 sm:w-5 sm:h-5 ${activeTab === "teachers" ? "text-white" : "text-[#6B7280]"}`} />
-                <span className="hidden sm:inline">{isAr ? "للمعلمين" : "For Teachers"}</span>
-                <span className="sm:hidden">{isAr ? "معلمون" : "Teachers"}</span>
+                <Presentation className="w-5 h-5" />
+                <span className="whitespace-nowrap">{isAr ? "للمعلمين" : "For Teachers"}</span>
               </button>
             </div>
           </div>
@@ -246,8 +264,9 @@ export default function ChineseFeatures() {
                     key={i}
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
+                    viewport={{ once: true, amount: 0.3 }}
                     transition={{ delay: i * 0.1 }}
+                    whileHover={{ y: -5, transition: { duration: 0.2 } }}
                     className={`bg-white p-6 md:p-8 rounded-[24px] md:rounded-[48px] border border-[#E5E7EB] shadow-sm hover:shadow-xl transition-all group flex flex-col items-start text-start`}
                   >
                     {/* Header: Title + Icon row */}
@@ -278,8 +297,14 @@ export default function ChineseFeatures() {
               className={`absolute bottom-0 ${isAr ? "-left-40" : "-right-40"} w-[280px] pointer-events-none hidden xl:block`}
               initial={{ opacity: 0, x: isAr ? -50 : 50, scaleX: isAr ? 1 : -1 }}
               whileInView={{ opacity: 1, x: 0, scaleX: isAr ? 1 : -1 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.4 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{
+                duration: 0.8,
+                ease: "easeOut",
+                delay: 0.4,
+                type: "spring",
+                stiffness: 100,
+              }}
             />
           </div>
         </div>
@@ -292,7 +317,7 @@ export default function ChineseFeatures() {
 function PointCard({ icon, title, desc, isAr }: { icon: React.ReactNode, title: string, desc: string, isAr: boolean }) {
   return (
     <motion.div 
-      whileHover={{ scale: 1.02 }}
+      whileHover={{ scale: 1.05 }}
       className="bg-[#F9FAFB] p-8 rounded-[48px] border border-[#F3F4F6] flex items-center gap-6 hover:shadow-md transition-all cursor-default"
     >
       <div className="w-12 h-12 flex items-center justify-center shrink-0">

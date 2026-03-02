@@ -98,18 +98,18 @@ export default function ChineseNavbar() {
   }, [isChinesePath]);
 
   return (
-    <nav className="w-full md:py-4 py-8 shadow-sm sticky top-0 bg-white z-[9999]" dir={isAr ? "rtl" : "ltr"}>
+    <nav className="w-full py-2 md:py-3 shadow-sm sticky top-0 bg-white z-[9999]" dir={isAr ? "rtl" : "ltr"}>
       <div className="flex items-center w-full px-4 relative">
         <div
-          className="absolute left-4 md:relative md:left-auto w-28 h-12 md:w-36 md:h-20 flex items-center cursor-pointer z-10"
+          className="absolute left-4 md:relative md:left-auto w-20 h-8 md:w-28 md:h-12 flex items-center cursor-pointer z-10"
           dir="ltr"
           onClick={() => scrollToSection("#home")}
         >
           <img
             src={navLogoPng}
             alt="Zayd AI Logo"
-            width={70}
-            height={70}
+            width={100}
+            height={100}
             style={{ objectFit: "contain" }}
           />
         </div>
@@ -124,8 +124,8 @@ export default function ChineseNavbar() {
           </button>
         </div>
 
-        {/* Centered blue background menu */}
-        <ul className="hidden lg:flex gap-6 bg-[#E1EEFF] px-6 py-2 rounded-full text-gray-700 font-medium mx-auto">
+        {/* Centered green background menu */}
+        <ul className="hidden lg:flex gap-6 bg-[#E4F2E7] px-6 py-2 rounded-full text-gray-700 font-medium mx-auto">
           {menuItems.map((item) => {
             const sectionId = item.href.substring(1);
             const isActive = item.isRoute 
@@ -138,7 +138,7 @@ export default function ChineseNavbar() {
                   <Link
                     to={item.href}
                     className={`cursor-pointer px-3 py-1 rounded-full transition-colors block ${
-                      isActive ? "bg-[#058BF4] text-white" : "hover:text-blue-800"
+                      isActive ? "bg-[#35AB4E] text-white" : "hover:text-[#35AB4E]"
                     }`}
                   >
                     {item.name}
@@ -151,7 +151,7 @@ export default function ChineseNavbar() {
               <li
                 key={item.name}
                 className={`cursor-pointer px-3 py-1 rounded-full transition-colors ${
-                  isActive ? "bg-[#058BF4] text-white" : "hover:text-blue-800"
+                  isActive ? "bg-[#35AB4E] text-white" : "hover:text-[#35AB4E]"
                 }`}
                 onClick={() => scrollToSection(item.href, item.isRoute)}
               >
@@ -162,21 +162,32 @@ export default function ChineseNavbar() {
         </ul>
 
         {/* Desktop buttons - far right */}
-        <div className="hidden lg:flex gap-2 items-center">
+        <div className="hidden lg:flex gap-3 items-center">
           <button
             onClick={() => setLanguage(language === "ar" ? "en" : "ar")}
             className="text-sm text-gray-700 hover:text-[#35AB4E] transition-colors px-2 py-1"
           >
             {isAr ? "English | العربية" : "العربية | English"}
           </button>
-          <Link to="/login">
+          
+          {/* Login Button - Outline Style */}
+          <a href="https://nihao.waaha.ai/login">
             <Button
               variant="outline"
-              className="rounded-full text-black border-[#35AB4E]"
+              className="border-2 border-gray-200 text-[#4B5563] rounded-lg px-6 py-2 h-10 font-bold hover:bg-gray-50 transition-all active:translate-y-[1px] active:border-b-0 flex items-center justify-center whitespace-nowrap"
             >
-              {isAr ? "تسجيل الدخول" : "Sign In"}
+              {isAr ? "تسجيل الدخول" : "Log In"}
             </Button>
-          </Link>
+          </a>
+
+          {/* Register Button - Premium Green Style */}
+          <a href="https://nihao.waaha.ai/register">
+            <Button
+              className="bg-[#35AB4E] hover:bg-[#2f9c46] text-white text-sm font-bold rounded-lg border-b-2 border-[#20672F] flex items-center justify-center transition active:translate-y-[1px] active:border-b-0 px-6 h-10 shadow-sm whitespace-nowrap"
+            >
+              {isAr ? "ابدأ الآن" : "Sign Up"}
+            </Button>
+          </a>
         </div>
 
         {/* Mobile/Tablet hamburger menu button */}
@@ -217,15 +228,15 @@ export default function ChineseNavbar() {
           {/* Mobile header with logo and close button */}
           <div className="flex justify-between items-center p-4 border-b relative">
             <div
-              className="w-28 h-12 md:w-36 md:h-20 flex items-center cursor-pointer"
+              className="w-20 h-8 md:w-28 md:h-12 flex items-center cursor-pointer"
               dir="ltr"
               onClick={() => scrollToSection("#home")}
             >
               <img
                 src={navLogoPng}
                 alt="Zayd AI Logo"
-                width={70}
-                height={70}
+                width={50}
+                height={50}
                 style={{ objectFit: "contain" }}
               />
             </div>
@@ -317,15 +328,29 @@ export default function ChineseNavbar() {
             >
               {isAr ? "English | العربية" : "العربية | English"}
             </button>
-            <Link to="/login">
-              <Button
-                variant="outline"
-                className="rounded-full text-black border-[#35AB4E] w-full"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                {isAr ? "تسجيل الدخول" : "Sign In"}
-              </Button>
-            </Link>
+            
+            <div className="flex flex-col gap-3">
+              {/* Login Button - Mobile */}
+              <a href="https://nihao.waaha.ai/login" className="w-full">
+                <Button
+                  variant="outline"
+                  className="border-2 border-gray-200 text-[#4B5563] rounded-lg py-6 font-extrabold hover:bg-gray-50 transition-all active:translate-y-[1px] active:border-b-0 w-full flex items-center justify-center"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {isAr ? "تسجيل الدخول" : "Log In"}
+                </Button>
+              </a>
+
+              {/* Register Button - Mobile */}
+              <a href="https://nihao.waaha.ai/register" className="w-full">
+                <Button
+                  className="bg-[#35AB4E] hover:bg-[#2f9c46] text-white font-extrabold rounded-lg border-b-4 border-[#20672F] flex items-center justify-center transition active:translate-y-[1px] active:border-b-0 py-6 shadow-md w-full"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {isAr ? "ابدأ الآن" : "Sign Up"}
+                </Button>
+              </a>
+            </div>
           </div>
         </div>
       </div>

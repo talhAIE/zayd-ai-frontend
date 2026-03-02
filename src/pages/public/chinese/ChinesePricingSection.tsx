@@ -54,22 +54,25 @@ export default function ChinesePricingSection() {
             className="w-72 h-auto mb-8"
             initial={{ opacity: 0, scaleX: isAr ? 0.8 : -0.8, scaleY: 0.8 }}
             whileInView={{ opacity: 1, scaleX: isAr ? 1 : -1, scaleY: 1 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.8, ease: "easeOut", type: "spring", stiffness: 100 }}
           />
           
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            initial={{ opacity: 0, y: 20, scale: 0.8 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
             className="bg-[#E5F3E9] text-[#35AB4E] px-6 py-2 rounded-full text-sm font-bold mb-6"
           >
             {isAr ? "أسعار مرنة" : "Flexible Pricing"}
           </motion.div>
 
           <motion.h2
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
             className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-[#121212] mb-8"
           >
             {isAr ? "خطط للطلاب والمدارس" : "Plans for Students & Schools"}
@@ -78,7 +81,8 @@ export default function ChinesePricingSection() {
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
             className="text-[#6B7280] text-base sm:text-lg md:text-xl font-medium max-w-3xl leading-relaxed"
           >
             {isAr 
@@ -94,7 +98,8 @@ export default function ChinesePricingSection() {
               key={i}
               initial={{ opacity: 0, x: isAr ? (i === 0 ? 50 : -50) : (i === 0 ? -50 : 50) }}
               whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.3 }}
+              whileHover={{ scale: 1.02 }}
               className="bg-white p-6 md:p-10 md:p-12 rounded-[24px] md:rounded-[48px] border border-gray-100 shadow-sm hover:shadow-2xl transition-all flex flex-col items-start text-start"
             >
               {/* Logically Aligned Header: Title + Icon */}
@@ -127,7 +132,7 @@ export default function ChinesePricingSection() {
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, amount: 0.3 }}
           className="bg-[#E5F3E9] rounded-[48px] p-10 md:p-20 relative overflow-hidden"
         >
           {/* Content Wrapper - Padded to avoid mascot overlap */}
@@ -156,8 +161,14 @@ export default function ChinesePricingSection() {
             className={`hidden md:block absolute top-1/2 -translate-y-1/2 ${isAr ? "right-0" : "left-0"} w-48 h-auto object-contain pointer-events-none`}
             initial={{ opacity: 0, x: isAr ? 50 : -50, y: "-50%", scaleX: isAr ? 1 : -1 }}
             whileInView={{ opacity: 1, x: 0, y: "-50%", scaleX: isAr ? 1 : -1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{
+              duration: 0.8,
+              ease: "easeOut",
+              delay: 0.6,
+              type: "spring",
+              stiffness: 100,
+            }}
           />
         </motion.div>
       </div>

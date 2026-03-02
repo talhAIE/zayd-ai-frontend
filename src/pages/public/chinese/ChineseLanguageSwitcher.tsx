@@ -21,7 +21,7 @@ export default function ChineseLanguageSwitcher() {
     if (tab === "chinese") {
       navigate("/chinese");
     } else {
-      navigate("/");
+      window.location.href = "https://nihao.waaha.ai/";
     }
   };
 
