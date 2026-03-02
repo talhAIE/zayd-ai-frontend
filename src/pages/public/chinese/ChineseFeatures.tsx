@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { CheckCircle2, Zap, Languages, Cpu, Trophy, GraduationCap, Users, Bot, Library, Globe, Presentation } from "lucide-react";
+import { CheckCircle2, GraduationCap, Globe, Presentation } from "lucide-react";
+import EmojiIcon from "@/components/ui/emoji-icon";
 import { useLanguage } from "@/components/language-provider";
 
 // Image Imports
@@ -18,28 +19,28 @@ export default function ChineseFeatures() {
       title: isAr ? "دروس موجهة" : "Guided Lessons",
       description: isAr ? "وحدات منظمة متوافقة مع مواضيع منهج وزارة التعليم" : "Structured units aligned with Ministry of Education curriculum topics",
       footer: isAr ? "متوافق مع المنهج الدراسي" : "Curriculum Aligned",
-      icon: <Library className="w-8 h-8 text-[#35AB4E]" />,
+      icon: <EmojiIcon emoji="📖" size={32} className="text-[#35AB4E]" />,
       iconBg: "bg-[#E5F3E9]",
     },
     {
       title: isAr ? "ممارسة الذكاء الاصطناعي" : "AI Practice",
       description: isAr ? "شاهد، اسمع، واستخدم كلمات جديدة مع ردود فعل فورية من الذكاء الاصطناعي" : "Watch, listen, and use new words with instant AI feedback",
       footer: isAr ? "ردود فعل فورية" : "Instant Feedback",
-      icon: <Bot className="w-8 h-8 text-[#35AB4E]" />,
+      icon: <EmojiIcon emoji="🎯" size={32} className="text-[#35AB4E]" />,
       iconBg: "bg-[#E5F3E9]",
     },
     {
       title: isAr ? "دعم اللغة العربية" : "Arabic Support",
       description: isAr ? "تعليمات باللغة العربية عند الحاجة للوضوح والثقة" : "Arabic instructions when needed for clarity and confidence",
       footer: isAr ? "تقليل الارتباك" : "Reduced Confusion",
-      icon: <Languages className="w-8 h-8 text-[#35AB4E]" />,
+      icon: <EmojiIcon emoji="🌍" size={32} className="text-[#35AB4E]" />,
       iconBg: "bg-[#E5F3E9]",
     },
     {
       title: isAr ? "تعلم ممتع" : "Fun Learning",
       description: isAr ? "سلاسل، نقاط، ولوحات متصدرين للمنافسة الصحية" : "Streaks, points, and leaderboards for healthy competition",
       footer: isAr ? "ابقَ متحمساً" : "Stay Motivated",
-      icon: <Trophy className="w-8 h-8 text-[#35AB4E]" />,
+      icon: <EmojiIcon emoji="⭐" size={32} className="text-[#35AB4E]" />,
       iconBg: "bg-[#E5F3E9]",
     },
   ];
@@ -49,28 +50,28 @@ export default function ChineseFeatures() {
       title: isAr ? "لوحة تحكم المعلم" : "Teacher Dashboard",
       description: isAr ? "تتبع تقدم الطلاب الفردي والجماعي في الوقت الفعلي" : "Track individual and group student progress in real-time",
       footer: isAr ? "تتبع دقيق" : "Precise Tracking",
-      icon: <Users className="w-8 h-8 text-[#35AB4E]" />,
+      icon: <EmojiIcon emoji="👥" size={32} className="text-[#35AB4E]" />,
       iconBg: "bg-[#E5F3E9]",
     },
     {
       title: isAr ? "تقارير ذكية" : "Smart Reports",
       description: isAr ? "تقارير مفصلة عن نقاط القوة والضعف لكل طالب" : "Detailed reports on each student's strengths and weaknesses",
       footer: isAr ? "تحليل معمق" : "Deep Analysis",
-      icon: <Cpu className="w-8 h-8 text-[#35AB4E]" />,
+      icon: <EmojiIcon emoji="📊" size={32} className="text-[#35AB4E]" />,
       iconBg: "bg-[#E5F3E9]",
     },
     {
       title: isAr ? "إدارة الفصول" : "Classroom Management",
       description: isAr ? "أضف الطلاب، فرّق المهام، وراقب التفاعل بسهولة" : "Add students, differentiate tasks, and monitor interaction easily",
       footer: isAr ? "سهولة الإدارة" : "Easy Management",
-      icon: <GraduationCap className="w-8 h-8 text-[#35AB4E]" />,
+      icon: <EmojiIcon emoji="🎓" size={32} className="text-[#35AB4E]" />,
       iconBg: "bg-[#E5F3E9]",
     },
     {
       title: isAr ? "محتوى إثرائي" : "Enrichment Content",
       description: isAr ? "وصول إلى مكتبة واسعة من الدروس والموارد الإضافية" : "Access to a vast library of extra lessons and resources",
       footer: isAr ? "موارد غنية" : "Rich Resources",
-      icon: <Library className="w-8 h-8 text-[#35AB4E]" />,
+      icon: <EmojiIcon emoji="📚" size={32} className="text-[#35AB4E]" />,
       iconBg: "bg-[#E5F3E9]",
     },
   ];
@@ -156,19 +157,19 @@ export default function ChineseFeatures() {
 
             <div className="space-y-4">
               <PointCard 
-                icon={<Zap className="w-6 h-6 text-[#35AB4E]" />} 
+                icon={<EmojiIcon emoji="⚡" size={24} className="text-[#35AB4E]" />} 
                 title={isAr ? "جلسات قصيرة ومركزة" : "Short, Focused Sessions"} 
                 desc={isAr ? "تناسب بشكل طبيعي ضمن يوم المدرسة أو وقت الواجبات المنزلية" : "Fit naturally within the school day or homework time"}
                 isAr={isAr}
               />
               <PointCard 
-                icon={<Languages className="w-6 h-6 text-[#35AB4E]" />} 
+                icon={<EmojiIcon emoji="🌍" size={24} className="text-[#35AB4E]" />} 
                 title={isAr ? "دعم اللغة العربية" : "Arabic Support"} 
                 desc={isAr ? "تعليمات باللغة العربية عند الحاجة للوضوح" : "Arabic instructions when needed for clarity"}
                 isAr={isAr}
               />
               <PointCard 
-                icon={<Bot className="w-6 h-6 text-[#35AB4E]" />} 
+                icon={<EmojiIcon emoji="🤖" size={24} className="text-[#35AB4E]" />} 
                 title={isAr ? "تعلم مدعوم بالذكاء الاصطناعي" : "AI-Powered Learning"} 
                 desc={isAr ? "ردود فعل فورية وممارسة مخصصة" : "Instant feedback and personalized practice"}
                 isAr={isAr}

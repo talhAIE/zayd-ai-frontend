@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import guyImage from "@/assets/images/chinese-landingpage/guy 1.png";
 import heroBookImage from "@/assets/images/chinese-landingpage/hero book 1.png";
 import LanguageTabSwitcher from "./ChineseLanguageSwitcher";
-import { CheckCircle2 } from "lucide-react";
+import EmojiIcon from "@/components/ui/emoji-icon";
 import { useLanguage } from "@/components/language-provider";
 
 export default function ChineseHeroSection() {
@@ -115,14 +115,23 @@ export default function ChineseHeroSection() {
           transition={{ duration: 0.8, ease: "easeOut", delay: 0.8 }}
         >
           {[
-            isAr ? "برامج إنجليزية وصينية للمرحلة الابتدائية العليا والمتوسطة والثانوية" : "English and Chinese programs for upper elementary, middle, and high school",
-            isAr ? "مصممة للمتعلمين العرب، وبمحتوى يراعي القيم المحلية" : "Designed for Arab learners, with content respecting local values",
-            isAr ? "مخصصة للمدارس، مع لوحات تحكم للمعلمين والإداريين" : "Dedicated for schools, with dashboards for teachers and administrators"
-          ].map((text, idx) => (
+            {
+              text: isAr ? "برامج إنجليزية وصينية للمرحلة الابتدائية العليا والمتوسطة والثانوية" : "English and Chinese programs for upper elementary, middle, and high school",
+              icon: <EmojiIcon emoji="✓" size={28} className="text-[#35AB4E]" />
+            },
+            {
+              text: isAr ? "مصممة للمتعلمين العرب، وبمحتوى يراعي القيم المحلية" : "Designed for Arab learners, with content respecting local values",
+              icon: <EmojiIcon emoji="✓" size={28} className="text-[#35AB4E]" />
+            },
+            {
+              text: isAr ? "مخصصة للمدارس، مع لوحات تحكم للمعلمين والإداريين" : "Dedicated for schools, with dashboards for teachers and administrators",
+              icon: <EmojiIcon emoji="✓" size={28} className="text-[#35AB4E]" />
+            }
+          ].map((item, idx) => (
             <div key={idx} className={`flex items-center gap-4 bg-[#F9FAFB] p-8 rounded-[24px] shadow-sm border border-gray-100 hover:shadow-md transition-shadow ${isAr ? "text-right" : "text-left"}`}>
-              <CheckCircle2 className="text-[#35AB4E] w-7 h-7 flex-shrink-0" />
+              {item.icon}
               <p className="text-[#374151] font-bold text-lg leading-snug">
-                {text}
+                {item.text}
               </p>
             </div>
           ))}

@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
-import { ShieldCheck, Layers, Database, BadgeCheck, UserCog, CheckCircle2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
+import EmojiIcon from "@/components/ui/emoji-icon";
 import { useLanguage } from "@/components/language-provider";
 
 export default function ChineseSafetySection() {
@@ -12,7 +13,7 @@ export default function ChineseSafetySection() {
       description: isAr 
         ? "يتم استضافة جميع بيانات المنصة على خوادم آمنة داخل المملكة العربية السعودية، مما يقلل من زمن الاستجابة ويتماشى مع السياسات الوطنية بشأن سيادة البيانات."
         : "All platform data is hosted on secure servers within Saudi Arabia, reducing latency and aligning with national data sovereignty policies.",
-      icon: <Database className="w-8 h-8 text-[#35AB4E]" />,
+      icon: <EmojiIcon emoji="🇸🇦" size={32} className="text-[#35AB4E]" />,
       iconBg: "bg-[#E5F3E9]",
     },
     {
@@ -20,7 +21,7 @@ export default function ChineseSafetySection() {
       description: isAr 
         ? "يستخدم زيد AI تكنولوجيا الذكاء الاصطناعي المعتمدة من SADAIA، مما يمنح المدارس والعائلات الثقة في كيفية عمل النظام وكيفية التعامل مع البيانات."
         : "Zayd AI uses SADAIA-certified AI technology, giving schools and families confidence in how the system works and how data is handled.",
-      icon: <ShieldCheck className="w-8 h-8 text-[#35AB4E]" />,
+      icon: <EmojiIcon emoji="✅" size={32} className="text-[#35AB4E]" />,
       iconBg: "bg-[#E5F3E9]",
     },
     {
@@ -28,7 +29,7 @@ export default function ChineseSafetySection() {
       description: isAr 
         ? "تم تصميم المحتوى والمواضيع وأنماط التفاعل لدعم أهداف منهج وزارة التعليم واستخدامه في الفصول الدراسية للطلاب السعوديين."
         : "Content, topics, and interaction patterns are designed to support Ministry of Education curriculum goals and classroom use for Saudi students.",
-      icon: <Layers className="w-8 h-8 text-[#35AB4E]" />,
+      icon: <EmojiIcon emoji="📚" size={32} className="text-[#35AB4E]" />,
       iconBg: "bg-[#E5F3E9]",
     },
   ];
@@ -45,7 +46,7 @@ export default function ChineseSafetySection() {
         "No open web access for students within the application",
         "Age-appropriate topics and language, suitable for school and home use"
       ],
-      icon: <BadgeCheck className="w-8 h-8 text-[#35AB4E]" />,
+      icon: <EmojiIcon emoji="🔒" size={32} className="text-[#35AB4E]" />,
       iconBg: "bg-[#E5F3E9]",
     },
     {
@@ -53,7 +54,7 @@ export default function ChineseSafetySection() {
       description: isAr 
         ? "يمكن للمسؤولين إدارة الفصول الدراسية، وإضافة أو إزالة الطلاب، والتحكم في الميزات المفعلة، مما يضمن توافق المنصة مع سياسات كل مدرسة."
         : "Administrators can manage classrooms, add/remove students, and control feature access, ensuring the platform aligns with school policies.",
-      icon: <UserCog className="w-8 h-8 text-[#35AB4E]" />,
+      icon: <EmojiIcon emoji="⚙️" size={32} className="text-[#35AB4E]" />,
       iconBg: "bg-[#E5F3E9]",
     },
   ];

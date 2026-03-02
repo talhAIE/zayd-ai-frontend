@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
-import { GraduationCap, School, CheckCircle2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
+import EmojiIcon from "@/components/ui/emoji-icon";
 import { useLanguage } from "@/components/language-provider";
 import birdImg from "@/assets/images/chinese-landingpage/birdy-wings-up.png";
 import birdSide from "@/assets/images/chinese-landingpage/bird-side.png";
@@ -14,7 +15,7 @@ export default function ChinesePricingSection() {
       type: "school",
       title: isAr ? "للمدارس" : "For Schools",
       description: isAr ? "نشر كامل مع أدوات إدارة وتحليلات" : "Full deployment with management and analytics tools",
-      icon: <School className="w-10 h-10 text-[#058BF4]" />,
+      icon: <EmojiIcon emoji="🏫" size={32} className="text-[#35AB4E]" />,
       features: isAr ? [
         "جميع ميزات الطلاب مشمولة",
         "لوحات تحكم للمعلمين والإدارة مع تحليلات",
@@ -29,7 +30,7 @@ export default function ChinesePricingSection() {
       type: "student",
       title: isAr ? "للطلاب" : "For Students",
       description: isAr ? "متعلمين فرديين مستعدين لإتقان اللغة الإنجليزية أو الصينية" : "Individual learners ready to master English or Chinese",
-      icon: <GraduationCap className="w-10 h-10 text-[#058BF4]" />,
+      icon: <EmojiIcon emoji="🎓" size={32} className="text-[#35AB4E]" />,
       features: isAr ? [
         "الوصول إلى برامج اللغة الإنجليزية و/أو الصينية",
         "لوحة تحكم شخصية مع إنجازات ومكافآت",
