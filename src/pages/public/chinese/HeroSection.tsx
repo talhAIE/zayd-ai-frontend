@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import guyImage from "@/assets/images/chinese-landingpage/guy 1.png";
 import heroBookImage from "@/assets/images/chinese-landingpage/hero book 1.png";
-import LanguageTabSwitcher from "./ChineseLanguageSwitcher";
+import LanguageTabSwitcher from "@/components/ui/LanguageTabSwitcher";
 import EmojiIcon from "@/components/ui/emoji-icon";
 import { useLanguage } from "@/components/language-provider";
 
