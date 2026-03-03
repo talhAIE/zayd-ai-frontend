@@ -206,9 +206,7 @@ export default function HeroSection() {
             alt="Pointing"
             width={250}
             height={250}
-            style={{
-              transform: language === "ar" ? "scaleX(-1)" : "none",
-            }}
+            className="flip-in-en"
           />
         </motion.div>
       </div>

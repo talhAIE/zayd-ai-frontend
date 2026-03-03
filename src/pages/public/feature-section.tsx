@@ -423,7 +423,7 @@ export default function FeatureSection() {
               }}
             >
               <img
-                className="scale-[200%]"
+                className="scale-[200%] flip-in-en"
                 src={teachImg}
                 alt="Teach illustration"
                 width={100}
@@ -531,7 +531,7 @@ export default function FeatureSection() {
                   alt={imgData.alt}
                   width={imgData.size.width}
                   height={imgData.size.height}
-                  style={{ scaleX: language === "ar" ? -1 : 1 }}
+                  className="flip-in-en"
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{
                     opacity: 1,
@@ -571,7 +571,7 @@ export default function FeatureSection() {
               alt={features[selectedFeature].title[language]}
               width={features[selectedFeature].imageSize.width}
               height={features[selectedFeature].imageSize.height}
-              style={{ scaleX: language === "ar" ? -1 : 1 }}
+              className="flip-in-en"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}

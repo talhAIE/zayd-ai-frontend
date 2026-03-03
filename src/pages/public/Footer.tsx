@@ -181,7 +181,7 @@ export default function Footer() {
               alt="ZAYD"
               width={150}
               height={150}
-              className="relative z-10 hidden lg:block lg:w-[200px] lg:h-[200px]"
+              className="relative z-10 hidden lg:block lg:w-[200px] lg:h-[200px] flip-in-en"
             />
           </div>
         </div>
