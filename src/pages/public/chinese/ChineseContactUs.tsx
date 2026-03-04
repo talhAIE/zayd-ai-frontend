@@ -28,8 +28,8 @@ import {
 import { contactService, ContactUserType } from '@/services/contactService';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
-import Navbar from './navbar';
-import Footer from './Footer';
+import ChineseNavbar from './ChineseNavbar';
+import Footer from '../Footer';
 import { ReactLenis } from '@/components/lenis';
 import { LanguageProvider, useLanguage } from '@/components/language-provider';
 import falconContactPage from '@/assets/images/landingpage/falcon-contactpage.svg';
@@ -63,7 +63,7 @@ const contactFormSchema = z.object({
 
 type ContactFormValues = z.infer<typeof contactFormSchema>;
 
-export default function ContactUs() {
+export default function ChineseContactUs() {
   return (
     <LanguageProvider>
       <ContactUsPage />
@@ -196,7 +196,7 @@ function ContactUsPage() {
     <>
       <style>{`
         .gradient-hover-animate {
-          background: linear-gradient(to right, #3EA4F9 0%, #0267B5 50%, #3EA4F9 100%);
+          background: linear-gradient(to right, #71C781 0%, #35AB4E 50%, #71C781 100%);
           background-size: 200% 100%;
           background-position: 0% 50%;
           transition: background-position 0.6s ease;
@@ -221,7 +221,7 @@ function ContactUsPage() {
           dir={direction}
           lang={language}
         >
-        <Navbar />
+        <ChineseNavbar />
         <section className="relative py-12 sm:py-20">
           <div className="container mx-auto px-4 max-w-6xl">
             {/* Header Section */}
@@ -247,7 +247,7 @@ function ContactUsPage() {
                   {language === "ar" ? (
                     <>
                       <motion.span
-                        className="bg-gradient-to-r from-[#76ABF8] via-[#058BF4] to-[#63B3F6] bg-clip-text text-transparent"
+                        className="bg-gradient-to-r from-[#71C781] via-[#35AB4E] to-[#20672F] bg-clip-text text-transparent"
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
@@ -266,7 +266,7 @@ function ContactUsPage() {
                   ) : (
                     <>
                       <motion.span
-                        className="bg-gradient-to-r from-[#76ABF8] via-[#058BF4] to-[#63B3F6] bg-clip-text text-transparent"
+                        className="bg-gradient-to-r from-[#71C781] via-[#35AB4E] to-[#20672F] bg-clip-text text-transparent"
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
@@ -599,7 +599,7 @@ function ContactUsPage() {
               }}
             >
               <motion.div
-                className="w-20 h-20 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center shadow-lg"
+                className="w-20 h-20 rounded-full bg-gradient-to-br from-[#71C781] to-[#35AB4E] flex items-center justify-center shadow-lg"
                 animate={{
                   scale: [1, 1.1, 1],
                 }}

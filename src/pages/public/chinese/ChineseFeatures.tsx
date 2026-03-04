@@ -3,6 +3,7 @@ import { useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 import EmojiIcon from "@/components/ui/emoji-icon";
 import { useLanguage } from "@/components/language-provider";
+import flagChina from "@/assets/svgs/flag-china.svg";
 
 // Image Imports
 import birdImg from "@/assets/images/chinese-landingpage/bird 1.png";
@@ -90,7 +91,7 @@ export default function ChineseFeatures() {
             transition={{ duration: 0.6, ease: "easeOut" }}
             className="inline-flex items-center gap-2 bg-[#E5F3E9] px-6 py-2 rounded-full border border-[#D1EBD9] mb-8"
           >
-            <EmojiIcon emoji="🇨🇳" className="w-2 h-2 text-[#35AB4E] px-5" />
+            <img src={flagChina} alt="China Flag" className="w-5 h-5 text-[#35AB4E]" />
             <span className="text-[#35AB4E] font-bold">
                 {isAr ? "برنامج تعلم اللغة الصينية" : "Chinese Language Learning Program"}
             </span>
@@ -162,7 +163,7 @@ export default function ChineseFeatures() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="bg-[#C1E6C9] p-8 rounded-[32px] relative overflow-hidden"
+            className="bg-[#C1E6C9] p-5 sm:p-8 rounded-[32px] relative overflow-hidden"
           >
             {/* Background Decorative Circle */}
             <div className="absolute top-0 right-0 w-48 h-48 bg-[#A8D9B3] rounded-full -mr-12 -mt-12 opacity-50" />
@@ -177,14 +178,14 @@ export default function ChineseFeatures() {
                   <p className="text-[#35AB4E] font-extrabold text-sm uppercase tracking-wider leading-none mb-1">
                     {isAr ? "ما سيتعلمه الطلاب" : "WHAT STUDENTS LEARN"}
                   </p>
-                  <h3 className="text-2xl font-black text-[#121212] leading-none">
+                  <h3 className="text-xl sm:text-2xl font-black text-[#121212]">
                     {isAr ? "المواضيع الأساسية" : "Essential Topics"}
                   </h3>
                 </div>
               </div>
 
               {/* Topics Grid */}
-              <div className="grid grid-cols-2 gap-2 sm:gap-3">
+              <div className="grid grid-cols-2 gap-2 sm:gap-4">
                 {[
                   { emoji: "👋", text: isAr ? "تحيات" : "Greetings" },
                   { emoji: "🏫", text: isAr ? "حياة المدرسة" : "School Life" },
@@ -196,10 +197,10 @@ export default function ChineseFeatures() {
                 ].map((topic, idx) => (
                   <div 
                     key={idx} 
-                    className={`bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl flex items-center gap-2 sm:gap-3 shadow-sm ${idx === 6 ? "col-span-1" : ""}`}
+                    className={`bg-white p-2 sm:p-4 rounded-xl sm:rounded-2xl flex items-center gap-2 sm:gap-4 shadow-sm ${idx === 6 ? "col-span-2" : ""}`}
                   >
-                    <span className="text-lg sm:text-xl shrink-0">{topic.emoji}</span>
-                    <span className="font-bold text-[#35AB4E] text-sm sm:text-base truncate">{topic.text}</span>
+                    <span className="text-lg sm:text-2xl shrink-0">{topic.emoji}</span>
+                    <span className="font-bold text-[#35AB4E] text-xs sm:text-lg">{topic.text}</span>
                   </div>
                 ))}
               </div>
@@ -300,20 +301,20 @@ export default function ChineseFeatures() {
               <button 
                 onClick={() => setActiveTab("students")}
                 className={`relative flex-1 flex items-center justify-center gap-3 px-4 sm:px-8 py-3.5 rounded-full text-sm sm:text-lg font-bold transition-all duration-300 z-10 ${
-                  activeTab === "students" ? "text-white" : "text-gray-500 hover:text-[#35AB4E] hover:brightness-110"
+                  activeTab === "students" ? "text-white" : "text-[#35AB4E] hover:brightness-110"
                 }`}
               >
-                <EmojiIcon emoji="🎓" size={24} className="text-[#35AB4E]" />
+                <EmojiIcon emoji="🎓" size={24} className={activeTab === "students" ? "text-white" : "text-[#35AB4E]"} />
                 <span className="whitespace-nowrap">{isAr ? "للطلاب" : "For Students"}</span>
               </button>
-
+ 
               <button 
                 onClick={() => setActiveTab("teachers")}
                 className={`relative flex-1 flex items-center justify-center gap-3 px-4 sm:px-8 py-3.5 rounded-full text-sm sm:text-lg font-bold transition-all duration-300 z-10 ${
-                  activeTab === "teachers" ? "text-white" : "text-gray-500 hover:text-[#35AB4E] hover:brightness-110"
+                  activeTab === "teachers" ? "text-white" : "text-[#35AB4E] hover:brightness-110"
                 }`}
               >
-                <EmojiIcon emoji="👨‍🏫" size={24} className="text-[#35AB4E]" />
+                <EmojiIcon emoji="👨‍🏫" size={24} className={activeTab === "teachers" ? "text-white" : "text-[#35AB4E]"} />
                 <span className="whitespace-nowrap">{isAr ? "للمعلمين" : "For Teachers"}</span>
               </button>
             </div>
@@ -366,13 +367,13 @@ function PointCard({ icon, title, desc, isAr }: { icon: React.ReactNode, title: 
   return (
     <motion.div 
       whileHover={{ scale: 1.05 }}
-      className="bg-[#F9FAFB] p-8 rounded-[48px] border border-[#F3F4F6] flex items-center gap-6 hover:shadow-md transition-all cursor-default"
+      className="bg-[#F9FAFB] p-4 sm:p-8 rounded-[48px] border border-[#F3F4F6] flex items-center gap-6 hover:shadow-md transition-all cursor-default"
     >
       <div className="w-12 h-12 flex items-center justify-center shrink-0">
         {icon}
       </div>
       <div className={`flex-1 ${isAr ? "text-right" : "text-left"}`}>
-        <h4 className="font-black text-[#121212] text-xl mb-1">{title}</h4>
+        <h4 className="font-black text-[#121212] text-lg sm:text-xl mb-1">{title}</h4>
         <p className="text-[#6B7280] font-medium text-sm">{desc}</p>
       </div>
     </motion.div>

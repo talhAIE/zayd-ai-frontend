@@ -99,7 +99,7 @@ export default function ChineseSafetySection() {
               className="bg-white p-6 md:p-10 rounded-[24px] md:rounded-[48px] border border-gray-100 shadow-sm hover:shadow-xl transition-all text-start"
             >
               <div className="flex items-center gap-3 md:gap-4 mb-6">
-                <h3 className="text-lg sm:text-xl lg:text-2xl font-black text-[#121212] leading-none">{card.title}</h3>
+                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-[#121212] leading-none">{card.title}</h3>
                 <div className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center shrink-0">
                   {card.icon}
                 </div>
@@ -124,7 +124,7 @@ export default function ChineseSafetySection() {
               className="bg-white p-6 md:p-10 rounded-[24px] md:rounded-[48px] border border-gray-100 shadow-sm hover:shadow-xl transition-all text-start"
             >
               <div className="flex items-center gap-3 md:gap-4 mb-6">
-                <h3 className="text-lg sm:text-xl lg:text-2xl font-black text-[#121212] leading-none">{card.title}</h3>
+                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-[#121212] leading-none">{card.title}</h3>
                 <div className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center shrink-0">
                   {card.icon}
                 </div>
