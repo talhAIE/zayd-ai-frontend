@@ -118,7 +118,7 @@ export default function ChineseNavbar() {
         <div className="lg:hidden absolute left-1/2 -translate-x-1/2">
           <button
             onClick={() => setLanguage(language === "ar" ? "en" : "ar")}
-            className="text-sm text-gray-700 hover:text-[#058BF4] transition-colors px-2 py-1"
+            className="text-sm text-gray-700 hover:text-[#35AB4E] transition-colors px-2 py-1"
           >
             العربية | English
           </button>
@@ -167,7 +167,7 @@ export default function ChineseNavbar() {
         <div className="hidden lg:flex gap-2 items-center">
           <button
             onClick={() => setLanguage(language === "ar" ? "en" : "ar")}
-            className="text-sm text-gray-700 hover:text-[#058BF4] transition-colors px-2 py-1"
+            className="text-sm text-gray-700 hover:text-[#35AB4E] transition-colors px-2 py-1"
           >
             العربية | English
           </button>
@@ -175,7 +175,7 @@ export default function ChineseNavbar() {
           {/* Login Button - Outline Style */}
           <a href="https://nihao.waaha.ai/login">
             <Button
-              className="bg-white text-[#4B5563] rounded-xl px-6 py-2 h-10 font-bold transition-all hover:brightness-95 active:scale-95 flex items-center justify-center whitespace-nowrap"
+              className="bg-white text-[#4B5563] rounded-xl px-6 py-2 h-10 font-bold transition-all hover:bg-gray-50 hover:text-[#35AB4E] active:scale-95 flex items-center justify-center whitespace-nowrap"
               style={{
                 border: "1px solid #D1D5DB",
                 boxShadow: "0px 3px 0px #9CA3AF",
@@ -336,7 +336,7 @@ export default function ChineseNavbar() {
                 setLanguage(language === "ar" ? "en" : "ar");
                 setIsMobileMenuOpen(false);
               }}
-              className="text-sm text-gray-700 hover:text-[#058BF4] transition-colors px-2 py-1 text-center"
+              className="text-sm text-gray-700 hover:text-[#35AB4E] transition-colors px-2 py-1 text-center"
             >
               العربية | English
             </button>
@@ -345,7 +345,7 @@ export default function ChineseNavbar() {
               {/* Login Button - Mobile */}
               <a href="https://nihao.waaha.ai/login" className="w-full">
                 <Button
-                  className="bg-white text-[#4B5563] rounded-xl py-6 font-extrabold transition-all hover:brightness-95 active:scale-95 w-full flex items-center justify-center"
+                  className="bg-white text-[#4B5563] rounded-xl py-6 font-extrabold transition-all hover:bg-gray-50 hover:text-[#35AB4E] active:scale-95 w-full flex items-center justify-center"
                   style={{
                     border: "1px solid #D1D5DB",
                     boxShadow: "0px 3px 0px #9CA3AF",
