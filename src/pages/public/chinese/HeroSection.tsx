@@ -31,10 +31,11 @@ export default function ChineseHeroSection() {
         <LanguageTabSwitcher />
       </div>
 
-      <div className="relative max-w-[1440px] w-full mx-auto flex flex-col items-center">
-        {/* Books Image - Dynamic Positioning & CSS Flip */}
+      {/* Floating Mascots Container - Full Width to allow spacing away from center */}
+      <div className="absolute inset-0 pointer-events-none hidden min-[1024px]:block overflow-hidden">
+        {/* Books Image - Collision-free fluid positioning */}
         <motion.div
-            className={`absolute ${isAr ? "left-[calc(50%-720px-120px)]" : "right-[calc(50%-720px-120px)]"} top-[15%] translate-y-[-50%] xl:flex hidden z-10 pointer-events-none origin-center transition-all duration-500 w-[15vw] max-w-[320px]`}
+            className={`absolute ${isAr ? "left-[1vw] 2xl:left-[4vw]" : "right-[1vw] 2xl:right-[4vw]"} top-[20%] translate-y-[-50%] z-0 origin-center w-[clamp(150px,18vw,400px)] transition-all duration-500`}
             initial={{ x: isAr ? -100 : 100, opacity: 0, scaleX: isAr ? 1 : -1 }}
             animate={{ x: 0, opacity: 1, scaleX: isAr ? 1 : -1 }}
             transition={{ duration: 0.8, ease: "easeOut", delay: 0.5 }}
@@ -42,15 +43,13 @@ export default function ChineseHeroSection() {
             <img
                 src={heroBookImage}
                 alt="Learning Resources"
-                width={320}
-                height={320}
-                className="max-w-full h-auto"
+                className="w-full h-auto drop-shadow-2xl"
             />
         </motion.div>
 
-        {/* Mascot Image - Dynamic Positioning & CSS Flip */}
+        {/* Mascot Image - Collision-free fluid positioning */}
         <motion.div
-          className={`absolute ${isAr ? "right-[calc(50%-720px-150px)]" : "left-[calc(50%-720px-150px)]"} top-[15%] translate-y-[-50%] xl:flex hidden z-10 pointer-events-none origin-center transition-all duration-500 w-[18vw] max-w-[380px]`}
+          className={`absolute ${isAr ? "right-[1vw] 2xl:right-[4vw]" : "left-[1vw] 2xl:left-[4vw]"} top-[20%] translate-y-[-50%] z-0 origin-center w-[clamp(180px,20vw,480px)] transition-all duration-500`}
           initial={{ x: isAr ? 100 : -100, opacity: 0, scaleX: isAr ? 1 : -1 }}
           animate={{ x: 0, opacity: 1, scaleX: isAr ? 1 : -1 }}
           transition={{ duration: 0.8, ease: "easeOut", delay: 0.5 }}
@@ -58,15 +57,15 @@ export default function ChineseHeroSection() {
           <img
             src={guyImage}
             alt="Zayd Mascot"
-            width={380}
-            height={380}
-            className="max-w-full h-auto"
+            className="w-full h-auto drop-shadow-2xl"
           />
         </motion.div>
+      </div>
 
+      <div className="relative max-w-7xl mx-auto flex flex-col items-center">
         {/* Main Header */}
         <motion.h1
-          className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#121212] mb-8 max-w-4xl leading-[1.2] tracking-tight overflow-visible"
+          className="text-3xl sm:text-4xl lg:text-[clamp(1.5rem,4vw,3.2rem)] font-extrabold text-[#121212] mb-8 max-w-2xl lg:max-w-3xl leading-[1.2] tracking-tight overflow-visible"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
@@ -101,9 +100,9 @@ export default function ChineseHeroSection() {
             whileTap={{ scale: 0.95 }}
             className="w-full lg:w-auto flex justify-center"
           >
-            <a href="https://nihao.waaha.ai/register" className="w-full">
+            <a href="https://nihao.waaha.ai/register" className="w-full flex justify-center">
               <Button
-                className="text-white text-sm md:text-xl font-extrabold flex items-center justify-center gap-2 transition-all hover:brightness-110 active:scale-95 px-8 md:px-12 py-6 md:py-8 w-full lg:w-[22vw] lg:max-w-[360px]"
+                className="text-white text-sm md:text-xl font-extrabold flex items-center justify-center gap-2 transition-all hover:brightness-110 active:scale-95 px-8 md:px-12 py-6 md:py-8 w-[90%] max-w-[380px] lg:w-[331px]"
                 style={{
                   background: "#35AB4E",
                   boxShadow: "0px 3px 0px #20672F",
@@ -125,10 +124,10 @@ export default function ChineseHeroSection() {
             whileTap={{ scale: 0.95 }}
             className="w-full lg:w-auto flex justify-center"
           >
-            <Link to="/" className="w-full">
+            <Link to="/" className="w-full flex justify-center">
               <Button
                 variant="outline"
-                className="bg-white text-[#4B5563] text-sm md:text-xl font-extrabold transition-all hover:brightness-95 active:scale-95 w-full lg:w-[22vw] lg:max-w-[360px] flex items-center justify-center"
+                className="bg-white text-[#4B5563] text-sm md:text-xl font-extrabold transition-all hover:brightness-95 active:scale-95 w-[90%] max-w-[380px] lg:w-[331px] flex items-center justify-center"
                 style={{
                   border: "1px solid #D1D5DB",
                   boxShadow: "0px 3px 0px #9CA3AF",
@@ -145,7 +144,7 @@ export default function ChineseHeroSection() {
 
         {/* Features Row */}
         <motion.div
-          className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 w-full max-w-[1440px] px-4"
+          className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 w-full max-w-7xl px-4"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.3 }}

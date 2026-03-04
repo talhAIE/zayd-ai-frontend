@@ -45,13 +45,13 @@ export default function ChinesePricingSection() {
 
   return (
     <section id="pricing" className={`py-12 px-6 bg-white overflow-hidden ${isAr ? 'font-almarai' : 'font-nunito'} relative overflow-x-hidden`} dir={dir}>
-      <div className="max-w-[1440px] mx-auto">
+      <div className="max-w-7xl mx-auto">
         {/* Top Mascot & Header */}
         <div className="flex flex-col items-center text-center mb-10 relative">
           <motion.img
             src={birdImg}
             alt="Zayd AI Mascot"
-            className="w-72 h-auto mb-8"
+            className="w-[clamp(12rem,20vw,18rem)] h-auto mb-8"
             initial={{ opacity: 0, scaleX: isAr ? 0.8 : -0.8, scaleY: 0.8 }}
             whileInView={{ opacity: 1, scaleX: isAr ? 1 : -1, scaleY: 1 }}
             viewport={{ once: true, amount: 0.3 }}
@@ -73,7 +73,7 @@ export default function ChinesePricingSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-[#121212] mb-8"
+            className="text-2xl sm:text-3xl lg:text-[clamp(1.5rem,3.5vw,2.5rem)] font-black text-[#121212] mb-8"
           >
             {isAr ? "خطط للطلاب والمدارس" : "Plans for Students & Schools"}
           </motion.h2>
@@ -148,7 +148,7 @@ export default function ChinesePricingSection() {
               </p>
               <div className="flex flex-col lg:flex-row gap-4 justify-center items-center">
                 <button 
-                  className="text-white px-6 lg:px-10 py-3 lg:py-5 font-black flex items-center justify-center gap-2 transition-all hover:brightness-110 active:scale-95 w-full lg:w-auto text-sm sm:text-base lg:text-lg"
+                  className="text-white px-6 lg:px-10 py-3 lg:py-5 font-black flex items-center justify-center gap-2 transition-all hover:brightness-110 active:scale-95 w-[90%] max-w-[380px] lg:w-auto text-sm sm:text-base lg:text-lg"
                   style={{
                     background: "#35AB4E",
                     boxShadow: "0px 3px 0px #20672F",
@@ -165,7 +165,7 @@ export default function ChinesePricingSection() {
           <motion.img
             src={birdSide}
             alt="Owl Mascot"
-            className={`hidden lg:block absolute top-1/2 -translate-y-1/2 ${isAr ? "right-[calc(50%-720px-80px)]" : "left-[calc(50%-720px-80px)]"} w-[12vw] max-w-[200px] h-auto object-contain pointer-events-none z-0 transition-all duration-500`}
+            className={`hidden lg:block absolute top-1/2 -translate-y-1/2 ${isAr ? "right-[-2rem]" : "left-[-2rem]"} 2xl:${isAr ? "right-0" : "left-0"} w-40 2xl:w-48 h-auto object-contain pointer-events-none z-0 scale-90 2xl:scale-100 transition-all duration-500`}
             initial={{ opacity: 0, x: isAr ? 50 : -50, y: "-50%", scaleX: isAr ? 1 : -1 }}
             whileInView={{ opacity: 1, x: 0, y: "-50%", scaleX: isAr ? 1 : -1 }}
             viewport={{ once: true, amount: 0.3 }}

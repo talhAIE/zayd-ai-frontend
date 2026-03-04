@@ -61,7 +61,7 @@ export default function ChineseSafetySection() {
 
   return (
     <section id="safety" className={`py-12 px-6 bg-white ${isAr ? 'font-almarai' : 'font-nunito'}`}>
-      <div className="max-w-[1440px] mx-auto">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
           <motion.h2 
@@ -69,7 +69,7 @@ export default function ChineseSafetySection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#121212] mb-8 leading-tight max-w-4xl mx-auto"
+            className="text-2xl sm:text-3xl lg:text-[clamp(1.5rem,3.5vw,2.5rem)] font-black text-[#121212] mb-8 leading-tight max-w-4xl mx-auto"
           >
             {isAr ? "السلامة والامتثال والاستضافة المحلية في المملكة العربية السعودية" : "Safety, Compliance, and Local Hosting in Saudi Arabia"}
           </motion.h2>

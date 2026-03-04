@@ -79,7 +79,7 @@ export default function ChineseFeatures() {
 
   return (
     <section id="features" className={`py-12 px-6 bg-white overflow-hidden ${isAr ? 'font-almarai' : 'font-nunito'} overflow-x-hidden relative`} dir={isAr ? "rtl" : "ltr"}>
-      <div className="max-w-[1440px] mx-auto">
+      <div className="max-w-7xl mx-auto">
         
         {/* Header Section */}
         <div className="text-center mb-12 relative">
@@ -101,7 +101,7 @@ export default function ChineseFeatures() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-            className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#121212] mb-6 leading-tight"
+            className="text-2xl sm:text-3xl lg:text-[clamp(1.5rem,3.5vw,2.5rem)] font-black text-[#121212] mb-6 leading-tight"
           >
             {isAr ? "تعلم الصينية مع" : "Learn Chinese with"} <span className="text-[#35AB4E]">{isAr ? "ذكاء زيد الاصطناعي" : "Zayd AI"}</span>
           </motion.h2>
@@ -115,12 +115,15 @@ export default function ChineseFeatures() {
           >
             {isAr ? "دروس صينية مدعومة بالذكاء الاصطناعي لطلاب المدارس المتوسطة والثانوية في السعودية" : "AI-powered Chinese lessons for middle and high school students in Saudi Arabia"}
           </motion.p>
-          
-          {/* Top Bird Mascot - Dynamic Positioning & CSS Flip */}
+        </div>
+
+        {/* Floating Mascots Container - Full Width for Features section */}
+        <div className="absolute inset-0 pointer-events-none hidden min-[1024px]:block overflow-hidden">
+          {/* Top Bird Mascot - Edge-pinned collision-free positioning */}
           <motion.img 
             src={birdImg} 
             alt="Mascot Bird" 
-            className={`absolute -top-10 ${isAr ? "right-[calc(50%-720px-120px)]" : "left-[calc(50%-720px-120px)]"} w-[15vw] max-w-[200px] h-auto hidden xl:block pointer-events-none z-0 transition-all duration-500`}
+            className={`absolute top-0 ${isAr ? "right-[2vw] 2xl:right-[6vw]" : "left-[2vw] 2xl:left-[6vw]"} w-[clamp(100px,12vw,200px)] h-auto z-0 transition-all duration-500`}
             initial={{ opacity: 0, x: isAr ? 50 : -50, rotate: isAr ? 10 : -10, scaleX: isAr ? 1 : -1 }}
             whileInView={{ opacity: 1, x: 0, rotate: 0, scaleX: isAr ? 1 : -1 }}
             viewport={{ once: true, amount: 0.3 }}
@@ -128,6 +131,23 @@ export default function ChineseFeatures() {
               duration: 0.8,
               ease: "easeOut",
               delay: 0.6,
+              type: "spring",
+              stiffness: 100,
+            }}
+          />
+
+          {/* Bottom Guy Mascot - Edge-pinned collision-free positioning */}
+          <motion.img 
+            src={guyImg} 
+            alt="Mascot Guy" 
+            className={`absolute top-[48%] -translate-y-1/2 ${isAr ? "left-[2vw] 2xl:left-[6vw]" : "right-[2vw] 2xl:right-[6vw]"} w-[clamp(150px,18vw,300px)] h-auto z-0 transition-all duration-500`}
+            initial={{ opacity: 0, x: isAr ? -50 : 50, scaleX: isAr ? 1 : -1 }}
+            whileInView={{ opacity: 1, x: 0, scaleX: isAr ? 1 : -1 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{
+              duration: 0.8,
+              ease: "easeOut",
+              delay: 0.4,
               type: "spring",
               stiffness: 100,
             }}
@@ -334,23 +354,6 @@ export default function ChineseFeatures() {
                 ))}
               </div>
             </div>
-
-            {/* Bottom Guy Mascot - Dynamic Positioning & CSS Flip */}
-            <motion.img 
-              src={guyImg} 
-              alt="Mascot Guy" 
-              className={`absolute bottom-0 ${isAr ? "left-[calc(50%-720px-120px)]" : "right-[calc(50%-720px-120px)]"} w-[18vw] max-w-[260px] h-auto pointer-events-none hidden xl:block z-0 transition-all duration-500`}
-              initial={{ opacity: 0, x: isAr ? -50 : 50, scaleX: isAr ? 1 : -1 }}
-              whileInView={{ opacity: 1, x: 0, scaleX: isAr ? 1 : -1 }}
-              viewport={{ once: true, amount: 0.3 }}
-              transition={{
-                duration: 0.8,
-                ease: "easeOut",
-                delay: 0.4,
-                type: "spring",
-                stiffness: 100,
-              }}
-            />
           </div>
         </div>
 
