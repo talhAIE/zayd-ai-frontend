@@ -1,6 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100;200;300;400;500;600;700;800;900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Geist:wght@100;200;300;400;500;600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800;900;1000&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -8,7 +10,9 @@
 
 /* Emoji support for consistent rendering across browsers */
 .emoji {
-  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Emoji", "Segoe UI Symbol", "Liberation Sans", sans-serif;
+  font-family:
+    "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Emoji",
+    "Segoe UI Symbol", "Liberation Sans", sans-serif;
   font-style: normal;
   font-weight: 400;
   line-height: 1;
@@ -22,7 +26,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Emoji", "Segoe UI Symbol", "Liberation Sans", sans-serif;
+  font-family:
+    "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Emoji",
+    "Segoe UI Symbol", "Liberation Sans", sans-serif;
   font-style: normal;
   font-weight: 400;
   line-height: 1;
@@ -35,7 +41,9 @@
 /* Fallback for browsers that don't support emoji fonts */
 @supports not (font-family: "Noto Color Emoji") {
   .emoji-icon {
-    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Emoji", "Segoe UI Symbol", sans-serif;
+    font-family:
+      "Apple Color Emoji", "Segoe UI Emoji", "Emoji", "Segoe UI Symbol",
+      sans-serif;
   }
 }
 
@@ -50,14 +58,14 @@
 
 :root {
   --font-light: #fff;
-  --font-dark: #0F153E;
-  --font-light2: #6E7496;
+  --font-dark: #0f153e;
+  --font-light2: #6e7496;
   --font-black: #121212;
   --text-color-1: #434343;
   --text-color-2: #949494;
-  --cardbg: #F8F9FD;
-  --primarybg: #065FF0;
-  --border-light: #F2F2F2;
+  --cardbg: #f8f9fd;
+  --primarybg: #065ff0;
+  --border-light: #f2f2f2;
 
   --background: 0 0% 100%;
   --foreground: 0 0% 3.9%;
@@ -79,7 +87,6 @@
   --input: 0 0% 89.8%;
   --ring: 217 93% 48%;
   --radius: 0.5rem;
-
 }
 
 .dark {
@@ -111,7 +118,9 @@
 
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
   }
 }
 
@@ -127,13 +136,16 @@ body {
   padding: 0 1rem;
 } */
 
-
 .gradientBg {
-  background: linear-gradient(90deg, rgba(98, 80, 233, 0.1) 0%, rgba(105, 189, 255, 0.1) 100%);
+  background: linear-gradient(
+    90deg,
+    rgba(98, 80, 233, 0.1) 0%,
+    rgba(105, 189, 255, 0.1) 100%
+  );
 }
 
 .gradientText {
-  color: linear-gradient(90deg, #6250E9 0%, #69BDFF 100%);
+  color: linear-gradient(90deg, #6250e9 0%, #69bdff 100%);
 }
 
 @keyframes scroll {
@@ -234,10 +246,12 @@ body {
 }
 
 .testimonials-slider .slick-slide {
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
 }
 
-.testimonials-slider .slick-slide>div {
+.testimonials-slider .slick-slide > div {
   height: 100%;
 }
 
@@ -252,23 +266,23 @@ body {
 
 html.lenis,
 html.lenis body {
-  height: auto
+  height: auto;
 }
 
 .lenis.lenis-smooth {
-  scroll-behavior: auto !important
+  scroll-behavior: auto !important;
 }
 
 .lenis.lenis-smooth [data-lenis-prevent] {
-  overscroll-behavior: contain
+  overscroll-behavior: contain;
 }
 
 .lenis.lenis-stopped {
-  overflow: clip
+  overflow: clip;
 }
 
 .lenis.lenis-smooth iframe {
-  pointer-events: none
+  pointer-events: none;
 }
 
 /* CSS Flag to flip images in English (EN) mode */

@@ -60,16 +60,16 @@ export default function ChineseSafetySection() {
   ];
 
   return (
-    <section className="py-24 px-6 bg-white font-geist">
+    <section id="safety" className={`py-12 px-6 bg-white ${isAr ? 'font-almarai' : 'font-nunito'}`}>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-20">
+        <div className="text-center mb-12">
           <motion.h2 
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-[#121212] mb-8 leading-tight max-w-4xl mx-auto"
+            className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#121212] mb-8 leading-tight max-w-4xl mx-auto"
           >
             {isAr ? "السلامة والامتثال والاستضافة المحلية في المملكة العربية السعودية" : "Safety, Compliance, and Local Hosting in Saudi Arabia"}
           </motion.h2>
@@ -99,12 +99,12 @@ export default function ChineseSafetySection() {
               className="bg-white p-6 md:p-10 rounded-[24px] md:rounded-[48px] border border-gray-100 shadow-sm hover:shadow-xl transition-all text-start"
             >
               <div className="flex items-center gap-3 md:gap-4 mb-6">
-                <h3 className="text-lg md:text-2xl font-black text-[#121212] leading-none">{card.title}</h3>
+                <h3 className="text-lg sm:text-xl lg:text-2xl font-black text-[#121212] leading-none">{card.title}</h3>
                 <div className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center shrink-0">
                   {card.icon}
                 </div>
               </div>
-              <p className="text-sm md:text-base text-[#6B7280] font-medium leading-relaxed">
+              <p className="text-sm sm:text-base lg:text-lg text-[#6B7280] font-medium leading-relaxed">
                 {card.description}
               </p>
             </motion.div>
@@ -124,7 +124,7 @@ export default function ChineseSafetySection() {
               className="bg-white p-6 md:p-10 rounded-[24px] md:rounded-[48px] border border-gray-100 shadow-sm hover:shadow-xl transition-all text-start"
             >
               <div className="flex items-center gap-3 md:gap-4 mb-6">
-                <h3 className="text-lg md:text-2xl font-black text-[#121212] leading-none">{card.title}</h3>
+                <h3 className="text-lg sm:text-xl lg:text-2xl font-black text-[#121212] leading-none">{card.title}</h3>
                 <div className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center shrink-0">
                   {card.icon}
                 </div>
@@ -134,12 +134,12 @@ export default function ChineseSafetySection() {
                   {card.points.map((point, idx) => (
                     <li key={idx} className="flex items-start gap-3">
                       <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-[#35AB4E] shrink-0 mt-0.5" />
-                      <span className="text-sm md:text-base text-[#374151] leading-relaxed">{point}</span>
+                      <span className="text-sm sm:text-base lg:text-lg text-[#374151] leading-relaxed">{point}</span>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm md:text-base text-[#6B7280] font-medium leading-relaxed">
+                <p className="text-sm sm:text-base lg:text-lg text-[#6B7280] font-medium leading-relaxed">
                   {card.description}
                 </p>
               )}

@@ -44,10 +44,10 @@ export default function ChinesePricingSection() {
   ];
 
   return (
-    <section className="py-24 px-6 bg-white overflow-hidden" dir={dir}>
+    <section id="pricing" className={`py-12 px-6 bg-white overflow-hidden ${isAr ? 'font-almarai' : 'font-nunito'} relative overflow-x-hidden`} dir={dir}>
       <div className="max-w-7xl mx-auto">
         {/* Top Mascot & Header */}
-        <div className="flex flex-col items-center text-center mb-16 relative">
+        <div className="flex flex-col items-center text-center mb-10 relative">
           <motion.img
             src={birdImg}
             alt="Zayd AI Mascot"
@@ -104,10 +104,10 @@ export default function ChinesePricingSection() {
             >
               {/* Logically Aligned Header: Title + Icon */}
               <div className="flex items-center gap-3 md:gap-4 mb-6">
-                <h3 className="text-2xl md:text-4xl font-black text-[#121212] leading-none">{plan.title}</h3>
                 <div className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center">
                   {plan.icon}
                 </div>
+                <h3 className="text-2xl md:text-4xl font-black text-[#121212] leading-none">{plan.title}</h3>
               </div>
               
               <p className="text-[#6B7280] text-base md:text-lg font-medium mb-6 md:mb-10 leading-relaxed">
@@ -133,21 +133,28 @@ export default function ChinesePricingSection() {
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true, amount: 0.3 }}
-          className="bg-[#E5F3E9] rounded-[48px] p-10 md:p-20 relative overflow-hidden"
+          className="bg-[#E5F3E9] rounded-[48px] p-10 lg:p-20 relative overflow-hidden"
         >
           {/* Content Wrapper - Padded to avoid mascot overlap */}
-          <div className={`relative z-10 ${isAr ? "md:pr-56" : "md:pl-56"}`}>
-            <div className="text-center md:text-left max-w-2xl">
-              <h3 className="text-2xl md:text-4xl font-black text-[#121212] mb-4">
+          <div className="relative z-10 w-full flex justify-center">
+            <div className="text-center max-w-2xl mx-auto flex flex-col items-center">
+              <h3 className="text-xl sm:text-2xl lg:text-3xl font-black text-[#121212] mb-4">
                 {isAr ? "هل أنت مستعد للبدء؟" : "Are you ready to start?"}
               </h3>
-              <p className="text-[#35AB4E] text-base md:text-lg md:text-xl font-bold mb-6 md:mb-8">
+              <p className="text-[#35AB4E] text-base sm:text-lg lg:text-xl font-bold mb-6 lg:mb-8">
                 {isAr 
                   ? "شارك حجم مدرستك واحتياجاتك اللغوية، وسنوصي بأفضل خطة لك."
                   : "Share your school size and language needs, and we'll recommend the best plan for you."}
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-                <button className="bg-[#35AB4E] hover:bg-[#2f9c46] text-white px-6 md:px-10 py-3 md:py-5 rounded-lg text-base md:text-xl font-black border-b-2 border-[#20672F] flex items-center justify-center gap-2 transition active:translate-y-[1px] active:border-b-0 shadow-lg shadow-[#35AB4E]/20 w-full sm:w-auto">
+              <div className="flex flex-col lg:flex-row gap-4 justify-center items-center">
+                <button 
+                  className="text-white px-6 lg:px-10 py-3 lg:py-5 font-black flex items-center justify-center gap-2 transition-all hover:brightness-110 active:scale-95 w-full lg:w-auto text-sm sm:text-base lg:text-lg"
+                  style={{
+                    background: "#35AB4E",
+                    boxShadow: "0px 3px 0px #20672F",
+                    borderRadius: "12px",
+                  }}
+                >
                   {isAr ? "اتصل بنا للحصول على الأسعار" : "Contact us for pricing"}
                 </button>
               </div>
@@ -158,7 +165,7 @@ export default function ChinesePricingSection() {
           <motion.img
             src={birdSide}
             alt="Owl Mascot"
-            className={`hidden md:block absolute top-1/2 -translate-y-1/2 ${isAr ? "right-0" : "left-0"} w-48 h-auto object-contain pointer-events-none`}
+            className={`hidden lg:block absolute top-1/2 -translate-y-1/2 ${isAr ? "right-[-2rem]" : "left-[-2rem]"} 2xl:${isAr ? "right-0" : "left-0"} w-40 2xl:w-48 h-auto object-contain pointer-events-none z-0 scale-90 2xl:scale-100 transition-all duration-500`}
             initial={{ opacity: 0, x: isAr ? 50 : -50, y: "-50%", scaleX: isAr ? 1 : -1 }}
             whileInView={{ opacity: 1, x: 0, y: "-50%", scaleX: isAr ? 1 : -1 }}
             viewport={{ once: true, amount: 0.3 }}

@@ -3,7 +3,6 @@ import ChineseHeroSection from "./HeroSection";
 import ChineseFeatures from "./ChineseFeatures";
 import ChineseSafetySection from "./ChineseSafetySection";
 import ChinesePricingSection from "./ChinesePricingSection";
-import Footer from "../Footer";
 import { useLanguage } from "@/components/language-provider";
 
 export default function ChineseMain() {
@@ -15,13 +14,12 @@ function ChinesePublicLanding() {
   const dir = language === "ar" ? "rtl" : "ltr";
 
   return (
-    <div className="min-h-screen bg-white" dir={dir}>
+    <div className={`min-h-screen bg-white ${language === "ar" ? 'font-almarai' : 'font-nunito'}`} dir={dir}>
       <ChineseNavbar />
       <ChineseHeroSection />
       <ChineseFeatures />
       <ChineseSafetySection />
       <ChinesePricingSection />
-      <Footer />
     </div>
   );
 }

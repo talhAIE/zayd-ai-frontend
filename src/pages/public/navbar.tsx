@@ -5,13 +5,10 @@ import navLogoPng from "@/assets/images/landingpage/nav-logo.png";
 import { useLanguage } from "@/components/language-provider";
 
 const menuItems = [
-  { name: "Home", href: "#home", isRoute: false },
-  { name: "Features", href: "#features", isRoute: false },
-  { name: "How It Works", href: "#how-it-works", isRoute: false },
-  // { name: "Testimonials", href: "#testimonials", isRoute: false },
-  { name: "Pricing", href: "#pricing", isRoute: false },
-  { name: "FAQ", href: "#faq", isRoute: false },
-  { name: "Contact Us", href: "/contact-us", isRoute: true },
+  { name: { en: "Home", ar: "الرئيسية" }, href: "#home", isRoute: false },
+  { name: { en: "Features", ar: "المميزات" }, href: "#features", isRoute: false },
+  { name: { en: "Pricing", ar: "الأسعار" }, href: "#pricing", isRoute: false },
+  { name: { en: "Contact Us", ar: "اتصل بنا" }, href: "/contact-us", isRoute: true },
 ];
 
 export default function Navbar() {
@@ -20,6 +17,7 @@ export default function Navbar() {
   const { language, setLanguage } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
+  const isAr = language === "ar";
 
   const isMainPath = location.pathname === "/" || location.pathname === "/chinese";
 
@@ -100,7 +98,7 @@ export default function Navbar() {
   }, [isMainPath]);
 
   return (
-    <nav className="w-full md:py-4 py-8 shadow-sm sticky top-0 bg-white z-[9999]">
+    <nav className="w-full md:py-4 py-8 shadow-sm sticky top-0 bg-white z-[9999]" dir={isAr ? "rtl" : "ltr"}>
       <div className="flex items-center w-full px-4 relative">
         <div
           className="absolute left-4 md:relative md:left-auto w-20 h-8 md:w-28 md:h-12 flex items-center cursor-pointer z-10"
@@ -134,16 +132,18 @@ export default function Navbar() {
               ? location.pathname === item.href
               : isMainPath && activeSection === sectionId;
             
+            const itemName = language === "ar" ? item.name.ar : item.name.en;
+
             if (item.isRoute) {
               return (
-                <li key={item.name}>
+                <li key={itemName}>
                   <Link
                     to={item.href}
                     className={`cursor-pointer px-3 py-1 rounded-full transition-colors block ${
                       isActive ? "bg-[#058BF4] text-white" : "hover:text-blue-800"
                     }`}
                   >
-                    {item.name}
+                    {itemName}
                   </Link>
                 </li>
               );
@@ -151,13 +151,13 @@ export default function Navbar() {
             
             return (
               <li
-                key={item.name}
+                key={itemName}
                 className={`cursor-pointer px-3 py-1 rounded-full transition-colors ${
                   isActive ? "bg-[#058BF4] text-white" : "hover:text-blue-800"
                 }`}
                 onClick={() => scrollToSection(item.href, item.isRoute)}
               >
-                {item.name}
+                {itemName}
               </li>
             );
           })}
@@ -176,7 +176,7 @@ export default function Navbar() {
               variant="outline"
               className="rounded-full text-black border-[#058BF4]"
             >
-              Sign In
+              {isAr ? "تسجيل الدخول" : "Sign In"}
             </Button>
           </Link>
           {/* <Button className="rounded-full bg-[#058BF4]">Sign Up</Button> */}
@@ -249,10 +249,12 @@ export default function Navbar() {
                 ? location.pathname === item.href
                 : isMainPath && activeSection === sectionId;
               
+              const itemName = language === "ar" ? item.name.ar : item.name.en;
+
               if (item.isRoute) {
                 return (
                   <Link
-                    key={item.name}
+                    key={itemName}
                     to={item.href}
                     className={`text-xl font-medium transition-all duration-300 ${
                       isActive
@@ -270,19 +272,19 @@ export default function Navbar() {
                     }}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    {item.name}
+                    {itemName}
                   </Link>
                 );
               }
               
               return (
                 <button
-                  key={item.name}
+                  key={itemName}
                   className={`text-xl font-medium transition-all duration-300 ${
                     isActive
                       ? "text-[#058BF4]"
                       : "text-gray-700 hover:text-[#058BF4]"
-                  } ${
+                    } ${
                     isMobileMenuOpen
                       ? "opacity-100 translate-y-0"
                       : "opacity-0 translate-y-4"
@@ -294,7 +296,7 @@ export default function Navbar() {
                   }}
                   onClick={() => scrollToSection(item.href, item.isRoute)}
                 >
-                  {item.name}
+                  {itemName}
                 </button>
               );
             })}
