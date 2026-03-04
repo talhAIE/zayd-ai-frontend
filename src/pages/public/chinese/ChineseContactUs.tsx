@@ -29,7 +29,6 @@ import { contactService, ContactUserType } from '@/services/contactService';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
 import ChineseNavbar from './ChineseNavbar';
-import Footer from '../Footer';
 import { ReactLenis } from '@/components/lenis';
 import { LanguageProvider, useLanguage } from '@/components/language-provider';
 import falconContactPage from '@/assets/images/landingpage/falcon-contactpage.svg';
@@ -573,7 +572,6 @@ function ContactUsPage() {
             </div>
           </div>
         </section>
-        <Footer />
       </div>
 
       {/* Success Modal */}
