@@ -61,7 +61,7 @@ export default function ChineseSafetySection() {
 
   return (
     <section id="safety" className={`py-12 px-6 bg-white ${isAr ? 'font-almarai' : 'font-nunito'}`}>
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-[1440px] mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
           <motion.h2 

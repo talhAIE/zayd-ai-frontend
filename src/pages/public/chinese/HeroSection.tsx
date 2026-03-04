@@ -31,10 +31,10 @@ export default function ChineseHeroSection() {
         <LanguageTabSwitcher />
       </div>
 
-      <div className="relative max-w-7xl mx-auto flex flex-col items-center">
+      <div className="relative max-w-[1440px] w-full mx-auto flex flex-col items-center">
         {/* Books Image - Dynamic Positioning & CSS Flip */}
         <motion.div
-            className={`absolute ${isAr ? "left-[-8rem]" : "right-[-8rem]"} 2xl:${isAr ? "left-[-16rem]" : "right-[-16rem]"} top-[15%] translate-y-[-50%] xl:flex hidden z-10 pointer-events-none origin-center scale-75 2xl:scale-100 transition-all duration-500`}
+            className={`absolute ${isAr ? "left-[calc(50%-720px-120px)]" : "right-[calc(50%-720px-120px)]"} top-[15%] translate-y-[-50%] xl:flex hidden z-10 pointer-events-none origin-center transition-all duration-500 w-[15vw] max-w-[320px]`}
             initial={{ x: isAr ? -100 : 100, opacity: 0, scaleX: isAr ? 1 : -1 }}
             animate={{ x: 0, opacity: 1, scaleX: isAr ? 1 : -1 }}
             transition={{ duration: 0.8, ease: "easeOut", delay: 0.5 }}
@@ -50,7 +50,7 @@ export default function ChineseHeroSection() {
 
         {/* Mascot Image - Dynamic Positioning & CSS Flip */}
         <motion.div
-          className={`absolute ${isAr ? "right-[-8rem]" : "left-[-8rem]"} 2xl:${isAr ? "right-[-16rem]" : "left-[-16rem]"} top-[15%] translate-y-[-50%] xl:flex hidden z-10 pointer-events-none origin-center scale-75 2xl:scale-100 transition-all duration-500`}
+          className={`absolute ${isAr ? "right-[calc(50%-720px-150px)]" : "left-[calc(50%-720px-150px)]"} top-[15%] translate-y-[-50%] xl:flex hidden z-10 pointer-events-none origin-center transition-all duration-500 w-[18vw] max-w-[380px]`}
           initial={{ x: isAr ? 100 : -100, opacity: 0, scaleX: isAr ? 1 : -1 }}
           animate={{ x: 0, opacity: 1, scaleX: isAr ? 1 : -1 }}
           transition={{ duration: 0.8, ease: "easeOut", delay: 0.5 }}
@@ -103,7 +103,7 @@ export default function ChineseHeroSection() {
           >
             <a href="https://nihao.waaha.ai/register" className="w-full">
               <Button
-                className="text-white text-sm md:text-xl font-extrabold flex items-center justify-center gap-2 transition-all hover:brightness-110 active:scale-95 px-8 md:px-12 py-6 md:py-8 w-full lg:w-[331px]"
+                className="text-white text-sm md:text-xl font-extrabold flex items-center justify-center gap-2 transition-all hover:brightness-110 active:scale-95 px-8 md:px-12 py-6 md:py-8 w-full lg:w-[22vw] lg:max-w-[360px]"
                 style={{
                   background: "#35AB4E",
                   boxShadow: "0px 3px 0px #20672F",
@@ -128,7 +128,7 @@ export default function ChineseHeroSection() {
             <Link to="/" className="w-full">
               <Button
                 variant="outline"
-                className="bg-white text-[#4B5563] text-sm md:text-xl font-extrabold transition-all hover:brightness-95 active:scale-95 w-full lg:w-[331px] flex items-center justify-center"
+                className="bg-white text-[#4B5563] text-sm md:text-xl font-extrabold transition-all hover:brightness-95 active:scale-95 w-full lg:w-[22vw] lg:max-w-[360px] flex items-center justify-center"
                 style={{
                   border: "1px solid #D1D5DB",
                   boxShadow: "0px 3px 0px #9CA3AF",
@@ -145,7 +145,7 @@ export default function ChineseHeroSection() {
 
         {/* Features Row */}
         <motion.div
-          className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 w-full max-w-7xl px-4"
+          className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 w-full max-w-[1440px] px-4"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.3 }}

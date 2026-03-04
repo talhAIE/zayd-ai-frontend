@@ -79,7 +79,7 @@ export default function ChineseFeatures() {
 
   return (
     <section id="features" className={`py-12 px-6 bg-white overflow-hidden ${isAr ? 'font-almarai' : 'font-nunito'} overflow-x-hidden relative`} dir={isAr ? "rtl" : "ltr"}>
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-[1440px] mx-auto">
         
         {/* Header Section */}
         <div className="text-center mb-12 relative">
@@ -120,7 +120,7 @@ export default function ChineseFeatures() {
           <motion.img 
             src={birdImg} 
             alt="Mascot Bird" 
-            className={`absolute -top-10 ${isAr ? "right-[-4rem]" : "left-[-4rem]"} 2xl:${isAr ? "right-[-10rem]" : "left-[-10rem]"} w-40 2xl:w-48 h-auto hidden xl:block pointer-events-none z-0 scale-90 2xl:scale-100 transition-all duration-500`}
+            className={`absolute -top-10 ${isAr ? "right-[calc(50%-720px-120px)]" : "left-[calc(50%-720px-120px)]"} w-[15vw] max-w-[200px] h-auto hidden xl:block pointer-events-none z-0 transition-all duration-500`}
             initial={{ opacity: 0, x: isAr ? 50 : -50, rotate: isAr ? 10 : -10, scaleX: isAr ? 1 : -1 }}
             whileInView={{ opacity: 1, x: 0, rotate: 0, scaleX: isAr ? 1 : -1 }}
             viewport={{ once: true, amount: 0.3 }}
@@ -339,7 +339,7 @@ export default function ChineseFeatures() {
             <motion.img 
               src={guyImg} 
               alt="Mascot Guy" 
-              className={`absolute bottom-0 ${isAr ? "left-[-4rem]" : "right-[-4rem]"} 2xl:${isAr ? "left-[-10rem]" : "right-[-10rem]"} w-48 2xl:w-64 h-auto pointer-events-none hidden xl:block z-0 scale-90 2xl:scale-100 transition-all duration-500`}
+              className={`absolute bottom-0 ${isAr ? "left-[calc(50%-720px-120px)]" : "right-[calc(50%-720px-120px)]"} w-[18vw] max-w-[260px] h-auto pointer-events-none hidden xl:block z-0 transition-all duration-500`}
               initial={{ opacity: 0, x: isAr ? -50 : 50, scaleX: isAr ? 1 : -1 }}
               whileInView={{ opacity: 1, x: 0, scaleX: isAr ? 1 : -1 }}
               viewport={{ once: true, amount: 0.3 }}
