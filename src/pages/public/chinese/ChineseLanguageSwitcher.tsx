@@ -32,11 +32,11 @@ export default function ChineseLanguageSwitcher() {
         <motion.button
           className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-base font-bold transition-all duration-300 ${
             activeTab === "chinese"
-              ? "bg-[#35AB4E] text-white shadow-md"
-              : "text-[#4B5563] hover:text-[#35AB4E]"
+              ? "bg-[#35AB4E] text-white shadow-[#20672F] shadow-[0px_3px_0px]"
+              : "text-[#4B5563] hover:text-[#35AB4E] hover:brightness-110"
           }`}
           onClick={() => handleTabClick("chinese")}
-          whileTap={{ scale: 0.95 }}
+          whileTap={{ scale: 0.98 }}
         >
           <img src={flagChina} alt="China Flag" className="w-6 h-6 rounded-full object-cover" />
           <span>الصينية</span>
@@ -46,11 +46,11 @@ export default function ChineseLanguageSwitcher() {
         <motion.button
           className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-base font-bold transition-all duration-300 ${
             activeTab === "english"
-              ? "bg-[#35AB4E] text-white shadow-md"
-              : "text-[#4B5563] hover:text-[#35AB4E]"
+              ? "bg-[#35AB4E] text-white shadow-[#20672F] shadow-[0px_3px_0px]"
+              : "text-[#4B5563] hover:text-[#35AB4E] hover:brightness-110"
           }`}
           onClick={() => handleTabClick("english")}
-          whileTap={{ scale: 0.95 }}
+          whileTap={{ scale: 0.98 }}
         >
           <img src={flagUK} alt="UK Flag" className="w-6 h-6 rounded-full object-cover" />
           <span>الإنجليزية</span>

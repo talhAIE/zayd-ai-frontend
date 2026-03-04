@@ -8,13 +8,12 @@ import { useLanguage } from "@/components/language-provider";
 export default function LanguageTabSwitcher() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { language, setLanguage } = useLanguage();
+  const { language } = useLanguage();
   const [activeTab, setActiveTab] = useState<"english" | "chinese">("english");
   const isAr = language === "ar";
   
   // Dynamic colors based on current page
   const isChinesePage = location.pathname === "/chinese";
-  const shadowColor = isChinesePage ? "rgba(53, 171, 78, 0.4)" : "rgba(5, 139, 244, 0.4)";
   
   // Dynamic gradient based on page
   const activeGradient = isChinesePage 
@@ -33,55 +32,46 @@ export default function LanguageTabSwitcher() {
   const handleTabClick = (tab: "english" | "chinese") => {
     if (tab === "chinese") {
       navigate("/chinese");
-      setLanguage("en"); // Set to English for Chinese landing page
     } else {
       navigate("/");
-      setLanguage("en"); // Set to English for main landing page
     }
   };
 
   return (
     <div className="flex justify-center mt-6 mb-8">
-      <div className="inline-flex rounded-full bg-white/10 backdrop-blur-sm p-1 shadow-lg" 
-           style={{ boxShadow: `0 4px 30px ${shadowColor}` }}>
+      <div className="inline-flex rounded-full bg-[#F3F4F6] p-1 border border-gray-100 shadow-sm">
         <motion.button
-          className={`flex items-center gap-3 px-8 py-3 rounded-full text-base font-medium transition-all duration-300 ${
+          className={`flex items-center gap-3 px-8 py-3 rounded-full text-base font-bold transition-all duration-300 ${
             activeTab === "english"
               ? "text-white"
-              : isChinesePage ? "text-green-600 hover:text-green-700" : "text-blue-500 hover:text-blue-700"
+              : isChinesePage ? "text-green-600 hover:brightness-110" : "text-blue-500 hover:brightness-110"
           }`}
           style={{
-            background: activeTab === "english" ? activeGradient : "transparent"
-          }}
-          onClick={() => handleTabClick("english")}
-          whileHover={{ 
-            scale: activeTab === "english" ? 1.05 : 1.02,
+            background: activeTab === "english" ? activeGradient : "transparent",
             boxShadow: activeTab === "english" 
-              ? `0 0 20px ${shadowColor}` 
+              ? isChinesePage ? "0px 3px 0px #20672F" : "0px 3px 0px #0472C6"
               : "none"
           }}
-          whileTap={{ scale: 0.95 }}
+          onClick={() => handleTabClick("english")}
+          whileTap={{ scale: 0.98 }}
         >
           <img src={flagUK} alt="UK Flag" className="w-5 h-5" />
           {isAr ? "الإنجليزية" : "English"}
         </motion.button>
         <motion.button
-          className={`flex items-center gap-3 px-8 py-3 rounded-full text-base font-medium transition-all duration-300 ${
+          className={`flex items-center gap-3 px-8 py-3 rounded-full text-base font-bold transition-all duration-300 ${
             activeTab === "chinese"
               ? "text-white"
-              : isChinesePage ? "text-green-600 hover:text-green-700" : "text-blue-500 hover:text-blue-700"
+              : isChinesePage ? "text-green-600 hover:brightness-110" : "text-blue-500 hover:brightness-110"
           }`}
           style={{
-            background: activeTab === "chinese" ? activeGradient : "transparent"
-          }}
-          onClick={() => handleTabClick("chinese")}
-          whileHover={{ 
-            scale: activeTab === "chinese" ? 1.05 : 1.02,
+            background: activeTab === "chinese" ? activeGradient : "transparent",
             boxShadow: activeTab === "chinese" 
-              ? `0 0 20px ${shadowColor}` 
+              ? isChinesePage ? "0px 3px 0px #20672F" : "0px 3px 0px #0472C6"
               : "none"
           }}
-          whileTap={{ scale: 0.95 }}
+          onClick={() => handleTabClick("chinese")}
+          whileTap={{ scale: 0.98 }}
         >
           <img src={flagChina} alt="China Flag" className="w-5 h-5" />
           {isAr ? "الصينية" : "Chinese"}

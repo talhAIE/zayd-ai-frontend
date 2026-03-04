@@ -28,6 +28,8 @@ export default {
       fontFamily: {
         sans: ["Outfit", "sans-serif"], // use Outfit as the default
         "geist-sans": ["Geist", "sans-serif"], // Geist font for public pages
+        almarai: ["Almarai", "sans-serif"],
+        nunito: ["Nunito", "sans-serif"],
       },
 
       borderRadius: {
