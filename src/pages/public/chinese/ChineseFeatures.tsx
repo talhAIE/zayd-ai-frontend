@@ -3,6 +3,7 @@ import { useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 import EmojiIcon from "@/components/ui/emoji-icon";
 import { useLanguage } from "@/components/language-provider";
+import flagChina from "@/assets/svgs/flag-china.svg";
 
 // Image Imports
 import birdImg from "@/assets/images/chinese-landingpage/bird 1.png";
@@ -25,21 +26,21 @@ export default function ChineseFeatures() {
       title: isAr ? "ممارسة الذكاء الاصطناعي" : "AI Practice",
       description: isAr ? "شاهد، اسمع، واستخدم كلمات جديدة مع ردود فعل فورية من الذكاء الاصطناعي" : "Watch, listen, and use new words with instant AI feedback",
       footer: isAr ? "ردود فعل فورية" : "Instant Feedback",
-      icon: <EmojiIcon emoji="🎯" size={32} className="text-[#35AB4E]" />,
+      icon: <EmojiIcon emoji="🤖" size={32} className="text-[#35AB4E]" />,
       iconBg: "bg-[#E5F3E9]",
     },
     {
       title: isAr ? "دعم اللغة العربية" : "Arabic Support",
       description: isAr ? "تعليمات باللغة العربية عند الحاجة للوضوح والثقة" : "Arabic instructions when needed for clarity and confidence",
       footer: isAr ? "تقليل الارتباك" : "Reduced Confusion",
-      icon: <EmojiIcon emoji="🌍" size={32} className="text-[#35AB4E]" />,
+      icon: <EmojiIcon emoji="�🇦" size={32} className="text-[#35AB4E]" />,
       iconBg: "bg-[#E5F3E9]",
     },
     {
       title: isAr ? "تعلم ممتع" : "Fun Learning",
       description: isAr ? "سلاسل، نقاط، ولوحات متصدرين للمنافسة الصحية" : "Streaks, points, and leaderboards for healthy competition",
       footer: isAr ? "ابقَ متحمساً" : "Stay Motivated",
-      icon: <EmojiIcon emoji="⭐" size={32} className="text-[#35AB4E]" />,
+      icon: <EmojiIcon emoji="🏆" size={32} className="text-[#35AB4E]" />,
       iconBg: "bg-[#E5F3E9]",
     },
   ];
@@ -90,7 +91,7 @@ export default function ChineseFeatures() {
             transition={{ duration: 0.6, ease: "easeOut" }}
             className="inline-flex items-center gap-2 bg-[#E5F3E9] px-6 py-2 rounded-full border border-[#D1EBD9] mb-8"
           >
-            <EmojiIcon emoji="🇨🇳" className="w-2 h-2 text-[#35AB4E] px-5" />
+            <img src={flagChina} alt="China Flag" className="w-5 h-5 text-[#35AB4E]" />
             <span className="text-[#35AB4E] font-bold">
                 {isAr ? "برنامج تعلم اللغة الصينية" : "Chinese Language Learning Program"}
             </span>
@@ -136,33 +137,18 @@ export default function ChineseFeatures() {
             }}
           />
 
-          {/* Bottom Guy Mascot - Edge-pinned collision-free positioning */}
-          <motion.img 
-            src={guyImg} 
-            alt="Mascot Guy" 
-            className={`absolute top-[48%] -translate-y-1/2 ${isAr ? "left-[2vw] 2xl:left-[6vw]" : "right-[2vw] 2xl:right-[6vw]"} w-[clamp(150px,18vw,300px)] h-auto z-0 transition-all duration-500`}
-            initial={{ opacity: 0, x: isAr ? -50 : 50, scaleX: isAr ? 1 : -1 }}
-            whileInView={{ opacity: 1, x: 0, scaleX: isAr ? 1 : -1 }}
-            viewport={{ once: true, amount: 0.3 }}
-            transition={{
-              duration: 0.8,
-              ease: "easeOut",
-              delay: 0.4,
-              type: "spring",
-              stiffness: 100,
-            }}
-          />
+          {/* This guy is now part of the tabbed section layout below */}
         </div>
 
         {/* Features Split Section - Essential Topics vs Saudi Students */}
-        <div className="grid lg:grid-cols-2 gap-16 items-center mb-16" dir={isAr ? "rtl" : "ltr"}>
+        <div className="grid lg:grid-cols-2 gap-16 items-center mb-32" dir={isAr ? "rtl" : "ltr"}>
           {/* Essential Topics Card (Left Side in design) */}
           <motion.div 
             initial={{ opacity: 0, x: isAr ? 50 : -50 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="bg-[#C1E6C9] p-8 rounded-[32px] relative overflow-hidden"
+            className="bg-[#C1E6C9] p-5 sm:p-8 rounded-[32px] relative overflow-hidden"
           >
             {/* Background Decorative Circle */}
             <div className="absolute top-0 right-0 w-48 h-48 bg-[#A8D9B3] rounded-full -mr-12 -mt-12 opacity-50" />
@@ -177,14 +163,14 @@ export default function ChineseFeatures() {
                   <p className="text-[#35AB4E] font-extrabold text-sm uppercase tracking-wider leading-none mb-1">
                     {isAr ? "ما سيتعلمه الطلاب" : "WHAT STUDENTS LEARN"}
                   </p>
-                  <h3 className="text-2xl font-black text-[#121212] leading-none">
+                  <h3 className="text-xl sm:text-2xl font-black text-[#121212]">
                     {isAr ? "المواضيع الأساسية" : "Essential Topics"}
                   </h3>
                 </div>
               </div>
 
               {/* Topics Grid */}
-              <div className="grid grid-cols-2 gap-2 sm:gap-3">
+              <div className="grid grid-cols-2 gap-2 sm:gap-4">
                 {[
                   { emoji: "👋", text: isAr ? "تحيات" : "Greetings" },
                   { emoji: "🏫", text: isAr ? "حياة المدرسة" : "School Life" },
@@ -196,10 +182,10 @@ export default function ChineseFeatures() {
                 ].map((topic, idx) => (
                   <div 
                     key={idx} 
-                    className={`bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl flex items-center gap-2 sm:gap-3 shadow-sm ${idx === 6 ? "col-span-1" : ""}`}
+                    className={`bg-white p-2 sm:p-4 rounded-xl sm:rounded-2xl flex items-center gap-2 sm:gap-4 shadow-sm ${idx === 6 ? "col-span-2" : ""}`}
                   >
-                    <span className="text-lg sm:text-xl shrink-0">{topic.emoji}</span>
-                    <span className="font-bold text-[#35AB4E] text-sm sm:text-base truncate">{topic.text}</span>
+                    <span className="text-lg sm:text-2xl shrink-0">{topic.emoji}</span>
+                    <span className="font-bold text-[#35AB4E] text-xs sm:text-lg">{topic.text}</span>
                   </div>
                 ))}
               </div>
@@ -257,7 +243,7 @@ export default function ChineseFeatures() {
         </div>
 
         {/* Tabbed Features Section */}
-        <div className="text-center">
+        <div className="text-center relative">
           <motion.span 
             initial={{ opacity: 0, scale: 0.8 }}
             whileInView={{ opacity: 1, scale: 1 }}
@@ -272,88 +258,104 @@ export default function ChineseFeatures() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-            className="text-5xl font-black text-[#121212] mb-12"
+            className="text-3xl sm:text-5xl font-black text-[#121212] mb-12"
           >
             {isAr ? "كل ما تحتاجه لإتقان اللغة الصينية" : "Everything You Need to Master Chinese"}
           </motion.h2>
 
           {/* Toggle Tabs */}
-          <div className="flex justify-center mb-16 px-4">
+          <div className="flex justify-center mb-16 px-4 overflow-x-hidden">
             <div 
-              className="relative inline-flex bg-[#F3F4F6] p-1.5 rounded-full shadow-inner w-full max-w-md border border-gray-100"
+              className="relative inline-flex bg-[#F3F4F6] p-1 rounded-full shadow-inner w-full max-w-md border border-gray-100"
               dir={isAr ? "rtl" : "ltr"}
             >
-              {/* Sliding Background */}
-              <motion.div
-                className="absolute top-1.5 bottom-1.5 rounded-full bg-[#35AB4E] shadow-lg"
-                initial={false}
-                animate={{
-                  left: isAr 
-                    ? (activeTab === "students" ? "50%" : "0.375rem")
-                    : (activeTab === "students" ? "0.375rem" : "50%"),
-                  width: "calc(50% - 0.375rem)",
-                  boxShadow: "0px 3px 0px #20672F",
-                }}
-                transition={{ type: "spring", stiffness: 400, damping: 35 }}
-              />
-
               <button 
                 onClick={() => setActiveTab("students")}
-                className={`relative flex-1 flex items-center justify-center gap-3 px-4 sm:px-8 py-3.5 rounded-full text-sm sm:text-lg font-bold transition-all duration-300 z-10 ${
-                  activeTab === "students" ? "text-white" : "text-gray-500 hover:text-[#35AB4E] hover:brightness-110"
+                className={`relative flex-1 flex items-center justify-center gap-1 sm:gap-3 px-1 sm:px-8 py-2.5 sm:py-3 rounded-full text-[12px] sm:text-lg font-bold transition-all duration-300 z-10 cursor-pointer min-w-0 ${
+                  activeTab === "students" ? "text-white" : "text-[#121212] opacity-50 hover:opacity-100"
                 }`}
               >
-                <EmojiIcon emoji="🎓" size={24} className="text-[#35AB4E]" />
-                <span className="whitespace-nowrap">{isAr ? "للطلاب" : "For Students"}</span>
+                {activeTab === "students" && (
+                  <motion.div 
+                    layoutId="activeTabBubble"
+                    className="absolute inset-0 rounded-full bg-[#35AB4E] shadow-[0px_4px_12px_rgba(53,171,78,0.2)]"
+                    transition={{ type: "spring", stiffness: 400, damping: 35 }}
+                  />
+                )}
+                <EmojiIcon emoji="🎓" size={20} className={`relative z-20 ${activeTab === "students" ? "text-white" : "text-[#35AB4E]"}`} />
+                <span className="relative z-20 whitespace-nowrap overflow-hidden text-ellipsis">{isAr ? "للطلاب" : "For Students"}</span>
               </button>
-
+ 
               <button 
                 onClick={() => setActiveTab("teachers")}
-                className={`relative flex-1 flex items-center justify-center gap-3 px-4 sm:px-8 py-3.5 rounded-full text-sm sm:text-lg font-bold transition-all duration-300 z-10 ${
-                  activeTab === "teachers" ? "text-white" : "text-gray-500 hover:text-[#35AB4E] hover:brightness-110"
+                className={`relative flex-1 flex items-center justify-center gap-1 sm:gap-3 px-1 sm:px-8 py-2.5 sm:py-3 rounded-full text-[12px] sm:text-lg font-bold transition-all duration-300 z-10 cursor-pointer min-w-0 ${
+                  activeTab === "teachers" ? "text-white" : "text-[#121212] opacity-50 hover:opacity-100"
                 }`}
               >
-                <EmojiIcon emoji="👨‍🏫" size={24} className="text-[#35AB4E]" />
-                <span className="whitespace-nowrap">{isAr ? "للمعلمين" : "For Teachers"}</span>
+                {activeTab === "teachers" && (
+                  <motion.div 
+                    layoutId="activeTabBubble"
+                    className="absolute inset-0 rounded-full bg-[#35AB4E] shadow-[0px_4px_12px_rgba(53,171,78,0.2)]"
+                    transition={{ type: "spring", stiffness: 400, damping: 35 }}
+                  />
+                )}
+                <EmojiIcon emoji="👨‍🏫" size={20} className={`relative z-20 ${activeTab === "teachers" ? "text-white" : "text-[#35AB4E]"}`} />
+                <span className="relative z-20 whitespace-nowrap overflow-hidden text-ellipsis">{isAr ? "للمعلمين" : "For Teachers"}</span>
               </button>
             </div>
           </div>
 
-          {/* Features Grid */}
-          <div className="relative">
-            <div className="max-w-4xl mx-auto">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 relative z-10" dir={isAr ? "rtl" : "ltr"}>
-                {features.map((f, i) => (
-                  <motion.div 
-                    key={i}
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, amount: 0.3 }}
-                    transition={{ delay: i * 0.1 }}
-                    whileHover={{ y: -5, transition: { duration: 0.2 } }}
-                    className={`bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm hover:shadow-xl transition-all group flex flex-col items-start text-start relative z-10 h-full`}
-                  >
-                    {/* Icon Category Background */}
-                    <div className="bg-[#E5F3E9] p-3 rounded-2xl mb-6 flex items-center justify-center shrink-0">
-                      {f.icon}
-                    </div>
-
-                    <h4 className="text-lg sm:text-xl lg:text-2xl font-black text-[#121212] mb-3 leading-tight">{f.title}</h4>
-                    
-                    <p className="text-[#6B7280] text-sm sm:text-base lg:text-lg font-medium mb-8 leading-relaxed">
-                      {f.description}
-                    </p>
-
-                    <div className="w-full h-px bg-gray-50 mb-6" />
-
-                    <div className={`flex items-center gap-2 text-[#35AB4E] font-bold text-sm md:text-base mt-auto`}>
-                      <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
-                      <span>{f.footer}</span>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+          {/* Features Grid and Mascot Desktop Container */}
+          <div className={`flex flex-col lg:flex-row items-center gap-8 lg:gap-12 ${isAr ? 'lg:flex-row' : 'lg:flex-row-reverse'}`}>
+            
+            {/* Mascot Image Area */}
+            <div className="hidden lg:flex lg:w-[40%] justify-center lg:justify-start">
+              <motion.img 
+                src={guyImg} 
+                alt="Mascot Guy" 
+                className={`w-[clamp(280px,80%,500px)] lg:w-full h-auto z-10 ${!isAr ? '-scale-x-100' : ''}`}
+                initial={{ opacity: 0, x: isAr ? 50 : -50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{
+                  duration: 0.8,
+                  ease: "easeOut",
+                  type: "spring",
+                  stiffness: 100,
+                }}
+              />
             </div>
+
+            {/* Features Grid Area */}
+            <div className={`w-full lg:w-[60%] grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 relative z-10`} dir={isAr ? "rtl" : "ltr"}>
+              {features.map((f, i) => (
+                <motion.div 
+                  key={i}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ delay: i * 0.1 }}
+                  whileHover={{ y: -5, transition: { duration: 0.2 } }}
+                  className="bg-white p-6 sm:p-8 rounded-[24px] border border-gray-100 shadow-[0px_8px_30px_rgba(0,0,0,0.04)] hover:shadow-[0px_10px_40px_rgba(0,0,0,0.08)] transition-all group flex flex-col items-start text-start h-full"
+                >
+                  <div className="bg-[#E5F3E9] p-3 rounded-2xl mb-6 flex items-center justify-center shrink-0">
+                    {f.icon}
+                  </div>
+
+                  <h4 className="text-xl font-black text-[#121212] mb-2 leading-tight">{f.title}</h4>
+                  
+                  <p className="text-[#6B7280] text-sm sm:text-base font-medium mb-6 leading-relaxed">
+                    {f.description}
+                  </p>
+
+                  <div className="mt-auto flex items-center gap-2 text-[#35AB4E] font-bold text-sm">
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                    <span>{f.footer}</span>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
           </div>
         </div>
 
@@ -365,14 +367,14 @@ export default function ChineseFeatures() {
 function PointCard({ icon, title, desc, isAr }: { icon: React.ReactNode, title: string, desc: string, isAr: boolean }) {
   return (
     <motion.div 
-      whileHover={{ scale: 1.05 }}
-      className="bg-[#F9FAFB] p-8 rounded-[48px] border border-[#F3F4F6] flex items-center gap-6 hover:shadow-md transition-all cursor-default"
+      whileHover={{ scale: 1.02 }}
+      className="bg-[#F9FAFB] p-4 sm:p-6 rounded-[24px] border border-[#F3F4F6] flex items-center gap-4 sm:gap-6 hover:shadow-md transition-all cursor-default"
     >
-      <div className="w-12 h-12 flex items-center justify-center shrink-0">
+      <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shrink-0">
         {icon}
       </div>
       <div className={`flex-1 ${isAr ? "text-right" : "text-left"}`}>
-        <h4 className="font-black text-[#121212] text-xl mb-1">{title}</h4>
+        <h4 className="font-black text-[#121212] text-lg mb-1">{title}</h4>
         <p className="text-[#6B7280] font-medium text-sm">{desc}</p>
       </div>
     </motion.div>

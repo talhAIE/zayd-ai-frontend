@@ -127,13 +127,13 @@ export default function ChineseHeroSection() {
             <Link to="/" className="w-full flex justify-center">
               <Button
                 variant="outline"
-                className="bg-white text-[#4B5563] text-sm md:text-xl font-extrabold transition-all hover:brightness-95 active:scale-95 w-[90%] max-w-[380px] lg:w-[331px] flex items-center justify-center"
+                className="bg-white text-[#4B5563] text-sm md:text-lg font-extrabold transition-all hover:brightness-95 active:scale-95 w-[90%] max-w-[380px] lg:w-auto flex items-center justify-center"
                 style={{
                   border: "1px solid #D1D5DB",
-                  boxShadow: "0px 3px 0px #9CA3AF",
+                  boxShadow: "0px 3px 0px #E5E7EB",
                   borderRadius: "12px",
                   height: "65px",
-                  padding: "18px 24px",
+                  padding: "18px 32px",
                 }}
               >
                 {isAr ? "استكشف برامج الإنجليزية والصينية" : "Explore English & Chinese Programs"}

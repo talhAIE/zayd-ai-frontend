@@ -3,7 +3,6 @@ import { CheckCircle2 } from "lucide-react";
 import EmojiIcon from "@/components/ui/emoji-icon";
 import { useLanguage } from "@/components/language-provider";
 import birdImg from "@/assets/images/chinese-landingpage/birdy-wings-up.png";
-import birdSide from "@/assets/images/chinese-landingpage/bird-side.png";
 
 export default function ChinesePricingSection() {
   const { language } = useLanguage();
@@ -107,7 +106,7 @@ export default function ChinesePricingSection() {
                 <div className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center">
                   {plan.icon}
                 </div>
-                <h3 className="text-2xl md:text-4xl font-black text-[#121212] leading-none">{plan.title}</h3>
+                <h3 className="text-2xl md:text-4xl font-bold text-[#121212] leading-none">{plan.title}</h3>
               </div>
               
               <p className="text-[#6B7280] text-base md:text-lg font-medium mb-6 md:mb-10 leading-relaxed">
@@ -117,7 +116,7 @@ export default function ChinesePricingSection() {
               <div className="space-y-3 md:space-y-4 w-full px-2 md:px-4">
                 {plan.features.map((feature, idx) => (
                   <div key={idx} className={`flex items-center justify-between w-full py-1`}>
-                    <p className="text-[#121212] font-semibold text-sm md:text-lg leading-snug">
+                    <p className="text-[#121212] font-medium text-sm md:text-lg leading-snug">
                       {feature}
                     </p>
                     <CheckCircle2 className="w-4 h-4 md:w-6 md:h-6 text-[#35AB4E] shrink-0" />
@@ -127,57 +126,6 @@ export default function ChinesePricingSection() {
             </motion.div>
           ))}
         </div>
-
-        {/* Bottom CTA Box */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true, amount: 0.3 }}
-          className="bg-[#E5F3E9] rounded-[48px] p-10 lg:p-20 relative overflow-hidden"
-        >
-          {/* Content Wrapper - Padded to avoid mascot overlap */}
-          <div className="relative z-10 w-full flex justify-center">
-            <div className="text-center max-w-2xl mx-auto flex flex-col items-center">
-              <h3 className="text-xl sm:text-2xl lg:text-3xl font-black text-[#121212] mb-4">
-                {isAr ? "هل أنت مستعد للبدء؟" : "Are you ready to start?"}
-              </h3>
-              <p className="text-[#35AB4E] text-base sm:text-lg lg:text-xl font-bold mb-6 lg:mb-8">
-                {isAr 
-                  ? "شارك حجم مدرستك واحتياجاتك اللغوية، وسنوصي بأفضل خطة لك."
-                  : "Share your school size and language needs, and we'll recommend the best plan for you."}
-              </p>
-              <div className="flex flex-col lg:flex-row gap-4 justify-center items-center">
-                <button 
-                  className="text-white px-6 lg:px-10 py-3 lg:py-5 font-black flex items-center justify-center gap-2 transition-all hover:brightness-110 active:scale-95 w-[90%] max-w-[380px] lg:w-auto text-sm sm:text-base lg:text-lg"
-                  style={{
-                    background: "#35AB4E",
-                    boxShadow: "0px 3px 0px #20672F",
-                    borderRadius: "12px",
-                  }}
-                >
-                  {isAr ? "اتصل بنا للحصول على الأسعار" : "Contact us for pricing"}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Absolute Mascot - Centered on edge */}
-          <motion.img
-            src={birdSide}
-            alt="Owl Mascot"
-            className={`hidden lg:block absolute top-1/2 -translate-y-1/2 ${isAr ? "right-[-2rem]" : "left-[-2rem]"} 2xl:${isAr ? "right-0" : "left-0"} w-40 2xl:w-48 h-auto object-contain pointer-events-none z-0 scale-90 2xl:scale-100 transition-all duration-500`}
-            initial={{ opacity: 0, x: isAr ? 50 : -50, y: "-50%", scaleX: isAr ? 1 : -1 }}
-            whileInView={{ opacity: 1, x: 0, y: "-50%", scaleX: isAr ? 1 : -1 }}
-            viewport={{ once: true, amount: 0.3 }}
-            transition={{
-              duration: 0.8,
-              ease: "easeOut",
-              delay: 0.6,
-              type: "spring",
-              stiffness: 100,
-            }}
-          />
-        </motion.div>
       </div>
     </section>
   );

@@ -7,8 +7,11 @@ import { useLanguage } from "@/components/language-provider";
 const menuItems = [
   { name: { en: "Home", ar: "الرئيسية" }, href: "#home", isRoute: false },
   { name: { en: "Features", ar: "المميزات" }, href: "#features", isRoute: false },
+  { name: { en: "How it Works", ar: "كيف يعمل" }, href: "#how-it-works", isRoute: false },
   { name: { en: "Safety", ar: "الأمان" }, href: "#safety", isRoute: false },
   { name: { en: "Pricing", ar: "الأسعار" }, href: "#pricing", isRoute: false },
+  { name: { en: "FAQ", ar: "الأسئلة الشائعة" }, href: "#faq", isRoute: false },
+  { name: { en: "Contact Us", ar: "اتصل بنا" }, href: "/chinese/contact-us", isRoute: true },
 ];
 
 export default function ChineseNavbar() {
@@ -125,7 +128,7 @@ export default function ChineseNavbar() {
         </div>
 
         {/* Centered green background menu */}
-        <ul className="hidden lg:flex gap-6 bg-[#E4F2E7] px-6 py-2 rounded-full text-gray-700 font-medium mx-auto">
+        <ul className="hidden lg:flex gap-6 bg-[#E4F2E7] px-6 py-2 rounded-full text-gray-700 font-medium mx-auto whitespace-nowrap">
           {menuItems.map((item) => {
             const sectionId = item.href.substring(1);
             const isActive = item.isRoute 
@@ -136,10 +139,10 @@ export default function ChineseNavbar() {
 
             if (item.isRoute) {
               return (
-                <li key={itemName}>
+                <li key={itemName} className="whitespace-nowrap">
                   <Link
                     to={item.href}
-                    className={`cursor-pointer px-3 py-1 rounded-full transition-colors block ${
+                    className={`cursor-pointer px-3 py-1 rounded-full transition-colors block whitespace-nowrap ${
                       isActive ? "bg-[#35AB4E] text-white" : "hover:text-[#35AB4E]"
                     }`}
                   >
@@ -152,7 +155,7 @@ export default function ChineseNavbar() {
             return (
               <li
                 key={itemName}
-                className={`cursor-pointer px-3 py-1 rounded-full transition-colors ${
+                className={`cursor-pointer px-3 py-1 rounded-full transition-colors whitespace-nowrap ${
                   isActive ? "bg-[#35AB4E] text-white" : "hover:text-[#35AB4E]"
                 }`}
                 onClick={() => scrollToSection(item.href, item.isRoute)}
