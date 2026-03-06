@@ -1,13 +1,12 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { CheckCircle2 } from "lucide-react";
 import EmojiIcon from "@/components/ui/emoji-icon";
 import { useLanguage } from "@/components/language-provider";
 import flagChina from "@/assets/svgs/flag-china.svg";
-
-// Image Imports
+import flagSaudi from "@/assets/svgs/flag-saudi-arabia.svg";
 import birdImg from "@/assets/images/chinese-landingpage/bird 1.png";
 import guyImg from "@/assets/images/chinese-landingpage/guy 2.png";
+import checkMark from "@/assets/images/chinese-landingpage/checkmark.svg";
 
 export default function ChineseFeatures() {
   const [activeTab, setActiveTab] = useState<"students" | "teachers">("students");
@@ -19,28 +18,28 @@ export default function ChineseFeatures() {
       title: isAr ? "دروس موجهة" : "Guided Lessons",
       description: isAr ? "وحدات منظمة متوافقة مع مواضيع منهج وزارة التعليم" : "Structured units aligned with Ministry of Education curriculum topics",
       footer: isAr ? "متوافق مع المنهج الدراسي" : "Curriculum Aligned",
-      icon: <EmojiIcon emoji="📚" size={32} className="text-[#35AB4E]" />,
+      icon: <EmojiIcon emoji="📚" size={24} className="text-[#35AB4E]" />,
       iconBg: "bg-[#E5F3E9]",
     },
     {
       title: isAr ? "ممارسة الذكاء الاصطناعي" : "AI Practice",
       description: isAr ? "شاهد، اسمع، واستخدم كلمات جديدة مع ردود فعل فورية من الذكاء الاصطناعي" : "Watch, listen, and use new words with instant AI feedback",
       footer: isAr ? "ردود فعل فورية" : "Instant Feedback",
-      icon: <EmojiIcon emoji="🤖" size={32} className="text-[#35AB4E]" />,
+      icon: <EmojiIcon emoji="🤖" size={24} className="text-[#35AB4E]" />,
       iconBg: "bg-[#E5F3E9]",
     },
     {
       title: isAr ? "دعم اللغة العربية" : "Arabic Support",
       description: isAr ? "تعليمات باللغة العربية عند الحاجة للوضوح والثقة" : "Arabic instructions when needed for clarity and confidence",
       footer: isAr ? "تقليل الارتباك" : "Reduced Confusion",
-      icon: <EmojiIcon emoji="�🇦" size={32} className="text-[#35AB4E]" />,
+      icon: <img src={flagSaudi} alt="Saudi Flag" className="w-6 h-6 object-contain rounded-sm shadow-sm" />,
       iconBg: "bg-[#E5F3E9]",
     },
     {
       title: isAr ? "تعلم ممتع" : "Fun Learning",
       description: isAr ? "سلاسل، نقاط، ولوحات متصدرين للمنافسة الصحية" : "Streaks, points, and leaderboards for healthy competition",
       footer: isAr ? "ابقَ متحمساً" : "Stay Motivated",
-      icon: <EmojiIcon emoji="🏆" size={32} className="text-[#35AB4E]" />,
+      icon: <EmojiIcon emoji="🏆" size={24} className="text-[#35AB4E]" />,
       iconBg: "bg-[#E5F3E9]",
     },
   ];
@@ -50,28 +49,28 @@ export default function ChineseFeatures() {
       title: isAr ? "لوحة تحكم المعلم" : "Teacher Dashboard",
       description: isAr ? "تتبع تقدم الطلاب الفردي والجماعي في الوقت الفعلي" : "Track individual and group student progress in real-time",
       footer: isAr ? "تتبع دقيق" : "Precise Tracking",
-      icon: <EmojiIcon emoji="👥" size={32} className="text-[#35AB4E]" />,
+      icon: <EmojiIcon emoji="👥" size={24} className="text-[#35AB4E]" />,
       iconBg: "bg-[#E5F3E9]",
     },
     {
       title: isAr ? "تقارير ذكية" : "Smart Reports",
       description: isAr ? "تقارير مفصلة عن نقاط القوة والضعف لكل طالب" : "Detailed reports on each student's strengths and weaknesses",
       footer: isAr ? "تحليل معمق" : "Deep Analysis",
-      icon: <EmojiIcon emoji="📊" size={32} className="text-[#35AB4E]" />,
+      icon: <EmojiIcon emoji="📊" size={24} className="text-[#35AB4E]" />,
       iconBg: "bg-[#E5F3E9]",
     },
     {
       title: isAr ? "إدارة الفصول" : "Classroom Management",
       description: isAr ? "أضف الطلاب، فرّق المهام، وراقب التفاعل بسهولة" : "Add students, differentiate tasks, and monitor interaction easily",
       footer: isAr ? "سهولة الإدارة" : "Easy Management",
-      icon: <EmojiIcon emoji="🎓" size={32} className="text-[#35AB4E]" />,
+      icon: <EmojiIcon emoji="🎓" size={24} className="text-[#35AB4E]" />,
       iconBg: "bg-[#E5F3E9]",
     },
     {
       title: isAr ? "محتوى إثرائي" : "Enrichment Content",
       description: isAr ? "وصول إلى مكتبة واسعة من الدروس والموارد الإضافية" : "Access to a vast library of extra lessons and resources",
       footer: isAr ? "موارد غنية" : "Rich Resources",
-      icon: <EmojiIcon emoji="📚" size={32} className="text-[#35AB4E]" />,
+      icon: <EmojiIcon emoji="📚" size={24} className="text-[#35AB4E]" />,
       iconBg: "bg-[#E5F3E9]",
     },
   ];
@@ -124,9 +123,9 @@ export default function ChineseFeatures() {
           <motion.img 
             src={birdImg} 
             alt="Mascot Bird" 
-            className={`absolute top-0 ${isAr ? "right-[2vw] 2xl:right-[6vw]" : "left-[2vw] 2xl:left-[6vw]"} w-[clamp(100px,12vw,200px)] h-auto z-0 transition-all duration-500`}
-            initial={{ opacity: 0, x: isAr ? 50 : -50, rotate: isAr ? 10 : -10, scaleX: isAr ? 1 : -1 }}
-            whileInView={{ opacity: 1, x: 0, rotate: 0, scaleX: isAr ? 1 : -1 }}
+            className={`absolute -top-4 right-[2vw] 2xl:right-[6vw] w-[clamp(100px,12vw,200px)] h-auto w-auto z-0 transition-all duration-500`}
+            initial={{ opacity: 0, x: -50, rotate: -10, scaleX: 1 }}
+            whileInView={{ opacity: 1, x: 0, rotate: 0, scaleX: 1 }}
             viewport={{ once: true, amount: 0.3 }}
             transition={{
               duration: 0.8,
@@ -136,8 +135,6 @@ export default function ChineseFeatures() {
               stiffness: 100,
             }}
           />
-
-          {/* This guy is now part of the tabbed section layout below */}
         </div>
 
         {/* Features Split Section - Essential Topics vs Saudi Students */}
@@ -227,7 +224,7 @@ export default function ChineseFeatures() {
                 isAr={isAr}
               />
               <PointCard 
-                icon={<EmojiIcon emoji="🇸🇦" size={24} className="text-[#35AB4E]" />} 
+                icon={<img src={flagSaudi} alt="Saudi Flag" className="w-6 h-6 object-contain rounded-sm shadow-[0_0_2px_rgba(0,0,0,0.1)]" />} 
                 title={isAr ? "دعم اللغة العربية" : "Arabic Support"} 
                 desc={isAr ? "تعليمات باللغة العربية عند الحاجة للوضوح" : "Instructions in Arabic when needed for clarity"}
                 isAr={isAr}
@@ -271,7 +268,7 @@ export default function ChineseFeatures() {
             >
               <button 
                 onClick={() => setActiveTab("students")}
-                className={`relative flex-1 flex items-center justify-center gap-1 sm:gap-3 px-1 sm:px-8 py-2.5 sm:py-3 rounded-full text-[12px] sm:text-lg font-bold transition-all duration-300 z-10 cursor-pointer min-w-0 ${
+                className={`relative flex-1 flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2.5 sm:py-3 rounded-full text-xs sm:text-base font-bold transition-all duration-300 z-10 cursor-pointer min-w-0 ${
                   activeTab === "students" ? "text-white" : "text-[#121212] opacity-50 hover:opacity-100"
                 }`}
               >
@@ -282,13 +279,13 @@ export default function ChineseFeatures() {
                     transition={{ type: "spring", stiffness: 400, damping: 35 }}
                   />
                 )}
-                <EmojiIcon emoji="🎓" size={20} className={`relative z-20 ${activeTab === "students" ? "text-white" : "text-[#35AB4E]"}`} />
-                <span className="relative z-20 whitespace-nowrap overflow-hidden text-ellipsis">{isAr ? "للطلاب" : "For Students"}</span>
+                <EmojiIcon emoji="🎓" size={20} className={`relative z-20 shrink-0 ${activeTab === "students" ? "text-white" : "text-[#35AB4E]"}`} />
+                <span className="relative z-20 whitespace-nowrap">{isAr ? "للطلاب" : "For Students"}</span>
               </button>
  
               <button 
                 onClick={() => setActiveTab("teachers")}
-                className={`relative flex-1 flex items-center justify-center gap-1 sm:gap-3 px-1 sm:px-8 py-2.5 sm:py-3 rounded-full text-[12px] sm:text-lg font-bold transition-all duration-300 z-10 cursor-pointer min-w-0 ${
+                className={`relative flex-1 flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2.5 sm:py-3 rounded-full text-xs sm:text-base font-bold transition-all duration-300 z-10 cursor-pointer min-w-0 ${
                   activeTab === "teachers" ? "text-white" : "text-[#121212] opacity-50 hover:opacity-100"
                 }`}
               >
@@ -299,8 +296,8 @@ export default function ChineseFeatures() {
                     transition={{ type: "spring", stiffness: 400, damping: 35 }}
                   />
                 )}
-                <EmojiIcon emoji="👨‍🏫" size={20} className={`relative z-20 ${activeTab === "teachers" ? "text-white" : "text-[#35AB4E]"}`} />
-                <span className="relative z-20 whitespace-nowrap overflow-hidden text-ellipsis">{isAr ? "للمعلمين" : "For Teachers"}</span>
+                <EmojiIcon emoji="👨‍🏫" size={20} className={`relative z-20 shrink-0 ${activeTab === "teachers" ? "text-white" : "text-[#35AB4E]"}`} />
+                <span className="relative z-20 whitespace-nowrap">{isAr ? "للمعلمين" : "For Teachers"}</span>
               </button>
             </div>
           </div>
@@ -338,18 +335,19 @@ export default function ChineseFeatures() {
                   whileHover={{ y: -5, transition: { duration: 0.2 } }}
                   className="bg-white p-6 sm:p-8 rounded-[24px] border border-gray-100 shadow-[0px_8px_30px_rgba(0,0,0,0.04)] hover:shadow-[0px_10px_40px_rgba(0,0,0,0.08)] transition-all group flex flex-col items-start text-start h-full"
                 >
-                  <div className="bg-[#E5F3E9] p-3 rounded-2xl mb-6 flex items-center justify-center shrink-0">
-                    {f.icon}
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="bg-[#E5F3E9] p-2.5 rounded-xl flex items-center justify-center shrink-0">
+                      {f.icon}
+                    </div>
+                    <h4 className="text-xl font-black text-[#121212] leading-tight">{f.title}</h4>
                   </div>
-
-                  <h4 className="text-xl font-black text-[#121212] mb-2 leading-tight">{f.title}</h4>
                   
                   <p className="text-[#6B7280] text-sm sm:text-base font-medium mb-6 leading-relaxed">
                     {f.description}
                   </p>
 
                   <div className="mt-auto flex items-center gap-2 text-[#35AB4E] font-bold text-sm">
-                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                    <img src={checkMark} alt="Checkmark" className="w-4 h-4 shrink-0" />
                     <span>{f.footer}</span>
                   </div>
                 </motion.div>

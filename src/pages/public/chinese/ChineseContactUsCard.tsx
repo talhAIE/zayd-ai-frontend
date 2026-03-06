@@ -9,7 +9,7 @@ export default function ChineseContactUsCard() {
     const isAr = language === "ar";
     const dir = language === "ar" ? "rtl" : "ltr";
     return (
-        <section id="pricing" className={`py-12 px-6 bg-white overflow-hidden ${isAr ? 'font-almarai' : 'font-nunito'} relative overflow-x-hidden`} dir={dir}>
+        <section id="pricing" className={`py-4 px-6 bg-white overflow-hidden ${isAr ? 'font-almarai' : 'font-nunito'} relative overflow-x-hidden`} dir={dir}>
           <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
@@ -48,9 +48,9 @@ export default function ChineseContactUsCard() {
           <motion.img
             src={birdSide}
             alt="Owl Mascot"
-            className={`hidden lg:block absolute top-1/2 -translate-y-1/2 ${isAr ? "right-[-2rem]" : "left-[-2rem]"} 2xl:${isAr ? "right-0" : "left-0"} w-40 2xl:w-48 h-auto object-contain pointer-events-none z-0 scale-90 2xl:scale-100 transition-all duration-500`}
-            initial={{ opacity: 0, x: isAr ? 50 : -50, y: "-50%", scaleX: isAr ? 1 : -1 }}
-            whileInView={{ opacity: 1, x: 0, y: "-50%", scaleX: isAr ? 1 : -1 }}
+            className={`hidden lg:block absolute top-1/2 -translate-y-1/2 right-[0rem] 2xl:right-0 w-40 2xl:w-48 h-auto object-contain pointer-events-none z-0 scale-90 2xl:scale-100 transition-all duration-500`}
+            initial={{ opacity: 0, x: 50, y: "-50%", scaleX: 1 }}
+            whileInView={{ opacity: 1, x: 0, y: "-50%", scaleX: 1 }}
             viewport={{ once: true, amount: 0.3 }}
             transition={{
               duration: 0.8,
