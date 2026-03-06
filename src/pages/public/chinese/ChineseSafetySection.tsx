@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
-import { CheckCircle2 } from "lucide-react";
-import EmojiIcon from "@/components/ui/emoji-icon";
+import { CheckCircle2, Layers, Box, Award, Users } from "lucide-react";
 import { useLanguage } from "@/components/language-provider";
+import checkMark from "@/assets/images/chinese-landingpage/checkmark.svg";
 
 export default function ChineseSafetySection() {
   const { language } = useLanguage();
@@ -9,58 +9,58 @@ export default function ChineseSafetySection() {
 
   const safetyCards = [
     {
-      title: isAr ? "خوادم محلية سعودية" : "Saudi Local Servers",
-      description: isAr 
-        ? "يتم استضافة جميع بيانات المنصة على خوادم آمنة داخل المملكة العربية السعودية، مما يقلل من زمن الاستجابة ويتماشى مع السياسات الوطنية بشأن سيادة البيانات."
-        : "All platform data is hosted on secure servers within Saudi Arabia, reducing latency and aligning with national data sovereignty policies.",
-      icon: <EmojiIcon emoji="🇸🇦" size={32} className="text-[#35AB4E]" />,
-      iconBg: "bg-[#E5F3E9]",
-    },
-    {
-      title: isAr ? "ذكاء اصطناعي معتمد من SADAIA" : "SADAIA Certified AI",
-      description: isAr 
-        ? "يستخدم زيد AI تكنولوجيا الذكاء الاصطناعي المعتمدة من SADAIA، مما يمنح المدارس والعائلات الثقة في كيفية عمل النظام وكيفية التعامل مع البيانات."
-        : "Zayd AI uses SADAIA-certified AI technology, giving schools and families confidence in how the system works and how data is handled.",
-      icon: <EmojiIcon emoji="✅" size={32} className="text-[#35AB4E]" />,
-      iconBg: "bg-[#E5F3E9]",
-    },
-    {
-      title: isAr ? "مصمم لدعم منهج وزارة التعليم" : "Designed for MoE Curriculum",
+      title: isAr ? "مصمم لدعم منهج وزارة التعليم" : "Designed to Support MoE Curriculum",
       description: isAr 
         ? "تم تصميم المحتوى والمواضيع وأنماط التفاعل لدعم أهداف منهج وزارة التعليم واستخدامه في الفصول الدراسية للطلاب السعوديين."
-        : "Content, topics, and interaction patterns are designed to support Ministry of Education curriculum goals and classroom use for Saudi students.",
-      icon: <EmojiIcon emoji="📚" size={32} className="text-[#35AB4E]" />,
+        : "Content, topics, and interaction styles are designed to support Ministry of Education curriculum goals and classroom use for Saudi students.",
+      icon: <Layers className="w-5 h-5 md:w-6 md:h-6 text-[#35AB4E]" />,
+      iconBg: "bg-[#E5F3E9]",
+    },
+    {
+      title: isAr ? "ذكاء اصطناعي معتمد من SADAIA" : "SADAIA-Approved AI",
+      description: isAr 
+        ? "يستخدم زيد AI تكنولوجيا الذكاء الاصطناعي المعتمدة من SADAIA، مما يمنح المدارس والعائلات الثقة في كيفية عمل النظام وكيفية التعامل مع البيانات."
+        : "Zayd AI uses AI technology that is approved by SADAIA, giving schools and families confidence in how the system works and how data is handled.",
+      icon: <CheckCircle2 className="w-5 h-5 md:w-6 md:h-6 text-[#35AB4E]" />,
+      iconBg: "bg-[#E5F3E9]",
+    },
+    {
+      title: isAr ? "خوادم محلية سعودية" : "Local Saudi Servers",
+      description: isAr 
+        ? "يتم استضافة جميع بيانات المنصة على خوادم آمنة داخل المملكة العربية السعودية، مما يقلل من زمن الاستجابة ويتماشى مع السياسات الوطنية بشأن سيادة البيانات."
+        : "All platform data is hosted on secure servers within the Kingdom of Saudi Arabia, reducing latency and aligning with national policies on data sovereignty.",
+      icon: <Box className="w-5 h-5 md:w-6 md:h-6 text-[#35AB4E]" />,
       iconBg: "bg-[#E5F3E9]",
     },
   ];
 
   const bottomCards = [
     {
-      title: isAr ? "تفاعلات ذكاء اصطناعي آمنة للأطفال" : "Safe AI Interactions for Children",
+      title: isAr ? "تفاعلات ذكاء اصطناعي آمنة للأطفال" : "Child-Safe AI Interactions",
       points: isAr ? [
         "مرشحات محتوى صارمة وحواجز أمان",
         "لا يوجد وصول إلى الويب المفتوح للطلاب داخل التطبيق",
         "مواضيع ولغة مناسبة للعمر، مناسبة للاستخدام في المدرسة والمنزل"
       ] : [
         "Strict content filters and safety guardrails",
-        "No open web access for students within the application",
+        "No open web access for students inside the app",
         "Age-appropriate topics and language, suitable for school and home use"
       ],
-      icon: <EmojiIcon emoji="🔒" size={32} className="text-[#35AB4E]" />,
+      icon: <Award className="w-5 h-5 md:w-6 md:h-6 text-[#35AB4E]" />,
       iconBg: "bg-[#E5F3E9]",
     },
     {
-      title: isAr ? "تحكم على مستوى المدرسة" : "School-Level Control",
+      title: isAr ? "تحكم على مستوى المدرسة" : "School-Level Controls",
       description: isAr 
         ? "يمكن للمسؤولين إدارة الفصول الدراسية، وإضافة أو إزالة الطلاب، والتحكم في الميزات المفعلة، مما يضمن توافق المنصة مع سياسات كل مدرسة."
-        : "Administrators can manage classrooms, add/remove students, and control feature access, ensuring the platform aligns with school policies.",
-      icon: <EmojiIcon emoji="⚙️" size={32} className="text-[#35AB4E]" />,
+        : "Admins can manage classes, add or remove students, and control which features are enabled, ensuring the platform matches each school's policies.",
+      icon: <Users className="w-5 h-5 md:w-6 md:h-6 text-[#35AB4E]" />,
       iconBg: "bg-[#E5F3E9]",
     },
   ];
 
   return (
-    <section id="safety" className={`py-12 px-6 bg-white ${isAr ? 'font-almarai' : 'font-nunito'}`}>
+    <section id="safety" className={`py-12 px-6 bg-white ${isAr ? 'font-almarai' : 'font-nunito'}`} dir={isAr ? "rtl" : "ltr"}>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
@@ -98,12 +98,12 @@ export default function ChineseSafetySection() {
               whileHover={{ scale: 1.02 }}
               className="bg-white p-6 md:p-10 rounded-[24px] md:rounded-[48px] border border-gray-100 shadow-sm hover:shadow-xl transition-all text-start"
             >
-              <div className="flex items-center gap-3 md:gap-4 mb-6">
-                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-[#121212] leading-none">{card.title}</h3>
-                <div className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center shrink-0">
-                  {card.icon}
-                </div>
+              <div className="bg-[#E5F3E9] w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center shrink-0 mb-4 md:mb-6">
+                {card.icon}
               </div>
+              <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-[#121212] leading-tight mb-3 md:mb-4" dir={isAr ? "rtl" : "ltr"}>
+                {card.title}
+              </h3>
               <p className="text-sm sm:text-base lg:text-lg text-[#6B7280] font-medium leading-relaxed">
                 {card.description}
               </p>
@@ -123,17 +123,17 @@ export default function ChineseSafetySection() {
               whileHover={{ scale: 1.02 }}
               className="bg-white p-6 md:p-10 rounded-[24px] md:rounded-[48px] border border-gray-100 shadow-sm hover:shadow-xl transition-all text-start"
             >
-              <div className="flex items-center gap-3 md:gap-4 mb-6">
-                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-[#121212] leading-none">{card.title}</h3>
-                <div className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center shrink-0">
-                  {card.icon}
-                </div>
+              <div className="bg-[#E5F3E9] w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center shrink-0 mb-4 md:mb-6">
+                {card.icon}
               </div>
+              <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-[#121212] leading-tight mb-3 md:mb-4" dir={isAr ? "rtl" : "ltr"}>
+                {card.title}
+              </h3>
               {card.points ? (
                 <ul className="space-y-3">
                   {card.points.map((point, idx) => (
-                    <li key={idx} className="flex items-start gap-3">
-                      <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-[#35AB4E] shrink-0 mt-0.5" />
+                    <li key={idx} className="flex items-center gap-3">
+                      <img src={checkMark} alt="Saudi Flag" className="w-6 h-6 object-contain rounded-sm shadow-sm" />
                       <span className="text-sm sm:text-base lg:text-lg text-[#374151] leading-relaxed">{point}</span>
                     </li>
                   ))}

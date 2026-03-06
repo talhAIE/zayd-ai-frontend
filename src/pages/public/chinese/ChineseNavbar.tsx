@@ -7,10 +7,8 @@ import { useLanguage } from "@/components/language-provider";
 const menuItems = [
   { name: { en: "Home", ar: "الرئيسية" }, href: "#home", isRoute: false },
   { name: { en: "Features", ar: "المميزات" }, href: "#features", isRoute: false },
-  { name: { en: "How it Works", ar: "كيف يعمل" }, href: "#how-it-works", isRoute: false },
   { name: { en: "Safety", ar: "الأمان" }, href: "#safety", isRoute: false },
   { name: { en: "Pricing", ar: "الأسعار" }, href: "#pricing", isRoute: false },
-  { name: { en: "FAQ", ar: "الأسئلة الشائعة" }, href: "#faq", isRoute: false },
   { name: { en: "Contact Us", ar: "اتصل بنا" }, href: "/chinese/contact-us", isRoute: true },
 ];
 

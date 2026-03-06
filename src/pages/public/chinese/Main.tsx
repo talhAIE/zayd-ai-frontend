@@ -3,8 +3,6 @@ import ChineseHeroSection from "./HeroSection";
 import ChineseFeatures from "./ChineseFeatures";
 import ChineseSafetySection from "./ChineseSafetySection";
 import ChinesePricingSection from "./ChinesePricingSection";
-import ChineseFlowSection from "./ChineseFlowSection";
-import ChineseFAQSection from "./ChineseFAQSection";
 import { useLanguage } from "@/components/language-provider";
 import { ReactLenis } from "@/components/lenis";
 import ChineseContactUsCard from "./ChineseContactUsCard";
@@ -33,10 +31,8 @@ function ChinesePublicLanding() {
         <ChineseNavbar />
         <ChineseHeroSection />
         <ChineseFeatures />
-        <ChineseFlowSection />
         <ChineseSafetySection />
         <ChinesePricingSection />
-        <ChineseFAQSection /> 
         <ChineseContactUsCard />
       </div>
     </ReactLenis>

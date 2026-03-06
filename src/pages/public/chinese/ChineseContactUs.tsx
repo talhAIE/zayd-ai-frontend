@@ -31,7 +31,7 @@ import { useState, useEffect } from 'react';
 import ChineseNavbar from './ChineseNavbar';
 import { ReactLenis } from '@/components/lenis';
 import { LanguageProvider, useLanguage } from '@/components/language-provider';
-import falconContactPage from '@/assets/images/landingpage/falcon-contactpage.svg';
+import falconContactPage from '@/assets/images/chinese-landingpage/chinese-mascot.png';
 
 const contactFormSchema = z.object({
   firstName: z
@@ -316,7 +316,7 @@ function ContactUsPage() {
               <img
                   src={falconContactPage}
                 alt="Falcon"
-                  className="w-full h-auto"
+                  className="w-full h-auto -scale-x-100"
               />
             </motion.div>
 

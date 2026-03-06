@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
-import { CheckCircle2 } from "lucide-react";
 import EmojiIcon from "@/components/ui/emoji-icon";
 import { useLanguage } from "@/components/language-provider";
 import birdImg from "@/assets/images/chinese-landingpage/birdy-wings-up.png";
+import checkMark from "@/assets/images/chinese-landingpage/checkmark.svg";
 
 export default function ChinesePricingSection() {
   const { language } = useLanguage();
@@ -14,7 +14,7 @@ export default function ChinesePricingSection() {
       type: "school",
       title: isAr ? "للمدارس" : "For Schools",
       description: isAr ? "نشر كامل مع أدوات إدارة وتحليلات" : "Full deployment with management and analytics tools",
-      icon: <EmojiIcon emoji="🏫" size={32} className="text-[#35AB4E]" />,
+      icon: <EmojiIcon emoji="🏫" size={24} className="text-[#35AB4E]" />,
       features: isAr ? [
         "جميع ميزات الطلاب مشمولة",
         "لوحات تحكم للمعلمين والإدارة مع تحليلات",
@@ -29,7 +29,7 @@ export default function ChinesePricingSection() {
       type: "student",
       title: isAr ? "للطلاب" : "For Students",
       description: isAr ? "متعلمين فرديين مستعدين لإتقان اللغة الإنجليزية أو الصينية" : "Individual learners ready to master English or Chinese",
-      icon: <EmojiIcon emoji="🎓" size={32} className="text-[#35AB4E]" />,
+      icon: <EmojiIcon emoji="🎓" size={24} className="text-[#35AB4E]" />,
       features: isAr ? [
         "الوصول إلى برامج اللغة الإنجليزية و/أو الصينية",
         "لوحة تحكم شخصية مع إنجازات ومكافآت",
@@ -43,7 +43,7 @@ export default function ChinesePricingSection() {
   ];
 
   return (
-    <section id="pricing" className={`py-12 px-6 bg-white overflow-hidden ${isAr ? 'font-almarai' : 'font-nunito'} relative overflow-x-hidden`} dir={dir}>
+    <section id="pricing" className={`px-6 bg-white overflow-hidden ${isAr ? 'font-almarai' : 'font-nunito'} relative overflow-x-hidden`} dir={dir}>
       <div className="max-w-7xl mx-auto">
         {/* Top Mascot & Header */}
         <div className="flex flex-col items-center text-center mb-10 relative">
@@ -82,7 +82,7 @@ export default function ChinesePricingSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
-            className="text-[#6B7280] text-base sm:text-lg md:text-xl font-medium max-w-3xl leading-relaxed"
+            className="text-[#6B7280] text-base sm:text-lg md:text-xl font-normal max-w-3xl leading-relaxed"
           >
             {isAr 
               ? "تقدم Zayd AI خططاً مرنة للمتعلمين الأفراد ونشر المدارس بالكامل. تشمل جميع الخطط الوصول إلى منصتنا الآمنة المعتمدة من SADAIA واستضافة محلية في السعودية."
@@ -99,27 +99,27 @@ export default function ChinesePricingSection() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, amount: 0.3 }}
               whileHover={{ scale: 1.02 }}
-              className="bg-white p-6 md:p-10 md:p-12 rounded-[24px] md:rounded-[48px] border border-gray-100 shadow-sm hover:shadow-2xl transition-all flex flex-col items-start text-start"
+              className="bg-white p-6 md:p-10 md:p-12 rounded-[24px] md:rounded-[48px] border border-gray-100 shadow-sm hover:shadow-2xl transition-all flex flex-col items-center text-center"
             >
               {/* Logically Aligned Header: Title + Icon */}
-              <div className="flex items-center gap-3 md:gap-4 mb-6">
+              <div className="flex items-center justify-center gap-3 md:gap-4 mb-6">
                 <div className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center">
                   {plan.icon}
                 </div>
                 <h3 className="text-2xl md:text-4xl font-bold text-[#121212] leading-none">{plan.title}</h3>
               </div>
               
-              <p className="text-[#6B7280] text-base md:text-lg font-medium mb-6 md:mb-10 leading-relaxed">
+              <p className="text-[#6B7280] text-base md:text-lg font-normal mb-6 md:mb-10 leading-relaxed">
                 {plan.description}
               </p>
 
-              <div className="space-y-3 md:space-y-4 w-full px-2 md:px-4">
+              <div className="space-y-3 md:space-y-4 w-full md:px-8">
                 {plan.features.map((feature, idx) => (
-                  <div key={idx} className={`flex items-center justify-between w-full py-1`}>
-                    <p className="text-[#121212] font-medium text-sm md:text-lg leading-snug">
+                  <div key={idx} className={`flex items-center justify-start gap-3 w-full py-1`}>
+                    <img src={checkMark} alt="Saudi Flag" className="w-6 h-6 object-contain rounded-sm shadow-sm" />
+                    <p className="text-[#121212] font-normal text-sm md:text-base lg:text-lg leading-snug text-start">
                       {feature}
                     </p>
-                    <CheckCircle2 className="w-4 h-4 md:w-6 md:h-6 text-[#35AB4E] shrink-0" />
                   </div>
                 ))}
               </div>

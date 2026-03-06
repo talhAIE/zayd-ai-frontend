@@ -3,9 +3,9 @@ import { motion } from "framer-motion";
 import guyImage from "@/assets/images/chinese-landingpage/guy 1.png";
 import heroBookImage from "@/assets/images/chinese-landingpage/hero book 1.png";
 import LanguageTabSwitcher from "@/components/ui/LanguageTabSwitcher";
-import EmojiIcon from "@/components/ui/emoji-icon";
 import { useLanguage } from "@/components/language-provider";
 import { Link } from "react-router-dom";
+import checkMark from "@/assets/images/chinese-landingpage/checkmark.svg";
 
 export default function ChineseHeroSection() {
   const { language } = useLanguage();
@@ -38,7 +38,7 @@ export default function ChineseHeroSection() {
             className={`absolute ${isAr ? "left-[1vw] 2xl:left-[4vw]" : "right-[1vw] 2xl:right-[4vw]"} top-[20%] translate-y-[-50%] z-0 origin-center w-[clamp(150px,18vw,400px)] transition-all duration-500`}
             initial={{ x: isAr ? -100 : 100, opacity: 0, scaleX: isAr ? 1 : -1 }}
             animate={{ x: 0, opacity: 1, scaleX: isAr ? 1 : -1 }}
-            transition={{ duration: 0.8, ease: "easeOut", delay: 0.5 }}
+            transition={{ duration: 0.1 }}
         >
             <img
                 src={heroBookImage}
@@ -52,7 +52,7 @@ export default function ChineseHeroSection() {
           className={`absolute ${isAr ? "right-[1vw] 2xl:right-[4vw]" : "left-[1vw] 2xl:left-[4vw]"} top-[20%] translate-y-[-50%] z-0 origin-center w-[clamp(180px,20vw,480px)] transition-all duration-500`}
           initial={{ x: isAr ? 100 : -100, opacity: 0, scaleX: isAr ? 1 : -1 }}
           animate={{ x: 0, opacity: 1, scaleX: isAr ? 1 : -1 }}
-          transition={{ duration: 0.8, ease: "easeOut", delay: 0.5 }}
+          transition={{ duration: 0.1 }}
         >
           <img
             src={guyImage}
@@ -153,15 +153,15 @@ export default function ChineseHeroSection() {
           {[
             {
               text: isAr ? "برامج إنجليزية وصينية للمرحلة الابتدائية العليا والمتوسطة والثانوية" : "English and Chinese programs for upper elementary, middle, and high school",
-              icon: <EmojiIcon emoji="✓" size={28} className="text-[#35AB4E]" />
+              icon: <img src={checkMark} alt="Checkmark" className="w-6 h-6 shrink-0" />
             },
             {
               text: isAr ? "مصممة للمتعلمين العرب، وبمحتوى يراعي القيم المحلية" : "Designed for Arab learners, with content respecting local values",
-              icon: <EmojiIcon emoji="✓" size={28} className="text-[#35AB4E]" />
+              icon: <img src={checkMark} alt="Checkmark" className="w-6 h-6 shrink-0" />
             },
             {
               text: isAr ? "مخصصة للمدارس، مع لوحات تحكم للمعلمين والإداريين" : "Dedicated for schools, with dashboards for teachers and administrators",
-              icon: <EmojiIcon emoji="✓" size={28} className="text-[#35AB4E]" />
+              icon: <img src={checkMark} alt="Checkmark" className="w-6 h-6 shrink-0" />
             }
           ].map((item, idx) => (
             <div key={idx} className={`flex items-center gap-3 md:gap-4 bg-[#F9FAFB] p-4 md:p-8 rounded-[16px] md:rounded-[24px] shadow-sm border border-gray-100 hover:shadow-md transition-shadow ${isAr ? "text-right" : "text-left"}`}>
