@@ -4,22 +4,22 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import navLogoPng from "@/assets/images/landingpage/nav-logo.png";
 import { useLanguage } from "@/components/language-provider";
 
-const menuItems = [
-  { name: { en: "Home", ar: "الرئيسية" }, href: "#home", isRoute: false },
-  { name: { en: "Features", ar: "المميزات" }, href: "#features", isRoute: false },
-  { name: { en: "Pricing", ar: "الأسعار" }, href: "#pricing", isRoute: false },
-  { name: { en: "Contact Us", ar: "اتصل بنا" }, href: "/contact-us", isRoute: true },
-];
-
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
   const { language, setLanguage } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
-  const isAr = language === "ar";
 
-  const isMainPath = location.pathname === "/" || location.pathname === "/chinese";
+  const menuItems = [
+    { name: "Home", href: "#home", isRoute: false },
+    { name: "Features", href: "#features", isRoute: false },
+    { name: "How It Works", href: "#how-it-works", isRoute: false },
+    // { name: "Testimonials", href: "#testimonials", isRoute: false },
+    { name: "Pricing", href: "#pricing", isRoute: false },
+    { name: "FAQ", href: "#faq", isRoute: false },
+    { name: "Contact Us", href: "/contact-us", isRoute: true },
+  ];
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -32,7 +32,7 @@ export default function Navbar() {
       return;
     }
     if (href === "#home") {
-      if (!isMainPath) {
+      if (location.pathname !== "/") {
         navigate("/");
         setTimeout(() => {
           window.scrollTo({
@@ -47,7 +47,7 @@ export default function Navbar() {
         });
       }
     } else {
-      if (!isMainPath) {
+      if (location.pathname !== "/") {
         navigate("/");
         setTimeout(() => {
           const element = document.querySelector(href);
@@ -72,7 +72,7 @@ export default function Navbar() {
   };
 
   useEffect(() => {
-    if (!isMainPath) {
+    if (location.pathname !== "/") {
       return;
     }
 
@@ -95,10 +95,10 @@ export default function Navbar() {
     handleScroll();
 
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [isMainPath]);
+  }, [location.pathname]);
 
   return (
-    <nav className="w-full md:py-4 py-8 shadow-sm sticky top-0 bg-white z-[9999]" dir={isAr ? "rtl" : "ltr"}>
+    <nav className="w-full md:py-4 py-8 shadow-sm sticky top-0 bg-white z-[9999]">
       <div className="flex items-center w-full px-4 relative">
         <div
           className="absolute left-4 md:relative md:left-auto w-20 h-8 md:w-28 md:h-12 flex items-center cursor-pointer z-10"
@@ -130,20 +130,18 @@ export default function Navbar() {
             const sectionId = item.href.substring(1);
             const isActive = item.isRoute 
               ? location.pathname === item.href
-              : isMainPath && activeSection === sectionId;
+              : location.pathname === "/" && activeSection === sectionId;
             
-            const itemName = language === "ar" ? item.name.ar : item.name.en;
-
             if (item.isRoute) {
               return (
-                <li key={itemName}>
+                <li key={item.name}>
                   <Link
                     to={item.href}
                     className={`cursor-pointer px-3 py-1 rounded-full transition-colors block ${
                       isActive ? "bg-[#058BF4] text-white" : "hover:text-blue-800"
                     }`}
                   >
-                    {itemName}
+                    {item.name}
                   </Link>
                 </li>
               );
@@ -151,13 +149,13 @@ export default function Navbar() {
             
             return (
               <li
-                key={itemName}
+                key={item.name}
                 className={`cursor-pointer px-3 py-1 rounded-full transition-colors ${
                   isActive ? "bg-[#058BF4] text-white" : "hover:text-blue-800"
                 }`}
                 onClick={() => scrollToSection(item.href, item.isRoute)}
               >
-                {itemName}
+                {item.name}
               </li>
             );
           })}
@@ -176,7 +174,7 @@ export default function Navbar() {
               variant="outline"
               className="rounded-full text-black border-[#058BF4]"
             >
-              {isAr ? "تسجيل الدخول" : "Sign In"}
+              Sign In
             </Button>
           </Link>
           {/* <Button className="rounded-full bg-[#058BF4]">Sign Up</Button> */}
@@ -247,14 +245,12 @@ export default function Navbar() {
               const sectionId = item.href.substring(1);
               const isActive = item.isRoute 
                 ? location.pathname === item.href
-                : isMainPath && activeSection === sectionId;
+                : location.pathname === "/" && activeSection === sectionId;
               
-              const itemName = language === "ar" ? item.name.ar : item.name.en;
-
               if (item.isRoute) {
                 return (
                   <Link
-                    key={itemName}
+                    key={item.name}
                     to={item.href}
                     className={`text-xl font-medium transition-all duration-300 ${
                       isActive
@@ -272,19 +268,19 @@ export default function Navbar() {
                     }}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    {itemName}
+                    {item.name}
                   </Link>
                 );
               }
               
               return (
                 <button
-                  key={itemName}
+                  key={item.name}
                   className={`text-xl font-medium transition-all duration-300 ${
                     isActive
                       ? "text-[#058BF4]"
                       : "text-gray-700 hover:text-[#058BF4]"
-                    } ${
+                  } ${
                     isMobileMenuOpen
                       ? "opacity-100 translate-y-0"
                       : "opacity-0 translate-y-4"
@@ -296,7 +292,7 @@ export default function Navbar() {
                   }}
                   onClick={() => scrollToSection(item.href, item.isRoute)}
                 >
-                  {itemName}
+                  {item.name}
                 </button>
               );
             })}
