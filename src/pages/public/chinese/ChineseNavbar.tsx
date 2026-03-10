@@ -1,27 +1,26 @@
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import navLogoPng from "@/assets/images/landingpage/nav-logo.png";
+import { useState, useEffect } from "react";
+import navLogoPng from "@/assets/images/chinese-landingpage/zayd-mascot-orange.png";
 import { useLanguage } from "@/components/language-provider";
 
 const menuItems = [
-  { name: "Home", href: "#home", isRoute: false },
-  { name: "Features", href: "#features", isRoute: false },
-  { name: "How It Works", href: "#how-it-works", isRoute: false },
-  // { name: "Testimonials", href: "#testimonials", isRoute: false },
-  { name: "Pricing", href: "#pricing", isRoute: false },
-  { name: "FAQ", href: "#faq", isRoute: false },
-  { name: "Contact Us", href: "/contact-us", isRoute: true },
+  { name: { en: "Home", ar: "الرئيسية" }, href: "#home", isRoute: false },
+  { name: { en: "Features", ar: "المميزات" }, href: "#features", isRoute: false },
+  { name: { en: "Safety", ar: "الأمان" }, href: "#safety", isRoute: false },
+  { name: { en: "Pricing", ar: "الأسعار" }, href: "#pricing", isRoute: false },
+  { name: { en: "Contact Us", ar: "اتصل بنا" }, href: "/chinese/contact-us", isRoute: true },
 ];
 
-export default function Navbar() {
+export default function ChineseNavbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
   const { language, setLanguage } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
+  const isAr = language === "ar";
 
-  const isMainPath = location.pathname === "/" || location.pathname === "/chinese";
+  const isChinesePath = location.pathname === "/chinese";
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -34,8 +33,8 @@ export default function Navbar() {
       return;
     }
     if (href === "#home") {
-      if (!isMainPath) {
-        navigate("/");
+      if (!isChinesePath) {
+        navigate("/chinese");
         setTimeout(() => {
           window.scrollTo({
             top: 0,
@@ -49,8 +48,8 @@ export default function Navbar() {
         });
       }
     } else {
-      if (!isMainPath) {
-        navigate("/");
+      if (!isChinesePath) {
+        navigate("/chinese");
         setTimeout(() => {
           const element = document.querySelector(href);
           if (element) {
@@ -74,7 +73,7 @@ export default function Navbar() {
   };
 
   useEffect(() => {
-    if (!isMainPath) {
+    if (!isChinesePath) {
       return;
     }
 
@@ -97,10 +96,10 @@ export default function Navbar() {
     handleScroll();
 
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [isMainPath]);
+  }, [isChinesePath]);
 
   return (
-    <nav className="w-full md:py-4 py-8 shadow-sm sticky top-0 bg-white z-[9999]">
+    <nav className={`w-full md:py-4 py-8 shadow-sm sticky top-0 bg-white z-[9999] ${isAr ? 'font-almarai' : 'font-nunito'}`} dir={isAr ? "rtl" : "ltr"}>
       <div className="flex items-center w-full px-4 relative">
         <div
           className="absolute left-4 md:relative md:left-auto w-20 h-8 md:w-28 md:h-12 flex items-center cursor-pointer z-10"
@@ -110,8 +109,8 @@ export default function Navbar() {
           <img
             src={navLogoPng}
             alt="Zayd AI Logo"
-            width={50}
-            height={50}
+            width={100}
+            height={100}
             style={{ objectFit: "contain" }}
           />
         </div>
@@ -120,30 +119,32 @@ export default function Navbar() {
         <div className="lg:hidden absolute left-1/2 -translate-x-1/2">
           <button
             onClick={() => setLanguage(language === "ar" ? "en" : "ar")}
-            className="text-sm text-gray-700 hover:text-[#058BF4] transition-colors px-2 py-1"
+            className="text-sm text-gray-700 hover:text-[#35AB4E] transition-colors px-2 py-1"
           >
             العربية | English
           </button>
         </div>
 
-        {/* Centered blue background menu */}
-        <ul className="hidden lg:flex gap-6 bg-[#E1EEFF] px-6 py-2 rounded-full text-gray-700 font-medium mx-auto">
+        {/* Centered green background menu */}
+        <ul className="hidden lg:flex gap-6 bg-[#E4F2E7] px-6 py-2 rounded-full text-gray-700 font-medium mx-auto whitespace-nowrap">
           {menuItems.map((item) => {
             const sectionId = item.href.substring(1);
             const isActive = item.isRoute 
               ? location.pathname === item.href
-              : isMainPath && activeSection === sectionId;
+              : isChinesePath && activeSection === sectionId;
             
+            const itemName = isAr ? item.name.ar : item.name.en;
+
             if (item.isRoute) {
               return (
-                <li key={item.name}>
+                <li key={itemName} className="whitespace-nowrap">
                   <Link
                     to={item.href}
-                    className={`cursor-pointer px-3 py-1 rounded-full transition-colors block ${
-                      isActive ? "bg-[#058BF4] text-white" : "hover:text-blue-800"
+                    className={`cursor-pointer px-3 py-1 rounded-full transition-colors block whitespace-nowrap ${
+                      isActive ? "bg-[#35AB4E] text-white" : "hover:text-[#35AB4E]"
                     }`}
                   >
-                    {item.name}
+                    {itemName}
                   </Link>
                 </li>
               );
@@ -151,13 +152,13 @@ export default function Navbar() {
             
             return (
               <li
-                key={item.name}
-                className={`cursor-pointer px-3 py-1 rounded-full transition-colors ${
-                  isActive ? "bg-[#058BF4] text-white" : "hover:text-blue-800"
+                key={itemName}
+                className={`cursor-pointer px-3 py-1 rounded-full transition-colors whitespace-nowrap ${
+                  isActive ? "bg-[#35AB4E] text-white" : "hover:text-[#35AB4E]"
                 }`}
                 onClick={() => scrollToSection(item.href, item.isRoute)}
               >
-                {item.name}
+                {itemName}
               </li>
             );
           })}
@@ -167,19 +168,37 @@ export default function Navbar() {
         <div className="hidden lg:flex gap-2 items-center">
           <button
             onClick={() => setLanguage(language === "ar" ? "en" : "ar")}
-            className="text-sm text-gray-700 hover:text-[#058BF4] transition-colors px-2 py-1"
+            className="text-sm text-gray-700 hover:text-[#35AB4E] transition-colors px-2 py-1"
           >
             العربية | English
           </button>
-          <Link to="/login">
+          
+          {/* Login Button - Outline Style */}
+          <a href="https://nihao.waaha.ai/login">
             <Button
-              variant="outline"
-              className="rounded-full text-black border-[#058BF4]"
+              className="bg-white text-[#4B5563] rounded-xl px-6 py-2 h-10 font-bold transition-all hover:bg-gray-50 hover:text-[#35AB4E] active:scale-95 flex items-center justify-center whitespace-nowrap"
+              style={{
+                border: "1px solid #D1D5DB",
+                boxShadow: "0px 3px 0px #9CA3AF",
+              }}
             >
-              Sign In
+              {isAr ? "تسجيل الدخول" : "Log In"}
             </Button>
-          </Link>
-          {/* <Button className="rounded-full bg-[#058BF4]">Sign Up</Button> */}
+          </a>
+
+          {/* Register Button - Premium Green Style */}
+          <a href="https://nihao.waaha.ai/register">
+            <Button
+              className="text-white text-sm font-bold rounded-xl flex items-center justify-center transition-all hover:brightness-110 active:scale-95 px-6 h-10 whitespace-nowrap"
+              style={{
+                background: "#35AB4E",
+                boxShadow: "0px 3px 0px #20672F",
+                border: "none",
+              }}
+            >
+              {isAr ? "ابدأ الآن" : "Sign Up"}
+            </Button>
+          </a>
         </div>
 
         {/* Mobile/Tablet hamburger menu button */}
@@ -220,7 +239,7 @@ export default function Navbar() {
           {/* Mobile header with logo and close button */}
           <div className="flex justify-between items-center p-4 border-b relative">
             <div
-              className="absolute left-4 w-20 h-8 md:w-28 md:h-12 flex items-center cursor-pointer z-10"
+              className="w-20 h-8 md:w-28 md:h-12 flex items-center cursor-pointer"
               dir="ltr"
               onClick={() => scrollToSection("#home")}
             >
@@ -247,17 +266,19 @@ export default function Navbar() {
               const sectionId = item.href.substring(1);
               const isActive = item.isRoute 
                 ? location.pathname === item.href
-                : isMainPath && activeSection === sectionId;
+                : isChinesePath && activeSection === sectionId;
               
+              const itemName = isAr ? item.name.ar : item.name.en;
+
               if (item.isRoute) {
                 return (
                   <Link
-                    key={item.name}
+                    key={itemName}
                     to={item.href}
                     className={`text-xl font-medium transition-all duration-300 ${
                       isActive
-                        ? "text-[#058BF4]"
-                        : "text-gray-700 hover:text-[#058BF4]"
+                        ? "text-[#35AB4E]"
+                        : "text-gray-700 hover:text-[#35AB4E]"
                     } ${
                       isMobileMenuOpen
                         ? "opacity-100 translate-y-0"
@@ -270,18 +291,18 @@ export default function Navbar() {
                     }}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    {item.name}
+                    {itemName}
                   </Link>
                 );
               }
               
               return (
                 <button
-                  key={item.name}
+                  key={itemName}
                   className={`text-xl font-medium transition-all duration-300 ${
                     isActive
-                      ? "text-[#058BF4]"
-                      : "text-gray-700 hover:text-[#058BF4]"
+                      ? "text-[#35AB4E]"
+                      : "text-gray-700 hover:text-[#35AB4E]"
                   } ${
                     isMobileMenuOpen
                       ? "opacity-100 translate-y-0"
@@ -294,7 +315,7 @@ export default function Navbar() {
                   }}
                   onClick={() => scrollToSection(item.href, item.isRoute)}
                 >
-                  {item.name}
+                  {itemName}
                 </button>
               );
             })}
@@ -316,25 +337,41 @@ export default function Navbar() {
                 setLanguage(language === "ar" ? "en" : "ar");
                 setIsMobileMenuOpen(false);
               }}
-              className="text-sm text-gray-700 hover:text-[#058BF4] transition-colors px-2 py-1 text-center"
+              className="text-sm text-gray-700 hover:text-[#35AB4E] transition-colors px-2 py-1 text-center"
             >
               العربية | English
             </button>
-            <Link to="/login">
-              <Button
-                variant="outline"
-                className="rounded-full text-black border-[#058BF4] w-full"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Sign In
-              </Button>
-            </Link>
-            {/* <Button
-              className="rounded-full bg-[#058BF4] w-full"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Sign Up
-            </Button> */}
+            
+            <div className="flex flex-col gap-3">
+              {/* Login Button - Mobile */}
+              <a href="https://nihao.waaha.ai/login" className="w-full">
+                <Button
+                  className="bg-white text-[#4B5563] rounded-xl py-6 font-extrabold transition-all hover:bg-gray-50 hover:text-[#35AB4E] active:scale-95 w-full flex items-center justify-center"
+                  style={{
+                    border: "1px solid #D1D5DB",
+                    boxShadow: "0px 3px 0px #9CA3AF",
+                  }}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {isAr ? "تسجيل الدخول" : "Log In"}
+                </Button>
+              </a>
+
+              {/* Register Button - Mobile */}
+              <a href="https://nihao.waaha.ai/register" className="w-full">
+                <Button
+                  className="text-white rounded-xl py-6 font-extrabold transition-all hover:brightness-110 active:scale-95 w-full flex items-center justify-center"
+                  style={{
+                    background: "#35AB4E",
+                    boxShadow: "0px 3px 0px #20672F",
+                    border: "none",
+                  }}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {isAr ? "ابدأ الآن" : "Sign Up"}
+                </Button>
+              </a>
+            </div>
           </div>
         </div>
       </div>

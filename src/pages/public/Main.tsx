@@ -10,14 +10,10 @@ import LandingCarousel from "./LandingCarousel";
 // import TestimonialsSection from "./testimonials";
 import Footer from "./Footer";
 import { ReactLenis } from "@/components/lenis";
-import { LanguageProvider, useLanguage } from "@/components/language-provider";
+import { useLanguage } from "@/components/language-provider";
 
 export default function Main() {
-  return (
-    <LanguageProvider>
-      <PublicLanding />
-    </LanguageProvider>
-  );
+  return <PublicLanding />;
 }
 
 function PublicLanding() {
