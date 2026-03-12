@@ -1,6 +1,7 @@
 import { Mail, Twitter, Instagram } from "lucide-react";
 import { useLanguage } from "@/components/language-provider";
 import logoImg from "@/assets/images/landingpage/logo.png";
+import { motion } from "framer-motion";
 
 export default function Footer() {
   const { language } = useLanguage();
@@ -49,7 +50,14 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="bg-[#F8FAFC] border-t border-gray-100 pt-24 pb-12" dir={direction}>
+    <motion.footer 
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.8, ease: "easeOut" }}
+      className="bg-[#F8FAFC] border-t border-gray-100 pt-24 pb-12" 
+      dir={direction}
+    >
       <div className="max-w-7xl mx-auto px-4">
         
         {/* Main Footer Content */}
@@ -133,6 +141,6 @@ export default function Footer() {
         </div>
 
       </div>
-    </footer>
+    </motion.footer>
   );
 }

@@ -22,6 +22,7 @@ export default function CTASection() {
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
             className="px-6 py-2 rounded-full border border-gray-100 bg-white text-gray-900 text-sm font-bold mb-8 shadow-sm"
           >
             {isAr ? "جاهز للتغيير" : "Ready to Transform"}
@@ -32,7 +33,7 @@ export default function CTASection() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 }}
             className="text-5xl md:text-8xl font-extrabold text-gray-900 mb-8 tracking-tight leading-[1.1]"
           >
             {isAr ? "جاهز لأول تمرين لك؟" : "Ready for your first rep?"}
@@ -40,10 +41,10 @@ export default function CTASection() {
 
           {/* Subheadline */}
           <motion.p 
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
             className="text-xl md:text-2xl text-gray-500 font-medium max-w-3xl mx-auto leading-relaxed mb-12"
           >
             {isAr ? (
@@ -55,10 +56,10 @@ export default function CTASection() {
 
           {/* CTA Button */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.3 }}
+            transition={{ duration: 0.6, ease: "circOut", delay: 0.3 }}
             className="mb-8"
           >
             <button className="group px-10 py-5 rounded-full bg-gradient-to-r from-[#76ABF8] via-[#058BF4] to-[#63B3F6] text-white font-extrabold text-xl shadow-[0_20px_40px_-10px_rgba(5,139,244,0.4)] flex items-center gap-3 transition-all duration-300 hover:scale-105 active:scale-95">
@@ -72,7 +73,7 @@ export default function CTASection() {
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.4 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
             className="text-gray-400 font-medium mb-12"
           >
             {isAr ? (

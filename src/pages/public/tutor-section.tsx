@@ -83,16 +83,17 @@ export default function TutorSection() {
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
             className="inline-flex items-center px-4 py-1.5 rounded-full border border-gray-200 bg-white text-gray-600 text-[13px] font-bold mb-6"
           >
             {isAr ? "المعلمون" : "The Tutors"}
           </motion.div>
 
           <motion.h2 
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 }}
             className="text-4xl md:text-7xl font-extrabold text-[#111827] mb-6 tracking-tight"
           >
             {isAr ? "مدربو اللغة العاملون بالذكاء الاصطناعي" : "Your AI Language Coaches"}
@@ -102,7 +103,7 @@ export default function TutorSection() {
             initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
             className="text-gray-500 text-lg md:text-xl font-medium max-w-2xl mx-auto leading-relaxed"
           >
             {isAr ? (

@@ -53,17 +53,34 @@ export default function LanguageGymSection() {
       <div className="relative z-10 max-w-7xl mx-auto px-4">
         {/* Header Pill */}
         <div className="flex justify-center mb-8">
-          <div className="px-6 py-2 rounded-full border border-gray-100 text-sm font-bold text-gray-900 shadow-sm bg-white">
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="px-6 py-2 rounded-full border border-gray-100 text-sm font-bold text-gray-900 shadow-sm bg-white"
+          >
             {isAr ? "نادي اللغة" : "The Language Gym"}
-          </div>
+          </motion.div>
         </div>
 
         {/* Headline & Subtext - Centered */}
-        <div className="text-center max-w-4xl mx-auto mb-20 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-          <h2 className="text-5xl md:text-7xl font-extrabold text-gray-900 mb-8 tracking-tight leading-[1.1]">
+        <div className="text-center max-w-4xl mx-auto mb-20">
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="text-5xl md:text-7xl font-extrabold text-gray-900 mb-8 tracking-tight leading-[1.1]"
+          >
             {isAr ? "توقف عن الدراسة. ابدأ التدريب." : "Stop Studying. Start Training."}
-          </h2>
-          <p className="text-xl text-gray-500 leading-relaxed font-medium max-w-3xl mx-auto">
+          </motion.h2>
+          <motion.p 
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+            className="text-xl text-gray-500 leading-relaxed font-medium max-w-3xl mx-auto"
+          >
             {isAr ? (
               <>
                 لا يمكنك الحصول على جسم رياضي بمجرد مشاهدة الآخرين يرفعون الأثقال. <br />
@@ -75,7 +92,7 @@ export default function LanguageGymSection() {
                 doing the reps. Zayd is your personal trainer for:
               </>
             )}
-          </p>
+          </motion.p>
         </div>
 
         {/* Cards Grid - Centered in the layout */}

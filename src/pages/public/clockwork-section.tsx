@@ -36,12 +36,13 @@ export default function ClockworkSection() {
     <section id="clockwork" className="py-24 bg-white relative overflow-hidden" dir={direction}>
       <div className="max-w-7xl mx-auto px-4">
         
-        {/* Header - Centered */}
+            {/* Header - Centered */}
         <div className="text-center mb-20">
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
             className="inline-flex items-center px-6 py-2 rounded-full border border-gray-100 bg-white text-gray-900 text-sm font-bold mb-8 shadow-sm"
           >
             {isAr ? "الطلاقة" : "Fluency"}
@@ -51,17 +52,17 @@ export default function ClockworkSection() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 }}
             className="text-5xl md:text-7xl font-extrabold text-gray-900 mb-8 tracking-tight leading-[1.1]"
           >
             {isAr ? "تحدي الـ 60 دقيقة" : "The 60-Minute Challenge"}
           </motion.h2>
 
           <motion.p 
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
             className="text-xl text-gray-500 font-medium max-w-2xl mx-auto leading-relaxed"
           >
             {isAr ? (
@@ -81,11 +82,13 @@ export default function ClockworkSection() {
             initial={{ opacity: 0, scale: 0.9, rotate: -5 }}
             whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
+            transition={{ duration: 1, ease: "circOut" }}
           >
             <div className="relative">
               <div className="absolute inset-0 bg-blue-100/20 blur-[100px] rounded-full scale-125" />
-              <img
+              <motion.img
+                animate={{ y: [0, -10, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                 src={stopwatchImg}
                 alt="60 Minute Challenge Stopwatch"
                 className="relative w-full max-w-[450px] h-auto object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.1)]"
@@ -104,7 +107,7 @@ export default function ClockworkSection() {
                   initial={{ opacity: 0, x: isAr ? -30 : 30 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: 0.3 + idx * 0.1 }}
+                  transition={{ duration: 0.7, delay: 0.3 + idx * 0.1, ease: "circOut" }}
                   className={`flex items-start gap-6 group transition-all duration-300 ${
                     !isCenter ? (isAr ? "mr-12" : "ml-12") : "scale-110"
                   }`}

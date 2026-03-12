@@ -34,9 +34,9 @@ export default function HeroSection() {
         <div className="flex flex-col items-center text-center z-10 flex-shrink-0 min-w-[620px]">
           {/* Language switcher */}
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 }}
+            transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
             className="mb-7"
           >
             <LanguageTabSwitcher />
@@ -45,7 +45,7 @@ export default function HeroSection() {
           {/* Headline — <br> forces the same 2-line split every time */}
           <motion.h1
             className="text-6xl sm:text-7xl font-extrabold text-gray-900 leading-[1.1] tracking-tight mb-5"
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
           >
@@ -57,7 +57,7 @@ export default function HeroSection() {
           {/* Subtitle */}
           <motion.p
             className="text-lg text-gray-500 leading-relaxed mb-8 max-w-lg"
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut", delay: 0.35 }}
           >
@@ -68,7 +68,7 @@ export default function HeroSection() {
 
           {/* CTA */}
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: "easeOut", delay: 0.5 }}
             whileHover={{ scale: 1.04 }}
@@ -107,7 +107,7 @@ export default function HeroSection() {
             className="mt-5 text-sm text-[#058BF4]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, ease: "easeOut", delay: 0.75 }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.8 }}
           >
             No credit card required&nbsp;•&nbsp;Join thousands of students
           </motion.p>
