@@ -1,16 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import navLogoPng from "@/assets/images/landingpage/nav-logo.png";
+import navLogoPng from "@/assets/images/landingpage/zayd-logo.png";
 import { useLanguage } from "@/components/language-provider";
 
 const menuItems = [
   { name: "Home", href: "#home", isRoute: false },
-  { name: "Features", href: "#features", isRoute: false },
-  { name: "How It Works", href: "#how-it-works", isRoute: false },
-  // { name: "Testimonials", href: "#testimonials", isRoute: false },
-  { name: "Pricing", href: "#pricing", isRoute: false },
-  { name: "FAQ", href: "#faq", isRoute: false },
+  { name: "The Gym", href: "#language-gym", isRoute: false },
+  { name: "Tutors", href: "#tutors", isRoute: false },
+  { name: "Challenge", href: "#clockwork", isRoute: false },
+  { name: "Join Now", href: "#cta", isRoute: false },
   { name: "Contact Us", href: "/contact-us", isRoute: true },
 ];
 
@@ -78,40 +77,47 @@ export default function Navbar() {
       return;
     }
 
-    const handleScroll = () => {
-      const sections = menuItems
-        .filter((item) => !item.isRoute)
-        .map((item) => item.href.substring(1));
-      const scrollPosition = window.scrollY + 100;
+    const sections = menuItems
+      .filter((item) => !item.isRoute)
+      .map((item) => item.href.substring(1));
 
-      for (let i = sections.length - 1; i >= 0; i--) {
-        const section = document.getElementById(sections[i]);
-        if (section && section.offsetTop <= scrollPosition) {
-          setActiveSection(sections[i]);
-          break;
-        }
-      }
+    const observerOptions = {
+      root: null,
+      rootMargin: "-20% 0px -70% 0px", // Focus on the top-ish part of the screen
+      threshold: 0,
     };
 
-    window.addEventListener("scroll", handleScroll);
-    handleScroll();
+    const observerCallback = (entries: IntersectionObserverEntry[]) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setActiveSection(entry.target.id);
+        }
+      });
+    };
 
-    return () => window.removeEventListener("scroll", handleScroll);
+    const observer = new IntersectionObserver(observerCallback, observerOptions);
+
+    sections.forEach((id) => {
+      const element = document.getElementById(id);
+      if (element) observer.observe(element);
+    });
+
+    return () => observer.disconnect();
   }, [isMainPath]);
 
   return (
     <nav className="w-full md:py-4 py-8 shadow-sm sticky top-0 bg-white z-[9999]">
       <div className="flex items-center w-full px-4 relative">
         <div
-          className="absolute left-4 md:relative md:left-auto w-20 h-8 md:w-28 md:h-12 flex items-center cursor-pointer z-10"
+          className="absolute left-4 md:relative md:left-auto w-32 h-10 md:w-40 md:h-14 flex items-center cursor-pointer z-10"
           dir="ltr"
           onClick={() => scrollToSection("#home")}
         >
           <img
             src={navLogoPng}
             alt="Zayd AI Logo"
-            width={50}
-            height={50}
+            width={120}
+            height={60}
             style={{ objectFit: "contain" }}
           />
         </div>
@@ -174,12 +180,19 @@ export default function Navbar() {
           <Link to="/login">
             <Button
               variant="outline"
-              className="rounded-full text-black border-[#058BF4]"
+              className="rounded-full border-[#058BF4] text-[#058BF4] hover:text-[#058BF4]"
             >
               Sign In
             </Button>
           </Link>
-          {/* <Button className="rounded-full bg-[#058BF4]">Sign Up</Button> */}
+          <Link to="/register">
+            <Button
+              className="rounded-full text-white hover:opacity-90 transition-opacity"
+              style={{ background: "linear-gradient(90deg, #76ABF8 0%, #058BF4 48.56%, #63B3F6 80%)" }}
+            >
+              Signup
+            </Button>
+          </Link>
         </div>
 
         {/* Mobile/Tablet hamburger menu button */}
@@ -220,15 +233,15 @@ export default function Navbar() {
           {/* Mobile header with logo and close button */}
           <div className="flex justify-between items-center p-4 border-b relative">
             <div
-              className="absolute left-4 w-20 h-8 md:w-28 md:h-12 flex items-center cursor-pointer z-10"
+              className="absolute left-4 w-32 h-10 md:w-40 md:h-14 flex items-center cursor-pointer z-10"
               dir="ltr"
               onClick={() => scrollToSection("#home")}
             >
               <img
                 src={navLogoPng}
                 alt="Zayd AI Logo"
-                width={50}
-                height={50}
+                width={160}
+                height={60}
                 style={{ objectFit: "contain" }}
               />
             </div>
@@ -323,18 +336,21 @@ export default function Navbar() {
             <Link to="/login">
               <Button
                 variant="outline"
-                className="rounded-full text-black border-[#058BF4] w-full"
+                className="rounded-full border-[#058BF4] text-[#058BF4] hover:text-[#058BF4] w-full"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Sign In
               </Button>
             </Link>
-            {/* <Button
-              className="rounded-full bg-[#058BF4] w-full"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Sign Up
-            </Button> */}
+            <Link to="/register">
+              <Button
+                className="rounded-full text-white hover:opacity-90 transition-opacity w-full"
+                style={{ background: "linear-gradient(90deg, #76ABF8 0%, #058BF4 48.56%, #63B3F6 80%)" }}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Signup
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
