@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import navLogoPng from "@/assets/images/landingpage/zayd-logo.png";
-import { useLanguage } from "@/components/language-provider";
 
 const menuItems = [
   { name: "Home", href: "#home", isRoute: false },
@@ -16,7 +15,6 @@ const menuItems = [
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
-  const { language, setLanguage } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -221,26 +219,24 @@ export default function Navbar() {
           }`}
         >
           {/* Mobile header with logo and close button */}
-          <div className="flex justify-between items-center p-4 border-b relative">
+          <div className="flex justify-between items-center p-4 border-b">
             <div
-              className="absolute left-4 w-32 h-10 md:w-40 md:h-14 flex items-center cursor-pointer z-10"
+              className="w-24 h-8 sm:w-32 sm:h-10 flex items-center cursor-pointer"
               dir="ltr"
               onClick={() => scrollToSection("#home")}
             >
               <img
                 src={navLogoPng}
                 alt="Zayd AI Logo"
-                width={160}
-                height={60}
-                style={{ objectFit: "contain" }}
+                className="w-full h-full object-contain"
               />
             </div>
             <button
               onClick={toggleMobileMenu}
-              className="w-8 h-8 flex items-center justify-center"
+              className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-900 transition-colors"
               aria-label="Close mobile menu"
             >
-              <span className="text-2xl">&times;</span>
+              <span className="text-3xl">&times;</span>
             </button>
           </div>
 
@@ -314,15 +310,6 @@ export default function Navbar() {
               transitionDelay: isMobileMenuOpen ? "400ms" : "0ms",
             }}
           >
-            <button
-              onClick={() => {
-                setLanguage(language === "ar" ? "en" : "ar");
-                setIsMobileMenuOpen(false);
-              }}
-              className="text-sm text-gray-700 hover:text-[#058BF4] transition-colors px-2 py-1 text-center"
-            >
-              العربية | English
-            </button>
             <Link to="/login">
               <Button
                 variant="outline"
