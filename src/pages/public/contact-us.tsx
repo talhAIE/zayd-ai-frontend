@@ -28,8 +28,8 @@ import {
 import { contactService, ContactUserType } from '@/services/contactService';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
-import Navbar from './navbar';
-import Footer from './Footer';
+import Navbar from './navbar-new';
+import Footer from './footer-new';
 import { ReactLenis } from '@/components/lenis';
 import { LanguageProvider, useLanguage } from '@/components/language-provider';
 import falconContactPage from '@/assets/images/landingpage/falcon-contactpage.svg';
