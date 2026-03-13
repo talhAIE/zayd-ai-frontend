@@ -55,21 +55,27 @@ export default function Footer() {
       whileInView={{ opacity: 1 }}
       viewport={{ once: true }}
       transition={{ duration: 0.8, ease: "easeOut" }}
-      className="bg-[#F8FAFC] border-t border-gray-100 pt-24 pb-12" 
+      className="bg-[#F8FAFC] border-t border-gray-100 pt-8 sm:pt-24 pb-8 sm:pb-12" 
       dir={direction}
     >
       <div className="max-w-7xl mx-auto px-4">
         
         {/* Main Footer Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 mb-20">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 sm:gap-16 mb-12 sm:mb-20">
           
           {/* Logo and About Side */}
-          <div className="lg:col-span-4 space-y-8">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.8 }}
+            className="lg:col-span-4 space-y-6 sm:space-y-8 flex flex-col items-center lg:items-start text-center lg:text-left"
+          >
             <div className="flex items-center gap-2">
-              <img src={logoImg} alt="ZAYD Logo" className="h-10 w-auto" />
+              <img src={logoImg} alt="ZAYD Logo" className="h-8 sm:h-10 w-auto" />
             </div>
             
-            <p className="text-gray-500 font-medium leading-relaxed max-w-sm">
+            <p className="text-gray-500 font-medium leading-relaxed max-w-sm text-sm sm:text-base">
               {isAr ? (
                 "نادي اللغة للدارس العصري. ممارسة الإنجليزية أو الصينية من خلال تدريب مدعوم بالذكاء الاصطناعي مصمم للطلاقة والدقة والنطق المثالي."
               ) : (
@@ -88,40 +94,47 @@ export default function Footer() {
                 </a>
               ))}
             </div>
-          </div>
+          </motion.div>
 
           {/* Links Columns */}
-          <div className="lg:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-12">
+          <div className="lg:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-10 sm:gap-12">
             {columns.map((column, idx) => (
-              <div key={idx} className="space-y-6">
-                <h4 className="text-gray-900 font-bold text-lg">{column.title}</h4>
-                <ul className="space-y-4">
+              <motion.div 
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 0.6, delay: 0.1 * idx }}
+                className="space-y-4 sm:space-y-6"
+              >
+                <h4 className="text-gray-900 font-bold text-base sm:text-lg">{column.title}</h4>
+                <ul className="space-y-3 sm:space-y-4">
                   {column.links.map((link, lIdx) => (
                     <li key={lIdx}>
-                      <a href={link.href} className="text-gray-500 font-medium hover:text-[#058BF4] transition-colors">
+                      <a href={link.href} className="text-gray-500 text-sm sm:text-base font-medium hover:text-[#058BF4] transition-colors">
                         {link.label}
                       </a>
                     </li>
                   ))}
                 </ul>
-              </div>
+              </motion.div>
             ))}
           </div>
 
         </div>
 
         {/* Lower Footer */}
-        <div className="pt-12 border-t border-gray-200/60 flex flex-col md:flex-row justify-between items-center gap-8">
+        <div className="pt-8 sm:pt-12 border-t border-gray-200/60 flex flex-col md:flex-row justify-between items-center gap-6 sm:gap-8">
           
           {/* Legal Links */}
-          <div className="flex items-center gap-8 text-sm text-gray-500 font-medium">
+          <div className="flex items-center gap-6 sm:gap-8 text-xs sm:text-sm text-gray-500 font-medium">
             <a href="#" className="hover:text-gray-900 transition-colors">{isAr ? "الخصوصية" : "Privacy"}</a>
             <a href="#" className="hover:text-gray-900 transition-colors">{isAr ? "الشروط" : "Terms"}</a>
             <a href="#" className="hover:text-gray-900 transition-colors">{isAr ? "الكوكيز" : "Cookies"}</a>
           </div>
 
           {/* Copyright */}
-          <p className="text-sm text-gray-400 font-medium whitespace-nowrap">
+          <p className="text-xs sm:text-sm text-gray-400 font-medium whitespace-nowrap order-3 md:order-2">
             {isAr ? (
               `© 2025 زيد أي آي. جميع الحقوق محفوظة.`
             ) : (
@@ -130,7 +143,7 @@ export default function Footer() {
           </p>
 
           {/* Tagline */}
-          <div className="flex items-center gap-2 text-sm text-gray-900 font-bold">
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-900 font-bold order-2 md:order-3">
             {isAr ? (
               "صنع في السعودية. تدريب قادة 2030."
             ) : (

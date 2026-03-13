@@ -1,16 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import navLogoPng from "@/assets/images/landingpage/nav-logo.png";
+import navLogoPng from "@/assets/images/landingpage/zayd-logo.png";
 import { useLanguage } from "@/components/language-provider";
 
 const menuItems = [
   { name: "Home", href: "#home", isRoute: false },
-  { name: "Features", href: "#features", isRoute: false },
-  { name: "How It Works", href: "#how-it-works", isRoute: false },
-  // { name: "Testimonials", href: "#testimonials", isRoute: false },
-  { name: "Pricing", href: "#pricing", isRoute: false },
-  { name: "FAQ", href: "#faq", isRoute: false },
+  { name: "The Gym", href: "#language-gym", isRoute: false },
+  { name: "Tutors", href: "#tutors", isRoute: false },
+  { name: "Challenge", href: "#clockwork", isRoute: false },
+  { name: "Join Now", href: "#cta", isRoute: false },
   { name: "Contact Us", href: "/contact-us", isRoute: true },
 ];
 
@@ -78,56 +77,53 @@ export default function Navbar() {
       return;
     }
 
-    const handleScroll = () => {
-      const sections = menuItems
-        .filter((item) => !item.isRoute)
-        .map((item) => item.href.substring(1));
-      const scrollPosition = window.scrollY + 100;
+    const sections = menuItems
+      .filter((item) => !item.isRoute)
+      .map((item) => item.href.substring(1));
 
-      for (let i = sections.length - 1; i >= 0; i--) {
-        const section = document.getElementById(sections[i]);
-        if (section && section.offsetTop <= scrollPosition) {
-          setActiveSection(sections[i]);
-          break;
-        }
-      }
+    const observerOptions = {
+      root: null,
+      rootMargin: "-20% 0px -70% 0px", // Focus on the top-ish part of the screen
+      threshold: 0,
     };
 
-    window.addEventListener("scroll", handleScroll);
-    handleScroll();
+    const observerCallback = (entries: IntersectionObserverEntry[]) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setActiveSection(entry.target.id);
+        }
+      });
+    };
 
-    return () => window.removeEventListener("scroll", handleScroll);
+    const observer = new IntersectionObserver(observerCallback, observerOptions);
+
+    sections.forEach((id) => {
+      const element = document.getElementById(id);
+      if (element) observer.observe(element);
+    });
+
+    return () => observer.disconnect();
   }, [isMainPath]);
 
   return (
-    <nav className="w-full md:py-4 py-8 shadow-sm sticky top-0 bg-white z-[9999]">
-      <div className="flex items-center w-full px-4 relative">
+    <nav className="w-full h-16 sm:h-20 shadow-sm sticky top-0 bg-white z-[9999] flex items-center">
+      <div className="flex items-center justify-between w-full px-4 sm:px-6">
+        
+        {/* Logo - Left aligned */}
         <div
-          className="absolute left-4 md:relative md:left-auto w-20 h-8 md:w-28 md:h-12 flex items-center cursor-pointer z-10"
+          className="w-24 sm:w-32 lg:w-40 h-8 sm:h-10 lg:h-14 flex items-center cursor-pointer shrink-0"
           dir="ltr"
           onClick={() => scrollToSection("#home")}
         >
           <img
             src={navLogoPng}
             alt="Zayd AI Logo"
-            width={50}
-            height={50}
-            style={{ objectFit: "contain" }}
+            className="w-full h-full object-contain"
           />
         </div>
 
-        {/* Mobile/Tablet language toggle centered between logo and menu */}
-        <div className="lg:hidden absolute left-1/2 -translate-x-1/2">
-          <button
-            onClick={() => setLanguage(language === "ar" ? "en" : "ar")}
-            className="text-sm text-gray-700 hover:text-[#058BF4] transition-colors px-2 py-1"
-          >
-            العربية | English
-          </button>
-        </div>
-
-        {/* Centered blue background menu */}
-        <ul className="hidden lg:flex gap-6 bg-[#E1EEFF] px-6 py-2 rounded-full text-gray-700 font-medium mx-auto">
+        {/* Desktop Menu - Responsive spacing */}
+        <ul className="hidden lg:flex items-center gap-1 xl:gap-4 bg-[#E1EEFF] px-4 xl:px-6 py-2 rounded-full text-gray-700 font-medium text-sm xl:text-base">
           {menuItems.map((item) => {
             const sectionId = item.href.substring(1);
             const isActive = item.isRoute 
@@ -139,7 +135,7 @@ export default function Navbar() {
                 <li key={item.name}>
                   <Link
                     to={item.href}
-                    className={`cursor-pointer px-3 py-1 rounded-full transition-colors block ${
+                    className={`cursor-pointer px-2 xl:px-3 py-1 rounded-full transition-colors block whitespace-nowrap ${
                       isActive ? "bg-[#058BF4] text-white" : "hover:text-blue-800"
                     }`}
                   >
@@ -152,7 +148,7 @@ export default function Navbar() {
             return (
               <li
                 key={item.name}
-                className={`cursor-pointer px-3 py-1 rounded-full transition-colors ${
+                className={`cursor-pointer px-2 xl:px-3 py-1 rounded-full transition-colors whitespace-nowrap ${
                   isActive ? "bg-[#058BF4] text-white" : "hover:text-blue-800"
                 }`}
                 onClick={() => scrollToSection(item.href, item.isRoute)}
@@ -163,47 +159,54 @@ export default function Navbar() {
           })}
         </ul>
 
-        {/* Desktop buttons - far right */}
-        <div className="hidden lg:flex gap-2 items-center">
-          <button
-            onClick={() => setLanguage(language === "ar" ? "en" : "ar")}
-            className="text-sm text-gray-700 hover:text-[#058BF4] transition-colors px-2 py-1"
-          >
-            العربية | English
-          </button>
-          <Link to="/login">
-            <Button
-              variant="outline"
-              className="rounded-full text-black border-[#058BF4]"
-            >
-              Sign In
-            </Button>
-          </Link>
-          {/* <Button className="rounded-full bg-[#058BF4]">Sign Up</Button> */}
-        </div>
+        {/* Right Side - Actions & Mobile Toggle */}
+        <div className="flex items-center gap-2 sm:gap-4">
+          {/* Desktop Auth Buttons */}
+          <div className="hidden lg:flex gap-2 items-center">
+            <Link to="/login">
+              <Button
+                variant="outline"
+                className="rounded-full border-[#058BF4] text-[#058BF4] hover:text-[#058BF4]"
+              >
+                Sign In
+              </Button>
+            </Link>
+            <Link to="/register">
+              <Button
+                className="rounded-full text-white hover:opacity-90 transition-opacity"
+                style={{ background: "linear-gradient(90deg, #76ABF8 0%, #058BF4 48.56%, #63B3F6 80%)" }}
+              >
+                Signup
+              </Button>
+            </Link>
+          </div>
 
-        {/* Mobile/Tablet hamburger menu button */}
-        <button
-          className="lg:hidden flex flex-col justify-center items-center w-8 h-8 space-y-1 shrink-0 absolute right-4"
-          onClick={toggleMobileMenu}
-          aria-label="Toggle mobile menu"
-        >
-          <span
-            className={`block w-6 h-0.5 bg-gray-700 transition-all duration-300 ${
-              isMobileMenuOpen ? "rotate-45 translate-y-1.5" : ""
-            }`}
-          />
-          <span
-            className={`block w-6 h-0.5 bg-gray-700 transition-all duration-300 ${
-              isMobileMenuOpen ? "opacity-0" : ""
-            }`}
-          />
-          <span
-            className={`block w-6 h-0.5 bg-gray-700 transition-all duration-300 ${
-              isMobileMenuOpen ? "-rotate-45 -translate-y-1.5" : ""
-            }`}
-          />
-        </button>
+          {/* Mobile/Tablet Controls (Toggle + Hamburger) */}
+          <div className="lg:hidden flex items-center gap-1">
+            {/* Minimal Mobile Toggle - Only text variant */}
+            <button
+              className="flex flex-col justify-center items-center w-8 h-8 space-y-1 shrink-0"
+              onClick={toggleMobileMenu}
+              aria-label="Toggle mobile menu"
+            >
+              <span
+                className={`block w-5 h-0.5 bg-gray-700 transition-all duration-300 ${
+                  isMobileMenuOpen ? "rotate-45 translate-y-1.5" : ""
+                }`}
+              />
+              <span
+                className={`block w-5 h-0.5 bg-gray-700 transition-all duration-300 ${
+                  isMobileMenuOpen ? "opacity-0" : ""
+                }`}
+              />
+              <span
+                className={`block w-5 h-0.5 bg-gray-700 transition-all duration-300 ${
+                  isMobileMenuOpen ? "-rotate-45 -translate-y-1.5" : ""
+                }`}
+              />
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Mobile/Tablet menu overlay */}
@@ -220,15 +223,15 @@ export default function Navbar() {
           {/* Mobile header with logo and close button */}
           <div className="flex justify-between items-center p-4 border-b relative">
             <div
-              className="absolute left-4 w-20 h-8 md:w-28 md:h-12 flex items-center cursor-pointer z-10"
+              className="absolute left-4 w-32 h-10 md:w-40 md:h-14 flex items-center cursor-pointer z-10"
               dir="ltr"
               onClick={() => scrollToSection("#home")}
             >
               <img
                 src={navLogoPng}
                 alt="Zayd AI Logo"
-                width={50}
-                height={50}
+                width={160}
+                height={60}
                 style={{ objectFit: "contain" }}
               />
             </div>
@@ -323,18 +326,21 @@ export default function Navbar() {
             <Link to="/login">
               <Button
                 variant="outline"
-                className="rounded-full text-black border-[#058BF4] w-full"
+                className="rounded-full border-[#058BF4] text-[#058BF4] hover:text-[#058BF4] w-full"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Sign In
               </Button>
             </Link>
-            {/* <Button
-              className="rounded-full bg-[#058BF4] w-full"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Sign Up
-            </Button> */}
+            <Link to="/register">
+              <Button
+                className="rounded-full text-white hover:opacity-90 transition-opacity w-full"
+                style={{ background: "linear-gradient(90deg, #76ABF8 0%, #058BF4 48.56%, #63B3F6 80%)" }}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Signup
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
