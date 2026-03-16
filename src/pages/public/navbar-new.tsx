@@ -5,10 +5,11 @@ import navLogoPng from "@/assets/images/landingpage/zayd-logo.png";
 
 const menuItems = [
   { name: "Home", href: "#home", isRoute: false },
-  { name: "The Gym", href: "#language-gym", isRoute: false },
+  { name: "Features", href: "#features", isRoute: false },
   { name: "Tutors", href: "#tutors", isRoute: false },
-  { name: "Challenge", href: "#clockwork", isRoute: false },
-  { name: "Join Now", href: "#cta", isRoute: false },
+  { name: "Challenge", href: "#challenge", isRoute: false },
+  { name: "Compliance", href: "#compliance", isRoute: false },
+  { name: "Join Now", href: "#join-now", isRoute: false },
   { name: "Contact Us", href: "/contact-us", isRoute: true },
 ];
 

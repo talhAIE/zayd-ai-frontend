@@ -33,7 +33,7 @@ export default function ClockworkSection() {
   const direction = isAr ? "rtl" : "ltr";
 
   return (
-    <section id="clockwork" className="py-12 sm:py-24 bg-white relative overflow-hidden" dir={direction}>
+    <section id="challenge" className="py-12 sm:py-24 bg-white relative" dir={direction}>
       <div className="max-w-7xl mx-auto px-4">
         
             {/* Header - Centered */}
@@ -78,7 +78,7 @@ export default function ClockworkSection() {
           
           {/* Stopwatch Image Side */}
           <motion.div 
-            className="flex-1 flex justify-center w-full"
+            className="flex-1 hidden lg:flex justify-center w-full"
             initial={{ opacity: 0, scale: 0.8, rotate: -10 }}
             whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
             viewport={{ once: true, amount: 0.3 }}
@@ -103,39 +103,41 @@ export default function ClockworkSection() {
           </motion.div>
 
           {/* Features Side */}
-          <div className="flex-1 flex flex-col gap-6 sm:gap-10 w-full px-4 sm:px-0">
-            {features.map((feature, idx) => {
-              const isCenter = idx === 1;
-              return (
-                <motion.div 
-                  key={idx}
-                  initial={{ opacity: 0, x: isAr ? -30 : 30 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.7, delay: 0.3 + idx * 0.1, ease: "circOut" }}
-                  className={`flex items-start gap-4 sm:gap-6 group transition-all duration-300 ${
-                    !isCenter ? (isAr ? "lg:mr-12" : "lg:ml-12") : "lg:scale-110"
-                  }`}
-                >
-                  <div 
-                    className={`rounded-full shadow-lg shadow-blue-50/50 flex items-center justify-center transition-transform duration-300 group-hover:scale-110 flex-shrink-0 ${
-                      isCenter ? "p-4 sm:p-5" : "p-3 sm:p-4"
+          <div className="flex-1 flex flex-col items-center lg:items-start w-full px-4 sm:px-0">
+            <div className="flex flex-col gap-6 sm:gap-10 w-full max-w-sm sm:max-w-md lg:max-w-none items-start">
+              {features.map((feature, idx) => {
+                const isCenter = idx === 1;
+                return (
+                  <motion.div 
+                    key={idx}
+                    initial={{ opacity: 0, x: isAr ? -30 : 30 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.7, delay: 0.3 + idx * 0.1, ease: "circOut" }}
+                    className={`flex items-start gap-4 sm:gap-6 group transition-all duration-300 ${
+                      !isCenter ? (isAr ? "lg:mr-12" : "lg:ml-12") : "lg:scale-110"
                     }`}
-                    style={{ background: "linear-gradient(135deg, #76ABF8 0%, #058BF4 48.56%, #63B3F6 80%)" }}
                   >
-                    <EmojiIcon emoji={feature.emoji} size={isCenter ? 28 : 24} className="text-white sm:w-[32px] sm:h-[32px]" />
-                  </div>
-                  <div className={isCenter ? "mt-0.5 sm:mt-1" : ""}>
-                    <h3 className={`${isCenter ? "text-xl sm:text-3xl" : "text-lg sm:text-2xl"} font-extrabold text-gray-900 mb-1 sm:mb-2 leading-tight`}>
-                      {isAr ? feature.arabicTitle : feature.title}
-                    </h3>
-                    <p className={`text-gray-500 font-medium leading-relaxed max-w-sm ${isCenter ? "text-base sm:text-lg" : "text-sm sm:text-base"}`}>
-                      {isAr ? feature.arabicDescription : feature.description}
-                    </p>
-                  </div>
-                </motion.div>
-              );
-            })}
+                    <div 
+                      className={`rounded-full shadow-lg shadow-blue-50/50 flex items-center justify-center transition-transform duration-300 group-hover:scale-110 flex-shrink-0 ${
+                        isCenter ? "p-3 sm:p-4 lg:p-4 xl:p-5" : "p-3 sm:p-4"
+                      }`}
+                      style={{ background: "linear-gradient(135deg, #76ABF8 0%, #058BF4 48.56%, #63B3F6 80%)" }}
+                    >
+                      <EmojiIcon emoji={feature.emoji} size={isCenter ? 24 : 24} className={`text-white sm:w-[32px] sm:h-[32px] ${isCenter ? "lg:w-[36px] lg:h-[36px]" : ""}`} />
+                    </div>
+                    <div className={isCenter ? "mt-0.5 sm:mt-1 lg:mt-1.5" : ""}>
+                      <h3 className={`${isCenter ? "text-lg sm:text-2xl lg:text-xl lg:sm:text-3xl" : "text-lg sm:text-2xl"} font-extrabold text-gray-900 mb-1 sm:mb-2 leading-tight`}>
+                        {isAr ? feature.arabicTitle : feature.title}
+                      </h3>
+                      <p className={`text-gray-500 font-medium leading-relaxed max-w-sm ${isCenter ? "text-sm sm:text-base lg:text-base lg:sm:text-lg" : "text-sm sm:text-base"}`}>
+                        {isAr ? feature.arabicDescription : feature.description}
+                      </p>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>

@@ -41,12 +41,12 @@ export default function LanguageGymSection() {
 
   return (
     <section 
-      id="language-gym" 
-      className="py-6 sm:py-24 bg-white relative overflow-hidden" 
+      id="features" 
+      className="py-6 sm:py-24 bg-white relative" 
       dir={direction}
     >
       {/* Background Decorative Element (Optional, based on design) */}
-      <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
+      <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
         <div className="absolute top-1/2 left-[-10%] w-[40%] h-[40%] bg-blue-50/20 blur-[120px] rounded-full" />
       </div>
 
@@ -134,7 +134,7 @@ export default function LanguageGymSection() {
 
       {/* Dumbbell Rack Image - Positioned to the right edge as per design */}
       <motion.div
-        className="hidden lg:block absolute top-1/2 right-0 pointer-events-none select-none z-0 overflow-visible"
+        className="hidden min-[1225px]:block absolute top-1/2 right-0 pointer-events-none select-none z-0 overflow-visible"
         style={{ width: "clamp(180px, 20vw, 320px)" }}
         initial={{ opacity: 0, x: isAr ? -80 : 80 }}
         whileInView={{ opacity: 1, x: 0 }}

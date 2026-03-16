@@ -10,7 +10,7 @@ export default function CTASection() {
   const direction = isAr ? "rtl" : "ltr";
 
   return (
-    <section id="cta" className="py-12 sm:py-24 bg-white relative overflow-hidden" dir={direction}>
+    <section id="join-now" className="py-12 sm:py-24 bg-white relative" dir={direction}>
       {/* Background Decorative Elements */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl h-[400px] bg-blue-50/30 blur-[120px] rounded-full -z-10" />
 
@@ -93,7 +93,7 @@ export default function CTASection() {
             stiffness: 80,
             delay: 0.2 
           }}
-          className="hidden lg:block absolute -left-12 xl:-left-36 -bottom-12 pointer-events-none select-none"
+          className="hidden lg:block absolute -left-12 xl:-left-36 -bottom-12 pointer-events-none select-none overflow-visible"
         >
           <img 
             src={birdClock} 

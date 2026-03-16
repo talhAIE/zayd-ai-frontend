@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { useLanguage } from "@/components/language-provider";
 import { Dumbbell, Shield, MapPin, ChevronRight } from "lucide-react";
 
@@ -31,13 +32,23 @@ const cards = [
   },
 ];
 
-export default function HighlightsSection() {
+export default function ComplianceSection() {
   const { language } = useLanguage();
   const isAr = language === "ar";
   const direction = isAr ? "rtl" : "ltr";
 
+  // Responsive state for JS-based transforms
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const checkSize = () => setIsDesktop(window.innerWidth >= 1000);
+    checkSize();
+    window.addEventListener('resize', checkSize);
+    return () => window.removeEventListener('resize', checkSize);
+  }, []);
+
   return (
-    <section id="highlights" className="py-32 bg-white relative overflow-hidden" dir={direction}>
+    <section id="compliance" className="py-32 bg-white relative overflow-hidden" dir={direction}>
       <div className="max-w-7xl mx-auto px-4">
         
         {/* Header - Centered */}
@@ -56,7 +67,7 @@ export default function HighlightsSection() {
         </div>
 
         {/* Feature Cards - Stacked Layout */}
-        <div className="relative flex flex-col md:flex-row items-center justify-center min-h-[500px] mb-24 max-w-6xl mx-auto">
+        <div className="relative flex flex-col min-[1000px]:flex-row items-center justify-center gap-12 min-[1000px]:gap-0 min-[1000px]:min-h-[500px] mb-24 max-w-6xl mx-auto">
           {cards.map((card, idx) => {
             const rotation = isAr ? -card.rotation : card.rotation;
             
@@ -64,36 +75,36 @@ export default function HighlightsSection() {
               <div
                 key={idx}
                 className={`
-                  relative w-full md:absolute
+                  relative w-full min-[1000px]:absolute
                   bg-[#F1F5F9] border border-gray-100 rounded-[48px] shadow-[0_10px_40px_rgba(0,0,0,0.03)]
                   flex flex-col items-center text-center
                   transition-all duration-500
                   ${card.isCenter 
-                    ? "z-20 max-w-[420px] p-14 scale-110 shadow-[0_30px_70px_rgba(0,0,0,0.08)]" 
-                    : "z-10 max-w-[350px] p-10 scale-[0.98] opacity-85"
+                    ? "min-[1000px]:z-20 max-w-md min-[1000px]:max-w-[420px] p-10 min-[1000px]:p-14 min-[1000px]:scale-110 shadow-[0_30px_70px_rgba(0,0,0,0.08)]" 
+                    : "min-[1000px]:z-10 max-w-md min-[1000px]:max-w-[350px] p-10 min-[1000px]:scale-[0.98] min-[1000px]:opacity-85"
                   }
                 `}
                 style={{
-                  transform: typeof window !== 'undefined' && window.innerWidth >= 768 
+                  transform: isDesktop 
                     ? `translateX(${idx === 0 ? (isAr ? '100%' : '-100%') : idx === 2 ? (isAr ? '-100%' : '100%') : '0'}) rotate(${rotation}deg)` 
                     : `rotate(0deg)`
                 }}
               >
                 {/* Icon Circle */}
                 <div 
-                  className={`${card.isCenter ? "w-24 h-24" : "w-16 h-16"} rounded-full flex items-center justify-center shadow-lg shadow-blue-50/50 mb-6`}
+                  className={`${(isDesktop && card.isCenter) ? "w-24 h-24" : "w-16 h-16"} rounded-full flex items-center justify-center shadow-lg shadow-blue-50/50 mb-6`}
                   style={{ background: "linear-gradient(135deg, #76ABF8 0%, #058BF4 48.56%, #63B3F6 80%)" }}
                 >
-                  <div className={card.isCenter ? "scale-125" : "scale-90"}>
+                  <div className={(isDesktop && card.isCenter) ? "scale-125" : "scale-90"}>
                     {card.icon}
                   </div>
                 </div>
 
-                <div className={`${card.isCenter ? "space-y-4" : "space-y-2"}`}>
-                  <h3 className={`${card.isCenter ? "text-3xl" : "text-xl"} font-extrabold text-[#111827] tracking-tight`}>
+                <div className={`${(isDesktop && card.isCenter) ? "space-y-4" : "space-y-2"}`}>
+                  <h3 className={`${(isDesktop && card.isCenter) ? "text-3xl" : "text-2xl"} font-extrabold text-[#111827] tracking-tight`}>
                     {isAr ? card.arabicTitle : card.title}
                   </h3>
-                  <p className={`${card.isCenter ? "text-lg" : "text-sm"} text-gray-500 font-medium leading-relaxed`}>
+                  <p className={`${(isDesktop && card.isCenter) ? "text-lg" : "text-base"} text-gray-500 font-medium leading-relaxed`}>
                     {isAr ? card.arabicDescription : card.description}
                   </p>
                 </div>
