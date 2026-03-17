@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import birdWithBook from "@/assets/images/landingpage/bird-with-book.png";
-import parrotMascot from "@/assets/images/landingpage/parrot.png"; // Assuming parrot for chinese based on previous assets
+import orangeBird from "@/assets/images/landingpage/orange-bird.png"; // Assuming parrot for chinese based on previous assets
 import { useLanguage } from "@/components/language-provider";
 import EmojiIcon from "@/components/ui/emoji-icon";
 import flagUK from "@/assets/svgs/flag-united-kingdom.svg";
@@ -39,7 +39,7 @@ const tutors = {
   chinese: {
     specialty: "Chinese Specialist",
     arabicSpecialty: "متخصص الصينية",
-    image: parrotMascot,
+    image: orangeBird,
     features: [
       {
         emoji: "🏮",
@@ -50,17 +50,17 @@ const tutors = {
       },
       {
         emoji: "🥢",
-        title: "Practical Usage",
-        arabicTitle: "الاستخدام العملي",
-        description: "Master essential phrases and sentence structures for daily life.",
-        arabicDescription: "أتقن العبارات الأساسية وتراكيب الجمل للحياة اليومية.",
+        title: "Guided Learning",
+        arabicTitle: "التعلم الموجه",
+        description: "Learn through structured lessons and improve with real-time feedback.",
+        arabicDescription: "تعلم من خلال الدروس المنظمة وحسّن مستواك من خلال التقييم الفوري.",
       },
       {
         emoji: "🏯",
-        title: "Traditional Roots",
-        arabicTitle: "الجذور التقليدية",
-        description: "Understand the logic and history behind the characters.",
-        arabicDescription: "افهم المنطق والتاريخ خلف الرموز.",
+        title: "Daily Practice",
+        arabicTitle: "التدريب اليومي",
+        description: "Practice every day to strengthen your skills and move toward fluency.",
+        arabicDescription: "تدرب كل يوم لتقوية مهاراتك والتقدم نحو الطلاقة.",
       },
     ],
   },
@@ -74,7 +74,7 @@ export default function TutorSection() {
   const tutor = tutors[activeTutor];
 
   return (
-    <section id="tutors" className="py-12 sm:py-24 bg-white relative overflow-hidden">
+    <section id="tutors" className="py-12 sm:py-24 bg-white relative">
       <div className="max-w-7xl mx-auto px-4">
         
         {/* Header - Centered */}

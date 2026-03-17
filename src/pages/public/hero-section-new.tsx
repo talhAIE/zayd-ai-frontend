@@ -9,10 +9,10 @@ export default function HeroSection() {
   return (
     <section
       id="home"
-      className="relative flex items-center justify-center bg-white px-4 pt-2 sm:pt-10 pb-4 sm:pb-14 overflow-hidden"
+      className="relative flex items-center justify-center bg-white px-4 pt-2 sm:pt-10 pb-4 sm:pb-14"
     >
       {/* Decorative Floating Images - Collision-free fluid positioning (Desktop lg+) */}
-      <div className="absolute inset-0 pointer-events-none hidden lg:block overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none hidden lg:block">
         {/* Left: dumbbell - Responsive positioning and sizing */}
         <motion.div
           className="absolute left-[2vw] 2xl:left-[6vw] top-[45%] lg:top-[50%] -translate-y-1/2 z-0"
