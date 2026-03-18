@@ -13,10 +13,10 @@ export default function Footer() {
       title: isAr ? "المنتج" : "Product",
       links: [
         { label: isAr ? "المزايا" : "Features", href: "#features" },
-        { label: isAr ? "كيف يعمل؟" : "How it Works", href: "#how-it-works" },
-        { label: isAr ? "الأسعار" : "Pricing", href: "#pricing" },
-        { label: isAr ? "الشهادات" : "Testimonials", href: "#testimonials" },
-        { label: isAr ? "الأسئلة الشائعة" : "FAQ", href: "#faq" },
+        { label: isAr ? "كيف يعمل؟" : "Tutors", href: "#tutors" },
+        { label: isAr ? "الأسعار" : "Challenge", href: "#challenge" },
+        { label: isAr ? "الشهادات" : "Compliance", href: "#compliance" },
+        { label: isAr ? "الأسئلة الشائعة" : "Join Now", href: "#join-now" },
       ]
     },
     {
@@ -85,13 +85,12 @@ export default function Footer() {
 
             <div className="flex items-center gap-4">
               {[Mail, Twitter, Instagram].map((Icon, idx) => (
-                <a 
+                <div 
                   key={idx} 
-                  href="#" 
-                  className="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-[#058BF4] hover:border-blue-100 shadow-sm transition-all"
+                  className="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center text-gray-400 shadow-sm transition-all cursor-default"
                 >
                   <Icon className="w-5 h-5" />
-                </a>
+                </div>
               ))}
             </div>
           </motion.div>
@@ -107,13 +106,19 @@ export default function Footer() {
                 transition={{ duration: 0.6, delay: 0.1 * idx }}
                 className="space-y-4 sm:space-y-6"
               >
-                <h4 className="text-gray-900 font-bold text-base sm:text-lg">{column.title}</h4>
+                <h4 className="text-gray-900 font-bold text-base sm:text-lg select-none">{column.title}</h4>
                 <ul className="space-y-3 sm:space-y-4">
                   {column.links.map((link, lIdx) => (
                     <li key={lIdx}>
-                      <a href={link.href} className="text-gray-500 text-sm sm:text-base font-medium hover:text-[#058BF4] transition-colors">
-                        {link.label}
-                      </a>
+                      {idx === 0 ? (
+                        <a href={link.href} className="text-gray-500 text-sm sm:text-base font-medium hover:text-[#058BF4] transition-colors">
+                          {link.label}
+                        </a>
+                      ) : (
+                        <span className="text-gray-500 text-sm sm:text-base font-medium select-none">
+                          {link.label}
+                        </span>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -128,9 +133,9 @@ export default function Footer() {
           
           {/* Legal Links */}
           <div className="flex items-center gap-6 sm:gap-8 text-xs sm:text-sm text-gray-500 font-medium">
-            <a href="#" className="hover:text-gray-900 transition-colors">{isAr ? "الخصوصية" : "Privacy"}</a>
-            <a href="#" className="hover:text-gray-900 transition-colors">{isAr ? "الشروط" : "Terms"}</a>
-            <a href="#" className="hover:text-gray-900 transition-colors">{isAr ? "الكوكيز" : "Cookies"}</a>
+            <span className="select-none">{isAr ? "الخصوصية" : "Privacy"}</span>
+            <span className="select-none">{isAr ? "الشروط" : "Terms"}</span>
+            <span className="select-none">{isAr ? "الكوكيز" : "Cookies"}</span>
           </div>
 
           {/* Copyright */}

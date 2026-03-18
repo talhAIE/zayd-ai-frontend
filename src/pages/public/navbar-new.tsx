@@ -110,9 +110,8 @@ export default function Navbar() {
         
         {/* Logo - Left aligned */}
         <div
-          className="w-24 sm:w-32 lg:w-40 h-8 sm:h-10 lg:h-14 flex items-center cursor-pointer shrink-0"
+          className="w-24 sm:w-32 lg:w-40 h-8 sm:h-10 lg:h-14 flex items-center shrink-0"
           dir="ltr"
-          onClick={() => scrollToSection("#home")}
         >
           <img
             src={navLogoPng}
@@ -222,9 +221,8 @@ export default function Navbar() {
           {/* Mobile header with logo and close button */}
           <div className="flex justify-between items-center p-4 border-b">
             <div
-              className="w-24 h-8 sm:w-32 sm:h-10 flex items-center cursor-pointer"
+              className="w-24 h-8 sm:w-32 sm:h-10 flex items-center"
               dir="ltr"
-              onClick={() => scrollToSection("#home")}
             >
               <img
                 src={navLogoPng}
