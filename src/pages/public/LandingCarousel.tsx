@@ -76,6 +76,7 @@ export default function LandingCarousel() {
 
     return (
         <motion.div
+            id="testimonials"
             className="relative top-20 w-full max-w-7xl mx-auto px-4 py-8 md:py-12 mb-20"
             dir="ltr"
             initial={{ opacity: 0, y: 30 }}

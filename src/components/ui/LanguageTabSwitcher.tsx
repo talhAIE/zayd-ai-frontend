@@ -38,10 +38,10 @@ export default function LanguageTabSwitcher() {
   };
 
   return (
-    <div className="flex justify-center mt-6 mb-8">
+    <div className="flex justify-center mt-2 sm:mt-6 mb-4 sm:mb-8">
       <div className="inline-flex rounded-full bg-[#F3F4F6] p-1 border border-gray-100 shadow-sm">
         <motion.button
-          className={`flex items-center gap-3 px-8 py-3 rounded-full text-base font-bold transition-all duration-300 ${
+          className={`flex items-center gap-1 sm:gap-3 px-3 sm:px-8 py-2 sm:py-3 rounded-full text-sm sm:text-base font-bold transition-all duration-300 ${
             activeTab === "english"
               ? "text-white"
               : isChinesePage ? "text-green-600 hover:brightness-110" : "text-blue-500 hover:brightness-110"
@@ -55,11 +55,11 @@ export default function LanguageTabSwitcher() {
           onClick={() => handleTabClick("english")}
           whileTap={{ scale: 0.98 }}
         >
-          <img src={flagUK} alt="UK Flag" className="w-5 h-5" />
+          <img src={flagUK} alt="UK Flag" className="w-4 h-4 sm:w-5 sm:h-5" />
           {isAr ? "الإنجليزية" : "English"}
         </motion.button>
         <motion.button
-          className={`flex items-center gap-3 px-8 py-3 rounded-full text-base font-bold transition-all duration-300 ${
+          className={`flex items-center gap-1 sm:gap-3 px-3 sm:px-8 py-2 sm:py-3 rounded-full text-sm sm:text-base font-bold transition-all duration-300 ${
             activeTab === "chinese"
               ? "text-white"
               : isChinesePage ? "text-green-600 hover:brightness-110" : "text-blue-500 hover:brightness-110"
@@ -73,7 +73,7 @@ export default function LanguageTabSwitcher() {
           onClick={() => handleTabClick("chinese")}
           whileTap={{ scale: 0.98 }}
         >
-          <img src={flagChina} alt="China Flag" className="w-5 h-5" />
+          <img src={flagChina} alt="China Flag" className="w-4 h-4 sm:w-5 sm:h-5" />
           {isAr ? "الصينية" : "Chinese"}
         </motion.button>
       </div>
