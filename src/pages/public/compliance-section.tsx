@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLanguage } from "@/components/language-provider";
 import { Dumbbell, Shield, MapPin, ChevronRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const cards = [
   {
@@ -48,7 +49,7 @@ export default function ComplianceSection() {
   }, []);
 
   return (
-    <section id="compliance" className="py-32 bg-white relative overflow-hidden" dir={direction}>
+    <section id="compliance" className="py-32 bg-white relative" dir={direction}>
       <div className="max-w-7xl mx-auto px-4">
         
         {/* Header - Centered */}
@@ -115,12 +116,14 @@ export default function ComplianceSection() {
 
         {/* Bottom CTA Button */}
         <div className="flex justify-center">
-          <button
-            className="group px-10 py-5 rounded-full bg-gradient-to-r from-[#76ABF8] via-[#058BF4] to-[#63B3F6] text-white font-extrabold text-lg md:text-xl shadow-[0_20px_40px_-10px_rgba(5,139,244,0.3)] flex items-center gap-3 active:scale-95 transition-all duration-300"
-          >
-            {isAr ? "تعلم مع زيد من اليوم" : "Learn With Zayd From Today"}
-            <ChevronRight className={`w-6 h-6 transition-transform duration-300 ${isAr ? "rotate-180 group-hover:-translate-x-1" : "group-hover:translate-x-1"}`} />
-          </button>
+          <Link to="/login">
+            <button
+              className="group px-10 py-5 rounded-full bg-gradient-to-r from-[#76ABF8] via-[#058BF4] to-[#63B3F6] text-white font-extrabold text-lg md:text-xl shadow-[0_20px_40px_-10px_rgba(5,139,244,0.3)] flex items-center gap-3 active:scale-95 transition-all duration-300"
+            >
+              {isAr ? "تعلم مع زيد من اليوم" : "Learn With Zayd From Today"}
+              <ChevronRight className={`w-6 h-6 transition-transform duration-300 ${isAr ? "rotate-180 group-hover:-translate-x-1" : "group-hover:translate-x-1"}`} />
+            </button>
+          </Link>
         </div>
 
       </div>
