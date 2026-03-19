@@ -232,6 +232,8 @@ interface Message {
 interface ChatWindowProps {
   onShowFeedback: (feedback: { type: string; content: any }) => void;
   onTopicImage: (imageUrl: string) => void;
+  onContentPayload?: (content: string) => void;
+  onAudioPlaybackChange?: (isPlaying: boolean) => void;
 }
 
 function findLastIndex<T>(
@@ -247,6 +249,8 @@ function findLastIndex<T>(
 const ChatWindow: React.FC<ChatWindowProps> = ({
   onShowFeedback,
   onTopicImage,
+  onContentPayload,
+  onAudioPlaybackChange,
 }) => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -733,6 +737,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           contentAudioUrl
         ) {
           setContentPayload({ content, audioUrl: contentAudioUrl });
+          if (mode === "reading-mode") {
+            onContentPayload?.(content);
+          }
         }
       }
     });
@@ -1375,6 +1382,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       onplay: () => {
         setPlayingAudioId(id);
         setIsCurrentlyPlaying(true);
+        onAudioPlaybackChange?.(true);
         if (id === "kb-audio" && mode === "listening-mode") {
           setHasStartedContextAudio(true);
           onEndCalledRef.current = false;
@@ -1403,16 +1411,19 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         if (progressIntervalRef.current)
           clearInterval(progressIntervalRef.current);
         setIsCurrentlyPlaying(false);
+        onAudioPlaybackChange?.(false);
       },
       onstop: () => {
         setPlayingAudioId(null);
         setIsCurrentlyPlaying(false);
         clearAudioProgress();
+        onAudioPlaybackChange?.(false);
       },
       onend: () => {
         setPlayingAudioId(null);
         setIsCurrentlyPlaying(false);
         clearAudioProgress();
+        onAudioPlaybackChange?.(false);
         if (onEnd && !onEndCalledRef.current) {
           onEndCalledRef.current = true;
           onEnd();
