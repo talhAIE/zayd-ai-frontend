@@ -1,5 +1,4 @@
 import React, { useRef } from 'react';
-import zaydMascot from '@/assets/images/landingpage/zaydMascot.svg';
 
 interface AvatarStageProps {
   timerLabel?: string;
@@ -17,7 +16,6 @@ const AvatarStage: React.FC<AvatarStageProps> = ({
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const handleEnded = () => {};
-
   React.useEffect(() => {
     if (!videoRef.current) return;
     if (syncPlaying) {
@@ -41,7 +39,6 @@ const AvatarStage: React.FC<AvatarStageProps> = ({
           <video
             ref={videoRef}
             src={videoSrc}
-            poster={zaydMascot}
             playsInline
             muted
             preload="auto"
