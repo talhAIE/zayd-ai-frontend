@@ -44,8 +44,9 @@ const AvatarStage: React.FC<AvatarStageProps> = ({
             poster={zaydMascot}
             playsInline
             muted
+            preload="auto"
             onEnded={handleEnded}
-            className={`relative w-full h-auto object-contain ${compact ? 'max-h-[300px]' : 'max-h-[380px]'}`}
+            className={`relative block w-full h-auto object-contain -scale-x-100 ${compact ? 'max-h-[300px]' : 'max-h-[380px]'}`}
           />
         </div>
       </div>
