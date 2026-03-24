@@ -251,17 +251,6 @@ function findLastIndex<T>(
   return -1;
 }
 
-function getNarrationVideoFallback(content: string): string | null {
-  const lower = content.toLowerCase();
-  if (lower.includes('the true story of a boy and his horn')) {
-    return '/3dAvatarMode/american/true-story-of-a-boy-and-his-horn.mp4';
-  }
-  if (lower.includes('someone has to do it')) {
-    return '/3dAvatarMode/saudi/someone-has-to-do-it.mp4';
-  }
-  return null;
-}
-
 const ChatWindow: React.FC<ChatWindowProps> = ({
   onShowFeedback,
   onTopicImage,
@@ -752,18 +741,17 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             mode === "debate-mode") &&
           content
         ) {
-          const fallbackVideoUrl =
-            narrationVideoUrl ?? getNarrationVideoFallback(content);
+          const safeNarrationVideoUrl = narrationVideoUrl ?? undefined;
           setContentPayload({
             content,
             audioUrl: contentAudioUrl,
-            narrationVideoUrl: fallbackVideoUrl ?? undefined,
+            narrationVideoUrl: safeNarrationVideoUrl,
           });
           if (mode === "reading-mode") {
             onContentPayload?.({
               content,
               contentAudioUrl,
-              narrationVideoUrl: fallbackVideoUrl ?? undefined,
+              narrationVideoUrl: safeNarrationVideoUrl,
             });
           }
         }
