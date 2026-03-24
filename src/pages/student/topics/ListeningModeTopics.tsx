@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { fetchTopics } from "@/redux/slices/topicsSlice";
@@ -12,6 +12,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 const ChatModeTopics = () => {
   // const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const location = useLocation();
+  const is3DPath = location.pathname.includes("/3d-avatar-mode/");
 
   const { topics, isLoading, error } = useAppSelector(
     (state: any) => state.topics
@@ -21,9 +23,14 @@ const ChatModeTopics = () => {
   useEffect(() => {
     if (user?.id) {
       console.log("Fetching chat mode topics for user:", user.id);
-      dispatch(fetchTopics({ userId: user.id, topicMode: "listening-mode" }));
+      dispatch(
+        fetchTopics({
+          userId: user.id,
+          topicMode: is3DPath ? "3d-avatar-listening-mode" : "listening-mode",
+        })
+      );
     }
-  }, [dispatch, user]);
+  }, [dispatch, user, is3DPath]);
 
   useEffect(() => {
     if (error) {
@@ -161,7 +168,7 @@ const ChatModeTopics = () => {
           <Link
             to={`/student/learning-mode/${topic?.id}/${encodeURIComponent(
               topic.topicName
-            )}?mode=listening-mode`}
+            )}?mode=listening-mode${is3DPath ? "&variant=3d" : ""}`}
             className={`absolute bottom-3 right-3 ${
               locked ? "pointer-events-none" : ""
             }`}

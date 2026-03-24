@@ -149,7 +149,8 @@ interface ServerToClientEvents {
   [ChatEvents.CONTENT_PAYLOAD]: (payload: {
     contentPayload: {
       content: string;
-      contentAudioUrl: string;
+      contentAudioUrl?: string;
+      narrationVideoUrl?: string;
     };
   }) => void;
   [ChatEvents.ACCOUNT_BLOCKED]: (payload: {
@@ -232,7 +233,11 @@ interface Message {
 interface ChatWindowProps {
   onShowFeedback: (feedback: { type: string; content: any }) => void;
   onTopicImage: (imageUrl: string) => void;
-  onContentPayload?: (content: string) => void;
+  onContentPayload?: (payload: {
+    content: string;
+    contentAudioUrl?: string;
+    narrationVideoUrl?: string;
+  }) => void;
   onAudioPlaybackChange?: (isPlaying: boolean) => void;
 }
 
@@ -244,6 +249,17 @@ function findLastIndex<T>(
     if (predicate(array[i])) return i;
   }
   return -1;
+}
+
+function getNarrationVideoFallback(content: string): string | null {
+  const lower = content.toLowerCase();
+  if (lower.includes('the true story of a boy and his horn')) {
+    return '/3dAvatarMode/american/true-story-of-a-boy-and-his-horn.mp4';
+  }
+  if (lower.includes('someone has to do it')) {
+    return '/3dAvatarMode/saudi/someone-has-to-do-it.mp4';
+  }
+  return null;
 }
 
 const ChatWindow: React.FC<ChatWindowProps> = ({
@@ -282,7 +298,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [contentPayload, setContentPayload] = useState<{
     content: string;
-    audioUrl: string;
+    audioUrl?: string;
+    narrationVideoUrl?: string;
   } | null>(null);
   const [isContentExpanded, setIsContentExpanded] = useState(false);
   const [shouldShowExpandButton, setShouldShowExpandButton] = useState(false);
@@ -728,17 +745,26 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       logger.receiving(ChatEvents.CONTENT_PAYLOAD, payload);
       const { contentPayload: data } = payload;
       if (data) {
-        const { content, contentAudioUrl } = data;
+        const { content, contentAudioUrl, narrationVideoUrl } = data;
         if (
           (mode === "reading-mode" ||
             mode === "roleplay-mode" ||
             mode === "debate-mode") &&
-          content &&
-          contentAudioUrl
+          content
         ) {
-          setContentPayload({ content, audioUrl: contentAudioUrl });
+          const fallbackVideoUrl =
+            narrationVideoUrl ?? getNarrationVideoFallback(content);
+          setContentPayload({
+            content,
+            audioUrl: contentAudioUrl,
+            narrationVideoUrl: fallbackVideoUrl ?? undefined,
+          });
           if (mode === "reading-mode") {
-            onContentPayload?.(content);
+            onContentPayload?.({
+              content,
+              contentAudioUrl,
+              narrationVideoUrl: fallbackVideoUrl ?? undefined,
+            });
           }
         }
       }
@@ -1784,8 +1810,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   playingAudioId === "content-payload-audio" &&
                   isCurrentlyPlaying
                 }
-                onToggleAudio={() =>
-                  toggleAudio("content-payload-audio", contentPayload.audioUrl)
+                onToggleAudio={
+                  contentPayload.audioUrl
+                    ? () =>
+                        toggleAudio(
+                          "content-payload-audio",
+                          contentPayload.audioUrl,
+                        )
+                    : undefined
                 }
               />
             )}

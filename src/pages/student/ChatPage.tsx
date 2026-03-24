@@ -25,10 +25,15 @@ const Chat: React.FC = () => {
   const [currentFeedback, setCurrentFeedback] = useState<Feedback | null>(null);
   const [topicImage, setTopicImage] = useState<string | null>(null);
   const [isAvatarSyncPlaying, setIsAvatarSyncPlaying] = useState(false);
+  const [narrationVideoUrl, setNarrationVideoUrl] = useState<string | null>(
+    null,
+  );
   const [searchParams] = useSearchParams();
   const mode = searchParams.get('mode') || 'chat-mode';
   const variant = searchParams.get('variant') || 'default';
-  const isReading3D = mode === 'reading-mode' || variant === '3d';
+  const isAvatar3D = variant === '3d';
+  const isReading3D = isAvatar3D && mode === 'reading-mode';
+  const loopVideoUrl = '/avatar/placeholder.mp4';
 
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const [isNarrowScreen, setIsNarrowScreen] = useState(false);
@@ -66,25 +71,47 @@ const Chat: React.FC = () => {
     setTopicImage(imageUrl);
   }, []); // Empty dependency array here as well.
 
+  const handleContentPayload = useCallback(
+    (payload: { narrationVideoUrl?: string }) => {
+      if (payload?.narrationVideoUrl) {
+        setNarrationVideoUrl(payload.narrationVideoUrl);
+      } else {
+        setNarrationVideoUrl(null);
+      }
+    },
+    [],
+  );
+
+  const handleAudioPlaybackChange = useCallback(
+    (isPlaying: boolean) => {
+      setIsAvatarSyncPlaying(isPlaying);
+    },
+    [],
+  );
+
+  const avatarVideoSrc = isReading3D
+    ? narrationVideoUrl ?? loopVideoUrl
+    : undefined;
 
   return (
     <div className="flex max-h-screen">
       <main className="flex-1 transition-all duration-300">
         <div className="mx-auto md:px-6">
-          {isNarrowScreen && isReading3D ? (
+          {isNarrowScreen && isAvatar3D ? (
             <div className="flex flex-col gap-1.5 h-[calc(100vh-120px)] min-h-0">
               <div className="flex-[0.55] min-h-0">
                 <AvatarModeLayout
                   compact
                   syncPlaying={isAvatarSyncPlaying}
+                  videoSrc={avatarVideoSrc}
                 />
               </div>
               <div className="flex-[0.45] min-h-0">
                 <ChatWindow
                   onShowFeedback={handleShowFeedback}
                   onTopicImage={handleTopicImage}
-                  onContentPayload={() => {}}
-                  onAudioPlaybackChange={setIsAvatarSyncPlaying}
+                  onContentPayload={handleContentPayload}
+                  onAudioPlaybackChange={handleAudioPlaybackChange}
                 />
               </div>
               <FeedbackSectionModal
@@ -99,15 +126,16 @@ const Chat: React.FC = () => {
                 <ChatWindow
                   onShowFeedback={handleShowFeedback}
                   onTopicImage={handleTopicImage}
-                  onContentPayload={() => {}}
-                  onAudioPlaybackChange={setIsAvatarSyncPlaying}
+                  onContentPayload={handleContentPayload}
+                  onAudioPlaybackChange={handleAudioPlaybackChange}
                 />
               </div>
               <div className="flex flex-col gap-3 w-full md:w-1/3">
-                {isReading3D && (
+                {isAvatar3D && (
                   <AvatarModeLayout
                     compact
                     syncPlaying={isAvatarSyncPlaying}
+                    videoSrc={avatarVideoSrc}
                   />
                 )}
                 {!isSmallScreen && (

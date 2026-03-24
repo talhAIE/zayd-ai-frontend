@@ -5,6 +5,8 @@ interface AvatarStageProps {
   videoSrc?: string;
   compact?: boolean;
   syncPlaying?: boolean;
+  loop?: boolean;
+  onEnded?: () => void;
 }
 
 const AvatarStage: React.FC<AvatarStageProps> = ({
@@ -12,20 +14,22 @@ const AvatarStage: React.FC<AvatarStageProps> = ({
   videoSrc = '/avatar/placeholder.mp4',
   compact = false,
   syncPlaying = false,
+  loop,
+  onEnded,
 }) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
-  const handleEnded = () => {};
   React.useEffect(() => {
-    if (!videoRef.current) return;
+    const video = videoRef.current;
+    if (!video) return;
     if (syncPlaying) {
-      videoRef.current.loop = true;
-      videoRef.current.play();
+      video.loop = loop ?? true;
+      video.play().catch(() => {});
     } else {
-      videoRef.current.loop = false;
-      videoRef.current.pause();
+      video.loop = loop ?? false;
+      video.pause();
     }
-  }, [syncPlaying]);
+  }, [syncPlaying, loop]);
 
   return (
     <div className="w-full">
@@ -35,15 +39,19 @@ const AvatarStage: React.FC<AvatarStageProps> = ({
         </div>
       )}
       <div className="w-full max-w-full mx-auto">
-        <div className="w-full rounded-2xl overflow-hidden">
+        <div
+          className={`w-full rounded-2xl overflow-hidden ${
+            compact ? 'h-[360px]' : 'h-[440px]'
+          }`}
+        >
           <video
             ref={videoRef}
             src={videoSrc}
             playsInline
             muted
             preload="auto"
-            onEnded={handleEnded}
-            className={`relative block w-full h-auto object-contain -scale-x-100 ${compact ? 'max-h-[300px]' : 'max-h-[380px]'}`}
+            onEnded={onEnded}
+            className="relative block w-full h-full object-cover -scale-x-100"
           />
         </div>
       </div>

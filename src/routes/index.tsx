@@ -33,6 +33,7 @@ import RolePlayModeTopics from "@/pages/student/topics/RolePlayModeTopics";
 import ListeningModeTopics from "@/pages/student/topics/ListeningModeTopics";
 import CurriculumModeTopics from "@/pages/student/topics/CurriculumModeTopics";
 import ChapterTopics from "@/pages/student/topics/ChapterTopics";
+import Avatar3DMode from "@/pages/student/Avatar3DMode";
 
 const AppRoutes = () => {
   // const { user } = useAppSelector((state) => state.auth);
@@ -124,6 +125,16 @@ const AppRoutes = () => {
         }
       />
       <Route
+        path="/student/learning-modes/3d-avatar-mode"
+        element={
+          <StudentRoute>
+            <StudentLayout>
+              <Avatar3DMode />
+            </StudentLayout>
+          </StudentRoute>
+        }
+      />
+      <Route
         path="/student/learning-modes"
         element={
           <StudentRoute>
@@ -174,6 +185,16 @@ const AppRoutes = () => {
         }
       />
       <Route
+        path="/student/learning-modes/3d-avatar-mode/reading-mode"
+        element={
+          <StudentRoute>
+            <StudentLayout>
+              <ReadingModeTopics />
+            </StudentLayout>
+          </StudentRoute>
+        }
+      />
+      <Route
         path="/student/learning-modes/roleplay-mode"
         element={
           <StudentRoute>
@@ -184,7 +205,27 @@ const AppRoutes = () => {
         }
       />
       <Route
+        path="/student/learning-modes/3d-avatar-mode/roleplay-mode"
+        element={
+          <StudentRoute>
+            <StudentLayout>
+              <RolePlayModeTopics />
+            </StudentLayout>
+          </StudentRoute>
+        }
+      />
+      <Route
         path="/student/learning-modes/listening-mode"
+        element={
+          <StudentRoute>
+            <StudentLayout>
+              <ListeningModeTopics />
+            </StudentLayout>
+          </StudentRoute>
+        }
+      />
+      <Route
+        path="/student/learning-modes/3d-avatar-mode/listening-mode"
         element={
           <StudentRoute>
             <StudentLayout>
