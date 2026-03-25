@@ -26,11 +26,11 @@ const ChatModeTopics = () => {
       dispatch(
         fetchTopics({
           userId: user.id,
-          topicMode: is3DPath ? "3d-avatar-listening-mode" : "listening-mode",
-        })
+          topicMode: "listening-mode",
+        }),
       );
     }
-  }, [dispatch, user, is3DPath]);
+  }, [dispatch, user, location.pathname]);
 
   useEffect(() => {
     if (error) {

@@ -17,6 +17,13 @@ import {
   Award,
   AlertTriangle,
   RotateCcw,
+  Menu,
+  Bell,
+  Info,
+  Star,
+  BookOpen,
+  Check,
+  ArrowRight,
 } from "lucide-react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -30,9 +37,10 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import QuestionnaireModal from "@/components/ui/QuestionaireModal";
-import { Progress } from "@/components/ui/progress";
 import AudioPlayer from "./AudioPlayer";
 import ReadingPassageCard from "@/components/ui/ReadingPassageCard";
+import AvatarModeLayout from "@/components/3d/AvatarModeLayout";
+import birdWithClock from "@/assets/images/landingpage/bird-with-clock.png";
 
 interface McqAnswer {
   questionId: string;
@@ -241,6 +249,8 @@ interface ChatWindowProps {
   onAudioPlaybackChange?: (isPlaying: boolean) => void;
   onNarrationComplete?: () => void;
   readingHeroActive?: boolean;
+  isAvatar3D?: boolean;
+  avatarVideoSrc?: string;
 }
 
 function findLastIndex<T>(
@@ -260,6 +270,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   onAudioPlaybackChange,
   onNarrationComplete,
   readingHeroActive = false,
+  isAvatar3D = false,
+  avatarVideoSrc,
 }) => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -297,6 +309,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const [isContentExpanded, setIsContentExpanded] = useState(false);
   const [shouldShowExpandButton, setShouldShowExpandButton] = useState(false);
   const contentRef = useRef<HTMLParagraphElement>(null);
+  const [isTranscriptExpanded, setIsTranscriptExpanded] = useState(false);
+  const [shouldShowTranscriptExpandButton, setShouldShowTranscriptExpandButton] =
+    useState(false);
+  const transcriptRef = useRef<HTMLParagraphElement>(null);
 
   const [unlockedBadgeInfo, setUnlockedBadgeInfo] = useState<{
     name: string;
@@ -317,6 +333,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     remainingWarnings: number;
   } | null>(null);
   const [isAccountBlockedOpen, setIsAccountBlockedOpen] = useState(false);
+  const [showListeningCompletionCard, setShowListeningCompletionCard] =
+    useState(false);
+  const [showListeningHints, setShowListeningHints] = useState(false);
   const [accountBlockedData, setAccountBlockedData] = useState<{
     message: string;
     violationCount: number;
@@ -324,7 +343,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   } | null>(null);
 
   // --- Listening Mode State ---
-  const [progress, setProgress] = React.useState(30);
   const [listeningStage, setListeningStage] = useState<string | null>(null);
   const [listeningData, setListeningData] = useState<any>(null);
   const [currentMcqIndex, setCurrentMcqIndex] = useState(0);
@@ -332,7 +350,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const [showReplayPopup, setShowReplayPopup] = useState(false);
   const [mcqAnswers, setMcqAnswers] = useState<{ [key: string]: number }>({});
   // const [barCount, setBarCount] = useState(0);
-  const [listeningSteps, setListeningSteps] = useState(1);
   // --- End Listening Mode State ---
 
   const [isContextCompleted, setIsContextCompleted] = useState(false);
@@ -454,6 +471,21 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   }, [contentPayload]);
 
   useEffect(() => {
+    if (mode !== "listening-mode" || !transcriptRef.current) return;
+    setIsTranscriptExpanded(false);
+
+    const element = transcriptRef.current;
+    const originalClass = element.className;
+    element.className = originalClass.replace("line-clamp-5", "line-clamp-none");
+    const fullHeight = element.scrollHeight;
+    element.className = originalClass;
+
+    const lineHeight = parseFloat(getComputedStyle(element).lineHeight) || 24;
+    const maxHeight = lineHeight * 5;
+    setShouldShowTranscriptExpandButton(fullHeight > maxHeight);
+  }, [mode, listeningData?.questionText]);
+
+  useEffect(() => {
     if (
       (mode === "reading-mode" || mode === "roleplay-mode") &&
       contentPayload &&
@@ -533,30 +565,20 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     socket.on("listening_payload", ({ chatId: newChatId, ...data }) => {
       setChatId(newChatId);
       setListeningData(data);
-      setProgress(30);
-      setListeningSteps(1);
 
       let currentStage: string | null = null;
       if (data.narrationText) {
         currentStage = "initial";
       } else if (data.questionText) {
         currentStage = "question_text";
-        setProgress(65);
-        setListeningSteps(2);
       } else if (data.mcqs) {
         currentStage = "quiz";
         setMcqList(data.mcqs);
         setCurrentMcqIndex(0);
-        setProgress(100);
-        setListeningSteps(3);
       }
 
       setListeningStage(currentStage);
       logger.info(`Listening mode stage inferred: ${currentStage}`, data);
-    });
-
-    socket.on("next_listening_stage", () => {
-      setProgress(2);
     });
 
     socket.on("listening_completed", () => {
@@ -948,6 +970,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     if (listeningStage === "question_text" && mode === "listening-mode") {
       setIsContextCompleted(false);
       setHasStartedContextAudio(false);
+      setShowListeningCompletionCard(false);
+      setShowListeningHints(false);
     }
   }, [listeningStage, mode]);
 
@@ -1588,56 +1612,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     <>
       {mode === "listening-mode" && (
         <>
-          <div className="space-y-4 border border-blue-400 p-4 rounded-xl bg-white/70 backdrop-blur mb-4">
-            <Progress value={progress} className="h-2 bg-gray-200" />
-
-            <div className="flex items-center justify-between">
-              <span className="font-medium text-blue-700">
-                Step {listeningSteps}/3
-              </span>
-              <span className="flex items-center gap-1 px-3 py-1.5 rounded-lg border-2 border-[#3EA4F9] bg-white text-blue-700">
-                <Clock className="h-6 w-6 text-[#3EA4F9]" />
-                <span>
-                  {sessionTimeRemaining
-                    ? formatTime(sessionTimeRemaining)
-                    : "..."}
-                </span>
-              </span>
-            </div>
-
-            {/* compact controls */}
-            <div>
-              <AudioPlayer
-                audioSrc={listeningData?.kbAudioUrl || ""}
-                isPlaying={playingAudioId === "kb-audio" && isCurrentlyPlaying}
-                progress={playingAudioId === "kb-audio" ? audioProgress : 0}
-                duration={playingAudioId === "kb-audio" ? audioDuration : 0}
-                onTogglePlay={() =>
-                  toggleAudio("kb-audio", listeningData?.kbAudioUrl, () =>
-                    setIsContextCompleted(true),
-                  )
-                }
-              />
-              {mode === "listening-mode" && (
-                <div className="flex justify-end items-center h-4 pr-2 mt-2 md:mt-0">
-                  {!hasStartedContextAudio ? (
-                    <span className="text-blue-500 text-xs flex items-center gap-1 animate-pulse">
-                      ▶ Play to proceed to next step
-                    </span>
-                  ) : !isContextCompleted ? (
-                    <span className="text-orange-500 text-xs flex items-center gap-1">
-                      <span className="animate-spin duration-1500">⏳</span>
-                      Listening...
-                    </span>
-                  ) : (
-                    <span className="text-green-500 text-xs flex items-center gap-1">
-                      ✓ Completed
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
           <Dialog open={showReplayPopup} onOpenChange={setShowReplayPopup}>
             <DialogContent>
               <DialogHeader>
@@ -1694,13 +1668,26 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
       {listeningStage === "quiz" && mcqList.length > 0 && (
         <div className="w-full flex flex-col items-center gap-4">
-          <div className="p-6 border rounded-xl bg-white shadow-lg w-full my-4 text-left">
-            <div className="flex justify-end mb-2">
-              <span className="text-sm font-semibold text-gray-600">
-                Question {currentMcqIndex + 1}/{mcqList.length}
+          <div className="p-6 md:p-8 border rounded-3xl bg-white shadow-lg w-full max-w-[820px] my-4 text-left">
+            <div className="flex items-start justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-[#E6F3FF] flex items-center justify-center">
+                  <Check className="h-5 w-5 text-[#3EA4F9]" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-[#6B8BB8] uppercase tracking-wide">
+                    Step 3: Quiz
+                  </p>
+                  <p className="text-lg font-semibold text-[#2B3A67]">
+                    Test Your Knowledge
+                  </p>
+                </div>
+              </div>
+              <span className="text-xs font-semibold text-[#6B8BB8] bg-[#F1F6FF] px-3 py-1 rounded-full">
+                {currentMcqIndex + 1}/{mcqList.length}
               </span>
             </div>
-            <p className="text-lg font-semibold mb-4">
+            <p className="text-lg font-semibold mb-4 text-[#2B3A67]">
               {mcqList[currentMcqIndex].question}
             </p>
             <div className="flex flex-col gap-2">
@@ -1713,11 +1700,17 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                       setSelectedAnswer(index);
                       resetInactivityTimer();
                     }}
-                    className="w-full justify-start p-4 h-auto transition-colors"
+                    className={`w-full justify-start p-4 h-auto transition-colors rounded-2xl ${
+                      selectedAnswer === index
+                        ? "bg-[#3EA4F9] text-white hover:bg-[#2F93F0] border-transparent"
+                        : "bg-white border-[#E1E7F0] text-[#2B3A67]"
+                    }`}
                   >
                     <div
-                      className={`w-5 h-5 mr-4 rounded-full border border-primary flex-shrink-0 ${
-                        selectedAnswer === index ? "bg-primary" : ""
+                      className={`w-5 h-5 mr-4 rounded-full border flex-shrink-0 ${
+                        selectedAnswer === index
+                          ? "bg-white border-white"
+                          : "border-[#C9D6E6]"
                       }`}
                     />
                     <span>{option}</span>
@@ -1733,12 +1726,48 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         <div
           className={`flex flex-col max-w-[800px] mx-auto bg-gray-100 rounded-xl overflow-hidden shadow-2xl ${
             mode === "listening-mode"
-              ? "min-h-[49vh] max-h-[49vh]"
+              ? "min-h-[70vh] max-h-[80vh]"
               : readingHeroActive
                 ? "min-h-[calc(100vh-340px)] max-h-[calc(100vh-340px)] md:min-h-[calc(100vh-340px)] md:max-h-[calc(100vh-340px)]"
                 : "max-h-[86vh] min-h-[86vh] md:min-h-[82vh] md:max-h-[82vh]"
           }`}
         >
+          {mode === "listening-mode" && (
+            <header className="flex items-center justify-between px-4 md:px-6 py-4 border-b bg-white">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate(-1)}
+                  className="md:hidden"
+                >
+                  <Menu className="h-5 w-5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate(-1)}
+                  className="hidden md:inline-flex"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </Button>
+              </div>
+              <h2 className="text-lg font-semibold">Listening Mode</h2>
+              <div className="flex items-center gap-2">
+                <div className="hidden md:flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border-2 border-[#3EA4F9] bg-white text-gray-500">
+                  <Clock className="h-5 w-5 text-[#3EA4F9]" />
+                  <span>
+                    {sessionTimeRemaining
+                      ? formatTime(sessionTimeRemaining)
+                      : "..."}
+                  </span>
+                </div>
+                <Button variant="ghost" size="icon" className="md:hidden">
+                  <Bell className="h-5 w-5" />
+                </Button>
+              </div>
+            </header>
+          )}
           {mode !== "listening-mode" && (
             <header className="flex justify-between items-center px-6 py-4 border-b bg-white">
               <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
@@ -1805,189 +1834,334 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               This conversation has ended.
             </div>
           )}
-          <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
-            {contentPayload && mode === "reading-mode" && (
-              <ReadingPassageCard
-                content={contentPayload.content}
-                audioUrl={contentPayload.audioUrl}
-                isPlaying={
-                  playingAudioId === "content-payload-audio" &&
-                  isCurrentlyPlaying
-                }
-                onToggleAudio={
-                  contentPayload.audioUrl
-                    ? () =>
-                        toggleAudio(
-                          "content-payload-audio",
-                          contentPayload.audioUrl,
-                          onNarrationComplete,
-                        )
-                    : undefined
-                }
-              />
-            )}
-            {contentPayload && mode !== "reading-mode" && (
-              <div className="p-4 rounded-lg shadow-sm bg-white border border-gray-200">
-                <p
-                  ref={contentRef}
-                  className={`text-gray-800 text-base leading-relaxed whitespace-pre-wrap transition-all duration-300 ${
-                    !isContentExpanded ? "line-clamp-3" : "line-clamp-none"
+          {mode === "listening-mode" ? (
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-4">
+              <div className="md:hidden flex justify-start">
+                <div className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border-2 border-[#3EA4F9] bg-white text-gray-500">
+                  <Clock className="h-5 w-5 text-[#3EA4F9]" />
+                  <span>
+                    {sessionTimeRemaining
+                      ? formatTime(sessionTimeRemaining)
+                      : "..."}
+                  </span>
+                </div>
+              </div>
+
+              <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 md:p-6">
+                <div className="relative rounded-2xl bg-[#F8FAFC] border border-slate-200 overflow-hidden p-4 md:p-6">
+                  {isAvatar3D && (
+                    <AvatarModeLayout
+                      syncPlaying={
+                        playingAudioId === "kb-audio" && isCurrentlyPlaying
+                      }
+                      videoSrc={avatarVideoSrc}
+                      heightClassName="h-auto"
+                      videoClassName="max-h-[300px] h-auto w-auto object-contain mx-auto"
+                    />
+                  )}
+                </div>
+                <div className="mt-4">
+                  <AudioPlayer
+                    audioSrc={listeningData?.kbAudioUrl || ""}
+                    isPlaying={playingAudioId === "kb-audio" && isCurrentlyPlaying}
+                    progress={playingAudioId === "kb-audio" ? audioProgress : 0}
+                    duration={playingAudioId === "kb-audio" ? audioDuration : 0}
+                    onTogglePlay={() =>
+                      toggleAudio("kb-audio", listeningData?.kbAudioUrl, () =>
+                        setIsContextCompleted(true),
+                      )
+                    }
+                  />
+                </div>
+              </div>
+
+              {(listeningStage === "initial" || showListeningHints) && (
+                <div className="rounded-2xl bg-[#CFE9FF] border border-[#8CC7FF] p-4 md:p-5 shadow-sm">
+                  <div className="flex items-center gap-2 text-[#2B6CB0] font-semibold mb-2">
+                    <Info className="h-4 w-4" />
+                    Hint
+                  </div>
+                  <p className="text-sm text-[#2F4B66] whitespace-pre-wrap">
+                    {listeningData?.narrationText ||
+                      "Hints will appear here as you progress."}
+                  </p>
+                </div>
+              )}
+
+              {listeningStage === "question_text" &&
+                !showListeningCompletionCard && (
+                  <div className="rounded-2xl bg-white border border-[#B9E1FF] p-4 md:p-5 shadow-sm">
+                    <div className="inline-flex items-center gap-2 rounded-full bg-[#E6F3FF] px-3 py-1 text-sm font-semibold text-[#2B6CB0] mb-3">
+                      <BookOpen className="h-4 w-4" />
+                      Character Transcript
+                    </div>
+                    <p
+                      ref={transcriptRef}
+                      className={`text-sm text-[#2F4B66] whitespace-pre-wrap transition-all duration-300 ${
+                        !isTranscriptExpanded
+                          ? "line-clamp-5"
+                          : "line-clamp-none"
+                      }`}
+                    >
+                      {listeningData?.questionText ||
+                        "Transcript will appear here as you progress."}
+                    </p>
+                    {shouldShowTranscriptExpandButton && (
+                      <Button
+                        variant="link"
+                        size="sm"
+                        onClick={() =>
+                          setIsTranscriptExpanded(!isTranscriptExpanded)
+                        }
+                        className="text-sm text-[#3EA4F9] p-0 h-auto mt-2"
+                      >
+                        {isTranscriptExpanded ? "See Less" : "See More"}
+                      </Button>
+                    )}
+                  </div>
+                )}
+
+              {showListeningCompletionCard && (
+                <div className="rounded-3xl bg-white border border-slate-200 p-6 md:p-8 text-center shadow-sm">
+                  <img
+                    src={birdWithClock}
+                    alt="Listening helper"
+                    className="h-28 w-auto mx-auto mb-4"
+                  />
+                  <h3 className="text-xl font-semibold text-[#2B3A67]">
+                    Done with it?
+                  </h3>
+                  <p className="text-sm text-gray-500 mt-2">
+                    Need help understanding? Get hints or watch the avatar
+                    explanation again
+                  </p>
+                  <Button
+                    className="w-full mt-5 rounded-full bg-[#5EA9FF] hover:bg-[#4E98F0] text-white"
+                    onClick={() => {
+                      setShowListeningCompletionCard(false);
+                      setShowListeningHints(false);
+                      handleNextStage();
+                    }}
+                  >
+                    Continue to Quiz
+                  </Button>
+                  <div className="grid grid-cols-2 gap-3 mt-3">
+                    <Button
+                      variant="outline"
+                      className="rounded-full border-[#6AAEFF] text-[#3EA4F9] hover:bg-[#E6F3FF]"
+                      onClick={() => setShowListeningHints(true)}
+                    >
+                      <Star className="h-4 w-4 mr-2" />
+                      Show Hints
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="rounded-full text-gray-500 hover:bg-gray-100"
+                      onClick={() => {
+                        if (listeningData?.kbAudioUrl) {
+                          toggleAudio(
+                            "kb-audio",
+                            listeningData.kbAudioUrl,
+                            () => setIsContextCompleted(true),
+                          );
+                        }
+                      }}
+                      disabled={!listeningData?.kbAudioUrl}
+                    >
+                      Replay Avatar Video
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+              {contentPayload && mode === "reading-mode" && (
+                <ReadingPassageCard
+                  content={contentPayload.content}
+                  audioUrl={contentPayload.audioUrl}
+                  isPlaying={
+                    playingAudioId === "content-payload-audio" &&
+                    isCurrentlyPlaying
+                  }
+                  onToggleAudio={
+                    contentPayload.audioUrl
+                      ? () =>
+                          toggleAudio(
+                            "content-payload-audio",
+                            contentPayload.audioUrl,
+                            onNarrationComplete,
+                          )
+                      : undefined
+                  }
+                />
+              )}
+              {contentPayload && mode !== "reading-mode" && (
+                <div className="p-4 rounded-lg shadow-sm bg-white border border-gray-200">
+                  <p
+                    ref={contentRef}
+                    className={`text-gray-800 text-base leading-relaxed whitespace-pre-wrap transition-all duration-300 ${
+                      !isContentExpanded ? "line-clamp-3" : "line-clamp-none"
+                    }`}
+                  >
+                    {contentPayload.content
+                      .split(/(\*\*.*?\*\*)/g)
+                      .map((part, i) =>
+                        part.startsWith("**") && part.endsWith("**") ? (
+                          <span key={i} className="font-bold text-blue-600">
+                            {part.slice(2, -2)}
+                          </span>
+                        ) : (
+                          part
+                        ),
+                      )}
+                  </p>
+                  <div className="flex items-center gap-4 mt-2">
+                    {contentPayload.audioUrl && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() =>
+                          toggleAudio(
+                            "content-payload-audio",
+                            contentPayload.audioUrl,
+                            mode === "roleplay-mode"
+                              ? onNarrationComplete
+                              : undefined,
+                          )
+                        }
+                      >
+                        {playingAudioId === "content-payload-audio" &&
+                        isCurrentlyPlaying ? (
+                          <Pause className="h-5 w-5" />
+                        ) : (
+                          <Play className="h-5 w-5" />
+                        )}
+                      </Button>
+                    )}
+                    {shouldShowExpandButton && (
+                      <Button
+                        variant="link"
+                        size="sm"
+                        onClick={() => {
+                          setIsContentExpanded(!isContentExpanded);
+                          resetInactivityTimer();
+                        }}
+                        className="text-sm text-blue-600 p-0 h-auto"
+                      >
+                        {isContentExpanded ? "See Less" : "See More"}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+              {messages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={`flex flex-col gap-1 ${
+                    msg.type === "sent"
+                      ? "self-end items-end"
+                      : "self-start items-start"
                   }`}
                 >
-                  {contentPayload.content
-                    .split(/(\*\*.*?\*\*)/g)
-                    .map((part, i) =>
-                      part.startsWith("**") && part.endsWith("**") ? (
-                        <span key={i} className="font-bold text-blue-600">
-                          {part.slice(2, -2)}
-                        </span>
-                      ) : (
-                        part
-                      ),
-                    )}
-                </p>
-                <div className="flex items-center gap-4 mt-2">
-                  {contentPayload.audioUrl && (
+                  {msg.loading ? (
+                    <div className="flex items-center gap-2 bg-white p-3 rounded-xl shadow-sm">
+                      <LoaderPinwheel
+                        size={18}
+                        className="animate-spin text-primary"
+                      />
+                      <span className="text-sm text-gray-500">
+                        AI is thinking...
+                      </span>
+                    </div>
+                  ) : msg.messageType === "audio" && msg.audioURL ? (
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() =>
-                        toggleAudio(
-                          "content-payload-audio",
-                          contentPayload.audioUrl,
-                          mode === "roleplay-mode" ? onNarrationComplete : undefined,
-                        )
-                      }
+                      onClick={() => toggleAudio(msg.id, msg.audioURL)}
                     >
-                      {playingAudioId === "content-payload-audio" &&
-                      isCurrentlyPlaying ? (
+                      {playingAudioId === msg.id && isCurrentlyPlaying ? (
                         <Pause className="h-5 w-5" />
                       ) : (
                         <Play className="h-5 w-5" />
                       )}
                     </Button>
-                  )}
-                  {shouldShowExpandButton && (
-                    <Button
-                      variant="link"
-                      size="sm"
-                      onClick={() => {
-                        setIsContentExpanded(!isContentExpanded);
-                        resetInactivityTimer();
-                      }}
-                      className="text-sm text-blue-600 p-0 h-auto"
+                  ) : (
+                    <div
+                      className={`p-3 rounded-xl max-w-md shadow-sm break-words ${
+                        msg.type === "sent"
+                          ? "bg-[#3EA4F9] text-white rounded-tr-none"
+                          : "bg-white text-gray-800 rounded-tl-none"
+                      }`}
                     >
-                      {isContentExpanded ? "See Less" : "See More"}
-                    </Button>
+                      {msg.text && (
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                          {msg.text.split(/(\*\*.*?\*\*)/g).map((part, i) =>
+                            part.startsWith("**") && part.endsWith("**") ? (
+                              <span key={i} className="font-bold text-blue-600">
+                                {part.slice(2, -2)}
+                              </span>
+                            ) : (
+                              part
+                            ),
+                          )}
+                        </p>
+                      )}
+
+                      <div className="flex gap-2 items-center mt-2 flex-wrap">
+                        {msg.type === "received" && msg.audioUrl && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => toggleAudio(msg.id, msg.audioUrl)}
+                          >
+                            {playingAudioId === msg.id &&
+                            isCurrentlyPlaying ? (
+                              <Pause className="h-5 w-5" />
+                            ) : (
+                              <Play className="h-5 w-5" />
+                            )}
+                          </Button>
+                        )}
+                        {msg.type === "received" && msg.hasFeedback && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              onShowFeedback({
+                                type: "feedback",
+                                content: msg.feedback,
+                              });
+                              resetInactivityTimer();
+                            }}
+                            className="flex items-center gap-1 text-primary text-xs p-1 h-auto"
+                          >
+                            <MessageCircle className="h-4 w-4" />
+                            View Feedback
+                          </Button>
+                        )}
+                        {msg.type === "sent" && msg.hasAssessment && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              handleShowAssessment(msg.assessments);
+                              resetInactivityTimer();
+                            }}
+                            className="flex items-center gap-1 bg-white text-primary text-xs p-1 h-auto rounded-md shadow-sm border"
+                          >
+                            <BarChart2 className="h-4 w-4" />
+                            View Assessment
+                          </Button>
+                        )}
+                      </div>
+                    </div>
                   )}
                 </div>
-              </div>
-            )}
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex flex-col gap-1 ${
-                  msg.type === "sent"
-                    ? "self-end items-end"
-                    : "self-start items-start"
-                }`}
-              >
-                {msg.loading ? (
-                  <div className="flex items-center gap-2 bg-white p-3 rounded-xl shadow-sm">
-                    <LoaderPinwheel
-                      size={18}
-                      className="animate-spin text-primary"
-                    />
-                    <span className="text-sm text-gray-500">
-                      AI is thinking...
-                    </span>
-                  </div>
-                ) : msg.messageType === "audio" && msg.audioURL ? (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => toggleAudio(msg.id, msg.audioURL)}
-                  >
-                    {playingAudioId === msg.id && isCurrentlyPlaying ? (
-                      <Pause className="h-5 w-5" />
-                    ) : (
-                      <Play className="h-5 w-5" />
-                    )}
-                  </Button>
-                ) : (
-                  <div
-                    className={`p-3 rounded-xl max-w-md shadow-sm break-words ${
-                      msg.type === "sent"
-                        ? "bg-[#3EA4F9] text-white rounded-tr-none"
-                        : "bg-white text-gray-800 rounded-tl-none"
-                    }`}
-                  >
-                    {msg.text && (
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                        {msg.text.split(/(\*\*.*?\*\*)/g).map((part, i) =>
-                          part.startsWith("**") && part.endsWith("**") ? (
-                            <span key={i} className="font-bold text-blue-600">
-                              {part.slice(2, -2)}
-                            </span>
-                          ) : (
-                            part
-                          ),
-                        )}
-                      </p>
-                    )}
-
-                    <div className="flex gap-2 items-center mt-2 flex-wrap">
-                      {msg.type === "received" && msg.audioUrl && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => toggleAudio(msg.id, msg.audioUrl)}
-                        >
-                          {playingAudioId === msg.id && isCurrentlyPlaying ? (
-                            <Pause className="h-5 w-5" />
-                          ) : (
-                            <Play className="h-5 w-5" />
-                          )}
-                        </Button>
-                      )}
-                      {msg.type === "received" && msg.hasFeedback && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            onShowFeedback({
-                              type: "feedback",
-                              content: msg.feedback,
-                            });
-                            resetInactivityTimer();
-                          }}
-                          className="flex items-center gap-1 text-primary text-xs p-1 h-auto"
-                        >
-                          <MessageCircle className="h-4 w-4" />
-                          View Feedback
-                        </Button>
-                      )}
-                      {msg.type === "sent" && msg.hasAssessment && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            handleShowAssessment(msg.assessments);
-                            resetInactivityTimer();
-                          }}
-                          className="flex items-center gap-1 bg-white text-primary text-xs p-1 h-auto rounded-md shadow-sm border"
-                        >
-                          <BarChart2 className="h-4 w-4" />
-                          View Assessment
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+          )}
 
           {mode !== "listening-mode" && (
             <form onSubmit={handleSubmit} className="border-t p-4 bg-gray-50">
@@ -2368,14 +2542,22 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         </DialogContent>
       </Dialog>
 
-      {mode === "listening-mode" && (
+      {mode === "listening-mode" && !showListeningCompletionCard && (
         <div>
           <Button
-            className="w-full mt-4 rounded-full p-5"
+            className="w-full mt-4 rounded-full p-5 bg-[#5EA9FF] hover:bg-[#4E98F0] text-white flex items-center justify-center gap-2"
             onClick={() => {
               if (clickLocked.current) return;
               clickLocked.current = true;
               setTimeout(() => (clickLocked.current = false), 2000);
+
+              if (
+                listeningStage === "question_text" &&
+                !showListeningCompletionCard
+              ) {
+                setShowListeningCompletionCard(true);
+                return;
+              }
 
               (listeningStage === "quiz"
                 ? handleSubmitAnswer
@@ -2391,7 +2573,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 selectedAnswer === null)
             }
           >
-            {listeningStage === "quiz" ? "Submit Answer" : "Next"}
+            <span>{listeningStage === "quiz" ? "Submit Answer" : "Next"}</span>
+            <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
       )}

@@ -21,11 +21,11 @@ const RolePlayModeTopics = () => {
       dispatch(
         fetchTopics({
           userId: user.id,
-          topicMode: is3DPath ? "3d-avatar-roleplay-mode" : "roleplay-mode",
-        })
+          topicMode: "roleplay-mode",
+        }),
       );
     }
-  }, [dispatch, user, is3DPath]);
+  }, [dispatch, user, location.pathname]);
 
   useEffect(() => {
     if (error) {

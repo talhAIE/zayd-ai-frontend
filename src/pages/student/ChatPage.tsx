@@ -109,8 +109,10 @@ const Chat: React.FC = () => {
     setIsNarrationComplete(false);
   }, [isHeroMode3D, narrationVideoUrl]);
 
-  const avatarVideoSrc = isReading3D
-    ? narrationVideoUrl ?? loopVideoUrl
+  const avatarVideoSrc = isAvatar3D
+    ? isReading3D
+      ? narrationVideoUrl ?? loopVideoUrl
+      : loopVideoUrl
     : undefined;
   const isDesktop = !isTabletOrBelow;
   const shouldShowReadingHero =
@@ -122,7 +124,7 @@ const Chat: React.FC = () => {
     <div className="flex max-h-screen">
       <main className="flex-1 transition-all duration-300">
         <div className="mx-auto md:px-6">
-          {isNarrowScreen && isAvatar3D ? (
+          {isNarrowScreen && isAvatar3D && mode !== 'listening-mode' ? (
             <div className="flex flex-col gap-1.5 h-[calc(100vh-120px)] min-h-0">
               <div className="flex-[0.55] min-h-0">
                 <AvatarModeLayout
@@ -173,10 +175,12 @@ const Chat: React.FC = () => {
                   onAudioPlaybackChange={handleAudioPlaybackChange}
                   onNarrationComplete={handleNarrationComplete}
                   readingHeroActive={shouldShowReadingHero}
+                  isAvatar3D={isAvatar3D}
+                  avatarVideoSrc={avatarVideoSrc}
                 />
               </div>
               <div className="flex flex-col gap-3 w-full md:w-1/3">
-                {isAvatar3D && (
+                {isAvatar3D && mode !== 'listening-mode' && (
                   <div
                     className={`transition-all duration-700 ease-in-out overflow-hidden ${
                       shouldShowSideAvatar

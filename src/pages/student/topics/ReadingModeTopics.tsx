@@ -21,11 +21,11 @@ const ReadingModeTopics = () => {
       dispatch(
         fetchTopics({
           userId: user.id,
-          topicMode: is3DPath ? "3d-avatar-reading-mode" : "reading-mode",
-        })
+          topicMode: "reading-mode",
+        }),
       );
     }
-  }, [dispatch, user, is3DPath]);
+  }, [dispatch, user, location.pathname]);
 
   useEffect(() => {
     if (error) {
