@@ -486,11 +486,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   }, [mode, listeningData?.questionText]);
 
   useEffect(() => {
-    if (
-      (mode === "reading-mode" || mode === "roleplay-mode") &&
-      contentPayload &&
-      !contentPayload.audioUrl
-    ) {
+    if (mode === "reading-mode" && contentPayload && !contentPayload.audioUrl) {
       onNarrationComplete?.();
     }
   }, [mode, contentPayload, onNarrationComplete]);
@@ -2025,9 +2021,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                           toggleAudio(
                             "content-payload-audio",
                             contentPayload.audioUrl,
-                            mode === "roleplay-mode"
-                              ? onNarrationComplete
-                              : undefined,
+                            undefined,
                           )
                         }
                       >

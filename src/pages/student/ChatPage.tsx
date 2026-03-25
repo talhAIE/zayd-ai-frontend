@@ -34,8 +34,7 @@ const Chat: React.FC = () => {
   const variant = searchParams.get('variant') || 'default';
   const isAvatar3D = variant === '3d';
   const isReading3D = isAvatar3D && mode === 'reading-mode';
-  const isRoleplay3D = isAvatar3D && mode === 'roleplay-mode';
-  const isHeroMode3D = isReading3D || isRoleplay3D;
+  const isHeroMode3D = isReading3D;
   const loopVideoUrl = '/avatar/placeholder.mp4';
 
   const [isSmallScreen, setIsSmallScreen] = useState(false);
