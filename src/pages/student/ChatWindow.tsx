@@ -1855,8 +1855,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                         playingAudioId === "kb-audio" && isCurrentlyPlaying
                       }
                       videoSrc={avatarVideoSrc}
-                      heightClassName="h-auto"
-                      videoClassName="max-h-[300px] h-auto w-auto object-contain mx-auto"
+                      heightClassName="h-[380px] md:h-[300px]"
+                      videoClassName="h-full w-full object-cover mx-auto md:max-h-[300px] md:h-auto md:w-auto md:object-contain"
                     />
                   )}
                 </div>
