@@ -239,6 +239,8 @@ interface ChatWindowProps {
     narrationVideoUrl?: string;
   }) => void;
   onAudioPlaybackChange?: (isPlaying: boolean) => void;
+  onNarrationComplete?: () => void;
+  readingHeroActive?: boolean;
 }
 
 function findLastIndex<T>(
@@ -256,6 +258,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   onTopicImage,
   onContentPayload,
   onAudioPlaybackChange,
+  onNarrationComplete,
+  readingHeroActive = false,
 }) => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -448,6 +452,16 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       setShouldShowExpandButton(fullHeight > maxHeight);
     }
   }, [contentPayload]);
+
+  useEffect(() => {
+    if (
+      (mode === "reading-mode" || mode === "roleplay-mode") &&
+      contentPayload &&
+      !contentPayload.audioUrl
+    ) {
+      onNarrationComplete?.();
+    }
+  }, [mode, contentPayload, onNarrationComplete]);
 
   const getSupportedMimeType = () => {
     const types = [
@@ -1720,7 +1734,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           className={`flex flex-col max-w-[800px] mx-auto bg-gray-100 rounded-xl overflow-hidden shadow-2xl ${
             mode === "listening-mode"
               ? "min-h-[49vh] max-h-[49vh]"
-              : "max-h-[86vh] min-h-[86vh] md:min-h-[82vh] md:max-h-[82vh]"
+              : readingHeroActive
+                ? "min-h-[calc(100vh-340px)] max-h-[calc(100vh-340px)] md:min-h-[calc(100vh-340px)] md:max-h-[calc(100vh-340px)]"
+                : "max-h-[86vh] min-h-[86vh] md:min-h-[82vh] md:max-h-[82vh]"
           }`}
         >
           {mode !== "listening-mode" && (
@@ -1804,6 +1820,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                         toggleAudio(
                           "content-payload-audio",
                           contentPayload.audioUrl,
+                          onNarrationComplete,
                         )
                     : undefined
                 }
@@ -1838,6 +1855,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                         toggleAudio(
                           "content-payload-audio",
                           contentPayload.audioUrl,
+                          mode === "roleplay-mode" ? onNarrationComplete : undefined,
                         )
                       }
                     >

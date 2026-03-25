@@ -7,6 +7,8 @@ interface AvatarModeLayoutProps {
   videoSrc?: string;
   loop?: boolean;
   onEnded?: () => void;
+  heightClassName?: string;
+  videoClassName?: string;
 }
 
 const AvatarModeLayout: React.FC<AvatarModeLayoutProps> = ({
@@ -15,6 +17,8 @@ const AvatarModeLayout: React.FC<AvatarModeLayoutProps> = ({
   videoSrc,
   loop,
   onEnded,
+  heightClassName,
+  videoClassName,
 }) => {
 
   return (
@@ -25,6 +29,8 @@ const AvatarModeLayout: React.FC<AvatarModeLayoutProps> = ({
         videoSrc={videoSrc}
         loop={loop}
         onEnded={onEnded}
+        heightClassName={heightClassName}
+        videoClassName={videoClassName}
       />
     </div>
   );

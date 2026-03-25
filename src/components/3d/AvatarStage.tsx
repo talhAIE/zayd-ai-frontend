@@ -7,6 +7,8 @@ interface AvatarStageProps {
   syncPlaying?: boolean;
   loop?: boolean;
   onEnded?: () => void;
+  heightClassName?: string;
+  videoClassName?: string;
 }
 
 const AvatarStage: React.FC<AvatarStageProps> = ({
@@ -16,6 +18,8 @@ const AvatarStage: React.FC<AvatarStageProps> = ({
   syncPlaying = false,
   loop,
   onEnded,
+  heightClassName,
+  videoClassName,
 }) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -31,6 +35,9 @@ const AvatarStage: React.FC<AvatarStageProps> = ({
     }
   }, [syncPlaying, loop]);
 
+  const videoSizingClass =
+    videoClassName ?? 'w-full h-full object-cover';
+
   return (
     <div className="w-full">
       {timerLabel && (
@@ -41,7 +48,7 @@ const AvatarStage: React.FC<AvatarStageProps> = ({
       <div className="w-full max-w-full mx-auto">
         <div
           className={`w-full rounded-2xl overflow-hidden ${
-            compact ? 'h-[360px]' : 'h-[440px]'
+            heightClassName ?? (compact ? 'h-[360px]' : 'h-[440px]')
           }`}
         >
           <video
@@ -51,7 +58,7 @@ const AvatarStage: React.FC<AvatarStageProps> = ({
             muted
             preload="auto"
             onEnded={onEnded}
-            className="relative block w-full h-full object-cover -scale-x-100"
+            className={`relative block -scale-x-100 ${videoSizingClass}`}
           />
         </div>
       </div>

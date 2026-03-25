@@ -28,33 +28,41 @@ const Chat: React.FC = () => {
   const [narrationVideoUrl, setNarrationVideoUrl] = useState<string | null>(
     null,
   );
+  const [isNarrationComplete, setIsNarrationComplete] = useState(false);
   const [searchParams] = useSearchParams();
   const mode = searchParams.get('mode') || 'chat-mode';
   const variant = searchParams.get('variant') || 'default';
   const isAvatar3D = variant === '3d';
   const isReading3D = isAvatar3D && mode === 'reading-mode';
+  const isRoleplay3D = isAvatar3D && mode === 'roleplay-mode';
+  const isHeroMode3D = isReading3D || isRoleplay3D;
   const loopVideoUrl = '/avatar/placeholder.mp4';
 
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const [isNarrowScreen, setIsNarrowScreen] = useState(false);
+  const [isTabletOrBelow, setIsTabletOrBelow] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const smallQuery = window.matchMedia('(max-width: 640px)');
     const narrowQuery = window.matchMedia('(max-width: 768px)');
+    const tabletQuery = window.matchMedia('(max-width: 1024px)');
 
     const update = () => {
       setIsSmallScreen(smallQuery.matches);
       setIsNarrowScreen(narrowQuery.matches);
+      setIsTabletOrBelow(tabletQuery.matches);
     };
 
     update();
     smallQuery.addEventListener?.('change', update);
     narrowQuery.addEventListener?.('change', update);
+    tabletQuery.addEventListener?.('change', update);
 
     return () => {
       smallQuery.removeEventListener?.('change', update);
       narrowQuery.removeEventListener?.('change', update);
+      tabletQuery.removeEventListener?.('change', update);
     };
   }, []);
 
@@ -89,9 +97,26 @@ const Chat: React.FC = () => {
     [],
   );
 
+  const handleNarrationComplete = useCallback(() => {
+    setIsNarrationComplete(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isHeroMode3D) {
+      setIsNarrationComplete(true);
+      return;
+    }
+    setIsNarrationComplete(false);
+  }, [isHeroMode3D, narrationVideoUrl]);
+
   const avatarVideoSrc = isReading3D
     ? narrationVideoUrl ?? loopVideoUrl
     : undefined;
+  const isDesktop = !isTabletOrBelow;
+  const shouldShowReadingHero =
+    isHeroMode3D && isDesktop && !isNarrationComplete;
+  const shouldShowSideAvatar =
+    isAvatar3D && (!isHeroMode3D || !isDesktop || isNarrationComplete);
 
   return (
     <div className="flex max-h-screen">
@@ -122,21 +147,49 @@ const Chat: React.FC = () => {
             </div>
           ) : (
             <div className="flex flex-col md:flex-row justify-between w-full gap-4 md:gap-6">
-              <div className="flex-1 md:flex-grow-2 w-full md:w-auto ">
+              <div className="flex-1 md:flex-grow-2 w-full md:w-auto flex flex-col min-h-0">
+                {isHeroMode3D && isDesktop && (
+                  <div
+                    className={`transition-all duration-700 ease-in-out overflow-hidden ${
+                      shouldShowReadingHero
+                        ? 'opacity-100 translate-y-0 scale-100 max-h-[1000px] mb-4'
+                        : 'opacity-0 -translate-y-2 scale-95 max-h-0 mb-0 pointer-events-none'
+                    }`}
+                  >
+                    <div className="w-full max-w-[800px] mx-auto rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white">
+                      <AvatarModeLayout
+                        syncPlaying={isAvatarSyncPlaying}
+                        videoSrc={avatarVideoSrc}
+                        heightClassName="h-auto"
+                        videoClassName="max-h-[300px] h-auto w-auto object-contain mx-auto"
+                      />
+                    </div>
+                  </div>
+                )}
                 <ChatWindow
                   onShowFeedback={handleShowFeedback}
                   onTopicImage={handleTopicImage}
                   onContentPayload={handleContentPayload}
                   onAudioPlaybackChange={handleAudioPlaybackChange}
+                  onNarrationComplete={handleNarrationComplete}
+                  readingHeroActive={shouldShowReadingHero}
                 />
               </div>
               <div className="flex flex-col gap-3 w-full md:w-1/3">
                 {isAvatar3D && (
-                  <AvatarModeLayout
-                    compact
-                    syncPlaying={isAvatarSyncPlaying}
-                    videoSrc={avatarVideoSrc}
-                  />
+                  <div
+                    className={`transition-all duration-700 ease-in-out overflow-hidden ${
+                      shouldShowSideAvatar
+                        ? 'opacity-100 translate-y-0 scale-100 max-h-[420px]'
+                        : 'opacity-0 translate-y-2 scale-95 max-h-0 pointer-events-none'
+                    }`}
+                  >
+                    <AvatarModeLayout
+                      compact
+                      syncPlaying={isAvatarSyncPlaying}
+                      videoSrc={avatarVideoSrc}
+                    />
+                  </div>
                 )}
                 {!isSmallScreen && (
                   <FeedbackSection
