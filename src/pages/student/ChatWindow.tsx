@@ -251,6 +251,7 @@ interface ChatWindowProps {
   readingHeroActive?: boolean;
   isAvatar3D?: boolean;
   avatarVideoSrc?: string;
+  onListeningVideoUrl?: (videoUrl?: string) => void;
 }
 
 function findLastIndex<T>(
@@ -272,6 +273,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   readingHeroActive = false,
   isAvatar3D = false,
   avatarVideoSrc,
+  onListeningVideoUrl,
 }) => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -561,6 +563,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     socket.on("listening_payload", ({ chatId: newChatId, ...data }) => {
       setChatId(newChatId);
       setListeningData(data);
+      if (data?.narrationVideoUrl) {
+        onListeningVideoUrl?.(data.narrationVideoUrl);
+      } else {
+        onListeningVideoUrl?.(undefined);
+      }
 
       let currentStage: string | null = null;
       if (data.narrationText) {

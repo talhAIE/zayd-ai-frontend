@@ -26,7 +26,7 @@ const ChatModeTopics = () => {
       dispatch(
         fetchTopics({
           userId: user.id,
-          topicMode: "listening-mode",
+          topicMode: is3DPath ? "3d-listening-mode" : "listening-mode",
         }),
       );
     }

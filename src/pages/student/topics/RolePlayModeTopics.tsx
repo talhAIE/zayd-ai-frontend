@@ -21,7 +21,7 @@ const RolePlayModeTopics = () => {
       dispatch(
         fetchTopics({
           userId: user.id,
-          topicMode: "roleplay-mode",
+          topicMode: is3DPath ? "3d-roleplay-mode" : "roleplay-mode",
         }),
       );
     }

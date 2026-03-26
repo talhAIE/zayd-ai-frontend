@@ -21,7 +21,7 @@ const ReadingModeTopics = () => {
       dispatch(
         fetchTopics({
           userId: user.id,
-          topicMode: "reading-mode",
+          topicMode: is3DPath ? "3d-reading-mode" : "reading-mode",
         }),
       );
     }

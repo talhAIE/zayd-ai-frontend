@@ -28,6 +28,9 @@ const Chat: React.FC = () => {
   const [narrationVideoUrl, setNarrationVideoUrl] = useState<string | null>(
     null,
   );
+  const [listeningVideoUrl, setListeningVideoUrl] = useState<string | null>(
+    null,
+  );
   const [isNarrationComplete, setIsNarrationComplete] = useState(false);
   const [searchParams] = useSearchParams();
   const mode = searchParams.get('mode') || 'chat-mode';
@@ -89,6 +92,14 @@ const Chat: React.FC = () => {
     [],
   );
 
+  const handleListeningVideoUrl = useCallback((videoUrl?: string) => {
+    if (videoUrl) {
+      setListeningVideoUrl(videoUrl);
+    } else {
+      setListeningVideoUrl(null);
+    }
+  }, []);
+
   const handleAudioPlaybackChange = useCallback(
     (isPlaying: boolean) => {
       setIsAvatarSyncPlaying(isPlaying);
@@ -108,10 +119,14 @@ const Chat: React.FC = () => {
     setIsNarrationComplete(false);
   }, [isHeroMode3D, narrationVideoUrl]);
 
+  const readingHeroVideoSrc = narrationVideoUrl ?? loopVideoUrl;
+  const readingSideVideoSrc = loopVideoUrl;
   const avatarVideoSrc = isAvatar3D
     ? isReading3D
-      ? narrationVideoUrl ?? loopVideoUrl
-      : loopVideoUrl
+      ? readingHeroVideoSrc
+      : mode === 'listening-mode'
+        ? listeningVideoUrl ?? loopVideoUrl
+        : loopVideoUrl
     : undefined;
   const isDesktop = !isTabletOrBelow;
   const shouldShowReadingHero =
@@ -160,7 +175,7 @@ const Chat: React.FC = () => {
                     <div className="w-full max-w-[800px] mx-auto rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white">
                       <AvatarModeLayout
                         syncPlaying={isAvatarSyncPlaying}
-                        videoSrc={avatarVideoSrc}
+                        videoSrc={readingHeroVideoSrc}
                         heightClassName="h-auto"
                         videoClassName="max-h-[300px] h-auto w-auto object-contain mx-auto"
                       />
@@ -176,6 +191,7 @@ const Chat: React.FC = () => {
                   readingHeroActive={shouldShowReadingHero}
                   isAvatar3D={isAvatar3D}
                   avatarVideoSrc={avatarVideoSrc}
+                  onListeningVideoUrl={handleListeningVideoUrl}
                 />
               </div>
               <div className="flex flex-col gap-3 w-full md:w-1/3">
@@ -190,7 +206,9 @@ const Chat: React.FC = () => {
                     <AvatarModeLayout
                       compact
                       syncPlaying={isAvatarSyncPlaying}
-                      videoSrc={avatarVideoSrc}
+                      videoSrc={
+                        isReading3D ? readingSideVideoSrc : avatarVideoSrc
+                      }
                     />
                   </div>
                 )}

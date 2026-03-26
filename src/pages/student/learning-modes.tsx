@@ -69,6 +69,7 @@ const LearningModes: React.FC = () => {
   const user = localStorage.getItem("AiTutorUser");
   const parsedUser = JSON.parse(user || "{}");
   const schoolCategory = parsedUser?.schoolCategory;
+  const schoolName = parsedUser?.schoolName;
 
   let filteredModes = modes;
   if (schoolCategory === "government") {
@@ -139,7 +140,8 @@ const LearningModes: React.FC = () => {
     );
 
   const is3dAllowed =
-    schoolCategory === "demo-flow" || schoolCategory === "Bave AI";
+    schoolCategory?.toLowerCase?.() === "3d-demo-test" ||
+    schoolName?.toLowerCase?.() === "3d-demo-test";
   if (!is3dAllowed) {
     filteredModes = filteredModes.filter(
       (mode) => mode.title !== "3D Avatar Mode"
