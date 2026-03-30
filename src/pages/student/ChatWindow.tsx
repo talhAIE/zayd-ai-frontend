@@ -355,7 +355,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   // --- End Listening Mode State ---
 
   const [isContextCompleted, setIsContextCompleted] = useState(false);
-  const [hasStartedContextAudio, setHasStartedContextAudio] = useState(false);
+  const [, setHasStartedContextAudio] = useState(false);
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
   const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
 
