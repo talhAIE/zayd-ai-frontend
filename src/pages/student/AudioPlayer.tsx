@@ -9,11 +9,12 @@ interface AudioPlayerProps {
     progress: number;
     duration: number;
     onTogglePlay: () => void;
+    showTotal?: boolean;
 }
 
-const formatTime = (sec: number) => {
+const formatTime = (sec: number, placeholder = '00:00') => {
     if (isNaN(sec) || sec === Infinity) {
-        return '00:00';
+        return placeholder;
     }
     return `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(
         Math.floor(sec % 60)
@@ -25,6 +26,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     progress,
     duration,
     onTogglePlay,
+    showTotal = false,
 }) => {
     const waveformRef = React.useRef<HTMLDivElement>(null);
     const [barCount, setBarCount] = React.useState(0);
@@ -89,8 +91,10 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
             >
                 {bars}
             </div>
-            <span className="text-xs font-mono text-white/80 min-w-[50px] text-right pr-1">
-                {formatTime(progress)}
+            <span className="text-xs font-mono text-white/80 min-w-[92px] text-right pr-1 whitespace-nowrap">
+                {showTotal
+                    ? `${formatTime(progress)} / ${formatTime(duration, '--:--')}`
+                    : formatTime(progress)}
             </span>
         </div>
     );

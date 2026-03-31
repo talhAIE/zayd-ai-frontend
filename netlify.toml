@@ -4,7 +4,7 @@
 
 [[redirects]]
   from = "/api/*"
-  to = "https://unadministratively-instable-tawana.ngrok-free.dev/api/:splat"
+  to = "https://calciferous-dopily-steven.ngrok-free.dev/api/:splat"
   status = 200
   force = true
   headers = {X-From = "Netlify"}
