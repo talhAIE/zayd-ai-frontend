@@ -45,7 +45,7 @@ import QuestionnaireModal from "@/components/ui/QuestionaireModal";
 import AudioPlayer from "./AudioPlayer";
 import ReadingPassageCard from "@/components/ui/ReadingPassageCard";
 import AvatarModeLayout from "@/components/3d/AvatarModeLayout";
-import birdWithClock from "@/assets/images/bird-with-headphones.png";
+import birdWithHeadphones from "@/assets/images/bird-with-headphones.png";
 
 interface McqAnswer {
   questionId: string;
@@ -379,14 +379,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
   // --- Listening Mode State ---
   const [listeningStage, setListeningStage] = useState<string | null>(null);
+  const listeningStageRef = useRef<string | null>(null);
   const [listeningData, setListeningData] = useState<any>(null);
   const [currentMcqIndex, setCurrentMcqIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showReplayPopup, setShowReplayPopup] = useState(false);
   const [mcqAnswers, setMcqAnswers] = useState<{ [key: string]: number }>({});
   const [pendingMcqPayload, setPendingMcqPayload] = useState<any | null>(null);
-  const [pendingQuestionPayload, setPendingQuestionPayload] =
-    useState<any | null>(null);
   const onListeningAudioStateRef = useRef(onListeningAudioState);
   const onListeningAudioControllerRef = useRef(onListeningAudioController);
   const onListeningStageChangeRef = useRef(onListeningStageChange);
@@ -469,7 +468,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     setShowListeningHints(false);
     setShowListeningCompletionCard(false);
     setPendingMcqPayload(null);
-    setPendingQuestionPayload(null);
     setHasPlayedIntroAudio(false);
     setIsContextCompleted(false);
     hasListeningStartedRef.current = false;
@@ -607,6 +605,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   }, [onListeningStageChange]);
 
   useEffect(() => {
+    listeningStageRef.current = listeningStage;
+  }, [listeningStage]);
+
+  useEffect(() => {
     if (mode !== "listening-mode" || !isAvatar3DContext) return;
     onListeningAudioStateRef.current?.({
       isPlaying: playingAudioId === "kb-audio" && isCurrentlyPlaying,
@@ -712,6 +714,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         onListeningVideoUrl?.(undefined);
       }
 
+      const inQuiz = listeningStageRef.current === "quiz";
+      const payloadMcqs = data.mcqs || data.questions || [];
+      if (inQuiz && !payloadMcqs.length) {
+        // Ignore late non-quiz payloads while user is on quiz.
+        return;
+      }
+
       let currentStage: string | null = null;
       const shouldForceInitial =
         mode === "listening-mode" && !hasListeningStartedRef.current;
@@ -722,7 +731,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         setShowListeningHints(false);
         setShowListeningCompletionCard(false);
         setPendingMcqPayload(null);
-        setPendingQuestionPayload(null);
         prefetchedQuizRef.current = false;
         currentStage = "initial";
         hasListeningStartedRef.current = true;
@@ -744,8 +752,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           setPendingMcqPayload({ chatId: newChatId, ...data });
         }
       } else if (data.questionText) {
-        if (listeningStage === "initial") {
-          setPendingQuestionPayload({ chatId: newChatId, ...data });
+        if (listeningStageRef.current === "initial") {
           if (!prefetchedQuizRef.current) {
             prefetchedQuizRef.current = true;
             requestNextListeningStage();
@@ -764,12 +771,17 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             },
           ]);
         }
-      } else if (data.mcqs || data.questions) {
+      } else if (payloadMcqs.length) {
         setPendingMcqPayload({ chatId: newChatId, ...data });
+        if (inQuiz) {
+          setMcqList(payloadMcqs);
+          setCurrentMcqIndex(0);
+          setPendingMcqPayload(null);
+          return;
+        }
         if (wantsQuizRef.current) {
-          const nextMcqs = data.mcqs || data.questions || [];
           setListeningStage("quiz");
-          setMcqList(nextMcqs);
+          setMcqList(payloadMcqs);
           setCurrentMcqIndex(0);
           setPendingMcqPayload(null);
           wantsQuizRef.current = false;
@@ -782,7 +794,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           setShowListeningHints(true);
           wantsHintsRef.current = false;
         }
-        currentStage = listeningStage ?? "question_text";
+        currentStage = listeningStageRef.current ?? "question_text";
       }
 
       setListeningStage(currentStage);
@@ -1673,6 +1685,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       listeningStage === "initial" &&
       !prefetchedQuestionRef.current
     ) {
+      if (!chatId) return;
       prefetchedQuestionRef.current = true;
       lastListeningStageRequestRef.current = Date.now();
       socketRef.current?.emit("next_listening_stage", { chatId });
@@ -1902,8 +1915,16 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     <>
       {mode === "listening-mode" && (
         <>
-          <Dialog open={showReplayPopup} onOpenChange={setShowReplayPopup}>
-            <DialogContent>
+          <Dialog
+            open={showReplayPopup}
+            onOpenChange={(open) => {
+              if (!open) setShowReplayPopup(false);
+            }}
+          >
+            <DialogContent
+              onPointerDownOutside={(e) => e.preventDefault()}
+              onInteractOutside={(e) => e.preventDefault()}
+            >
               <DialogHeader>
                 <DialogTitle>That's not quite right</DialogTitle>
                 <DialogDescription>
@@ -1913,7 +1934,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               </DialogHeader>
               <DialogFooter className="gap-2 sm:justify-center">
                 <Button
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setShowReplayPopup(false);
                   }}
                 >
@@ -2228,7 +2250,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               {showListeningCompletionCard && (
                 <div className="w-full max-w-[720px] mx-auto text-center px-2 md:px-0">
                   <img
-                    src={birdWithClock}
+                    src={birdWithHeadphones}
                     alt="Listening helper"
                     className="h-28 w-auto mx-auto mb-4"
                   />
