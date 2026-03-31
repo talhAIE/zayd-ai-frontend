@@ -269,7 +269,12 @@ interface ChatWindowProps {
     progress: number;
     duration: number;
   }) => void;
-  onListeningAudioController?: (controller: { toggle: () => void }) => void;
+  onListeningAudioController?: (controller: {
+    toggle: () => void;
+    play: () => void;
+    pause: () => void;
+    restart: () => void;
+  }) => void;
 }
 
 function findLastIndex<T>(
