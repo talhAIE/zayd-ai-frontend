@@ -45,7 +45,7 @@ import QuestionnaireModal from "@/components/ui/QuestionaireModal";
 import AudioPlayer from "./AudioPlayer";
 import ReadingPassageCard from "@/components/ui/ReadingPassageCard";
 import AvatarModeLayout from "@/components/3d/AvatarModeLayout";
-import birdWithClock from "@/assets/images/landingpage/bird-with-clock.png";
+import birdWithClock from "@/assets/images/bird-with-headphones.png";
 
 interface McqAnswer {
   questionId: string;
@@ -385,6 +385,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const [showReplayPopup, setShowReplayPopup] = useState(false);
   const [mcqAnswers, setMcqAnswers] = useState<{ [key: string]: number }>({});
   const [pendingMcqPayload, setPendingMcqPayload] = useState<any | null>(null);
+  const [pendingQuestionPayload, setPendingQuestionPayload] =
+    useState<any | null>(null);
   const onListeningAudioStateRef = useRef(onListeningAudioState);
   const onListeningAudioControllerRef = useRef(onListeningAudioController);
   const onListeningStageChangeRef = useRef(onListeningStageChange);
@@ -399,6 +401,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const clickLocked = React.useRef(false);
   const onEndCalledRef = useRef(false);
   const skipListeningCompletionStepRef = useRef(false);
+  const hasListeningStartedRef = useRef(false);
+  const wantsQuizRef = useRef(false);
+  const wantsHintsRef = useRef(false);
+  const prefetchedQuestionRef = useRef(false);
+  const prefetchedQuizRef = useRef(false);
+  const lastListeningStageRequestRef = useRef<number>(0);
+  const quizPrefetchTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Add new states for audio completion tracking
   const [_hasCompletedNarration, _setHasCompletedNarration] = useState(false);
@@ -438,6 +447,21 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     );
   }, []);
 
+  const requestNextListeningStage = (delayMs = 0) => {
+    if (!socketRef.current || !chatId) return;
+    const now = Date.now();
+    const elapsed = now - lastListeningStageRequestRef.current;
+    const minGap = 5200;
+    const wait = Math.max(delayMs, minGap - elapsed, 0);
+    if (quizPrefetchTimerRef.current) {
+      clearTimeout(quizPrefetchTimerRef.current);
+    }
+    quizPrefetchTimerRef.current = setTimeout(() => {
+      lastListeningStageRequestRef.current = Date.now();
+      socketRef.current?.emit("next_listening_stage", { chatId });
+    }, wait);
+  };
+
   useEffect(() => {
     if (mode !== "listening-mode") return;
     // Always start listening topics from the beginning.
@@ -445,8 +469,19 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     setShowListeningHints(false);
     setShowListeningCompletionCard(false);
     setPendingMcqPayload(null);
+    setPendingQuestionPayload(null);
     setHasPlayedIntroAudio(false);
     setIsContextCompleted(false);
+    hasListeningStartedRef.current = false;
+    wantsQuizRef.current = false;
+    wantsHintsRef.current = false;
+    prefetchedQuestionRef.current = false;
+    prefetchedQuizRef.current = false;
+    lastListeningStageRequestRef.current = 0;
+    if (quizPrefetchTimerRef.current) {
+      clearTimeout(quizPrefetchTimerRef.current);
+      quizPrefetchTimerRef.current = null;
+    }
   }, [mode, topicId]);
 
   const isIOS = () =>
@@ -667,11 +702,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       resetActivityTimer();
     });
 
-  socket.on("listening_payload", ({ chatId: newChatId, ...data }) => {
-    setChatId(newChatId);
-    setListeningData(data);
-    setHasPlayedIntroAudio(false);
-    setIsContextCompleted(false);
+    socket.on("listening_payload", ({ chatId: newChatId, ...data }) => {
+      setChatId(newChatId);
+      setListeningData(data);
+
       if (data?.narrationVideoUrl) {
         onListeningVideoUrl?.(data.narrationVideoUrl);
       } else {
@@ -679,24 +713,79 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       }
 
       let currentStage: string | null = null;
-      if (data.narrationText) {
+      const shouldForceInitial =
+        mode === "listening-mode" && !hasListeningStartedRef.current;
+
+      if (shouldForceInitial) {
+        setHasPlayedIntroAudio(false);
+        setIsContextCompleted(false);
+        setShowListeningHints(false);
+        setShowListeningCompletionCard(false);
+        setPendingMcqPayload(null);
+        setPendingQuestionPayload(null);
+        prefetchedQuizRef.current = false;
         currentStage = "initial";
-      } else if (data.questionText) {
-        currentStage = "question_text";
-      } else if (data.mcqs) {
-        if (isAvatar3DContext && data.kbAudioUrl) {
-          currentStage = "initial";
+        hasListeningStartedRef.current = true;
+        setMessages(
+          data.narrationText
+            ? [
+                {
+                  id: "narration-audio",
+                  messageType: "text",
+                  type: "received",
+                  text: data.narrationText,
+                  audioUrl: data.narrationAudioUrl,
+                  audioPlayed: false,
+                },
+              ]
+            : [],
+        );
+        if (data.mcqs || data.questions) {
           setPendingMcqPayload({ chatId: newChatId, ...data });
-        } else {
-          currentStage = "quiz";
-          setMcqList(data.mcqs);
-          setCurrentMcqIndex(0);
         }
+      } else if (data.questionText) {
+        if (listeningStage === "initial") {
+          setPendingQuestionPayload({ chatId: newChatId, ...data });
+          if (!prefetchedQuizRef.current) {
+            prefetchedQuizRef.current = true;
+            requestNextListeningStage();
+          }
+          currentStage = "initial";
+        } else {
+          currentStage = "question_text";
+          setMessages([
+            {
+              id: "question-audio",
+              messageType: "text",
+              type: "received",
+              text: data.questionText,
+              audioUrl: data.questionAudioUrl,
+              audioPlayed: false,
+            },
+          ]);
+        }
+      } else if (data.mcqs || data.questions) {
+        setPendingMcqPayload({ chatId: newChatId, ...data });
+        if (wantsQuizRef.current) {
+          const nextMcqs = data.mcqs || data.questions || [];
+          setListeningStage("quiz");
+          setMcqList(nextMcqs);
+          setCurrentMcqIndex(0);
+          setPendingMcqPayload(null);
+          wantsQuizRef.current = false;
+          onListeningStageChangeRef.current?.("quiz", {
+            kbAudioUrl: data.kbAudioUrl,
+          });
+          return;
+        }
+        if (wantsHintsRef.current) {
+          setShowListeningHints(true);
+          wantsHintsRef.current = false;
+        }
+        currentStage = listeningStage ?? "question_text";
       }
 
       setListeningStage(currentStage);
-      setShowListeningCompletionCard(false);
-      setShowListeningHints(false);
       logger.info(`Listening mode stage inferred: ${currentStage}`, data);
       onListeningStageChangeRef.current?.(currentStage, {
         kbAudioUrl: data.kbAudioUrl,
@@ -924,8 +1013,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         setMcqList(payload.questions);
         setChatId(payload.chatId);
         setIsQuestionnaireOpen(true);
-      } else if (mode === "listening-mode" && payload.mcqs) {
-        setPendingMcqPayload(payload);
+      } else if (mode === "listening-mode") {
+        if (payload.mcqs || payload.questions) {
+          setPendingMcqPayload(payload);
+        }
       }
     });
 
@@ -949,60 +1040,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       }
     });
 
-    socket.on("listening_payload", ({ chatId: newChatId, ...data }) => {
-      setChatId(newChatId);
-      setListeningData(data);
-      setHasPlayedIntroAudio(false);
-      setIsContextCompleted(false);
-      setShowListeningHints(false);
-      setShowListeningCompletionCard(false);
-      setPendingMcqPayload(null);
 
-      let currentStage: string | null = null;
-      if (mode === "listening-mode") {
-        currentStage = "initial";
-        setMessages(
-          data.narrationText
-            ? [
-                {
-                  id: "narration-audio",
-                  messageType: "text",
-                  type: "received",
-                  text: data.narrationText,
-                  audioUrl: data.narrationAudioUrl,
-                  audioPlayed: false,
-                },
-              ]
-            : [],
-        );
-        if (data.mcqs) {
-          setPendingMcqPayload({ chatId: newChatId, ...data });
-        }
-      } else if (data.questionText) {
-        currentStage = "question_text";
-        setMessages([
-          {
-            id: "question-audio", // Use a fixed ID for question
-            messageType: "text",
-            type: "received",
-            text: data.questionText,
-            audioUrl: data.questionAudioUrl,
-            audioPlayed: false,
-          },
-        ]);
-      } else if (data.mcqs) {
-        currentStage = "quiz";
-        setMessages([]); // Clear messages for quiz stage
-        setMcqList(data.mcqs);
-        setCurrentMcqIndex(0);
-      }
-
-      setListeningStage(currentStage);
-      logger.info(`Listening mode stage inferred: ${currentStage}`, data);
-      onListeningStageChangeRef.current?.(currentStage, {
-        kbAudioUrl: data.kbAudioUrl,
-      });
-    });
 
     socket.on(ChatEvents.ERROR, (payload) => {
       logger.receiving(ChatEvents.ERROR, payload);
@@ -1630,6 +1668,15 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
   const playKbAudio = () => {
     if (!listeningData?.kbAudioUrl) return;
+    if (
+      mode === "listening-mode" &&
+      listeningStage === "initial" &&
+      !prefetchedQuestionRef.current
+    ) {
+      prefetchedQuestionRef.current = true;
+      lastListeningStageRequestRef.current = Date.now();
+      socketRef.current?.emit("next_listening_stage", { chatId });
+    }
     if (soundRef.current) {
       if (playingAudioId !== "kb-audio") {
         setPlayingAudioId("kb-audio");
@@ -1671,12 +1718,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     resetInactivityTimer();
 
     if (mode === "listening-mode" && isAvatar3DContext) {
-      // Step 2: show hint card after intro before advancing
-      if (listeningStage === "initial" && !showListeningHints) {
-        setShowListeningHints(true);
+      // Step 2: show completion card after intro before advancing
+      if (listeningStage === "initial" && !showListeningCompletionCard) {
+        setShowListeningCompletionCard(true);
         return;
       }
-      // Step 3: show completion card after transcript before quiz
+      // Step 2: show completion card after transcript before quiz
       if (
         listeningStage === "question_text" &&
         !showListeningCompletionCard &&
@@ -1686,16 +1733,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         return;
       }
     }
-    skipListeningCompletionStepRef.current = false;
-
     if (
       mode === "listening-mode" &&
       isAvatar3DContext &&
-      pendingMcqPayload?.mcqs &&
-      isContextCompleted
+      pendingMcqs?.length &&
+      skipListeningCompletionStepRef.current
     ) {
       setListeningStage("quiz");
-      setMcqList(pendingMcqPayload.mcqs);
+      setMcqList(pendingMcqs);
       setChatId(pendingMcqPayload.chatId);
       setListeningData((prevData: any) => ({
         ...prevData,
@@ -1706,6 +1751,23 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       onListeningStageChangeRef.current?.("quiz", {
         kbAudioUrl: pendingMcqPayload.kbAudioUrl,
       });
+      wantsQuizRef.current = false;
+      skipListeningCompletionStepRef.current = false;
+      return;
+    }
+
+    if (
+      mode === "listening-mode" &&
+      isAvatar3DContext &&
+      skipListeningCompletionStepRef.current &&
+      !pendingMcqs?.length
+    ) {
+      wantsQuizRef.current = true;
+      if (!prefetchedQuizRef.current) {
+        prefetchedQuizRef.current = true;
+        requestNextListeningStage();
+      }
+      toast.info("Loading quiz...");
       return;
     }
 
@@ -1726,9 +1788,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         toast.info("Loading quiz...");
       } else {
         toast.info("Loading next part...");
-        setTimeout(() => {
-          window.location.reload();
-        }, 500); // Small delay to ensure event is sent
       }
     } else {
       toast.error("Cannot proceed to next stage. Connection issue.");
@@ -1817,18 +1876,26 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
   const shouldShowModeTitle = !(isAvatar3DContext && mode === "reading-mode");
   const shouldShowListeningIntro =
-    isAvatar3DContext && listeningStage === "initial" && !showListeningHints;
-  const shouldShowListeningHint =
-    (listeningStage === "initial" && !isAvatar3DContext) ||
-    showListeningHints;
+    isAvatar3DContext &&
+    listeningStage === "initial" &&
+    !showListeningHints &&
+    !showListeningCompletionCard;
+  const shouldShowListeningHint = showListeningHints;
+  const pendingMcqs =
+    pendingMcqPayload?.mcqs || pendingMcqPayload?.questions || [];
   const listeningHints =
-    (pendingMcqPayload?.mcqs || [])
+    [
+      ...(pendingMcqs || []),
+      ...(mcqList || []),
+    ]
       .map((mcq: any) => (typeof mcq?.hint === "string" ? mcq.hint.trim() : ""))
       .filter((hint: string) => hint.length > 0) || [];
   const listeningHintText =
     listeningHints.length > 0
-      ? listeningHints.join("\n\n")
-      : listeningData?.questionText || "Hints will appear here as you progress.";
+      ? listeningHints
+      : listeningData?.questionText
+        ? [listeningData.questionText]
+        : [];
 
   return (
     // The JSX part remains largely the same, only the audio player logic needs updates.
@@ -2125,18 +2192,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 </div>
               )}
 
-              {shouldShowListeningHint && (
-                <div className="rounded-2xl bg-[#CFE9FF] border border-[#8CC7FF] p-4 md:p-5 shadow-sm">
-                  <div className="flex items-center gap-2 text-[#2B6CB0] font-semibold mb-2">
-                    <Info className="h-4 w-4" />
-                    Hint
-                  </div>
-                  <p className="text-sm text-[#2F4B66] whitespace-pre-wrap">
-                    {listeningHintText}
-                  </p>
-                </div>
-              )}
-
               {listeningStage === "question_text" &&
                 !showListeningCompletionCard && (
                   <div className="rounded-2xl bg-white border border-[#B9E1FF] p-4 md:p-5 shadow-sm">
@@ -2171,7 +2226,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 )}
 
               {showListeningCompletionCard && (
-                <div className="rounded-3xl bg-white border border-slate-200 p-6 md:p-8 text-center shadow-sm">
+                <div className="w-full max-w-[720px] mx-auto text-center px-2 md:px-0">
                   <img
                     src={birdWithClock}
                     alt="Listening helper"
@@ -2198,23 +2253,68 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   <div className="grid grid-cols-2 gap-3 mt-3">
                     <Button
                       variant="outline"
-                      className="rounded-full border-[#6AAEFF] text-[#3EA4F9] hover:bg-[#E6F3FF]"
-                      onClick={() => setShowListeningHints(true)}
+                      className="rounded-full border-[#6AAEFF] text-[#3EA4F9] hover:bg-[#E6F3FF] h-10 px-3 md:px-4 text-[11px] sm:text-sm leading-none whitespace-nowrap min-w-0 justify-center gap-2"
+                      onClick={() => {
+                        setShowListeningHints(true);
+                        if (!pendingMcqs?.length) {
+                          wantsHintsRef.current = true;
+                          if (!prefetchedQuizRef.current) {
+                            prefetchedQuizRef.current = true;
+                            requestNextListeningStage();
+                          }
+                        }
+                      }}
                     >
-                      <Star className="h-4 w-4 mr-2" />
+                      <Star className="h-4 w-4" />
                       Show Hints
                     </Button>
                     <Button
                       variant="outline"
-                      className="rounded-full text-gray-500 hover:bg-gray-100"
+                      className="rounded-full text-gray-500 hover:bg-gray-100 h-10 px-3 md:px-4 text-[11px] sm:text-sm leading-none whitespace-nowrap min-w-0 justify-center gap-2"
                       onClick={() => {
-                        restartKbAudio();
+                        setShowListeningCompletionCard(false);
+                        setShowListeningHints(false);
+                        skipListeningCompletionStepRef.current = false;
+                        setListeningStage("initial");
+                        setIsContextCompleted(false);
+                        setHasPlayedIntroAudio(false);
+                        if (listeningData?.narrationText) {
+                          setMessages([
+                            {
+                              id: "narration-audio",
+                              messageType: "text",
+                              type: "received",
+                              text: listeningData.narrationText,
+                              audioUrl: listeningData.narrationAudioUrl,
+                              audioPlayed: false,
+                            },
+                          ]);
+                        }
                       }}
                       disabled={!listeningData?.kbAudioUrl}
                     >
                       Replay Avatar Video
                     </Button>
                   </div>
+                  {shouldShowListeningHint && (
+                    <div className="mt-4 rounded-2xl bg-[#CFE9FF] border border-[#8CC7FF] p-4 md:p-5 shadow-sm text-left">
+                      <div className="flex items-center gap-2 text-[#2B6CB0] font-semibold mb-2">
+                        <Info className="h-4 w-4" />
+                        Hint
+                      </div>
+                      {listeningHintText.length > 0 ? (
+                        <ul className="text-sm text-[#2F4B66] space-y-2 list-disc pl-5">
+                          {listeningHintText.map((hint, idx) => (
+                            <li key={idx}>{hint}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-sm text-[#2F4B66]">
+                          Hints will appear here as you progress.
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
