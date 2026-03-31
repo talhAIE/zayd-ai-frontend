@@ -216,7 +216,7 @@ const Chat: React.FC = () => {
               <div className="flex-none shrink-0">
                 {isAvatar3D ? (
                   <div className="w-full rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white">
-                    {(mode === 'reading-mode' || mode === 'roleplay-mode') && (
+                    {mode === 'reading-mode' && (
                       <AvatarHeaderBar
                         title={modeTitle}
                         onBack={() => navigate(-1)}
@@ -286,8 +286,8 @@ const Chat: React.FC = () => {
               />
             </div>
           ) : (
-            <div className="flex flex-col md:flex-row justify-between w-full gap-4 md:gap-6">
-              <div className="flex-1 md:flex-grow-2 w-full md:w-auto flex flex-col min-h-0">
+            <div className="flex flex-col lg:flex-row justify-between w-full gap-4 lg:gap-6">
+              <div className="flex-1 lg:flex-grow-2 w-full lg:w-auto flex flex-col min-h-0 order-2 lg:order-1">
                 {isHeroMode3D && isDesktop && (
                   <div
                     className={`transition-all duration-700 ease-in-out overflow-hidden ${
@@ -346,7 +346,7 @@ const Chat: React.FC = () => {
                   }}
                 />
               </div>
-              <div className="flex flex-col gap-3 w-full md:w-1/3">
+              <div className="flex flex-col gap-3 w-full lg:w-1/3 order-1 lg:order-2">
                 {isAvatar3D && mode !== 'listening-mode' && (
                   <div
                     className={`transition-all duration-700 ease-in-out overflow-hidden ${
@@ -355,32 +355,13 @@ const Chat: React.FC = () => {
                         : 'opacity-0 translate-y-2 scale-95 max-h-0 pointer-events-none'
                     }`}
                   >
-                    {mode === 'roleplay-mode' && isDesktop ? (
-                      <div className="w-full rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white">
-                        <AvatarHeaderBar
-                          title={modeTitle}
-                          onBack={() => navigate(-1)}
-                          timerLabel={
-                            sessionTimeRemaining
-                              ? formatTime(sessionTimeRemaining)
-                              : '...'
-                          }
-                        />
-                        <AvatarModeLayout
-                          compact
-                          syncPlaying={isAvatarSyncPlaying}
-                          videoSrc={avatarVideoSrc}
-                        />
-                      </div>
-                    ) : (
-                      <AvatarModeLayout
-                        compact
-                        syncPlaying={isAvatarSyncPlaying}
-                        videoSrc={
-                          isReading3D ? readingSideVideoSrc : avatarVideoSrc
-                        }
-                      />
-                    )}
+                    <AvatarModeLayout
+                      compact
+                      syncPlaying={isAvatarSyncPlaying}
+                      videoSrc={isReading3D ? readingSideVideoSrc : avatarVideoSrc}
+                      heightClassName={!isDesktop ? 'h-[420px] md:h-[380px]' : undefined}
+                      videoClassName={!isDesktop ? 'h-full w-full object-contain' : undefined}
+                    />
                   </div>
                 )}
                 {shouldShowListeningSidebar && (
