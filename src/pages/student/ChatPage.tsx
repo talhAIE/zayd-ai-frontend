@@ -234,10 +234,12 @@ const Chat: React.FC = () => {
                       loop={isReading3D ? false : undefined}
                       onEnded={isReading3D ? handleNarrationComplete : undefined}
                       heightClassName={
-                        mode === 'roleplay-mode' ? 'h-auto' : undefined
+                        mode === 'roleplay-mode' || mode === 'reading-mode'
+                          ? 'h-auto'
+                          : undefined
                       }
                       videoClassName={
-                        mode === 'roleplay-mode'
+                        mode === 'roleplay-mode' || mode === 'reading-mode'
                           ? 'w-full h-auto object-contain'
                           : undefined
                       }
@@ -296,7 +298,11 @@ const Chat: React.FC = () => {
           ) : (
             <div className="flex flex-col w-full gap-4 lg:gap-6">
               <div className="flex flex-col lg:flex-row justify-between w-full gap-4 lg:gap-6">
-                <div className="flex-1 lg:flex-grow-2 w-full lg:w-auto flex flex-col min-h-0 order-2 lg:order-1">
+                <div
+                  className={`flex-1 lg:flex-grow-2 w-full lg:w-auto flex flex-col min-h-0 ${
+                    mode === 'roleplay-mode' ? 'order-1 lg:order-1' : 'order-2 lg:order-1'
+                  }`}
+                >
                   {!isNarrowScreen && isAvatar3D && mode === 'roleplay-mode' && (
                     <div className="w-full max-w-[800px] mx-auto rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white mb-0">
                       <AvatarHeaderBar
@@ -310,6 +316,22 @@ const Chat: React.FC = () => {
                       />
                     </div>
                   )}
+                  {!isNarrowScreen &&
+                    !isDesktop &&
+                    isAvatar3D &&
+                    mode === 'reading-mode' && (
+                      <div className="w-full rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white mb-0">
+                        <AvatarHeaderBar
+                          title={modeTitle}
+                          onBack={() => navigate(-1)}
+                          timerLabel={
+                            sessionTimeRemaining
+                              ? formatTime(sessionTimeRemaining)
+                              : '...'
+                          }
+                        />
+                      </div>
+                    )}
                   {isHeroMode3D && isDesktop && (
                     <div
                       className={`transition-all duration-700 ease-in-out overflow-hidden ${
@@ -368,30 +390,44 @@ const Chat: React.FC = () => {
                     }}
                   />
                 </div>
-                <div className="flex flex-col gap-3 w-full lg:w-1/3 order-1 lg:order-2">
-                  {isAvatar3D && mode !== 'listening-mode' && (
+                <div
+                  className={`flex flex-col gap-3 w-full lg:w-1/3 ${
+                    mode === 'roleplay-mode' ? 'order-2 lg:order-2' : 'order-1 lg:order-2'
+                  }`}
+                >
+                {isAvatar3D && mode !== 'listening-mode' && (
                   <div
                     className={`transition-all duration-700 ease-in-out ${
                       shouldShowSideAvatar
                         ? `opacity-100 translate-y-0 scale-100 ${
-                            mode === 'roleplay-mode'
+                            mode === 'roleplay-mode' || mode === 'reading-mode'
                               ? 'max-h-none overflow-visible'
                               : 'max-h-[420px] overflow-hidden'
                           }`
                         : 'opacity-0 translate-y-2 scale-95 max-h-0 pointer-events-none overflow-hidden'
                     }`}
                   >
-                      <AvatarModeLayout
-                        compact
-                        syncPlaying={isAvatarSyncPlaying}
-                        videoSrc={
-                          isReading3D ? readingSideVideoSrc : avatarVideoSrc
-                        }
-                        heightClassName="h-auto"
-                        videoClassName="relative left-1/2 -translate-x-1/2 w-[150%] max-w-none h-auto object-contain object-center"
-                      />
-                    </div>
-                  )}
+                    <AvatarModeLayout
+                      compact
+                      syncPlaying={isAvatarSyncPlaying}
+                      videoSrc={
+                        isReading3D ? readingSideVideoSrc : avatarVideoSrc
+                      }
+                      heightClassName={
+                        mode === 'roleplay-mode' || mode === 'reading-mode'
+                          ? 'h-auto'
+                          : undefined
+                      }
+                      videoClassName={
+                        mode === 'roleplay-mode'
+                          ? 'relative left-1/2 -translate-x-1/2 w-[150%] max-w-none h-auto object-contain object-center'
+                          : mode === 'reading-mode'
+                            ? 'w-full h-auto object-contain'
+                            : undefined
+                      }
+                    />
+                  </div>
+                )}
                   {shouldShowListeningSidebar && (
                     <div className="flex flex-col gap-3">
                       <AvatarModeLayout
