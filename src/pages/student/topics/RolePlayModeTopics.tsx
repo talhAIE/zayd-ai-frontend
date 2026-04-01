@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { fetchTopics } from "@/redux/slices/topicsSlice";
@@ -10,15 +10,22 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const RolePlayModeTopics = () => {
   const dispatch = useAppDispatch();
+  const location = useLocation();
+  const is3DPath = location.pathname.includes("/3d-avatar-mode/");
 
   const { topics, isLoading, error } = useAppSelector((state) => state.topics);
   const { user } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
     if (user?.id) {
-      dispatch(fetchTopics({ userId: user.id, topicMode: "roleplay-mode" }));
+      dispatch(
+        fetchTopics({
+          userId: user.id,
+          topicMode: is3DPath ? "3d-roleplay-mode" : "roleplay-mode",
+        }),
+      );
     }
-  }, [dispatch, user]);
+  }, [dispatch, user, location.pathname]);
 
   useEffect(() => {
     if (error) {
@@ -156,7 +163,7 @@ const RolePlayModeTopics = () => {
           <Link
             to={`/student/learning-mode/${topic?.id}/${encodeURIComponent(
               topic.topicName
-            )}?mode=roleplay-mode`}
+            )}?mode=roleplay-mode${is3DPath ? "&variant=3d" : ""}`}
             className={`absolute bottom-3 right-3 ${
               locked ? "pointer-events-none" : ""
             }`}

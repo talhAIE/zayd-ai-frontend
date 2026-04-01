@@ -44,6 +44,12 @@ const modes = [
     route: "/student/learning-modes/listening-mode",
   },
   {
+    title: "3D Avatar Mode",
+    description: "3D avatar learning with Reading, Role Play, and Listening.",
+    image: ReadingModeAvatar,
+    route: "/student/learning-modes/3d-avatar-mode",
+  },
+  {
     title: "Debate Mode",
     description: "Practice debating skills and critical thinking with the AI.",
     image: debateModeAvatar,
@@ -63,6 +69,7 @@ const LearningModes: React.FC = () => {
   const user = localStorage.getItem("AiTutorUser");
   const parsedUser = JSON.parse(user || "{}");
   const schoolCategory = parsedUser?.schoolCategory;
+  const schoolName = parsedUser?.schoolName;
 
   let filteredModes = modes;
   if (schoolCategory === "government") {
@@ -112,7 +119,11 @@ const LearningModes: React.FC = () => {
 
   if (schoolCategory === "demo-flow") {
     filteredModes = modes.filter(
-      (mode) => mode.title === "Reading Mode" || mode.title === "Role Play Mode" || mode.title === "Listening Mode"
+      (mode) =>
+        mode.title === "Reading Mode" ||
+        mode.title === "Role Play Mode" ||
+        mode.title === "Listening Mode" ||
+        mode.title === "3D Avatar Mode"
     );
   }
 
@@ -124,8 +135,18 @@ const LearningModes: React.FC = () => {
         mode.title === "Debate Mode" ||
         mode.title === "Reading Mode" ||
         mode.title === "Role Play Mode" ||
-        mode.title === "Listening Mode"
+        mode.title === "Listening Mode" ||
+        mode.title === "3D Avatar Mode"
     );
+
+  const is3dAllowed =
+    schoolCategory?.toLowerCase?.() === "3d-demo-test" ||
+    schoolName?.toLowerCase?.() === "3d-demo-test";
+  if (!is3dAllowed) {
+    filteredModes = filteredModes.filter(
+      (mode) => mode.title !== "3D Avatar Mode"
+    );
+  }
 
   // const [isQueationnaireOpen, setIsQuestionnaireOpen] = React.useState(true);
 

@@ -9,11 +9,12 @@ interface AudioPlayerProps {
     progress: number;
     duration: number;
     onTogglePlay: () => void;
+    showTotal?: boolean;
 }
 
-const formatTime = (sec: number) => {
+const formatTime = (sec: number, placeholder = '00:00') => {
     if (isNaN(sec) || sec === Infinity) {
-        return '00:00';
+        return placeholder;
     }
     return `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(
         Math.floor(sec % 60)
@@ -25,6 +26,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     progress,
     duration,
     onTogglePlay,
+    showTotal = false,
 }) => {
     const waveformRef = React.useRef<HTMLDivElement>(null);
     const [barCount, setBarCount] = React.useState(0);
@@ -61,18 +63,19 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         return Array.from({ length: barCount }, (_, i) => (
             <div
                 key={i}
-                className={`w-[3px] rounded-full ${i < coloredBars ? 'bg-primary' : 'bg-gray-300'
-                    }`}
+                className={`w-[3px] rounded-full ${
+                    i < coloredBars ? 'bg-[#6AAEFF]' : 'bg-white/20'
+                }`}
                 style={{ height: `${heights[i % heights.length]}px` }}
             />
         ));
     }, [barCount, progress, duration]);
 
     return (
-        <div className="flex items-center gap-2 w-full max-w-xs p-2 rounded-full bg-gray-100 border">
+        <div className="flex items-center gap-3 w-full rounded-full bg-[#2B2B2B] px-3 py-2 shadow-lg">
             <Button
                 size="icon"
-                className="rounded-full bg-primary text-white hover:bg-primary/90 shadow-md h-8 w-8 flex-shrink-0"
+                className="rounded-full bg-white/10 text-white hover:bg-white/20 shadow-md h-8 w-8 flex-shrink-0"
                 onClick={onTogglePlay}
             >
                 {isPlaying ? (
@@ -88,8 +91,10 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
             >
                 {bars}
             </div>
-            <span className="text-xs font-mono text-gray-500 min-w-[45px] text-right pr-1">
-                {formatTime(progress)}
+            <span className="text-xs font-mono text-white/80 min-w-[92px] text-right pr-1 whitespace-nowrap">
+                {showTotal
+                    ? `${formatTime(progress)} / ${formatTime(duration, '--:--')}`
+                    : formatTime(progress)}
             </span>
         </div>
     );
