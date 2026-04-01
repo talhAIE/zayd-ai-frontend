@@ -216,7 +216,7 @@ const Chat: React.FC = () => {
               <div className="flex-none shrink-0">
                 {isAvatar3D ? (
                   <div className="w-full rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white">
-                    {mode === 'reading-mode' && (
+                    {(mode === 'reading-mode' || mode === 'roleplay-mode') && (
                       <AvatarHeaderBar
                         title={modeTitle}
                         onBack={() => navigate(-1)}
@@ -286,126 +286,147 @@ const Chat: React.FC = () => {
               />
             </div>
           ) : (
-            <div className="flex flex-col lg:flex-row justify-between w-full gap-4 lg:gap-6">
-              <div className="flex-1 lg:flex-grow-2 w-full lg:w-auto flex flex-col min-h-0 order-2 lg:order-1">
-                {isHeroMode3D && isDesktop && (
-                  <div
-                    className={`transition-all duration-700 ease-in-out overflow-hidden ${
-                      shouldShowReadingHero
-                        ? 'opacity-100 translate-y-0 scale-100 max-h-[1000px] mb-4'
-                        : 'opacity-0 -translate-y-2 scale-95 max-h-0 mb-0 pointer-events-none'
-                    }`}
-                  >
-                    <div className="w-full max-w-[800px] mx-auto rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white">
-                      {isAvatar3D && (
-                        <AvatarHeaderBar
-                          title={modeTitle}
-                          onBack={() => navigate(-1)}
-                          timerLabel={
-                            sessionTimeRemaining
-                              ? formatTime(sessionTimeRemaining)
-                              : '...'
-                          }
-                        />
-                      )}
-                      <AvatarModeLayout
-                        syncPlaying={isAvatarSyncPlaying}
-                        videoSrc={readingHeroVideoSrc}
-                        loop={false}
-                        onEnded={handleNarrationComplete}
-                        heightClassName="h-auto"
-                        videoClassName="max-h-[300px] h-auto w-auto object-contain mx-auto"
+            <div className="flex flex-col w-full gap-4 lg:gap-6">
+              <div className="flex flex-col lg:flex-row justify-between w-full gap-4 lg:gap-6">
+                <div className="flex-1 lg:flex-grow-2 w-full lg:w-auto flex flex-col min-h-0 order-2 lg:order-1">
+                  {isDesktop && isAvatar3D && mode === 'roleplay-mode' && (
+                    <div className="w-full max-w-[800px] mx-auto rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white mb-0">
+                      <AvatarHeaderBar
+                        title={modeTitle}
+                        onBack={() => navigate(-1)}
+                        timerLabel={
+                          sessionTimeRemaining
+                            ? formatTime(sessionTimeRemaining)
+                            : '...'
+                        }
                       />
                     </div>
-                  </div>
-                )}
-                <ChatWindow
-                  onShowFeedback={handleShowFeedback}
-                  onTopicImage={handleTopicImage}
-                  onContentPayload={handleContentPayload}
-                  onAudioPlaybackChange={handleAudioPlaybackChange}
-                  onNarrationComplete={handleNarrationComplete}
-                  readingHeroActive={shouldShowReadingHero}
-                  isAvatar3D={isAvatar3D}
-                  avatarVideoSrc={avatarVideoSrc}
-                  chatLocked={shouldLockChat}
-                  onContentAudioComplete={handleContentAudioComplete}
-                  onListeningVideoUrl={handleListeningVideoUrl}
-                  onSessionTimeRemaining={setSessionTimeRemaining}
-                  onListeningAudioController={(controller) => {
-                    listeningAudioControlRef.current = controller;
-                  }}
-                  onListeningAudioState={(state) => {
-                    setListeningAudioState(state);
-                  }}
-                  onListeningStageChange={(stage, data) => {
-                    setListeningStage(stage ?? null);
-                    if (data?.kbAudioUrl) {
-                      setListeningAudioUrl(data.kbAudioUrl);
-                    }
-                  }}
-                />
-              </div>
-              <div className="flex flex-col gap-3 w-full lg:w-1/3 order-1 lg:order-2">
-                {isAvatar3D && mode !== 'listening-mode' && (
-                  <div
-                    className={`transition-all duration-700 ease-in-out overflow-hidden ${
-                      shouldShowSideAvatar
-                        ? 'opacity-100 translate-y-0 scale-100 max-h-[420px]'
-                        : 'opacity-0 translate-y-2 scale-95 max-h-0 pointer-events-none'
-                    }`}
-                  >
-                    <AvatarModeLayout
-                      compact
-                      syncPlaying={isAvatarSyncPlaying}
-                      videoSrc={isReading3D ? readingSideVideoSrc : avatarVideoSrc}
-                      heightClassName={!isDesktop ? 'h-[420px] md:h-[380px]' : undefined}
-                      videoClassName={!isDesktop ? 'h-full w-full object-contain' : undefined}
-                    />
-                  </div>
-                )}
-                {shouldShowListeningSidebar && (
-                  <div className="flex flex-col gap-3">
-                    <AvatarModeLayout
-                      key={`listening-avatar-${listeningAvatarSeed}`}
-                      compact
-                      syncPlaying={listeningAudioState.isPlaying}
-                      videoSrc={avatarVideoSrc}
-                    />
-                    <AudioPlayer
-                      audioSrc={listeningAudioUrl || ''}
-                      isPlaying={listeningAudioState.isPlaying}
-                      progress={listeningAudioState.progress}
-                      duration={listeningAudioState.duration}
-                      onTogglePlay={() => {
-                        if (listeningAudioState.isPlaying) {
-                          listeningAudioControlRef.current?.pause?.();
-                        } else {
-                          listeningAudioControlRef.current?.play?.();
-                        }
-                      }}
-                      showTotal
-                    />
-                  </div>
-                )}
-                {!isSmallScreen && (
-                  <FeedbackSection
-                    isOpen={isFeedbackOpen}
-                    onClose={() => setIsFeedbackOpen(false)}
-                    feedback={currentFeedback}
-                  />
-                )}
-                {isSmallScreen && (
-                  <FeedbackSectionModal
-                    isOpen={isFeedbackMobile}
-                    onClose={() => setIsFeedbackMobile(false)}
-                    feedback={currentFeedback}
-                  />
-                )}
-                <div className="hidden md:block">
-                  {mode === 'photo-mode' && (
-                    <PhotoDisplay imageUrl={topicImage} />
                   )}
+                  {isHeroMode3D && isDesktop && (
+                    <div
+                      className={`transition-all duration-700 ease-in-out overflow-hidden ${
+                        shouldShowReadingHero
+                          ? 'opacity-100 translate-y-0 scale-100 max-h-[1000px] mb-4'
+                          : 'opacity-0 -translate-y-2 scale-95 max-h-0 mb-0 pointer-events-none'
+                      }`}
+                    >
+                      <div className="w-full max-w-[800px] mx-auto rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white">
+                        {isAvatar3D && (
+                          <AvatarHeaderBar
+                            title={modeTitle}
+                            onBack={() => navigate(-1)}
+                            timerLabel={
+                              sessionTimeRemaining
+                                ? formatTime(sessionTimeRemaining)
+                                : '...'
+                            }
+                          />
+                        )}
+                        <AvatarModeLayout
+                          syncPlaying={isAvatarSyncPlaying}
+                          videoSrc={readingHeroVideoSrc}
+                          loop={false}
+                          onEnded={handleNarrationComplete}
+                          heightClassName="h-auto"
+                          videoClassName="max-h-[300px] h-auto w-auto object-contain mx-auto"
+                        />
+                      </div>
+                    </div>
+                  )}
+                  <ChatWindow
+                    onShowFeedback={handleShowFeedback}
+                    onTopicImage={handleTopicImage}
+                    onContentPayload={handleContentPayload}
+                    onAudioPlaybackChange={handleAudioPlaybackChange}
+                    onNarrationComplete={handleNarrationComplete}
+                    readingHeroActive={shouldShowReadingHero}
+                    isAvatar3D={isAvatar3D}
+                    avatarVideoSrc={avatarVideoSrc}
+                    chatLocked={shouldLockChat}
+                    onContentAudioComplete={handleContentAudioComplete}
+                    onListeningVideoUrl={handleListeningVideoUrl}
+                    onSessionTimeRemaining={setSessionTimeRemaining}
+                    onListeningAudioController={(controller) => {
+                      listeningAudioControlRef.current = controller;
+                    }}
+                    onListeningAudioState={(state) => {
+                      setListeningAudioState(state);
+                    }}
+                    onListeningStageChange={(stage, data) => {
+                      setListeningStage(stage ?? null);
+                      if (data?.kbAudioUrl) {
+                        setListeningAudioUrl(data.kbAudioUrl);
+                      }
+                    }}
+                  />
+                </div>
+                <div className="flex flex-col gap-3 w-full lg:w-1/3 order-1 lg:order-2">
+                  {isAvatar3D && mode !== 'listening-mode' && (
+                    <div
+                      className={`transition-all duration-700 ease-in-out overflow-hidden ${
+                        shouldShowSideAvatar
+                          ? 'opacity-100 translate-y-0 scale-100 max-h-[420px]'
+                          : 'opacity-0 translate-y-2 scale-95 max-h-0 pointer-events-none'
+                      }`}
+                    >
+                      <AvatarModeLayout
+                        compact
+                        syncPlaying={isAvatarSyncPlaying}
+                        videoSrc={
+                          isReading3D ? readingSideVideoSrc : avatarVideoSrc
+                        }
+                        heightClassName={
+                          !isDesktop ? 'h-[420px] md:h-[380px]' : undefined
+                        }
+                        videoClassName={
+                          !isDesktop ? 'h-full w-full object-contain' : undefined
+                        }
+                      />
+                    </div>
+                  )}
+                  {shouldShowListeningSidebar && (
+                    <div className="flex flex-col gap-3">
+                      <AvatarModeLayout
+                        key={`listening-avatar-${listeningAvatarSeed}`}
+                        compact
+                        syncPlaying={listeningAudioState.isPlaying}
+                        videoSrc={avatarVideoSrc}
+                      />
+                      <AudioPlayer
+                        audioSrc={listeningAudioUrl || ''}
+                        isPlaying={listeningAudioState.isPlaying}
+                        progress={listeningAudioState.progress}
+                        duration={listeningAudioState.duration}
+                        onTogglePlay={() => {
+                          if (listeningAudioState.isPlaying) {
+                            listeningAudioControlRef.current?.pause?.();
+                          } else {
+                            listeningAudioControlRef.current?.play?.();
+                          }
+                        }}
+                        showTotal
+                      />
+                    </div>
+                  )}
+                  {!isSmallScreen && (
+                    <FeedbackSection
+                      isOpen={isFeedbackOpen}
+                      onClose={() => setIsFeedbackOpen(false)}
+                      feedback={currentFeedback}
+                    />
+                  )}
+                  {isSmallScreen && (
+                    <FeedbackSectionModal
+                      isOpen={isFeedbackMobile}
+                      onClose={() => setIsFeedbackMobile(false)}
+                      feedback={currentFeedback}
+                    />
+                  )}
+                  <div className="hidden md:block">
+                    {mode === 'photo-mode' && (
+                      <PhotoDisplay imageUrl={topicImage} />
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

@@ -20,7 +20,6 @@ import {
   Menu,
   Bell,
   Info,
-  Star,
   BookOpen,
   Check,
   ArrowRight,
@@ -1730,13 +1729,37 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     // Reset inactivity timer when user clicks next
     resetInactivityTimer();
 
+    const nextMcqs =
+      pendingMcqPayload?.mcqs || pendingMcqPayload?.questions || [];
+
     if (mode === "listening-mode" && isAvatar3DContext) {
-      // Step 2: show completion card after intro before advancing
-      if (listeningStage === "initial" && !showListeningCompletionCard) {
+      // Step 2: show hints after intro before advancing
+      if (
+        listeningStage === "initial" &&
+        !showListeningHints &&
+        !showListeningCompletionCard
+      ) {
+        setShowListeningHints(true);
+        if (!nextMcqs?.length) {
+          wantsHintsRef.current = true;
+          if (!prefetchedQuizRef.current) {
+            prefetchedQuizRef.current = true;
+            requestNextListeningStage();
+          }
+        }
+        return;
+      }
+      // Step 3: show completion card after hints before quiz
+      if (
+        listeningStage === "initial" &&
+        showListeningHints &&
+        !showListeningCompletionCard
+      ) {
+        setShowListeningHints(false);
         setShowListeningCompletionCard(true);
         return;
       }
-      // Step 2: show completion card after transcript before quiz
+      // Step 3: show completion card after transcript before quiz
       if (
         listeningStage === "question_text" &&
         !showListeningCompletionCard &&
@@ -1893,7 +1916,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     listeningStage === "initial" &&
     !showListeningHints &&
     !showListeningCompletionCard;
-  const shouldShowListeningHint = showListeningHints;
+  const shouldShowListeningHint =
+    isAvatar3DContext && showListeningHints && !showListeningCompletionCard;
   const pendingMcqs =
     pendingMcqPayload?.mcqs || pendingMcqPayload?.questions || [];
   const listeningHints =
@@ -1983,7 +2007,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-[#6B8BB8] uppercase tracking-wide">
-                    Step 3: Quiz
+                    Step 4: Quiz
                   </p>
                   <p className="text-lg font-semibold text-[#2B3A67]">
                     Test Your Knowledge
@@ -2149,7 +2173,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           )}
           {mode === "listening-mode" ? (
             <div
-              className={`flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-4 transition-all duration-500 ease-out ${
+              className={`relative flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-4 transition-all duration-500 ease-out ${
                 isListeningStepTransitioning
                   ? "opacity-0 translate-x-6"
                   : "opacity-100 translate-x-0"
@@ -2166,40 +2190,38 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 </div>
               </div>
 
-              {!(isAvatar3D && showListeningCompletionCard) && (
-                <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 md:p-6">
-                  <div className="relative rounded-2xl bg-[#F8FAFC] border border-slate-200 overflow-hidden p-4 md:p-6">
+              <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 md:p-6">
+                <div className="relative rounded-2xl bg-[#F8FAFC] border border-slate-200 overflow-hidden p-4 md:p-6">
                     {isAvatar3D && (
                       <AvatarModeLayout
                         syncPlaying={
                           playingAudioId === "kb-audio" && isCurrentlyPlaying
                         }
                         videoSrc={avatarVideoSrc}
-                        heightClassName="h-[380px] md:h-[300px]"
-                        videoClassName="h-full w-full object-cover mx-auto md:max-h-[300px] md:h-auto md:w-auto md:object-contain"
+                        heightClassName="h-auto"
+                        videoClassName="w-full h-auto object-contain"
                       />
                     )}
                   </div>
-                  <div className="mt-4">
-                    <AudioPlayer
-                      audioSrc={listeningData?.kbAudioUrl || ""}
-                      isPlaying={
-                        playingAudioId === "kb-audio" && isCurrentlyPlaying
-                      }
-                      progress={playingAudioId === "kb-audio" ? audioProgress : 0}
-                      duration={playingAudioId === "kb-audio" ? audioDuration : 0}
-                      onTogglePlay={() =>
-                        toggleAudio(
-                          "kb-audio",
-                          listeningData?.kbAudioUrl,
-                          handleKbAudioEnd,
-                        )
-                      }
-                      showTotal={isAvatar3DContext}
-                    />
-                  </div>
+                <div className="mt-4">
+                  <AudioPlayer
+                    audioSrc={listeningData?.kbAudioUrl || ""}
+                    isPlaying={
+                      playingAudioId === "kb-audio" && isCurrentlyPlaying
+                    }
+                    progress={playingAudioId === "kb-audio" ? audioProgress : 0}
+                    duration={playingAudioId === "kb-audio" ? audioDuration : 0}
+                    onTogglePlay={() =>
+                      toggleAudio(
+                        "kb-audio",
+                        listeningData?.kbAudioUrl,
+                        handleKbAudioEnd,
+                      )
+                    }
+                    showTotal={isAvatar3DContext}
+                  />
                 </div>
-              )}
+              </div>
 
               {shouldShowListeningIntro && (
                 <div className="rounded-2xl bg-white border border-[#B9E1FF] p-4 md:p-5 shadow-sm">
@@ -2211,6 +2233,26 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                     {listeningData?.introText ||
                       "Listen to the audio carefully. When you're ready, tap Next to continue."}
                   </p>
+                </div>
+              )}
+
+              {shouldShowListeningHint && (
+                <div className="rounded-2xl bg-[#CFE9FF] border border-[#8CC7FF] p-4 md:p-5 shadow-sm text-left">
+                  <div className="flex items-center gap-2 text-[#2B6CB0] font-semibold mb-2">
+                    <Info className="h-4 w-4" />
+                    Hints
+                  </div>
+                  {listeningHintText.length > 0 ? (
+                    <ul className="text-sm text-[#2F4B66] space-y-2 list-disc pl-5">
+                      {listeningHintText.map((hint, idx) => (
+                        <li key={idx}>{hint}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-[#2F4B66]">
+                      Hints will appear here as you progress.
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -2248,95 +2290,50 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 )}
 
               {showListeningCompletionCard && (
-                <div className="w-full max-w-[720px] mx-auto text-center px-2 md:px-0">
-                  <img
-                    src={birdWithHeadphones}
-                    alt="Listening helper"
-                    className="h-28 w-auto mx-auto mb-4"
-                  />
-                  <h3 className="text-xl font-semibold text-[#2B3A67]">
-                    Done with it?
-                  </h3>
-                  <p className="text-sm text-gray-500 mt-2">
-                    Need help understanding? Get hints or watch the avatar
-                    explanation again
-                  </p>
-                  <Button
-                    className="w-full mt-5 rounded-full bg-[#5EA9FF] hover:bg-[#4E98F0] text-white"
-                    onClick={() => {
-                      setShowListeningCompletionCard(false);
-                      setShowListeningHints(false);
-                      skipListeningCompletionStepRef.current = true;
-                      handleNextStage();
-                    }}
-                  >
-                    Continue to Quiz
-                  </Button>
-                  <div className="grid grid-cols-2 gap-3 mt-3">
+                <div className="absolute inset-0 z-20 flex items-center justify-center px-3 md:px-6">
+                  <div className="absolute inset-0 bg-white/70 backdrop-blur-sm" />
+                  <div className="relative w-full max-w-[720px] mx-auto text-center px-4 md:px-8 py-6 bg-white border border-slate-200 rounded-2xl shadow-xl">
+                    <img
+                      src={birdWithHeadphones}
+                      alt="Listening helper"
+                      className="h-28 w-auto mx-auto mb-4"
+                    />
+                    <h3 className="text-xl font-semibold text-[#2B3A67]">
+                      Done with it?
+                    </h3>
+                    <p className="text-sm text-gray-500 mt-2">
+                      Ready for the quiz? You can continue or replay the avatar
+                      explanation.
+                    </p>
                     <Button
-                      variant="outline"
-                      className="rounded-full border-[#6AAEFF] text-[#3EA4F9] hover:bg-[#E6F3FF] h-10 px-3 md:px-4 text-[11px] sm:text-sm leading-none whitespace-nowrap min-w-0 justify-center gap-2"
+                      className="w-full mt-5 rounded-full bg-[#5EA9FF] hover:bg-[#4E98F0] text-white"
                       onClick={() => {
-                        setShowListeningHints(true);
-                        if (!pendingMcqs?.length) {
-                          wantsHintsRef.current = true;
-                          if (!prefetchedQuizRef.current) {
-                            prefetchedQuizRef.current = true;
-                            requestNextListeningStage();
-                          }
-                        }
+                        setShowListeningCompletionCard(false);
+                        setShowListeningHints(false);
+                        skipListeningCompletionStepRef.current = true;
+                        handleNextStage();
                       }}
                     >
-                      <Star className="h-4 w-4" />
-                      Show Hints
+                      Continue to Quiz
                     </Button>
-                    <Button
-                      variant="outline"
-                      className="rounded-full text-gray-500 hover:bg-gray-100 h-10 px-3 md:px-4 text-[11px] sm:text-sm leading-none whitespace-nowrap min-w-0 justify-center gap-2"
+                    <div className="mt-3">
+                      <Button
+                        variant="outline"
+                        className="w-full rounded-full text-gray-500 hover:bg-gray-100 h-10 px-3 md:px-4 text-[11px] sm:text-sm leading-none whitespace-nowrap min-w-0 justify-center gap-2"
                       onClick={() => {
                         setShowListeningCompletionCard(false);
                         setShowListeningHints(false);
                         skipListeningCompletionStepRef.current = false;
                         setListeningStage("initial");
-                        setIsContextCompleted(false);
-                        setHasPlayedIntroAudio(false);
-                        if (listeningData?.narrationText) {
-                          setMessages([
-                            {
-                              id: "narration-audio",
-                              messageType: "text",
-                              type: "received",
-                              text: listeningData.narrationText,
-                              audioUrl: listeningData.narrationAudioUrl,
-                              audioPlayed: false,
-                            },
-                          ]);
-                        }
+                        setShowListeningHints(true);
+                        restartKbAudio();
                       }}
                       disabled={!listeningData?.kbAudioUrl}
                     >
                       Replay Avatar Video
-                    </Button>
-                  </div>
-                  {shouldShowListeningHint && (
-                    <div className="mt-4 rounded-2xl bg-[#CFE9FF] border border-[#8CC7FF] p-4 md:p-5 shadow-sm text-left">
-                      <div className="flex items-center gap-2 text-[#2B6CB0] font-semibold mb-2">
-                        <Info className="h-4 w-4" />
-                        Hint
-                      </div>
-                      {listeningHintText.length > 0 ? (
-                        <ul className="text-sm text-[#2F4B66] space-y-2 list-disc pl-5">
-                          {listeningHintText.map((hint, idx) => (
-                            <li key={idx}>{hint}</li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="text-sm text-[#2F4B66]">
-                          Hints will appear here as you progress.
-                        </p>
-                      )}
+                      </Button>
                     </div>
-                  )}
+                  </div>
                 </div>
               )}
             </div>
@@ -2926,7 +2923,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       </Dialog>
 
       {mode === "listening-mode" && !showListeningCompletionCard && (
-        <div>
+        <div className="w-full max-w-[800px] mx-auto">
           <Button
             className="w-full mt-4 rounded-full p-5 bg-[#5EA9FF] hover:bg-[#4E98F0] text-white flex items-center justify-center gap-2"
             onClick={() => {
