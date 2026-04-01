@@ -233,6 +233,14 @@ const Chat: React.FC = () => {
                       videoSrc={avatarVideoSrc}
                       loop={isReading3D ? false : undefined}
                       onEnded={isReading3D ? handleNarrationComplete : undefined}
+                      heightClassName={
+                        mode === 'roleplay-mode' ? 'h-auto' : undefined
+                      }
+                      videoClassName={
+                        mode === 'roleplay-mode'
+                          ? 'w-full h-auto object-contain'
+                          : undefined
+                      }
                     />
                   </div>
                 ) : (
@@ -408,18 +416,18 @@ const Chat: React.FC = () => {
                       />
                     </div>
                   )}
-                  {!isSmallScreen && (
-                    <FeedbackSection
-                      isOpen={isFeedbackOpen}
-                      onClose={() => setIsFeedbackOpen(false)}
-                      feedback={currentFeedback}
-                    />
-                  )}
-                  {isSmallScreen && (
-                    <FeedbackSectionModal
-                      isOpen={isFeedbackMobile}
-                      onClose={() => setIsFeedbackMobile(false)}
-                      feedback={currentFeedback}
+                {!isSmallScreen && !(isAvatar3D && mode === 'listening-mode') && (
+                  <FeedbackSection
+                    isOpen={isFeedbackOpen}
+                    onClose={() => setIsFeedbackOpen(false)}
+                    feedback={currentFeedback}
+                  />
+                )}
+                {isSmallScreen && !(isAvatar3D && mode === 'listening-mode') && (
+                  <FeedbackSectionModal
+                    isOpen={isFeedbackMobile}
+                    onClose={() => setIsFeedbackMobile(false)}
+                    feedback={currentFeedback}
                     />
                   )}
                   <div className="hidden md:block">
