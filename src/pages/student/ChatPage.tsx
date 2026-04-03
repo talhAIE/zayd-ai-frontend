@@ -297,10 +297,10 @@ const Chat: React.FC = () => {
             </div>
           ) : (
             <div className="flex flex-col w-full gap-4 lg:gap-6">
-              <div className="flex flex-col lg:flex-row justify-between w-full gap-4 lg:gap-6">
+              <div className="flex flex-col min-[768px]:flex-row justify-between w-full gap-4 lg:gap-6">
                 <div
-                  className={`flex-1 lg:flex-grow-2 w-full lg:w-auto flex flex-col min-h-0 ${
-                    mode === 'roleplay-mode' ? 'order-1 lg:order-1' : 'order-2 lg:order-1'
+                  className={`flex-1 min-[768px]:flex-grow-2 w-full min-[768px]:w-auto flex flex-col min-h-0 ${
+                    mode === 'roleplay-mode' ? 'order-1 min-[768px]:order-1' : 'order-2 min-[768px]:order-1'
                   }`}
                 >
                   {!isNarrowScreen && isAvatar3D && mode === 'roleplay-mode' && (
@@ -391,8 +391,8 @@ const Chat: React.FC = () => {
                   />
                 </div>
                 <div
-                  className={`flex flex-col gap-3 w-full lg:w-1/3 ${
-                    mode === 'roleplay-mode' ? 'order-2 lg:order-2' : 'order-1 lg:order-2'
+                  className={`flex flex-col gap-3 w-full min-[768px]:w-1/3 ${
+                    mode === 'roleplay-mode' ? 'order-2 min-[768px]:order-2' : 'order-1 min-[768px]:order-2'
                   }`}
                 >
                 {isAvatar3D && mode !== 'listening-mode' && (
