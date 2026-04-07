@@ -6,6 +6,7 @@ import AppRoutes from "./routes";
 import { ThemeProvider } from "./components/theme-provider";
 import { LanguageProvider } from "./components/language-provider";
 import { useCrossTabLogout } from "./hooks/useCrossTabLogout";
+import FaviconManager from "./components/FaviconManager";
 import "./App.css";
 
 const CrossTabLogoutHandler = () => {
@@ -20,6 +21,7 @@ function App() {
         <LanguageProvider defaultLanguage="en" storageKey="ai-tutor-language">
           <Router>
             <CrossTabLogoutHandler />
+            <FaviconManager />
             <AppRoutes />
             <Toaster position="top-right" offset={{ right: 85, top: 16 }} />
           </Router>
