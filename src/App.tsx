@@ -5,6 +5,7 @@ import { store } from "./redux/store";
 import AppRoutes from "./routes";
 import { ThemeProvider } from "./components/theme-provider";
 import { LanguageProvider } from "./components/language-provider";
+import FaviconManager from "./components/FaviconManager";
 import { useCrossTabLogout } from "./hooks/useCrossTabLogout";
 import "./App.css";
 
@@ -20,6 +21,7 @@ function App() {
         <LanguageProvider defaultLanguage="en" storageKey="ai-tutor-language">
           <Router>
             <CrossTabLogoutHandler />
+            <FaviconManager />
             <AppRoutes />
             <Toaster position="top-right" offset={{ right: 85, top: 16 }} />
           </Router>
