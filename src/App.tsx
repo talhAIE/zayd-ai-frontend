@@ -5,8 +5,8 @@ import { store } from "./redux/store";
 import AppRoutes from "./routes";
 import { ThemeProvider } from "./components/theme-provider";
 import { LanguageProvider } from "./components/language-provider";
-import { useCrossTabLogout } from "./hooks/useCrossTabLogout";
 import FaviconManager from "./components/FaviconManager";
+import { useCrossTabLogout } from "./hooks/useCrossTabLogout";
 import "./App.css";
 
 const CrossTabLogoutHandler = () => {

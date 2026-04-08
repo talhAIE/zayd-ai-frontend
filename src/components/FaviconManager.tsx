@@ -3,9 +3,7 @@ import { useLocation } from "react-router-dom";
 
 const FAVICON_SETS = {
   english: [
-    { id: "favicon-16", size: "16x16", href: "/favicons/one.ico" },
-    { id: "favicon-32", size: "32x32", href: "/favicons/five.ico" },
-    { id: "favicon-48", size: "48x48", href: "/favicons/three.ico" },
+    { id: "favicon-ico", size: "any", href: "/favicons/favicon.ico" },
   ],
 } as const;
 
