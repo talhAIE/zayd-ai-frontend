@@ -41,6 +41,51 @@ const initialState: AuthState = {
   isAuthenticated: Boolean(localStorage.getItem('AiTutorUser')),
 };
 
+const AVAILABLE_TOPIC_MODES_KEY = 'availableTopicModes';
+const TOPIC_MODES_TO_CHECK = [
+  'chat-mode',
+  'photo-mode',
+  'reading-mode',
+  'roleplay-mode',
+  'listening-mode',
+  'debate-mode',
+  'curriculum-mode',
+  '3d-reading-mode',
+  '3d-roleplay-mode',
+  '3d-listening-mode',
+];
+
+const fetchAvailableTopicModes = async (userId: string, accessToken: string) => {
+  const baseUrl = import.meta.env.VITE_API_BASE_URL;
+  const headers = {
+    Authorization: `Bearer ${accessToken}`,
+    'Content-Type': 'application/json',
+  };
+
+  const results = await Promise.all(
+    TOPIC_MODES_TO_CHECK.map(async (topicMode) => {
+      try {
+        const response = await axios.post(
+          `${baseUrl}/api/v1/topic/search`,
+          { userId, topicMode },
+          { headers }
+        );
+        const payload = response?.data?.data;
+        if (!payload) return null;
+        if (payload.isChapterBased) {
+          return (payload.chapters?.length || 0) > 0 ? topicMode : null;
+        }
+        return (payload.topics?.length || 0) > 0 ? topicMode : null;
+      } catch {
+        // Fail open to avoid hiding modes on transient errors
+        return topicMode;
+      }
+    })
+  );
+
+  return results.filter(Boolean) as string[];
+};
+
 export const login = createAsyncThunk(
   'auth/login',
   async (credentials: LoginCredentials, { rejectWithValue }) => {
@@ -61,6 +106,19 @@ export const login = createAsyncThunk(
       
       localStorage.setItem('loginEvent', Date.now().toString());
       localStorage.removeItem('loginEvent');
+
+      try {
+        const availableModes = await fetchAvailableTopicModes(
+          userWithRole.id,
+          data.accessToken
+        );
+        localStorage.setItem(
+          AVAILABLE_TOPIC_MODES_KEY,
+          JSON.stringify(availableModes)
+        );
+      } catch {
+        // ignore availability errors
+      }
       
       return {
         user: userWithRole,
@@ -105,6 +163,21 @@ export const addPhoneNumber = createAsyncThunk(
       
       localStorage.setItem('loginEvent', Date.now().toString());
       localStorage.removeItem('loginEvent');
+
+      if (accessToken) {
+        try {
+          const availableModes = await fetchAvailableTopicModes(
+            userWithRole.id,
+            accessToken
+          );
+          localStorage.setItem(
+            AVAILABLE_TOPIC_MODES_KEY,
+            JSON.stringify(availableModes)
+          );
+        } catch {
+          // ignore availability errors
+        }
+      }
       
       return {
         user: userWithRole,
@@ -189,6 +262,22 @@ export const getCurrentUser = createAsyncThunk(
       };
       
       localStorage.setItem('AiTutorUser', JSON.stringify(userWithRole));
+
+      const cached = localStorage.getItem(AVAILABLE_TOPIC_MODES_KEY);
+      if (!cached) {
+        try {
+          const availableModes = await fetchAvailableTopicModes(
+            userWithRole.id,
+            accessToken
+          );
+          localStorage.setItem(
+            AVAILABLE_TOPIC_MODES_KEY,
+            JSON.stringify(availableModes)
+          );
+        } catch {
+          // ignore availability errors
+        }
+      }
       
       return userWithRole;
     } catch (error: any) {

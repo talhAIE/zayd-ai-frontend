@@ -8,6 +8,7 @@ import roleplayModeAvatar from "@/assets/svgs/roleplay-mode.png";
 import listeningModeAvatar from "@/assets/svgs/listening-mode.png";
 import ReadingModeAvatar from "@/assets/svgs/reading-mode.png";
 import curriculumModeAvatar from "@/assets/svgs/curriculum-mode.webp";
+import TopicService from "@/services/topicsService";
 // import QuestionnaireModal from "@/components/ui/QuestionaireModal";
 
 const modes = [
@@ -70,83 +71,191 @@ const LearningModes: React.FC = () => {
   const parsedUser = JSON.parse(user || "{}");
   const schoolCategory = parsedUser?.schoolCategory;
   const schoolName = parsedUser?.schoolName;
+  const userId = parsedUser?.id;
+  const cachedTopicModes = React.useMemo(() => {
+    try {
+      const raw = localStorage.getItem("availableTopicModes");
+      return raw ? (JSON.parse(raw) as string[]) : null;
+    } catch {
+      return null;
+    }
+  }, []);
 
-  let filteredModes = modes;
-  if (schoolCategory === "government") {
-    filteredModes = modes.filter(
-      (mode) =>
-        mode.title === "Reading Mode" ||
-        mode.title === "Role Play Mode" ||
-        mode.title === "Listening Mode" ||
-        mode.title === "Debate Mode"
-    );
-  }
+  const filteredModes = React.useMemo(() => {
+    let nextModes = modes;
+    if (schoolCategory === "government") {
+      nextModes = modes.filter(
+        (mode) =>
+          mode.title === "Reading Mode" ||
+          mode.title === "Role Play Mode" ||
+          mode.title === "Listening Mode" ||
+          mode.title === "Debate Mode"
+      );
+    }
 
-  if (schoolCategory === "trial") {
-    filteredModes = modes.filter(
-      (mode) =>
-        mode.title === "Reading Mode" ||
-        mode.title === "Role Play Mode" ||
-        mode.title === "Listening Mode"
-    );
-  }
+    if (schoolCategory === "trial") {
+      nextModes = modes.filter(
+        (mode) =>
+          mode.title === "Reading Mode" ||
+          mode.title === "Role Play Mode" ||
+          mode.title === "Listening Mode"
+      );
+    }
 
-  if (schoolCategory === "saudi") {
-    filteredModes = modes.filter(
-      (mode) =>
-        mode.title === "Reading Mode" ||
-        mode.title === "Role Play Mode" ||
-        mode.title === "Listening Mode"
-    );
-  }
+    if (schoolCategory === "saudi") {
+      nextModes = modes.filter(
+        (mode) =>
+          mode.title === "Reading Mode" ||
+          mode.title === "Role Play Mode" ||
+          mode.title === "Listening Mode"
+      );
+    }
 
-  if (schoolCategory === "american") {
-    filteredModes = modes.filter(
-      (mode) => mode.title === "Chat Mode" || mode.title === "Photo Mode" ||
-        mode.title === "Curriculum Mode"
-    );
-  }
+    if (schoolCategory === "american") {
+      nextModes = modes.filter(
+        (mode) =>
+          mode.title === "Chat Mode" ||
+          mode.title === "Photo Mode" ||
+          mode.title === "Curriculum Mode"
+      );
+    }
 
-  if (schoolCategory === "american-2025") {
-    filteredModes = modes.filter(
-      (mode) =>
-        mode.title === "Reading Mode" ||
-        mode.title === "Role Play Mode" ||
-        mode.title === "Listening Mode" ||
-        mode.title === "Curriculum Mode"
-    );
-  }
+    if (schoolCategory === "american-2025") {
+      nextModes = modes.filter(
+        (mode) =>
+          mode.title === "Reading Mode" ||
+          mode.title === "Role Play Mode" ||
+          mode.title === "Listening Mode" ||
+          mode.title === "Curriculum Mode"
+      );
+    }
 
-  if (schoolCategory === "demo-flow") {
-    filteredModes = modes.filter(
-      (mode) =>
-        mode.title === "Reading Mode" ||
-        mode.title === "Role Play Mode" ||
-        mode.title === "Listening Mode" ||
-        mode.title === "3D Avatar Mode"
-    );
-  }
+    if (schoolCategory === "demo-flow") {
+      nextModes = modes.filter(
+        (mode) =>
+          mode.title === "Reading Mode" ||
+          mode.title === "Role Play Mode" ||
+          mode.title === "Listening Mode" ||
+          mode.title === "3D Avatar Mode"
+      );
+    }
 
-  if (schoolCategory === "Bave AI")
-    filteredModes = modes.filter(
-      (mode) =>
-        mode.title === "Chat Mode" ||
-        mode.title === "Photo Mode" ||
-        mode.title === "Debate Mode" ||
-        mode.title === "Reading Mode" ||
-        mode.title === "Role Play Mode" ||
-        mode.title === "Listening Mode" ||
-        mode.title === "3D Avatar Mode"
-    );
+    if (schoolCategory === "Bave AI") {
+      nextModes = modes.filter(
+        (mode) =>
+          mode.title === "Chat Mode" ||
+          mode.title === "Photo Mode" ||
+          mode.title === "Debate Mode" ||
+          mode.title === "Reading Mode" ||
+          mode.title === "Role Play Mode" ||
+          mode.title === "Listening Mode" ||
+          mode.title === "3D Avatar Mode"
+      );
+    }
 
-  const is3dAllowed =
-    schoolCategory?.toLowerCase?.() === "3d-demo-test" ||
-    schoolName?.toLowerCase?.() === "3d-demo-test";
-  if (!is3dAllowed) {
-    filteredModes = filteredModes.filter(
-      (mode) => mode.title !== "3D Avatar Mode"
-    );
-  }
+    const is3dAllowed =
+      schoolCategory?.toLowerCase?.() === "3d-demo-test" ||
+      schoolName?.toLowerCase?.() === "3d-demo-test";
+    if (!is3dAllowed) {
+      nextModes = nextModes.filter((mode) => mode.title !== "3D Avatar Mode");
+    }
+
+    return nextModes;
+  }, [schoolCategory, schoolName]);
+
+  const [modeAvailability, setModeAvailability] = React.useState<
+    Record<string, boolean>
+  >({});
+
+  React.useEffect(() => {
+    let cancelled = false;
+
+    const topicModeByTitle: Record<string, string> = {
+      "Chat Mode": "chat-mode",
+      "Photo Mode": "photo-mode",
+      "Reading Mode": "reading-mode",
+      "Role Play Mode": "roleplay-mode",
+      "Listening Mode": "listening-mode",
+      "Debate Mode": "debate-mode",
+      "Curriculum Mode": "curriculum-mode",
+    };
+
+    const hasContentForMode = async (topicMode: string) => {
+      try {
+        const response = await TopicService.getTopics(userId, topicMode);
+        const payload = response?.data?.data;
+        if (!payload) return true;
+        if (payload.isChapterBased) {
+          return (payload.chapters?.length || 0) > 0;
+        }
+        return (payload.topics?.length || 0) > 0;
+      } catch {
+        return true;
+      }
+    };
+
+    const fetchAvailability = async () => {
+      if (!userId) return;
+      if (cachedTopicModes) {
+        const cachedSet = new Set(cachedTopicModes);
+        const results = filteredModes.map((mode) => {
+          if (mode.title === "3D Avatar Mode") {
+            const available =
+              cachedSet.has("3d-reading-mode") ||
+              cachedSet.has("3d-roleplay-mode") ||
+              cachedSet.has("3d-listening-mode");
+            return [mode.title, available] as const;
+          }
+          const topicMode = topicModeByTitle[mode.title];
+          if (!topicMode) {
+            return [mode.title, true] as const;
+          }
+          return [mode.title, cachedSet.has(topicMode)] as const;
+        });
+        if (!cancelled) {
+          setModeAvailability(
+            results.reduce((acc, [title, available]) => {
+              acc[title] = available;
+              return acc;
+            }, {} as Record<string, boolean>)
+          );
+        }
+        return;
+      }
+      const results = await Promise.all(
+        filteredModes.map(async (mode) => {
+          if (mode.title === "3D Avatar Mode") {
+            const checks = await Promise.all([
+              hasContentForMode("3d-reading-mode"),
+              hasContentForMode("3d-roleplay-mode"),
+              hasContentForMode("3d-listening-mode"),
+            ]);
+            return [mode.title, checks.some(Boolean)] as const;
+          }
+          const topicMode = topicModeByTitle[mode.title];
+          if (!topicMode) {
+            return [mode.title, true] as const;
+          }
+          const available = await hasContentForMode(topicMode);
+          return [mode.title, available] as const;
+        })
+      );
+
+      if (!cancelled) {
+        setModeAvailability(
+          results.reduce((acc, [title, available]) => {
+            acc[title] = available;
+            return acc;
+          }, {} as Record<string, boolean>)
+        );
+      }
+    };
+
+    fetchAvailability();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, filteredModes, cachedTopicModes]);
 
   // const [isQueationnaireOpen, setIsQuestionnaireOpen] = React.useState(true);
 
@@ -170,7 +279,9 @@ const LearningModes: React.FC = () => {
       `}</style>
       <div className="mt-6 lg:mt-4 mx-2">
         <div className="flex flex-col gap-6 mx-auto">
-          {filteredModes.map((mode, index) => (
+          {filteredModes
+            .filter((mode) => modeAvailability[mode.title] !== false)
+            .map((mode, index) => (
             <div
               key={index}
               className="flex flex-col sm:flex-row items-center sm:items-center gap-4 sm:gap-6 rounded-3xl p-4 sm:p-3 bg-gradient-to-br from-[#058cf432] to-[#8a83f02c] hover:shadow-lg transition-all duration-300"
