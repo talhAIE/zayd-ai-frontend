@@ -311,8 +311,39 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const [sessionTimeRemaining, setSessionTimeRemaining] = useState<
     number | null
   >(null);
+  const sessionTimerBaseRef = useRef<{
+    remainingSeconds: number;
+    receivedAt: number;
+  } | null>(null);
+  const sessionTimerLastEmittedRef = useRef<number | null>(null);
   const [_sessionLimitReached, _setSessionLimitReached] = useState(false);
   const [chatCompleted, setChatCompleted] = useState(false);
+  const emitSessionRemaining = useCallback(
+    (next: number | null) => {
+      setSessionTimeRemaining(next);
+      onSessionTimeRemaining?.(next);
+    },
+    [onSessionTimeRemaining],
+  );
+
+  useEffect(() => {
+    const tick = () => {
+      const base = sessionTimerBaseRef.current;
+      if (!base) return;
+      const elapsedSeconds = Math.floor((Date.now() - base.receivedAt) / 1000);
+      const nextRemaining = Math.max(
+        0,
+        base.remainingSeconds - elapsedSeconds,
+      );
+      if (sessionTimerLastEmittedRef.current !== nextRemaining) {
+        sessionTimerLastEmittedRef.current = nextRemaining;
+        emitSessionRemaining(nextRemaining);
+      }
+    };
+
+    const intervalId = setInterval(tick, 1000);
+    return () => clearInterval(intervalId);
+  }, [emitSessionRemaining]);
 
   // --- MODIFIED: Simplified audio state management
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
@@ -985,8 +1016,20 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
     socket.on(ChatEvents.SESSION_STATUS_UPDATE, (payload) => {
       logger.receiving(ChatEvents.SESSION_STATUS_UPDATE, payload);
-      setSessionTimeRemaining(payload.remainingSeconds);
-      onSessionTimeRemaining?.(payload.remainingSeconds);
+      const rawRemaining = payload?.remainingSeconds;
+      if (typeof rawRemaining !== "number" || Number.isNaN(rawRemaining)) {
+        sessionTimerBaseRef.current = null;
+        sessionTimerLastEmittedRef.current = null;
+        emitSessionRemaining(null);
+        return;
+      }
+      const normalizedRemaining = Math.max(0, Math.floor(rawRemaining));
+      sessionTimerBaseRef.current = {
+        remainingSeconds: normalizedRemaining,
+        receivedAt: Date.now(),
+      };
+      sessionTimerLastEmittedRef.current = normalizedRemaining;
+      emitSessionRemaining(normalizedRemaining);
     });
 
     socket.on(ChatEvents.CONTENT_PAYLOAD, (payload) => {
@@ -2088,7 +2131,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 <div className="hidden md:flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border-2 border-[#3EA4F9] bg-white text-gray-500">
                   <Clock className="h-5 w-5 text-[#3EA4F9]" />
                   <span>
-                    {sessionTimeRemaining
+                    {sessionTimeRemaining !== null
                       ? formatTime(sessionTimeRemaining)
                       : "..."}
                   </span>
@@ -2140,7 +2183,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   <div className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border-2 border-[#3EA4F9] bg-white text-gray-500">
                     <Clock className="h-6 w-6 text-[#3EA4F9]" />
                     <span>
-                      {sessionTimeRemaining
+                      {sessionTimeRemaining !== null
                         ? formatTime(sessionTimeRemaining)
                         : "..."}
                     </span>
@@ -2183,7 +2226,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 <div className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border-2 border-[#3EA4F9] bg-white text-gray-500">
                   <Clock className="h-5 w-5 text-[#3EA4F9]" />
                   <span>
-                    {sessionTimeRemaining
+                    {sessionTimeRemaining !== null
                       ? formatTime(sessionTimeRemaining)
                       : "..."}
                   </span>
