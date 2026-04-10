@@ -10,11 +10,11 @@ export default function CTASection() {
   const direction = isAr ? "rtl" : "ltr";
 
   return (
-    <section id="cta" className="py-12 sm:py-24 bg-white relative overflow-hidden" dir={direction}>
+    <section id="cta" className="py-12 sm:py-24 bg-white relative overflow-visible" dir={direction}>
       {/* Background Decorative Elements */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl h-[400px] bg-blue-50/30 blur-[120px] rounded-full -z-10" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl h-[400px] bg-blue-50/30 blur-[120px] rounded-full -z-10 overflow-hidden" />
 
-      <div className="max-w-7xl mx-auto px-4 relative">
+      <div className="max-w-[1440px] mx-auto px-4 relative">
         <div className="flex flex-col items-center text-center">
           
           {/* Top Pill */}
@@ -93,12 +93,12 @@ export default function CTASection() {
             stiffness: 80,
             delay: 0.2 
           }}
-          className="hidden lg:block absolute -left-12 xl:-left-36 -bottom-12 pointer-events-none select-none"
+          className="hidden lg:block absolute left-0 min-[1440px]:left-6 -bottom-12 pointer-events-none select-none"
         >
           <img 
             src={birdClock} 
             alt="Mascot with clock" 
-            className="w-[180px] xl:w-[320px] h-auto drop-shadow-2xl" 
+            className="w-[180px] min-[1440px]:w-[320px] h-auto drop-shadow-2xl" 
             draggable={false}
           />
         </motion.div>
@@ -113,12 +113,12 @@ export default function CTASection() {
             stiffness: 80,
             delay: 0.4 
           }}
-          className="hidden lg:block absolute -right-12 xl:-right-24 -top-12 xl:-top-24 pointer-events-none select-none overflow-visible"
+          className="hidden lg:block absolute right-0 min-[1440px]:right-6 -top-12 min-[1440px]:-top-24 pointer-events-none select-none overflow-visible"
         >
           <img 
             src={birdFire} 
             alt="Mascot with fire" 
-            className="w-[140px] xl:w-[240px] h-auto drop-shadow-2xl" 
+            className="w-[140px] min-[1440px]:w-[240px] h-auto drop-shadow-2xl" 
             draggable={false}
           />
         </motion.div>

@@ -11,11 +11,15 @@ export default function CTASection() {
   const direction = isAr ? "rtl" : "ltr";
 
   return (
-    <section id="join-now" className="py-12 sm:py-24 bg-white relative" dir={direction}>
+    <section
+      id="join-now"
+      className="py-12 sm:py-24 bg-white relative overflow-visible"
+      dir={direction}
+    >
       {/* Background Decorative Elements */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl h-[400px] bg-blue-50/30 blur-[120px] rounded-full -z-10" />
 
-      <div className="max-w-7xl mx-auto px-4 relative">
+      <div className="max-w-[1440px] mx-auto px-4 relative">
         <div className="flex flex-col items-center text-center">
           
           {/* Top Pill - Fixed Label as "Ready to Transform" */}
@@ -107,12 +111,12 @@ export default function CTASection() {
             stiffness: 80,
             delay: 0.2 
           }}
-          className="hidden lg:block absolute -left-6 xl:-left-36 -bottom-12 pointer-events-none select-none overflow-visible"
+          className="hidden lg:block absolute left-4 min-[1440px]:left-8 -bottom-12 pointer-events-none select-none overflow-visible"
         >
           <img 
             src={birdClock} 
             alt="Mascot with clock" 
-            className="w-[240px] xl:w-[320px] h-auto drop-shadow-2xl" 
+            className="w-[240px] min-[1440px]:w-[320px] h-auto drop-shadow-2xl" 
             draggable={false}
           />
         </motion.div>
@@ -127,12 +131,12 @@ export default function CTASection() {
             stiffness: 80,
             delay: 0.4 
           }}
-          className="hidden lg:block absolute -right-6 xl:-right-24 -top-12 xl:-top-24 pointer-events-none select-none overflow-visible"
+          className="hidden lg:block absolute right-4 min-[1440px]:right-8 -top-12 min-[1440px]:-top-24 pointer-events-none select-none overflow-visible"
         >
           <img 
             src={birdFire} 
             alt="Mascot with fire" 
-            className="w-[200px] xl:w-[240px] h-auto drop-shadow-2xl" 
+            className="w-[200px] min-[1440px]:w-[240px] h-auto drop-shadow-2xl" 
             draggable={false}
           />
         </motion.div>
