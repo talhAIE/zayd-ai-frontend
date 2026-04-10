@@ -135,7 +135,7 @@ export default function LanguageGymSection() {
       {/* Dumbbell Rack Image - Positioned to the right edge as per design */}
       <motion.div
         className="hidden min-[1225px]:block absolute top-1/2 right-0 pointer-events-none select-none z-0 overflow-visible"
-        style={{ width: "clamp(180px, 20vw, 320px)" }}
+        style={{ width: "clamp(140px, 16vw, 260px)" }}
         initial={{ opacity: 0, x: isAr ? -80 : 80 }}
         whileInView={{ opacity: 1, x: 0 }}
         viewport={{ once: true, amount: 0.3 }}
@@ -147,7 +147,7 @@ export default function LanguageGymSection() {
           stiffness: 100 
         }}
       >
-        <div className={`relative transform ${isAr ? '-translate-x-[5%]' : 'translate-x-[5%]'} -translate-y-[20%]`}>
+        <div className={`relative transform ${isAr ? 'translate-x-[8%]' : '-translate-x-[8%]'} -translate-y-[16%]`}>
             <img
                 src={dumbbellRack}
                 alt="Dumbbell Rack"
