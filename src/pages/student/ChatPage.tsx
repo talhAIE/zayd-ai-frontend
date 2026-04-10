@@ -221,7 +221,7 @@ const Chat: React.FC = () => {
                         title={modeTitle}
                         onBack={() => navigate(-1)}
                         timerLabel={
-                          sessionTimeRemaining
+                          sessionTimeRemaining !== null
                             ? formatTime(sessionTimeRemaining)
                             : '...'
                         }
@@ -254,23 +254,24 @@ const Chat: React.FC = () => {
                 )}
               </div>
               <div className="flex-1 min-h-0">
-                <ChatWindow
-                  onShowFeedback={handleShowFeedback}
-                  onTopicImage={handleTopicImage}
-                  onContentPayload={handleContentPayload}
-                  onAudioPlaybackChange={handleAudioPlaybackChange}
-                  onNarrationComplete={handleNarrationComplete}
-                  readingHeroActive={shouldShowReadingHero}
-                  isAvatar3D={isAvatar3D}
-                  avatarVideoSrc={avatarVideoSrc}
-                  chatLocked={shouldLockChat}
-                  onContentAudioComplete={handleContentAudioComplete}
-                  onListeningVideoUrl={handleListeningVideoUrl}
-                  onListeningAudioController={(controller) => {
-                    listeningAudioControlRef.current = controller;
-                  }}
-                  onListeningAudioState={(state) => {
-                    setListeningAudioState((prev) => {
+                  <ChatWindow
+                    onShowFeedback={handleShowFeedback}
+                    onTopicImage={handleTopicImage}
+                    onContentPayload={handleContentPayload}
+                    onAudioPlaybackChange={handleAudioPlaybackChange}
+                    onNarrationComplete={handleNarrationComplete}
+                    readingHeroActive={shouldShowReadingHero}
+                    isAvatar3D={isAvatar3D}
+                    avatarVideoSrc={avatarVideoSrc}
+                    chatLocked={shouldLockChat}
+                    onContentAudioComplete={handleContentAudioComplete}
+                    onListeningVideoUrl={handleListeningVideoUrl}
+                    onSessionTimeRemaining={setSessionTimeRemaining}
+                    onListeningAudioController={(controller) => {
+                      listeningAudioControlRef.current = controller;
+                    }}
+                    onListeningAudioState={(state) => {
+                      setListeningAudioState((prev) => {
                       if (
                         prev.isPlaying === state.isPlaying &&
                         prev.progress === state.progress &&
@@ -309,7 +310,7 @@ const Chat: React.FC = () => {
                         title={modeTitle}
                         onBack={() => navigate(-1)}
                         timerLabel={
-                          sessionTimeRemaining
+                          sessionTimeRemaining !== null
                             ? formatTime(sessionTimeRemaining)
                             : '...'
                         }
@@ -324,13 +325,13 @@ const Chat: React.FC = () => {
                         <AvatarHeaderBar
                           title={modeTitle}
                           onBack={() => navigate(-1)}
-                          timerLabel={
-                            sessionTimeRemaining
-                              ? formatTime(sessionTimeRemaining)
-                              : '...'
-                          }
-                        />
-                      </div>
+                        timerLabel={
+                          sessionTimeRemaining !== null
+                            ? formatTime(sessionTimeRemaining)
+                            : '...'
+                        }
+                      />
+                    </div>
                     )}
                   {isHeroMode3D && isDesktop && (
                     <div
@@ -346,7 +347,7 @@ const Chat: React.FC = () => {
                             title={modeTitle}
                             onBack={() => navigate(-1)}
                             timerLabel={
-                              sessionTimeRemaining
+                              sessionTimeRemaining !== null
                                 ? formatTime(sessionTimeRemaining)
                                 : '...'
                             }
