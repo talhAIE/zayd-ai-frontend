@@ -478,17 +478,18 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
   const requestNextListeningStage = (delayMs = 0) => {
     if (!socketRef.current || !chatId) return;
-    const now = Date.now();
-    const elapsed = now - lastListeningStageRequestRef.current;
-    const minGap = 5200;
-    const wait = Math.max(delayMs, minGap - elapsed, 0);
     if (quizPrefetchTimerRef.current) {
       clearTimeout(quizPrefetchTimerRef.current);
     }
-    quizPrefetchTimerRef.current = setTimeout(() => {
+    const emitNextStage = () => {
       lastListeningStageRequestRef.current = Date.now();
       socketRef.current?.emit("next_listening_stage", { chatId });
-    }, wait);
+    };
+    if (delayMs > 0) {
+      quizPrefetchTimerRef.current = setTimeout(emitNextStage, delayMs);
+      return;
+    }
+    emitNextStage();
   };
 
   useEffect(() => {
@@ -682,6 +683,41 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
   const lastRecordingEndTimeRef = useRef<number | null>(null);
 
+  const normalizeListeningStage = (
+    incomingStage: string | null | undefined,
+    payload: any,
+  ): string | null => {
+    if (incomingStage === "initial") return "initial";
+    if (incomingStage === "question") return "question_text";
+    if (incomingStage === "quiz") return "quiz";
+    if (payload?.questionText) return "question_text";
+    if ((payload?.mcqs || payload?.questions || []).length > 0) return "quiz";
+    if (payload?.narrationText || payload?.narrationAudioUrl) return "initial";
+    return null;
+  };
+
+  const openListeningQuiz = useCallback((payload: any) => {
+    const quizItems = payload?.mcqs || payload?.questions || [];
+    if (!quizItems.length) return;
+    setListeningStage("quiz");
+    setMcqList(quizItems);
+    setCurrentMcqIndex(0);
+    setSelectedAnswer(null);
+    setPendingMcqPayload(null);
+    wantsQuizRef.current = false;
+    skipListeningCompletionStepRef.current = false;
+    if (payload?.chatId) {
+      setChatId(payload.chatId);
+    }
+    setListeningData((prevData: any) => ({
+      ...prevData,
+      ...payload,
+    }));
+    onListeningStageChangeRef.current?.("quiz", {
+      kbAudioUrl: payload?.kbAudioUrl,
+    });
+  }, []);
+
   useEffect(() => {
     if (!userId) {
       toast.error("User information is missing.");
@@ -746,16 +782,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
       const inQuiz = listeningStageRef.current === "quiz";
       const payloadMcqs = data.mcqs || data.questions || [];
-      if (inQuiz && !payloadMcqs.length) {
+      const backendStage = normalizeListeningStage(data?.stage, data);
+      if (inQuiz && backendStage !== "quiz") {
         // Ignore late non-quiz payloads while user is on quiz.
         return;
       }
 
       let currentStage: string | null = null;
-      const shouldForceInitial =
-        mode === "listening-mode" && !hasListeningStartedRef.current;
-
-      if (shouldForceInitial) {
+      if (backendStage === "initial") {
         setHasPlayedIntroAudio(false);
         setIsContextCompleted(false);
         setShowListeningHints(false);
@@ -781,8 +815,15 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         if (data.mcqs || data.questions) {
           setPendingMcqPayload({ chatId: newChatId, ...data });
         }
-      } else if (data.questionText) {
+      } else if (backendStage === "question_text") {
         if (listeningStageRef.current === "initial") {
+          if (wantsQuizRef.current || skipListeningCompletionStepRef.current) {
+            if (!prefetchedQuizRef.current) {
+              prefetchedQuizRef.current = true;
+              requestNextListeningStage();
+            }
+            return;
+          }
           if (!prefetchedQuizRef.current) {
             prefetchedQuizRef.current = true;
             requestNextListeningStage();
@@ -801,23 +842,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             },
           ]);
         }
-      } else if (payloadMcqs.length) {
+      } else if (backendStage === "quiz" && payloadMcqs.length) {
         setPendingMcqPayload({ chatId: newChatId, ...data });
         if (inQuiz) {
-          setMcqList(payloadMcqs);
-          setCurrentMcqIndex(0);
-          setPendingMcqPayload(null);
           return;
         }
         if (wantsQuizRef.current) {
-          setListeningStage("quiz");
-          setMcqList(payloadMcqs);
-          setCurrentMcqIndex(0);
-          setPendingMcqPayload(null);
-          wantsQuizRef.current = false;
-          onListeningStageChangeRef.current?.("quiz", {
-            kbAudioUrl: data.kbAudioUrl,
-          });
+          openListeningQuiz({ chatId: newChatId, ...data });
           return;
         }
         if (wantsHintsRef.current) {
@@ -1722,16 +1753,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
   const playKbAudio = () => {
     if (!listeningData?.kbAudioUrl) return;
-    if (
-      mode === "listening-mode" &&
-      listeningStage === "initial" &&
-      !prefetchedQuestionRef.current
-    ) {
-      if (!chatId) return;
-      prefetchedQuestionRef.current = true;
-      lastListeningStageRequestRef.current = Date.now();
-      socketRef.current?.emit("next_listening_stage", { chatId });
-    }
     if (soundRef.current) {
       if (playingAudioId !== "kb-audio") {
         setPlayingAudioId("kb-audio");
@@ -1853,21 +1874,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     if (socketRef.current && userId && topicId && chatId) {
       const payload = { userId, topicId, chatId };
       logger.emitting(ChatEvents.NEXT_STAGE, payload);
-      socketRef.current.emit(ChatEvents.NEXT_STAGE, payload);
-
-      // If we are on the hint screen, we wait for the MCQ_LIST event.
-      // Otherwise, we reload to get the next stage (the hint screen).
       if (mode === "listening-mode" && socketRef.current && chatId) {
         logger.emitting("next_listening_stage", { chatId });
-        socketRef.current.emit("next_listening_stage", { chatId });
-        toast.info("Loading next part...");
+        requestNextListeningStage();
+        toast.info(listeningStage === "question_text" ? "Loading quiz..." : "Loading next part...");
         return;
       }
-      if (listeningStage === "question_text") {
-        toast.info("Loading quiz...");
-      } else {
-        toast.info("Loading next part...");
-      }
+      socketRef.current.emit(ChatEvents.NEXT_STAGE, payload);
     } else {
       toast.error("Cannot proceed to next stage. Connection issue.");
       logger.error("Could not emit next_stage", {
@@ -1953,6 +1966,21 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       sec % 60,
     ).padStart(2, "0")}`;
 
+  const parseListeningHintLines = (rawHint: string): string[] => {
+    const normalized = rawHint
+      .replace(/\r\n/g, "\n")
+      .replace(/[•●▪◦]/g, "\n")
+      .replace(/\s+-\s+/g, "\n")
+      .replace(/\s*;\s*/g, "\n")
+      .replace(/\n+/g, "\n")
+      .trim();
+
+    return normalized
+      .split("\n")
+      .map((part) => part.trim().replace(/^[,-]\s*/, ""))
+      .filter((part) => part.length > 0);
+  };
+
   const shouldShowModeTitle = !(isAvatar3DContext && mode === "reading-mode");
   const shouldShowListeningIntro =
     isAvatar3DContext &&
@@ -1968,7 +1996,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       ...(pendingMcqs || []),
       ...(mcqList || []),
     ]
-      .map((mcq: any) => (typeof mcq?.hint === "string" ? mcq.hint.trim() : ""))
+      .flatMap((mcq: any) =>
+        typeof mcq?.hint === "string" ? parseListeningHintLines(mcq.hint) : [],
+      )
       .filter((hint: string) => hint.length > 0) || [];
   const listeningHintText =
     listeningHints.length > 0
