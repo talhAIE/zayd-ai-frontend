@@ -744,25 +744,26 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         onListeningVideoUrl?.(undefined);
       }
 
-      const inQuiz = listeningStageRef.current === "quiz";
+      const serverStage = typeof data?.stage === "string" ? data.stage : null;
+      if (!serverStage) {
+        logger.error("Listening payload missing stage; ignoring payload.", data);
+        return;
+      }
+
+      const inQuiz = serverStage === "quiz";
       const payloadMcqs = data.mcqs || data.questions || [];
       if (inQuiz && !payloadMcqs.length) {
         // Ignore late non-quiz payloads while user is on quiz.
         return;
       }
 
-      let currentStage: string | null = null;
-      const shouldForceInitial =
-        mode === "listening-mode" && !hasListeningStartedRef.current;
-
-      if (shouldForceInitial) {
+      if (serverStage === "initial") {
         setHasPlayedIntroAudio(false);
         setIsContextCompleted(false);
         setShowListeningHints(false);
         setShowListeningCompletionCard(false);
         setPendingMcqPayload(null);
         prefetchedQuizRef.current = false;
-        currentStage = "initial";
         hasListeningStartedRef.current = true;
         setMessages(
           data.narrationText
@@ -781,55 +782,29 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         if (data.mcqs || data.questions) {
           setPendingMcqPayload({ chatId: newChatId, ...data });
         }
-      } else if (data.questionText) {
-        if (listeningStageRef.current === "initial") {
-          if (!prefetchedQuizRef.current) {
-            prefetchedQuizRef.current = true;
-            requestNextListeningStage();
-          }
-          currentStage = "initial";
-        } else {
-          currentStage = "question_text";
-          setMessages([
-            {
-              id: "question-audio",
-              messageType: "text",
-              type: "received",
-              text: data.questionText,
-              audioUrl: data.questionAudioUrl,
-              audioPlayed: false,
-            },
-          ]);
-        }
-      } else if (payloadMcqs.length) {
+      } else if (serverStage === "question" && data.questionText) {
+        setMessages([
+          {
+            id: "question-audio",
+            messageType: "text",
+            type: "received",
+            text: data.questionText,
+            audioUrl: data.questionAudioUrl,
+            audioPlayed: false,
+          },
+        ]);
+      } else if (serverStage === "quiz" && payloadMcqs.length) {
         setPendingMcqPayload({ chatId: newChatId, ...data });
-        if (inQuiz) {
-          setMcqList(payloadMcqs);
-          setCurrentMcqIndex(0);
-          setPendingMcqPayload(null);
-          return;
-        }
-        if (wantsQuizRef.current) {
-          setListeningStage("quiz");
-          setMcqList(payloadMcqs);
-          setCurrentMcqIndex(0);
-          setPendingMcqPayload(null);
-          wantsQuizRef.current = false;
-          onListeningStageChangeRef.current?.("quiz", {
-            kbAudioUrl: data.kbAudioUrl,
-          });
-          return;
-        }
-        if (wantsHintsRef.current) {
-          setShowListeningHints(true);
-          wantsHintsRef.current = false;
-        }
-        currentStage = listeningStageRef.current ?? "question_text";
+        setMcqList(payloadMcqs);
+        setCurrentMcqIndex(0);
+        setPendingMcqPayload(null);
+        wantsQuizRef.current = false;
+        wantsHintsRef.current = false;
       }
 
-      setListeningStage(currentStage);
-      logger.info(`Listening mode stage inferred: ${currentStage}`, data);
-      onListeningStageChangeRef.current?.(currentStage, {
+      setListeningStage(serverStage);
+      logger.info(`Listening mode stage from server: ${serverStage}`, data);
+      onListeningStageChangeRef.current?.(serverStage, {
         kbAudioUrl: data.kbAudioUrl,
       });
     });
@@ -1193,7 +1168,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   }, [userId, topicId, navigate, resetActivityTimer, onTopicImage]);
 
   useEffect(() => {
-    if (listeningStage === "question_text" && mode === "listening-mode") {
+    if (listeningStage === "question" && mode === "listening-mode") {
       setIsContextCompleted(false);
       setHasStartedContextAudio(false);
       setShowListeningCompletionCard(false);
@@ -1804,7 +1779,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       }
       // Step 3: show completion card after transcript before quiz
       if (
-        listeningStage === "question_text" &&
+        listeningStage === "question" &&
         !showListeningCompletionCard &&
         !skipListeningCompletionStepRef.current
       ) {
@@ -1863,7 +1838,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         toast.info("Loading next part...");
         return;
       }
-      if (listeningStage === "question_text") {
+      if (listeningStage === "question") {
         toast.info("Loading quiz...");
       } else {
         toast.info("Loading next part...");
@@ -2299,7 +2274,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 </div>
               )}
 
-              {listeningStage === "question_text" &&
+              {listeningStage === "question" &&
                 !showListeningCompletionCard && (
                   <div className="rounded-2xl bg-white border border-[#B9E1FF] p-4 md:p-5 shadow-sm">
                     <div className="inline-flex items-center gap-2 rounded-full bg-[#E6F3FF] px-3 py-1 text-sm font-semibold text-[#2B6CB0] mb-3">
@@ -2975,7 +2950,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               setTimeout(() => (clickLocked.current = false), 2000);
 
               if (
-                listeningStage === "question_text" &&
+                listeningStage === "question" &&
                 !showListeningCompletionCard
               ) {
                 setShowListeningCompletionCard(true);
@@ -2989,7 +2964,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             disabled={
               (mode === "listening-mode" &&
                 ((listeningStage === "initial" && !hasPlayedIntroAudio) ||
-                  (listeningStage === "question_text" && !isContextCompleted))) ||
+                  (listeningStage === "question" && !isContextCompleted))) ||
               (mode === "listening-mode" &&
                 listeningStage === "quiz" &&
                 selectedAnswer === null)
