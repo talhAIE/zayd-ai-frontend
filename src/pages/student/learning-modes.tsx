@@ -72,6 +72,7 @@ const LearningModes: React.FC = () => {
   const schoolCategory = parsedUser?.schoolCategory;
   const schoolName = parsedUser?.schoolName;
   const userId = parsedUser?.id;
+  const username = parsedUser?.username;
   const cachedTopicModes = React.useMemo(() => {
     try {
       const raw = localStorage.getItem("availableTopicModes");
@@ -198,20 +199,29 @@ const LearningModes: React.FC = () => {
       if (!userId) return;
       if (cachedTopicModes) {
         const cachedSet = new Set(cachedTopicModes);
-        const results = filteredModes.map((mode) => {
-          if (mode.title === "3D Avatar Mode") {
-            const available =
-              cachedSet.has("3d-reading-mode") ||
-              cachedSet.has("3d-roleplay-mode") ||
-              cachedSet.has("3d-listening-mode");
-            return [mode.title, available] as const;
-          }
-          const topicMode = topicModeByTitle[mode.title];
-          if (!topicMode) {
-            return [mode.title, true] as const;
-          }
-          return [mode.title, cachedSet.has(topicMode)] as const;
-        });
+        const results = await Promise.all(
+          filteredModes.map(async (mode) => {
+            if (
+              username === "zayd.all.modes" &&
+              mode.title === "Curriculum Mode"
+            ) {
+              const available = await hasContentForMode("curriculum-mode");
+              return [mode.title, available] as const;
+            }
+            if (mode.title === "3D Avatar Mode") {
+              const available =
+                cachedSet.has("3d-reading-mode") ||
+                cachedSet.has("3d-roleplay-mode") ||
+                cachedSet.has("3d-listening-mode");
+              return [mode.title, available] as const;
+            }
+            const topicMode = topicModeByTitle[mode.title];
+            if (!topicMode) {
+              return [mode.title, true] as const;
+            }
+            return [mode.title, cachedSet.has(topicMode)] as const;
+          }),
+        );
         if (!cancelled) {
           setModeAvailability(
             results.reduce((acc, [title, available]) => {
@@ -255,7 +265,7 @@ const LearningModes: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [userId, filteredModes, cachedTopicModes]);
+  }, [userId, filteredModes, cachedTopicModes, username]);
 
   // const [isQueationnaireOpen, setIsQuestionnaireOpen] = React.useState(true);
 
