@@ -316,7 +316,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     receivedAt: number;
   } | null>(null);
   const sessionTimerLastEmittedRef = useRef<number | null>(null);
-  const [_sessionLimitReached, _setSessionLimitReached] = useState(false);
+  const [sessionLimitReached, setSessionLimitReached] = useState(false);
+  const sessionLimitReachedRef = useRef(false);
+  const sessionLimitToastShownRef = useRef(false);
   const [chatCompleted, setChatCompleted] = useState(false);
   const emitSessionRemaining = useCallback(
     (next: number | null) => {
@@ -344,6 +346,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     const intervalId = setInterval(tick, 1000);
     return () => clearInterval(intervalId);
   }, [emitSessionRemaining]);
+
+  const isSessionExpired =
+    sessionTimeRemaining !== null && sessionTimeRemaining <= 0;
+  const isSessionLocked = sessionLimitReached || isSessionExpired;
+
+  useEffect(() => {
+    sessionLimitReachedRef.current = isSessionLocked;
+  }, [isSessionLocked]);
 
   // --- MODIFIED: Simplified audio state management
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
@@ -1055,10 +1065,16 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       if (typeof rawRemaining !== "number" || Number.isNaN(rawRemaining)) {
         sessionTimerBaseRef.current = null;
         sessionTimerLastEmittedRef.current = null;
+        setSessionLimitReached(false);
+        sessionLimitToastShownRef.current = false;
         emitSessionRemaining(null);
         return;
       }
       const normalizedRemaining = Math.max(0, Math.floor(rawRemaining));
+      setSessionLimitReached(normalizedRemaining <= 0);
+      if (normalizedRemaining > 0) {
+        sessionLimitToastShownRef.current = false;
+      }
       sessionTimerBaseRef.current = {
         remainingSeconds: normalizedRemaining,
         receivedAt: Date.now(),
@@ -1148,8 +1164,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       ) {
         setIsDuplicateConnectionModalOpen(true);
       } else if (errorMessage.includes("daily session limit")) {
-        _setSessionLimitReached(true);
-        toast.error("You have reached your daily session limit.");
+        setSessionLimitReached(true);
+        if (!sessionLimitToastShownRef.current) {
+          sessionLimitToastShownRef.current = true;
+          toast.error("You have reached your daily session limit.");
+        }
       } else if (errorMessage.includes("user not found")) {
         toast.error("User authentication failed. Please log in again.");
         setTimeout(() => navigate("/login"), 3000);
@@ -1309,8 +1328,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     // Reset inactivity timer when user starts recording
     resetInactivityTimer();
 
-    if (chatCompleted || _sessionLimitReached) {
-      toast.warning("Cannot record: The chat session is complete.");
+    if (chatCompleted || isSessionLocked) {
+      toast.warning(
+        sessionLimitReachedRef.current
+          ? "Your daily session limit has been reached."
+          : "Cannot record: The chat session is complete.",
+      );
       return;
     }
 
@@ -1357,6 +1380,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
         if (wasCanceled) {
           logger.info("Recording canceled by user.");
+          return;
+        }
+        if (sessionLimitReachedRef.current) {
+          logger.info("Discarding recorded audio because session time expired.");
+          toast.error("Your daily session limit has been reached.");
           return;
         }
         if (audioChunksRef.current.length === 0) {
@@ -1457,6 +1485,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     // Reset inactivity timer when user submits MCQ answer
     resetInactivityTimer();
 
+    if (isSessionLocked) {
+      toast.error("Your daily session limit has been reached.");
+      return;
+    }
+
     if (selectedAnswer === null) {
       toast.warning("Please select an answer.");
       return;
@@ -1536,6 +1569,24 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     } else cleanupRecording();
   };
 
+  useEffect(() => {
+    if (!isSessionExpired) return;
+
+    setSessionLimitReached(true);
+    clearInactivityTimer();
+    setIsWaitingForResponse(false);
+
+    if (mediaRecorderRef.current?.state === "recording") {
+      isCanceledRef.current = true;
+      mediaRecorderRef.current.stop();
+    }
+
+    if (!sessionLimitToastShownRef.current) {
+      sessionLimitToastShownRef.current = true;
+      toast.error("You have reached your daily session limit.");
+    }
+  }, [isSessionExpired]);
+
   const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const clearInactivityTimer = () => {
@@ -1606,6 +1657,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
     logger.info("Form submitted.");
+
+    if (isSessionLocked) {
+      logger.error("Cannot send message: session limit reached.");
+      toast.error("Your daily session limit has been reached.");
+      return;
+    }
 
     if (!message.trim() || !isSocketConnected || isWaitingForResponse) {
       logger.error("Cannot send message.", {
@@ -1811,6 +1868,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     // Reset inactivity timer when user clicks next
     resetInactivityTimer();
 
+    if (isSessionLocked) {
+      toast.error("Your daily session limit has been reached.");
+      return;
+    }
+
     const nextMcqs =
       pendingMcqPayload?.mcqs || pendingMcqPayload?.questions || [];
 
@@ -1819,6 +1881,22 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       nextMcqs?.length &&
       (listeningStage === "question" || wantsQuizRef.current)
     ) {
+      openListeningQuiz(pendingMcqPayload);
+      return;
+    }
+
+    if (
+      mode === "listening-mode" &&
+      !isAvatar3DContext &&
+      nextMcqs?.length &&
+      listeningStage === "initial" &&
+      !listeningData?.questionText &&
+      !listeningData?.questionAudioUrl
+    ) {
+      logger.info(
+        "Opening cached quiz for standard listening mode because no question stage payload is available.",
+        pendingMcqPayload,
+      );
       openListeningQuiz(pendingMcqPayload);
       return;
     }
@@ -2036,6 +2114,24 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       : listeningData?.questionText
         ? [listeningData.questionText]
         : [];
+  const standardDesktopWidthClass = !isAvatar3DContext ? "md:max-w-[820px]" : "";
+  const chatShellWidthClass = `w-full ${standardDesktopWidthClass}`.trim();
+  const shouldRenderListeningVideo =
+    Boolean(isAvatar3D && avatarVideoSrc) &&
+    (isAvatar3DContext || Boolean(listeningData?.narrationVideoUrl));
+  const listeningMediaCardClass =
+    shouldRenderListeningVideo || isAvatar3DContext
+      ? "rounded-2xl bg-white border border-slate-200 shadow-sm p-4 md:p-6"
+      : "";
+  const listeningHeightClass = isAvatar3DContext
+    ? "min-h-[70vh] max-h-[80vh]"
+    : "h-auto min-h-0 max-h-none";
+  const listeningShellOverflowClass = isAvatar3DContext
+    ? "overflow-visible"
+    : "overflow-hidden";
+  const listeningContentClass = isAvatar3DContext
+    ? "relative flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-4"
+    : "relative h-auto overflow-visible p-4 md:p-6 flex flex-col gap-4";
 
   return (
     // The JSX part remains largely the same, only the audio player logic needs updates.
@@ -2101,8 +2197,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       </Dialog>
 
       {listeningStage === "quiz" && mcqList.length > 0 && (
-        <div className="w-full flex flex-col items-center gap-4">
-          <div className="p-6 md:p-8 border rounded-3xl bg-white shadow-lg w-full max-w-[820px] my-4 text-left">
+        <div className={`flex w-full flex-col items-center gap-4 ${chatShellWidthClass}`}>
+          <div className="my-4 w-full rounded-3xl border bg-white p-6 text-left shadow-lg md:p-8">
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-[#E6F3FF] flex items-center justify-center">
@@ -2158,12 +2254,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
       {listeningStage !== "quiz" && (
         <div
-          className={`flex flex-col max-w-[800px] mx-auto bg-gray-100 rounded-xl overflow-hidden shadow-2xl ${
+          className={`mx-auto flex flex-col ${chatShellWidthClass} rounded-xl bg-gray-100 shadow-2xl ${
             mode === "listening-mode"
-              ? "min-h-[70vh] max-h-[80vh]"
+              ? `${listeningHeightClass} ${listeningShellOverflowClass}`
               : readingHeroActive
-                ? "min-h-[calc(100vh-340px)] max-h-[calc(100vh-340px)] md:min-h-[calc(100vh-340px)] md:max-h-[calc(100vh-340px)]"
-                : "max-h-[86vh] min-h-[86vh] md:min-h-[82vh] md:max-h-[82vh]"
+                ? "min-h-[calc(100vh-340px)] max-h-[calc(100vh-340px)] overflow-hidden md:min-h-[calc(100vh-340px)] md:max-h-[calc(100vh-340px)]"
+                : "min-h-[86vh] max-h-[86vh] overflow-hidden md:min-h-[82vh] md:max-h-[82vh]"
           }`}
         >
           {mode === "listening-mode" && (
@@ -2264,7 +2360,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               </div>
             )}
           </div>
-          {_sessionLimitReached && (
+          {isSessionLocked && (
             <div className="bg-yellow-500 text-white text-center p-2 text-sm font-semibold">
               You have reached your session limit.
             </div>
@@ -2276,7 +2372,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           )}
           {mode === "listening-mode" ? (
             <div
-              className={`relative flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-4 transition-all duration-500 ease-out ${
+              className={`${listeningContentClass} transition-all duration-500 ease-out ${
                 isListeningStepTransitioning
                   ? "opacity-0 translate-x-6"
                   : "opacity-100 translate-x-0"
@@ -2293,8 +2389,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 </div>
               </div>
 
-              <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 md:p-6">
-                <div className="relative rounded-2xl bg-[#F8FAFC] border border-slate-200 overflow-hidden p-4 md:p-6">
+              <div className={listeningMediaCardClass}>
+                {shouldRenderListeningVideo && (
+                  <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-[#F8FAFC] p-4 md:p-6">
                     {isAvatar3D && (
                       <AvatarModeLayout
                         syncPlaying={
@@ -2306,7 +2403,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                       />
                     )}
                   </div>
-                <div className="mt-4">
+                )}
+                <div className={shouldRenderListeningVideo ? "mt-4" : ""}>
                   <AudioPlayer
                     audioSrc={listeningData?.kbAudioUrl || ""}
                     isPlaying={
@@ -2405,8 +2503,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                       Done with it?
                     </h3>
                     <p className="text-sm text-gray-500 mt-2">
-                      Ready for the quiz? You can continue or replay the avatar
-                      explanation.
+                      Ready for the quiz? You can continue or replay the{" "}
+                      {isAvatar3DContext ? "avatar video" : "audio"}.
                     </p>
                     <Button
                       className="w-full mt-5 rounded-full bg-[#5EA9FF] hover:bg-[#4E98F0] text-white"
@@ -2433,7 +2531,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                       }}
                       disabled={!listeningData?.kbAudioUrl}
                     >
-                      Replay Avatar Video
+                      {isAvatar3DContext
+                        ? "Replay Avatar Video"
+                        : "Replay Audio"}
                       </Button>
                     </div>
                   </div>
@@ -2661,7 +2761,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   disabled={
                     isRecording ||
                     chatCompleted ||
-                    _sessionLimitReached ||
+                    isSessionLocked ||
                     !isSocketConnected ||
                     isWaitingForResponse
                   }
@@ -2697,6 +2797,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                     disabled={
                       !isSocketConnected ||
                       chatCompleted ||
+                      isSessionLocked ||
                       isWaitingForResponse
                     }
                   >
@@ -2712,6 +2813,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                     disabled={
                       !isSocketConnected ||
                       chatCompleted ||
+                      isSessionLocked ||
                       isWaitingForResponse
                     }
                   >
@@ -3026,7 +3128,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       </Dialog>
 
       {mode === "listening-mode" && !showListeningCompletionCard && (
-        <div className="w-full max-w-[800px] mx-auto">
+        <div className={`mx-auto ${chatShellWidthClass}`}>
           <Button
             className="w-full mt-4 rounded-full p-5 bg-[#5EA9FF] hover:bg-[#4E98F0] text-white flex items-center justify-center gap-2"
             onClick={() => {
@@ -3047,9 +3149,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 : handleNextStage)();
             }}
             disabled={
+              isSessionLocked ||
               (mode === "listening-mode" &&
                 ((listeningStage === "initial" && !hasPlayedIntroAudio) ||
-                  (listeningStage === "question" && !isContextCompleted))) ||
+                  (listeningStage === "question" &&
+                    !isContextCompleted))) ||
               (mode === "listening-mode" &&
                 listeningStage === "quiz" &&
                 selectedAnswer === null)
