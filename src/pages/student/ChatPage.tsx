@@ -436,6 +436,7 @@ const Chat: React.FC = () => {
                         compact
                         syncPlaying={listeningAudioState.isPlaying}
                         videoSrc={avatarVideoSrc}
+                        videoClassName="w-full h-auto object-contain mx-auto"
                       />
                       <AudioPlayer
                         audioSrc={listeningAudioUrl || ''}

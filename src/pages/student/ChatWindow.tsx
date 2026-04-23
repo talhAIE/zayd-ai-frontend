@@ -802,15 +802,15 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         setMessages(
           data.narrationText
             ? [
-                {
-                  id: "narration-audio",
-                  messageType: "text",
-                  type: "received",
-                  text: data.narrationText,
-                  audioUrl: data.narrationAudioUrl,
-                  audioPlayed: false,
-                },
-              ]
+              {
+                id: "narration-audio",
+                messageType: "text",
+                type: "received",
+                text: data.narrationText,
+                audioUrl: data.narrationAudioUrl,
+                audioPlayed: false,
+              },
+            ]
             : [],
         );
         if (data.mcqs || data.questions) {
@@ -2228,18 +2228,16 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                       setSelectedAnswer(index);
                       resetInactivityTimer();
                     }}
-                    className={`w-full justify-start p-4 h-auto transition-colors rounded-2xl ${
-                      selectedAnswer === index
+                    className={`w-full justify-start p-4 h-auto transition-colors rounded-2xl ${selectedAnswer === index
                         ? "bg-[#3EA4F9] text-white hover:bg-[#2F93F0] border-transparent"
                         : "bg-white border-[#E1E7F0] text-[#2B3A67]"
-                    }`}
+                      }`}
                   >
                     <div
-                      className={`w-5 h-5 mr-4 rounded-full border flex-shrink-0 ${
-                        selectedAnswer === index
+                      className={`w-5 h-5 mr-4 rounded-full border flex-shrink-0 ${selectedAnswer === index
                           ? "bg-white border-white"
                           : "border-[#C9D6E6]"
-                      }`}
+                        }`}
                     />
                     <span>{option}</span>
                   </Button>
@@ -2252,13 +2250,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
       {listeningStage !== "quiz" && (
         <div
-          className={`mx-auto flex flex-col ${chatShellWidthClass} rounded-xl bg-gray-100 shadow-2xl ${
-            mode === "listening-mode"
+          className={`mx-auto flex flex-col ${chatShellWidthClass} rounded-xl bg-gray-100 shadow-2xl ${mode === "listening-mode"
               ? `${listeningHeightClass} ${listeningShellOverflowClass}`
               : readingHeroActive
                 ? "min-h-[calc(100vh-340px)] max-h-[calc(100vh-340px)] overflow-hidden md:min-h-[calc(100vh-340px)] md:max-h-[calc(100vh-340px)]"
                 : "min-h-[86vh] max-h-[86vh] overflow-hidden md:min-h-[82vh] md:max-h-[82vh]"
-          }`}
+            }`}
         >
           {mode === "listening-mode" && (
             <header className="flex items-center justify-between px-4 md:px-6 py-4 border-b bg-white">
@@ -2370,11 +2367,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           )}
           {mode === "listening-mode" ? (
             <div
-              className={`${listeningContentClass} transition-all duration-500 ease-out ${
-                isListeningStepTransitioning
+              className={`${listeningContentClass} transition-all duration-500 ease-out ${isListeningStepTransitioning
                   ? "opacity-0 translate-x-6"
                   : "opacity-100 translate-x-0"
-              }`}
+                }`}
             >
               <div className="md:hidden flex justify-start">
                 <div className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border-2 border-[#3EA4F9] bg-white text-gray-500">
@@ -2389,7 +2385,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
               <div className={listeningMediaCardClass}>
                 {shouldRenderListeningVideo && (
-                  <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-[#F8FAFC] p-4 md:p-6">
+                  <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-[#F8FAFC] p-4 md:p-6 max-w-[640px] mx-auto">
                     {isAvatar3D && (
                       <AvatarModeLayout
                         syncPlaying={
@@ -2464,11 +2460,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                     </div>
                     <p
                       ref={transcriptRef}
-                      className={`text-sm text-[#2F4B66] whitespace-pre-wrap transition-all duration-300 ${
-                        !isTranscriptExpanded
+                      className={`text-sm text-[#2F4B66] whitespace-pre-wrap transition-all duration-300 ${!isTranscriptExpanded
                           ? "line-clamp-5"
                           : "line-clamp-none"
-                      }`}
+                        }`}
                     >
                       {listeningData?.questionText ||
                         "Transcript will appear here as you progress."}
@@ -2519,19 +2514,19 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                       <Button
                         variant="outline"
                         className="w-full rounded-full text-gray-500 hover:bg-gray-100 h-10 px-3 md:px-4 text-[11px] sm:text-sm leading-none whitespace-nowrap min-w-0 justify-center gap-2"
-                      onClick={() => {
-                        setShowListeningCompletionCard(false);
-                        setShowListeningHints(false);
-                        skipListeningCompletionStepRef.current = false;
-                        setListeningStage("initial");
-                        setShowListeningHints(true);
-                        restartKbAudio();
-                      }}
-                      disabled={!listeningData?.kbAudioUrl}
-                    >
-                      {isAvatar3DContext
-                        ? "Replay Avatar Video"
-                        : "Replay Audio"}
+                        onClick={() => {
+                          setShowListeningCompletionCard(false);
+                          setShowListeningHints(false);
+                          skipListeningCompletionStepRef.current = false;
+                          setListeningStage("initial");
+                          setShowListeningHints(true);
+                          restartKbAudio();
+                        }}
+                        disabled={!listeningData?.kbAudioUrl}
+                      >
+                        {isAvatar3DContext
+                          ? "Replay Avatar Video"
+                          : "Replay Audio"}
                       </Button>
                     </div>
                   </div>
@@ -2551,11 +2546,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   onToggleAudio={
                     contentPayload.audioUrl
                       ? () =>
-                          toggleAudio(
-                            "content-payload-audio",
-                            contentPayload.audioUrl,
-                            () => onContentAudioComplete?.(true),
-                          )
+                        toggleAudio(
+                          "content-payload-audio",
+                          contentPayload.audioUrl,
+                          () => onContentAudioComplete?.(true),
+                        )
                       : undefined
                   }
                 />
@@ -2564,9 +2559,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 <div className="p-4 rounded-lg shadow-sm bg-white border border-gray-200">
                   <p
                     ref={contentRef}
-                    className={`text-gray-800 text-base leading-relaxed whitespace-pre-wrap transition-all duration-300 ${
-                      !isContentExpanded ? "line-clamp-3" : "line-clamp-none"
-                    }`}
+                    className={`text-gray-800 text-base leading-relaxed whitespace-pre-wrap transition-all duration-300 ${!isContentExpanded ? "line-clamp-3" : "line-clamp-none"
+                      }`}
                   >
                     {contentPayload.content
                       .split(/(\*\*.*?\*\*)/g)
@@ -2594,7 +2588,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                         }
                       >
                         {playingAudioId === "content-payload-audio" &&
-                        isCurrentlyPlaying ? (
+                          isCurrentlyPlaying ? (
                           <Pause className="h-5 w-5" />
                         ) : (
                           <Play className="h-5 w-5" />
@@ -2622,11 +2616,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   {messages.map((msg) => (
                     <div
                       key={msg.id}
-                      className={`flex flex-col gap-1 ${
-                        msg.type === "sent"
+                      className={`flex flex-col gap-1 ${msg.type === "sent"
                           ? "self-end items-end"
                           : "self-start items-start"
-                      }`}
+                        }`}
                     >
                       {msg.loading ? (
                         <div className="flex items-center gap-2 bg-white p-3 rounded-xl shadow-sm">
@@ -2652,11 +2645,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                         </Button>
                       ) : (
                         <div
-                          className={`p-3 rounded-xl max-w-md shadow-sm break-words ${
-                            msg.type === "sent"
+                          className={`p-3 rounded-xl max-w-md shadow-sm break-words ${msg.type === "sent"
                               ? "bg-[#3EA4F9] text-white rounded-tr-none"
                               : "bg-white text-gray-800 rounded-tl-none"
-                          }`}
+                            }`}
                         >
                           {msg.text && (
                             <p className="text-sm leading-relaxed whitespace-pre-wrap">
@@ -2683,7 +2675,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                                 onClick={() => toggleAudio(msg.id, msg.audioUrl)}
                               >
                                 {playingAudioId === msg.id &&
-                                isCurrentlyPlaying ? (
+                                  isCurrentlyPlaying ? (
                                   <Pause className="h-5 w-5" />
                                 ) : (
                                   <Play className="h-5 w-5" />
@@ -3004,13 +2996,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                           Severity
                         </p>
                         <p
-                          className={`text-sm font-semibold ${
-                            contentFilterWarningData.severity === "High"
+                          className={`text-sm font-semibold ${contentFilterWarningData.severity === "High"
                               ? "text-red-600"
                               : contentFilterWarningData.severity === "Medium"
                                 ? "text-orange-600"
                                 : "text-yellow-600"
-                          }`}
+                            }`}
                         >
                           {contentFilterWarningData.severity}
                         </p>
