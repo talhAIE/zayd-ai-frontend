@@ -820,12 +820,15 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         setListeningStage("question");
         if (payloadMcqs.length) {
           setPendingMcqPayload({ chatId: newChatId, ...data });
-          if (wantsQuizRef.current || skipListeningCompletionStepRef.current) {
+          if (
+            isAvatar3DContext &&
+            (wantsQuizRef.current || skipListeningCompletionStepRef.current)
+          ) {
             openListeningQuiz({ chatId: newChatId, ...data });
             return;
           }
         }
-        if (listeningStageRef.current === "initial") {
+        if (listeningStageRef.current === "initial" && isAvatar3DContext) {
           if (wantsQuizRef.current || skipListeningCompletionStepRef.current) {
             if (!prefetchedQuizRef.current) {
               prefetchedQuizRef.current = true;
@@ -850,12 +853,23 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           ]);
         }
       } else if (serverStage === "quiz") {
-        setListeningStage("quiz");
         setPendingMcqPayload({ chatId: newChatId, ...data });
         const cachedMcqs = extractListeningQuizItems(pendingMcqPayload);
         if (inQuiz) {
+          setListeningStage("quiz");
           return;
         }
+        if (!isAvatar3DContext && !wantsQuizRef.current) {
+          logger.info(
+            "Caching quiz payload for standard listening mode until the user advances.",
+            data,
+          );
+          onListeningStageChangeRef.current?.(listeningStageRef.current ?? null, {
+            kbAudioUrl: data.kbAudioUrl,
+          });
+          return;
+        }
+        setListeningStage("quiz");
         if (wantsQuizRef.current && (payloadMcqs.length || cachedMcqs.length)) {
           const quizPayload = payloadMcqs.length
             ? { chatId: newChatId, ...data }
@@ -1881,22 +1895,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       nextMcqs?.length &&
       (listeningStage === "question" || wantsQuizRef.current)
     ) {
-      openListeningQuiz(pendingMcqPayload);
-      return;
-    }
-
-    if (
-      mode === "listening-mode" &&
-      !isAvatar3DContext &&
-      nextMcqs?.length &&
-      listeningStage === "initial" &&
-      !listeningData?.questionText &&
-      !listeningData?.questionAudioUrl
-    ) {
-      logger.info(
-        "Opening cached quiz for standard listening mode because no question stage payload is available.",
-        pendingMcqPayload,
-      );
       openListeningQuiz(pendingMcqPayload);
       return;
     }
