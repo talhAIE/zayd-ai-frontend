@@ -4,6 +4,7 @@ import FeedbackSection from './FeedbackSection';
 import FeedbackSectionModal from './FeedbackSectionModel';
 import PhotoDisplay from './PhotoDisplay';
 import ChatWindow from './ChatWindow';
+import ChatWindowNormal from './ChatWindowNormal';
 import AudioPlayer from './AudioPlayer';
 import AvatarModeLayout from '@/components/3d/AvatarModeLayout';
 import AvatarHeaderBar from '@/components/3d/AvatarHeaderBar';
@@ -204,8 +205,48 @@ const Chat: React.FC = () => {
           : mode === 'debate-mode'
             ? 'Debate Mode'
             : mode === 'curriculum-mode'
-              ? 'Curriculum Mode'
+            ? 'Curriculum Mode'
               : 'Chat Mode';
+
+  if (!isAvatar3D) {
+    return (
+      <div className="flex max-h-screen">
+        <main className="flex-1 transition-all duration-300">
+          <div className="mx-auto md:px-6">
+            <div className="flex flex-col md:flex-row justify-between w-full gap-4 md:gap-6">
+              <div className="flex-1 md:flex-grow-2 w-full md:w-auto">
+                <ChatWindowNormal
+                  onShowFeedback={handleShowFeedback}
+                  onTopicImage={handleTopicImage}
+                />
+              </div>
+              <div className="flex flex-col gap-3 w-full md:w-1/3">
+                {!isSmallScreen && (
+                  <FeedbackSection
+                    isOpen={isFeedbackOpen}
+                    onClose={() => setIsFeedbackOpen(false)}
+                    feedback={currentFeedback}
+                  />
+                )}
+                {isSmallScreen && (
+                  <FeedbackSectionModal
+                    isOpen={isFeedbackMobile}
+                    onClose={() => setIsFeedbackMobile(false)}
+                    feedback={currentFeedback}
+                  />
+                )}
+                <div className="hidden md:block">
+                  {mode === 'photo-mode' && (
+                    <PhotoDisplay imageUrl={topicImage} />
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex max-h-screen">
