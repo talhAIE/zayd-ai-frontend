@@ -2154,10 +2154,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       {listeningStage !== "quiz" && (
         <div
           className={`flex flex-col max-w-[800px] mx-auto bg-gray-100 rounded-xl overflow-hidden shadow-2xl ${mode === "listening-mode"
-            ? "min-h-[70vh] max-h-[80vh]"
+            ? isAvatar3DContext
+              ? "h-[calc(100svh-9.5rem)] max-h-[calc(100svh-9.5rem)]"
+              : "min-h-[70vh] max-h-[80vh]"
             : readingHeroActive
               ? "min-h-[calc(100vh-340px)] max-h-[calc(100vh-340px)] md:min-h-[calc(100vh-340px)] md:max-h-[calc(100vh-340px)]"
-              : "max-h-[86vh] min-h-[86vh] md:min-h-[82vh] md:max-h-[82vh]"
+              : "max-h-[76vh] min-h-[76vh] md:min-h-[74vh] md:max-h-[74vh]"
             }`}
         >
           {mode === "listening-mode" && (
@@ -2272,7 +2274,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           )}
           {mode === "listening-mode" ? (
             <div
-              className={`relative flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-4 transition-all duration-500 ease-out ${isListeningStepTransitioning
+              className={`relative flex-1 ${isAvatar3DContext ? "overflow-y-auto p-3 md:p-4 gap-3" : "overflow-y-auto p-4 md:p-6 gap-4"} flex flex-col transition-all duration-500 ease-out ${isListeningStepTransitioning
                 ? "opacity-0 translate-x-6"
                 : "opacity-100 translate-x-0"
                 }`}
@@ -2288,17 +2290,19 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 </div>
               </div>
 
-              <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 md:p-6">
-                <div className="relative rounded-2xl bg-[#F8FAFC] border border-slate-200 overflow-hidden p-4 md:p-6">
+              <div className={`rounded-2xl bg-white border border-slate-200 shadow-sm ${isAvatar3DContext ? "p-3 md:p-4" : "p-4 md:p-6"}`}>
+                <div className={`relative rounded-2xl bg-[#F8FAFC] border border-slate-200 overflow-hidden ${isAvatar3DContext ? "p-2 md:p-0" : "p-4 md:p-6"}`}>
                   {isAvatar3D && (
-                    <AvatarModeLayout
-                      syncPlaying={
-                        playingAudioId === "kb-audio" && isCurrentlyPlaying
-                      }
-                      videoSrc={avatarVideoSrc}
-                      heightClassName="h-auto"
-                      videoClassName="w-full h-auto object-contain"
-                    />
+                    <div className={isAvatar3DContext ? "max-w-[65%] mx-auto" : ""}>
+                      <AvatarModeLayout
+                        syncPlaying={
+                          playingAudioId === "kb-audio" && isCurrentlyPlaying
+                        }
+                        videoSrc={avatarVideoSrc}
+                        heightClassName="h-auto"
+                        videoClassName="w-full h-auto object-contain"
+                      />
+                    </div>
                   )}
                 </div>
                 <div className="mt-4">

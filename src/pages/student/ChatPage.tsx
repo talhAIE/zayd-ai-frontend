@@ -369,6 +369,19 @@ const Chat: React.FC = () => {
                       />
                     </div>
                   )}
+                  {!isNarrowScreen && isDesktop && isAvatar3D && mode === 'reading-mode' && !shouldShowReadingHero && (
+                    <div className="flex-none w-full max-w-[800px] mx-auto rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white mb-0">
+                      <AvatarHeaderBar
+                        title={modeTitle}
+                        onBack={() => navigate(-1)}
+                        timerLabel={
+                          sessionTimeRemaining !== null
+                            ? formatTime(sessionTimeRemaining)
+                            : '...'
+                        }
+                      />
+                    </div>
+                  )}
                   {!isNarrowScreen &&
                     !isDesktop &&
                     isAvatar3D &&
