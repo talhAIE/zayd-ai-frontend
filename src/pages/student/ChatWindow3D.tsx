@@ -482,15 +482,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       clearTimeout(quizPrefetchTimerRef.current);
     }
     const emitNextStage = () => {
-      const emitNextStage = () => {
-        lastListeningStageRequestRef.current = Date.now();
-        socketRef.current?.emit("next_listening_stage", { chatId });
-      };
-      if (delayMs > 0) {
-        quizPrefetchTimerRef.current = setTimeout(emitNextStage, delayMs);
-        return;
-      }
-      emitNextStage();
+      lastListeningStageRequestRef.current = Date.now();
+      socketRef.current?.emit("next_listening_stage", { chatId });
     };
     if (delayMs > 0) {
       quizPrefetchTimerRef.current = setTimeout(emitNextStage, delayMs);
@@ -803,6 +796,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         setShowListeningCompletionCard(false);
         setPendingMcqPayload(null);
         prefetchedQuizRef.current = false;
+        currentStage = "initial";
         hasListeningStartedRef.current = true;
         setMessages(
           data.narrationText
@@ -864,9 +858,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         currentStage = listeningStageRef.current ?? "question_text";
       }
 
-      setListeningStage(serverStage);
-      logger.info(`Listening mode stage from server: ${serverStage}`, data);
-      onListeningStageChangeRef.current?.(serverStage, {
+      setListeningStage(currentStage);
+      logger.info(`Listening mode stage inferred: ${currentStage}`, data);
+      onListeningStageChangeRef.current?.(currentStage, {
         kbAudioUrl: data.kbAudioUrl,
       });
     });
@@ -1230,7 +1224,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   }, [userId, topicId, navigate, resetActivityTimer, onTopicImage]);
 
   useEffect(() => {
-    if (listeningStage === "question" && mode === "listening-mode") {
+    if (listeningStage === "question_text" && mode === "listening-mode") {
       setIsContextCompleted(false);
       setHasStartedContextAudio(false);
       setShowListeningCompletionCard(false);
@@ -1831,7 +1825,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       }
       // Step 3: show completion card after transcript before quiz
       if (
-        listeningStage === "question" &&
+        listeningStage === "question_text" &&
         !showListeningCompletionCard &&
         !skipListeningCompletionStepRef.current
       ) {
@@ -1886,7 +1880,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         toast.info(listeningStage === "question_text" ? "Loading quiz..." : "Loading next part...");
         return;
       }
-      socketRef.current.emit(ChatEvents.NEXT_STAGE, payload);
       socketRef.current.emit(ChatEvents.NEXT_STAGE, payload);
     } else {
       toast.error("Cannot proceed to next stage. Connection issue.");
@@ -1988,21 +1981,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       .filter((part) => part.length > 0);
   };
 
-  const parseListeningHintLines = (rawHint: string): string[] => {
-    const normalized = rawHint
-      .replace(/\r\n/g, "\n")
-      .replace(/[•●▪◦]/g, "\n")
-      .replace(/\s+-\s+/g, "\n")
-      .replace(/\s*;\s*/g, "\n")
-      .replace(/\n+/g, "\n")
-      .trim();
-
-    return normalized
-      .split("\n")
-      .map((part) => part.trim().replace(/^[,-]\s*/, ""))
-      .filter((part) => part.length > 0);
-  };
-
   const shouldShowModeTitle = !(isAvatar3DContext && mode === "reading-mode");
   const shouldShowListeningIntro =
     isAvatar3DContext &&
@@ -2018,9 +1996,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       ...(pendingMcqs || []),
       ...(mcqList || []),
     ]
-      .flatMap((mcq: any) =>
-        typeof mcq?.hint === "string" ? parseListeningHintLines(mcq.hint) : [],
-      )
       .flatMap((mcq: any) =>
         typeof mcq?.hint === "string" ? parseListeningHintLines(mcq.hint) : [],
       )
@@ -2350,7 +2325,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 </div>
               )}
 
-              {listeningStage === "question" &&
+              {listeningStage === "question_text" &&
                 !showListeningCompletionCard && (
                   <div className="rounded-2xl bg-white border border-[#B9E1FF] p-4 md:p-5 shadow-sm">
                     <div className="inline-flex items-center gap-2 rounded-full bg-[#E6F3FF] px-3 py-1 text-sm font-semibold text-[#2B6CB0] mb-3">
@@ -3021,7 +2996,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               setTimeout(() => (clickLocked.current = false), 2000);
 
               if (
-                listeningStage === "question" &&
+                listeningStage === "question_text" &&
                 !showListeningCompletionCard
               ) {
                 setShowListeningCompletionCard(true);
@@ -3035,7 +3010,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             disabled={
               (mode === "listening-mode" &&
                 ((listeningStage === "initial" && !hasPlayedIntroAudio) ||
-                  (listeningStage === "question" && !isContextCompleted))) ||
+                  (listeningStage === "question_text" && !isContextCompleted))) ||
               (mode === "listening-mode" &&
                 listeningStage === "quiz" &&
                 selectedAnswer === null)
