@@ -263,6 +263,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const sessionTimerLastEmittedRef = useRef<number | null>(null);
   const [_sessionLimitReached, _setSessionLimitReached] = useState(false);
   const [chatCompleted, setChatCompleted] = useState(false);
+  const isSessionExpired = _sessionLimitReached || sessionTimeRemaining === 0;
   const emitSessionRemaining = useCallback((next: number | null) => {
     setSessionTimeRemaining(next);
   }, []);
@@ -284,7 +285,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   }, [emitSessionRemaining]);
 
   useEffect(() => {
-    if (sessionTimeRemaining === 0) {
+    if (isSessionExpired) {
       _setSessionLimitReached(true);
       if (isRecording) {
         stopRecording(true);
@@ -295,7 +296,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     if (sessionTimeRemaining !== null && sessionTimeRemaining > 0) {
       _setSessionLimitReached(false);
     }
-  }, [isRecording, sessionTimeRemaining]);
+  }, [isRecording, isSessionExpired, sessionTimeRemaining]);
 
   // --- MODIFIED: Simplified audio state management
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
@@ -1015,8 +1016,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     // Reset inactivity timer when user starts recording
     resetInactivityTimer();
 
-    if (chatCompleted || _sessionLimitReached) {
-      toast.warning("Cannot record: The chat session is complete.");
+    if (chatCompleted || isSessionExpired) {
+      toast.warning(
+        isSessionExpired
+          ? "Session time is over. You cannot send more messages."
+          : "Cannot record: The chat session is complete.",
+      );
       return;
     }
 
@@ -1311,6 +1316,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
     logger.info("Form submitted.");
+
+    if (isSessionExpired) {
+      logger.error("Cannot send message: session expired.");
+      return;
+    }
 
     if (!message.trim() || !isSocketConnected || isWaitingForResponse) {
       logger.error("Cannot send message.", {
@@ -1805,7 +1815,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               </div>
             )}
           </div>
-          {_sessionLimitReached && (
+          {isSessionExpired && (
             <div className="bg-yellow-500 text-white text-center p-2 text-sm font-semibold">
               You have reached your session limit.
             </div>
@@ -2006,7 +2016,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   disabled={
                     isRecording ||
                     chatCompleted ||
-                    _sessionLimitReached ||
+                    isSessionExpired ||
                     !isSocketConnected ||
                     isWaitingForResponse
                   }
@@ -2042,6 +2052,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                     disabled={
                       !isSocketConnected ||
                       chatCompleted ||
+                      isSessionExpired ||
                       isWaitingForResponse
                     }
                   >
@@ -2057,6 +2068,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                     disabled={
                       !isSocketConnected ||
                       chatCompleted ||
+                      isSessionExpired ||
                       isWaitingForResponse
                     }
                   >

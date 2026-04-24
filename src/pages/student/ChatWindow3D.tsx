@@ -41,7 +41,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import QuestionnaireModal from "@/components/ui/QuestionaireModal";
-import AudioPlayer from "./AudioPlayer";
+import AudioPlayer3DListening from "./AudioPlayer3D";
 import ReadingPassageCard from "@/components/ui/ReadingPassageCard";
 import AvatarModeLayout from "@/components/3d/AvatarModeLayout";
 import birdWithHeadphones from "@/assets/images/bird-with-headphones.png";
@@ -318,6 +318,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const sessionTimerLastEmittedRef = useRef<number | null>(null);
   const [_sessionLimitReached, _setSessionLimitReached] = useState(false);
   const [chatCompleted, setChatCompleted] = useState(false);
+  const isSessionExpired = _sessionLimitReached || sessionTimeRemaining === 0;
   const emitSessionRemaining = useCallback(
     (next: number | null) => {
       setSessionTimeRemaining(next);
@@ -344,6 +345,20 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     const intervalId = setInterval(tick, 1000);
     return () => clearInterval(intervalId);
   }, [emitSessionRemaining]);
+
+  useEffect(() => {
+    if (isSessionExpired) {
+      _setSessionLimitReached(true);
+      if (isRecording) {
+        stopRecording(true);
+      }
+      return;
+    }
+
+    if (sessionTimeRemaining !== null && sessionTimeRemaining > 0) {
+      _setSessionLimitReached(false);
+    }
+  }, [isRecording, isSessionExpired, sessionTimeRemaining]);
 
   // --- MODIFIED: Simplified audio state management
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
@@ -1291,8 +1306,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     // Reset inactivity timer when user starts recording
     resetInactivityTimer();
 
-    if (chatCompleted || _sessionLimitReached) {
-      toast.warning("Cannot record: The chat session is complete.");
+    if (chatCompleted || isSessionExpired) {
+      toast.warning(
+        isSessionExpired
+          ? "Session time is over. You cannot send more messages."
+          : "Cannot record: The chat session is complete.",
+      );
       return;
     }
 
@@ -1588,6 +1607,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
     logger.info("Form submitted.");
+
+    if (isSessionExpired) {
+      logger.error("Cannot send message: session expired.");
+      return;
+    }
 
     if (!message.trim() || !isSocketConnected || isWaitingForResponse) {
       logger.error("Cannot send message.", {
@@ -2105,14 +2129,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                       resetInactivityTimer();
                     }}
                     className={`w-full justify-start p-4 h-auto transition-colors rounded-2xl ${selectedAnswer === index
-                        ? "bg-[#3EA4F9] text-white hover:bg-[#2F93F0] border-transparent"
-                        : "bg-white border-[#E1E7F0] text-[#2B3A67]"
+                      ? "bg-[#3EA4F9] text-white hover:bg-[#2F93F0] border-transparent"
+                      : "bg-white border-[#E1E7F0] text-[#2B3A67]"
                       }`}
                   >
                     <div
                       className={`w-5 h-5 mr-4 rounded-full border flex-shrink-0 ${selectedAnswer === index
-                          ? "bg-white border-white"
-                          : "border-[#C9D6E6]"
+                        ? "bg-white border-white"
+                        : "border-[#C9D6E6]"
                         }`}
                     />
                     <span>{option}</span>
@@ -2127,15 +2151,15 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       {listeningStage !== "quiz" && (
         <div
           className={`flex flex-col max-w-[800px] mx-auto bg-gray-100 rounded-xl overflow-hidden shadow-2xl ${mode === "listening-mode"
-              ? "min-h-[70vh] max-h-[80vh]"
-              : readingHeroActive
-                ? "min-h-[calc(100vh-340px)] max-h-[calc(100vh-340px)] md:min-h-[calc(100vh-340px)] md:max-h-[calc(100vh-340px)]"
-                : "max-h-[86vh] min-h-[86vh] md:min-h-[82vh] md:max-h-[82vh]"
+            ? "min-h-[70vh] max-h-[80vh]"
+            : readingHeroActive
+              ? "min-h-[calc(100vh-340px)] max-h-[calc(100vh-340px)] md:min-h-[calc(100vh-340px)] md:max-h-[calc(100vh-340px)]"
+              : "max-h-[86vh] min-h-[86vh] md:min-h-[82vh] md:max-h-[82vh]"
             }`}
         >
           {mode === "listening-mode" && (
-            <header className="flex items-center justify-between px-4 md:px-6 py-4 border-b bg-white">
-              <div className="flex items-center gap-2">
+            <header className="grid grid-cols-[auto,1fr,auto] items-center gap-3 px-4 md:px-6 py-4 border-b bg-white">
+              <div className="flex items-center gap-2 justify-self-start">
                 <Button
                   variant="ghost"
                   size="icon"
@@ -2153,8 +2177,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   <ChevronLeft className="h-5 w-5" />
                 </Button>
               </div>
-              <h2 className="text-lg font-semibold">Listening Mode</h2>
-              <div className="flex items-center gap-2">
+              <h2 className="min-w-0 truncate text-center text-base md:text-lg font-semibold">
+                Listening Mode
+              </h2>
+              <div className="flex items-center gap-2 justify-self-end">
                 <div className="hidden md:flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border-2 border-[#3EA4F9] bg-white text-gray-500">
                   <Clock className="h-5 w-5 text-[#3EA4F9]" />
                   <span>
@@ -2231,7 +2257,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               </div>
             )}
           </div>
-          {_sessionLimitReached && (
+          {isSessionExpired && (
             <div className="bg-yellow-500 text-white text-center p-2 text-sm font-semibold">
               You have reached your session limit.
             </div>
@@ -2244,8 +2270,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           {mode === "listening-mode" ? (
             <div
               className={`relative flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-4 transition-all duration-500 ease-out ${isListeningStepTransitioning
-                  ? "opacity-0 translate-x-6"
-                  : "opacity-100 translate-x-0"
+                ? "opacity-0 translate-x-6"
+                : "opacity-100 translate-x-0"
                 }`}
             >
               <div className="md:hidden flex justify-start">
@@ -2273,7 +2299,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   )}
                 </div>
                 <div className="mt-4">
-                  <AudioPlayer
+                  <AudioPlayer3DListening
                     audioSrc={listeningData?.kbAudioUrl || ""}
                     isPlaying={
                       playingAudioId === "kb-audio" && isCurrentlyPlaying
@@ -2335,8 +2361,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                     <p
                       ref={transcriptRef}
                       className={`text-sm text-[#2F4B66] whitespace-pre-wrap transition-all duration-300 ${!isTranscriptExpanded
-                          ? "line-clamp-5"
-                          : "line-clamp-none"
+                        ? "line-clamp-5"
+                        : "line-clamp-none"
                         }`}
                     >
                       {listeningData?.questionText ||
@@ -2489,8 +2515,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                     <div
                       key={msg.id}
                       className={`flex flex-col gap-1 ${msg.type === "sent"
-                          ? "self-end items-end"
-                          : "self-start items-start"
+                        ? "self-end items-end"
+                        : "self-start items-start"
                         }`}
                     >
                       {msg.loading ? (
@@ -2518,8 +2544,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                       ) : (
                         <div
                           className={`p-3 rounded-xl max-w-md shadow-sm break-words ${msg.type === "sent"
-                              ? "bg-[#3EA4F9] text-white rounded-tr-none"
-                              : "bg-white text-gray-800 rounded-tl-none"
+                            ? "bg-[#3EA4F9] text-white rounded-tr-none"
+                            : "bg-white text-gray-800 rounded-tl-none"
                             }`}
                         >
                           {msg.text && (
@@ -2623,7 +2649,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   disabled={
                     isRecording ||
                     chatCompleted ||
-                    _sessionLimitReached ||
+                    isSessionExpired ||
                     !isSocketConnected ||
                     isWaitingForResponse
                   }
@@ -2659,6 +2685,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                     disabled={
                       !isSocketConnected ||
                       chatCompleted ||
+                      isSessionExpired ||
                       isWaitingForResponse
                     }
                   >
@@ -2674,6 +2701,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                     disabled={
                       !isSocketConnected ||
                       chatCompleted ||
+                      isSessionExpired ||
                       isWaitingForResponse
                     }
                   >
@@ -2867,10 +2895,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                         </p>
                         <p
                           className={`text-sm font-semibold ${contentFilterWarningData.severity === "High"
-                              ? "text-red-600"
-                              : contentFilterWarningData.severity === "Medium"
-                                ? "text-orange-600"
-                                : "text-yellow-600"
+                            ? "text-red-600"
+                            : contentFilterWarningData.severity === "Medium"
+                              ? "text-orange-600"
+                              : "text-yellow-600"
                             }`}
                         >
                           {contentFilterWarningData.severity}
