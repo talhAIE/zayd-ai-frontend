@@ -5,7 +5,7 @@ import FeedbackSectionModal from './FeedbackSectionModel';
 import PhotoDisplay from './PhotoDisplay';
 import ChatWindow from './ChatWindow3D';
 import ChatWindowNormal from './ChatWindowNormal';
-import AudioPlayer from './AudioPlayer';
+import AudioPlayer3D from './AudioPlayer3D';
 import AvatarModeLayout from '@/components/3d/AvatarModeLayout';
 import AvatarHeaderBar from '@/components/3d/AvatarHeaderBar';
 
@@ -252,9 +252,8 @@ const Chat: React.FC = () => {
     <div className="flex max-h-screen">
       <main className="flex-1 transition-all duration-300">
         <div
-          className={`mx-auto md:px-6 ${
-            isAvatar3D && isDesktop ? "min-h-0 xl:h-[calc(100vh-9.5rem)]" : ""
-          }`}
+          className={`mx-auto md:px-6 ${isAvatar3D && isDesktop ? "min-h-0 xl:h-[calc(100vh-9.5rem)]" : ""
+            }`}
         >
           {isNarrowScreen && isAvatar3D && mode !== 'listening-mode' ? (
             <div className="flex flex-col gap-3 h-[calc(100vh-120px)] min-h-0">
@@ -344,14 +343,12 @@ const Chat: React.FC = () => {
             </div>
           ) : (
             <div
-              className={`flex flex-col w-full gap-4 lg:gap-6 ${
-                isAvatar3D && isDesktop ? "min-h-0 h-full" : ""
-              }`}
+              className={`flex flex-col w-full gap-4 lg:gap-6 ${isAvatar3D && isDesktop ? "min-h-0 h-full" : ""
+                }`}
             >
               <div
-                className={`flex flex-col min-[768px]:flex-row justify-between w-full gap-4 lg:gap-6 ${
-                  isAvatar3D && isDesktop ? "min-h-0 h-full" : ""
-                }`}
+                className={`flex flex-col min-[768px]:flex-row justify-between w-full gap-4 lg:gap-6 ${isAvatar3D && isDesktop ? "min-h-0 h-full" : ""
+                  }`}
               >
                 <div
                   className={`flex-1 min-[768px]:flex-grow-2 w-full min-[768px]:w-auto flex flex-col min-h-0 ${mode === 'roleplay-mode' ? 'order-1 min-[768px]:order-1' : 'order-2 min-[768px]:order-1'
@@ -402,8 +399,8 @@ const Chat: React.FC = () => {
                   {isHeroMode3D && isDesktop && (
                     <div
                       className={`flex-none transition-all duration-700 ease-in-out overflow-hidden ${shouldShowReadingHero
-                          ? 'opacity-100 translate-y-0 scale-100 max-h-[1000px] mb-4'
-                          : 'opacity-0 -translate-y-2 scale-95 max-h-0 mb-0 pointer-events-none'
+                        ? 'opacity-100 translate-y-0 scale-100 max-h-[1000px] mb-4'
+                        : 'opacity-0 -translate-y-2 scale-95 max-h-0 mb-0 pointer-events-none'
                         }`}
                     >
                       <div className="w-full max-w-[800px] mx-auto rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white">
@@ -458,19 +455,18 @@ const Chat: React.FC = () => {
                   />
                 </div>
                 <div
-                  className={`flex flex-col gap-3 w-full ${
-                    shouldShowListeningSidebar ? 'min-[768px]:w-[28%]' : 'min-[768px]:w-1/3'
-                  } ${isAvatar3D && isDesktop ? 'min-h-0' : ''} ${mode === 'roleplay-mode' ? 'order-2 min-[768px]:order-2' : 'order-1 min-[768px]:order-2'
+                  className={`flex flex-col gap-3 w-full ${shouldShowListeningSidebar ? 'min-[768px]:w-[28%]' : 'min-[768px]:w-1/3'
+                    } ${isAvatar3D && isDesktop ? 'min-h-0' : ''} ${mode === 'roleplay-mode' ? 'order-2 min-[768px]:order-2' : 'order-1 min-[768px]:order-2'
                     }`}
                 >
                   {isAvatar3D && mode !== 'listening-mode' && (
                     <div
                       className={`transition-all duration-700 ease-in-out ${shouldShowSideAvatar
-                          ? `opacity-100 translate-y-0 scale-100 ${mode === 'roleplay-mode' || mode === 'reading-mode'
-                            ? 'max-h-none overflow-visible'
-                            : 'max-h-[420px] overflow-hidden'
-                          }`
-                          : 'opacity-0 translate-y-2 scale-95 max-h-0 pointer-events-none overflow-hidden'
+                        ? `opacity-100 translate-y-0 scale-100 ${mode === 'roleplay-mode' || mode === 'reading-mode'
+                          ? 'max-h-none overflow-visible'
+                          : 'max-h-[420px] overflow-hidden'
+                        }`
+                        : 'opacity-0 translate-y-2 scale-95 max-h-0 pointer-events-none overflow-hidden'
                         }`}
                     >
                       <AvatarModeLayout
@@ -503,7 +499,7 @@ const Chat: React.FC = () => {
                         videoSrc={avatarVideoSrc}
                         videoClassName="w-full h-auto object-contain mx-auto"
                       />
-                      <AudioPlayer
+                      <AudioPlayer3D
                         audioSrc={listeningAudioUrl || ''}
                         isPlaying={listeningAudioState.isPlaying}
                         progress={listeningAudioState.progress}
