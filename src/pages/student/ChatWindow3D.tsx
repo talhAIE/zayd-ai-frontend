@@ -41,7 +41,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import QuestionnaireModal from "@/components/ui/QuestionaireModal";
-import AudioPlayer from "./AudioPlayer";
+import AudioPlayer3DListening from "./AudioPlayer3D";
 import ReadingPassageCard from "@/components/ui/ReadingPassageCard";
 import AvatarModeLayout from "@/components/3d/AvatarModeLayout";
 import birdWithHeadphones from "@/assets/images/bird-with-headphones.png";
@@ -2273,7 +2273,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   )}
                 </div>
                 <div className="mt-4">
-                  <AudioPlayer
+                  <AudioPlayer3DListening
                     audioSrc={listeningData?.kbAudioUrl || ""}
                     isPlaying={
                       playingAudioId === "kb-audio" && isCurrentlyPlaying
