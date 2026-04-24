@@ -62,9 +62,8 @@ const AudioPlayer3DListening: React.FC<AudioPlayer3DListeningProps> = ({
     return Array.from({ length: barCount }, (_, i) => (
       <div
         key={i}
-        className={`w-[3px] rounded-full ${
-          i < coloredBars ? 'bg-primary' : 'bg-gray-300'
-        }`}
+        className={`w-[3px] rounded-full ${i < coloredBars ? 'bg-primary' : 'bg-gray-300'
+          }`}
         style={{ height: `${heights[i % heights.length]}px` }}
       />
     ));
@@ -86,7 +85,7 @@ const AudioPlayer3DListening: React.FC<AudioPlayer3DListeningProps> = ({
 
       <div
         ref={waveformRef}
-        className="flex h-6 w-full items-center gap-[2px] overflow-hidden"
+        className="flex h-6 w-[90%] items-center gap-[2px] overflow-hidden"
       >
         {bars}
       </div>
