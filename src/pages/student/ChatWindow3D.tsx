@@ -482,8 +482,15 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       clearTimeout(quizPrefetchTimerRef.current);
     }
     const emitNextStage = () => {
-      lastListeningStageRequestRef.current = Date.now();
-      socketRef.current?.emit("next_listening_stage", { chatId });
+      const emitNextStage = () => {
+        lastListeningStageRequestRef.current = Date.now();
+        socketRef.current?.emit("next_listening_stage", { chatId });
+      };
+      if (delayMs > 0) {
+        quizPrefetchTimerRef.current = setTimeout(emitNextStage, delayMs);
+        return;
+      }
+      emitNextStage();
     };
     if (delayMs > 0) {
       quizPrefetchTimerRef.current = setTimeout(emitNextStage, delayMs);
@@ -796,7 +803,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         setShowListeningCompletionCard(false);
         setPendingMcqPayload(null);
         prefetchedQuizRef.current = false;
-        currentStage = "initial";
         hasListeningStartedRef.current = true;
         setMessages(
           data.narrationText
@@ -858,9 +864,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         currentStage = listeningStageRef.current ?? "question_text";
       }
 
-      setListeningStage(currentStage);
-      logger.info(`Listening mode stage inferred: ${currentStage}`, data);
-      onListeningStageChangeRef.current?.(currentStage, {
+      setListeningStage(serverStage);
+      logger.info(`Listening mode stage from server: ${serverStage}`, data);
+      onListeningStageChangeRef.current?.(serverStage, {
         kbAudioUrl: data.kbAudioUrl,
       });
     });
@@ -1224,7 +1230,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   }, [userId, topicId, navigate, resetActivityTimer, onTopicImage]);
 
   useEffect(() => {
-    if (listeningStage === "question_text" && mode === "listening-mode") {
+    if (listeningStage === "question" && mode === "listening-mode") {
       setIsContextCompleted(false);
       setHasStartedContextAudio(false);
       setShowListeningCompletionCard(false);
@@ -1825,7 +1831,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       }
       // Step 3: show completion card after transcript before quiz
       if (
-        listeningStage === "question_text" &&
+        listeningStage === "question" &&
         !showListeningCompletionCard &&
         !skipListeningCompletionStepRef.current
       ) {
@@ -1880,6 +1886,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         toast.info(listeningStage === "question_text" ? "Loading quiz..." : "Loading next part...");
         return;
       }
+      socketRef.current.emit(ChatEvents.NEXT_STAGE, payload);
       socketRef.current.emit(ChatEvents.NEXT_STAGE, payload);
     } else {
       toast.error("Cannot proceed to next stage. Connection issue.");
@@ -1981,6 +1988,21 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       .filter((part) => part.length > 0);
   };
 
+  const parseListeningHintLines = (rawHint: string): string[] => {
+    const normalized = rawHint
+      .replace(/\r\n/g, "\n")
+      .replace(/[•●▪◦]/g, "\n")
+      .replace(/\s+-\s+/g, "\n")
+      .replace(/\s*;\s*/g, "\n")
+      .replace(/\n+/g, "\n")
+      .trim();
+
+    return normalized
+      .split("\n")
+      .map((part) => part.trim().replace(/^[,-]\s*/, ""))
+      .filter((part) => part.length > 0);
+  };
+
   const shouldShowModeTitle = !(isAvatar3DContext && mode === "reading-mode");
   const shouldShowListeningIntro =
     isAvatar3DContext &&
@@ -1996,6 +2018,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       ...(pendingMcqs || []),
       ...(mcqList || []),
     ]
+      .flatMap((mcq: any) =>
+        typeof mcq?.hint === "string" ? parseListeningHintLines(mcq.hint) : [],
+      )
       .flatMap((mcq: any) =>
         typeof mcq?.hint === "string" ? parseListeningHintLines(mcq.hint) : [],
       )
@@ -2105,14 +2130,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                       resetInactivityTimer();
                     }}
                     className={`w-full justify-start p-4 h-auto transition-colors rounded-2xl ${selectedAnswer === index
-                        ? "bg-[#3EA4F9] text-white hover:bg-[#2F93F0] border-transparent"
-                        : "bg-white border-[#E1E7F0] text-[#2B3A67]"
+                      ? "bg-[#3EA4F9] text-white hover:bg-[#2F93F0] border-transparent"
+                      : "bg-white border-[#E1E7F0] text-[#2B3A67]"
                       }`}
                   >
                     <div
                       className={`w-5 h-5 mr-4 rounded-full border flex-shrink-0 ${selectedAnswer === index
-                          ? "bg-white border-white"
-                          : "border-[#C9D6E6]"
+                        ? "bg-white border-white"
+                        : "border-[#C9D6E6]"
                         }`}
                     />
                     <span>{option}</span>
@@ -2127,10 +2152,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       {listeningStage !== "quiz" && (
         <div
           className={`flex flex-col max-w-[800px] mx-auto bg-gray-100 rounded-xl overflow-hidden shadow-2xl ${mode === "listening-mode"
-              ? "min-h-[70vh] max-h-[80vh]"
-              : readingHeroActive
-                ? "min-h-[calc(100vh-340px)] max-h-[calc(100vh-340px)] md:min-h-[calc(100vh-340px)] md:max-h-[calc(100vh-340px)]"
-                : "max-h-[86vh] min-h-[86vh] md:min-h-[82vh] md:max-h-[82vh]"
+            ? "min-h-[70vh] max-h-[80vh]"
+            : readingHeroActive
+              ? "min-h-[calc(100vh-340px)] max-h-[calc(100vh-340px)] md:min-h-[calc(100vh-340px)] md:max-h-[calc(100vh-340px)]"
+              : "max-h-[86vh] min-h-[86vh] md:min-h-[82vh] md:max-h-[82vh]"
             }`}
         >
           {mode === "listening-mode" && (
@@ -2244,8 +2269,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           {mode === "listening-mode" ? (
             <div
               className={`relative flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-4 transition-all duration-500 ease-out ${isListeningStepTransitioning
-                  ? "opacity-0 translate-x-6"
-                  : "opacity-100 translate-x-0"
+                ? "opacity-0 translate-x-6"
+                : "opacity-100 translate-x-0"
                 }`}
             >
               <div className="md:hidden flex justify-start">
@@ -2325,7 +2350,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 </div>
               )}
 
-              {listeningStage === "question_text" &&
+              {listeningStage === "question" &&
                 !showListeningCompletionCard && (
                   <div className="rounded-2xl bg-white border border-[#B9E1FF] p-4 md:p-5 shadow-sm">
                     <div className="inline-flex items-center gap-2 rounded-full bg-[#E6F3FF] px-3 py-1 text-sm font-semibold text-[#2B6CB0] mb-3">
@@ -2335,8 +2360,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                     <p
                       ref={transcriptRef}
                       className={`text-sm text-[#2F4B66] whitespace-pre-wrap transition-all duration-300 ${!isTranscriptExpanded
-                          ? "line-clamp-5"
-                          : "line-clamp-none"
+                        ? "line-clamp-5"
+                        : "line-clamp-none"
                         }`}
                     >
                       {listeningData?.questionText ||
@@ -2489,8 +2514,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                     <div
                       key={msg.id}
                       className={`flex flex-col gap-1 ${msg.type === "sent"
-                          ? "self-end items-end"
-                          : "self-start items-start"
+                        ? "self-end items-end"
+                        : "self-start items-start"
                         }`}
                     >
                       {msg.loading ? (
@@ -2518,8 +2543,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                       ) : (
                         <div
                           className={`p-3 rounded-xl max-w-md shadow-sm break-words ${msg.type === "sent"
-                              ? "bg-[#3EA4F9] text-white rounded-tr-none"
-                              : "bg-white text-gray-800 rounded-tl-none"
+                            ? "bg-[#3EA4F9] text-white rounded-tr-none"
+                            : "bg-white text-gray-800 rounded-tl-none"
                             }`}
                         >
                           {msg.text && (
@@ -2867,10 +2892,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                         </p>
                         <p
                           className={`text-sm font-semibold ${contentFilterWarningData.severity === "High"
-                              ? "text-red-600"
-                              : contentFilterWarningData.severity === "Medium"
-                                ? "text-orange-600"
-                                : "text-yellow-600"
+                            ? "text-red-600"
+                            : contentFilterWarningData.severity === "Medium"
+                              ? "text-orange-600"
+                              : "text-yellow-600"
                             }`}
                         >
                           {contentFilterWarningData.severity}
@@ -2996,7 +3021,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               setTimeout(() => (clickLocked.current = false), 2000);
 
               if (
-                listeningStage === "question_text" &&
+                listeningStage === "question" &&
                 !showListeningCompletionCard
               ) {
                 setShowListeningCompletionCard(true);
@@ -3010,7 +3035,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             disabled={
               (mode === "listening-mode" &&
                 ((listeningStage === "initial" && !hasPlayedIntroAudio) ||
-                  (listeningStage === "question_text" && !isContextCompleted))) ||
+                  (listeningStage === "question" && !isContextCompleted))) ||
               (mode === "listening-mode" &&
                 listeningStage === "quiz" &&
                 selectedAnswer === null)
