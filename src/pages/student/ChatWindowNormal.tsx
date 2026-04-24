@@ -1600,7 +1600,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     <>
       {mode === "listening-mode" && (
         <>
-          <div className="space-y-4 border border-blue-400 p-4 rounded-xl bg-white/70 backdrop-blur mb-4">
+          <div className="w-full max-w-[800px] mx-auto space-y-4 border border-blue-400 p-4 rounded-xl bg-white/70 backdrop-blur mb-4">
             <Progress value={progress} className="h-2 bg-gray-200" />
 
             <div className="flex items-center justify-between">
@@ -1706,7 +1706,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
       {listeningStage === "quiz" && mcqList.length > 0 && (
         <div className="w-full flex flex-col items-center gap-4">
-          <div className="p-6 border rounded-xl bg-white shadow-lg w-full my-4 text-left">
+          <div className="p-6 border rounded-xl bg-white shadow-lg w-full max-w-[800px] my-4 text-left">
             <div className="flex justify-end mb-2">
               <span className="text-sm font-semibold text-gray-600">
                 Question {currentMcqIndex + 1}/{mcqList.length}
@@ -2371,7 +2371,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       </Dialog>
 
       {mode === "listening-mode" && (
-        <div>
+        <div className="w-full max-w-[800px] mx-auto">
           <Button
             className="w-full mt-4 rounded-full p-5"
             onClick={() => {
