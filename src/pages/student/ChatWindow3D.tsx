@@ -338,6 +338,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       );
       if (sessionTimerLastEmittedRef.current !== nextRemaining) {
         sessionTimerLastEmittedRef.current = nextRemaining;
+        _setSessionLimitReached(nextRemaining === 0);
         emitSessionRemaining(nextRemaining);
       }
     };
@@ -1066,6 +1067,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       if (typeof rawRemaining !== "number" || Number.isNaN(rawRemaining)) {
         sessionTimerBaseRef.current = null;
         sessionTimerLastEmittedRef.current = null;
+        _setSessionLimitReached(false);
         emitSessionRemaining(null);
         return;
       }
@@ -1075,6 +1077,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         receivedAt: Date.now(),
       };
       sessionTimerLastEmittedRef.current = normalizedRemaining;
+      _setSessionLimitReached(normalizedRemaining === 0);
       emitSessionRemaining(normalizedRemaining);
     });
 

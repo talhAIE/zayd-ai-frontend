@@ -276,6 +276,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       const nextRemaining = Math.max(0, base.remainingSeconds - elapsedSeconds);
       if (sessionTimerLastEmittedRef.current !== nextRemaining) {
         sessionTimerLastEmittedRef.current = nextRemaining;
+        _setSessionLimitReached(nextRemaining === 0);
         emitSessionRemaining(nextRemaining);
       }
     };
@@ -760,6 +761,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       if (typeof rawRemaining !== "number" || Number.isNaN(rawRemaining)) {
         sessionTimerBaseRef.current = null;
         sessionTimerLastEmittedRef.current = null;
+        _setSessionLimitReached(false);
         emitSessionRemaining(null);
         return;
       }
@@ -769,6 +771,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         receivedAt: Date.now(),
       };
       sessionTimerLastEmittedRef.current = normalizedRemaining;
+      _setSessionLimitReached(normalizedRemaining === 0);
       emitSessionRemaining(normalizedRemaining);
     });
 
@@ -1610,14 +1613,29 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     <>
       {mode === "listening-mode" && (
         <>
-          <div className="w-full max-w-[800px] mx-auto space-y-4 border border-blue-400 p-4 rounded-xl bg-white/70 backdrop-blur mb-4">
-            <Progress value={progress} className="h-2 bg-gray-200" />
+          <style>{`
+            .gradient-hover-animate {
+              background: linear-gradient(to right, #3EA4F9 0%, #0267B5 50%, #3EA4F9 100%);
+              background-size: 200% 100%;
+              background-position: 0% 50%;
+              transition: background-position 0.6s ease;
+            }
+            .gradient-hover-animate:hover {
+              background-position: 100% 50%;
+            }
+          `}</style>
+          <div className="w-full max-w-[800px] mx-auto space-y-4 border border-[#058BF4] p-4 rounded-xl bg-white/70 backdrop-blur mb-4">
+            <Progress
+              value={progress}
+              className="h-2 bg-[#D9ECFD]"
+              indicatorClassName="bg-[linear-gradient(90deg,#3EA4F9_0%,#0267B5_50%,#3EA4F9_100%)]"
+            />
 
             <div className="flex items-center justify-between">
-              <span className="font-medium text-blue-700">
+              <span className="font-medium text-[#058BF4]">
                 Step {listeningSteps}/3
               </span>
-              <span className="flex items-center gap-1 px-3 py-1.5 rounded-lg border-2 border-[#3EA4F9] bg-white text-blue-700">
+              <span className="flex items-center gap-1 px-3 py-1.5 rounded-lg border-2 border-[#3EA4F9] bg-white text-[#058BF4]">
                 <Clock className="h-6 w-6 text-[#3EA4F9]" />
                 <span>
                   {sessionTimeRemaining !== null
@@ -1634,6 +1652,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 isPlaying={playingAudioId === "kb-audio" && isCurrentlyPlaying}
                 progress={playingAudioId === "kb-audio" ? audioProgress : 0}
                 duration={playingAudioId === "kb-audio" ? audioDuration : 0}
+                variant="gradient"
                 onTogglePlay={() =>
                   toggleAudio("kb-audio", listeningData?.kbAudioUrl, () =>
                     setIsContextCompleted(true),
@@ -1643,7 +1662,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               {mode === "listening-mode" && (
                 <div className="flex justify-end items-center h-4 pr-2 mt-2 md:mt-0">
                   {!hasStartedContextAudio ? (
-                    <span className="text-blue-500 text-xs flex items-center gap-1 animate-pulse">
+                    <span className="text-[#058BF4] text-xs flex items-center gap-1 animate-pulse">
                       ▶ Play to proceed to next step
                     </span>
                   ) : !isContextCompleted ? (
@@ -1738,9 +1757,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                     className="w-full justify-start p-4 h-auto transition-colors"
                   >
                     <div
-                      className={`w-5 h-5 mr-4 rounded-full border border-primary flex-shrink-0 ${
-                        selectedAnswer === index ? "bg-primary" : ""
-                      }`}
+                      className={`w-5 h-5 mr-4 rounded-full border border-primary flex-shrink-0 ${selectedAnswer === index ? "bg-primary" : ""
+                        }`}
                     />
                     <span>{option}</span>
                   </Button>
@@ -1753,11 +1771,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
       {listeningStage !== "quiz" && (
         <div
-          className={`flex flex-col max-w-[800px] mx-auto bg-gray-100 rounded-xl overflow-hidden shadow-2xl ${
-            mode === "listening-mode"
-              ? "min-h-[49vh] max-h-[49vh]"
-              : "max-h-[86vh] min-h-[86vh] md:min-h-[82vh] md:max-h-[82vh]"
-          }`}
+          className={`flex flex-col max-w-[800px] mx-auto bg-gray-100 rounded-xl overflow-hidden shadow-2xl ${mode === "listening-mode"
+            ? "min-h-[49vh] max-h-[49vh]"
+            : "max-h-[86vh] min-h-[86vh] md:min-h-[82vh] md:max-h-[82vh]"
+            }`}
         >
           {mode !== "listening-mode" && (
             <header className="flex justify-between items-center px-6 py-4 border-b bg-white">
@@ -1843,15 +1860,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               <div className="p-4 rounded-lg shadow-sm bg-white border border-gray-200">
                 <p
                   ref={contentRef}
-                  className={`text-gray-800 text-base leading-relaxed whitespace-pre-wrap transition-all duration-300 ${
-                    !isContentExpanded ? "line-clamp-3" : "line-clamp-none"
-                  }`}
+                  className={`text-gray-800 text-base leading-relaxed whitespace-pre-wrap transition-all duration-300 ${!isContentExpanded ? "line-clamp-3" : "line-clamp-none"
+                    }`}
                 >
                   {contentPayload.content
                     .split(/(\*\*.*?\*\*)/g)
                     .map((part, i) =>
                       part.startsWith("**") && part.endsWith("**") ? (
-                        <span key={i} className="font-bold text-blue-600">
+                        <span key={i} className="font-bold text-[#058BF4]">
                           {part.slice(2, -2)}
                         </span>
                       ) : (
@@ -1872,7 +1888,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                       }
                     >
                       {playingAudioId === "content-payload-audio" &&
-                      isCurrentlyPlaying ? (
+                        isCurrentlyPlaying ? (
                         <Pause className="h-5 w-5" />
                       ) : (
                         <Play className="h-5 w-5" />
@@ -1887,7 +1903,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                         setIsContentExpanded(!isContentExpanded);
                         resetInactivityTimer();
                       }}
-                      className="text-sm text-blue-600 p-0 h-auto"
+                      className="text-sm text-[#058BF4] p-0 h-auto"
                     >
                       {isContentExpanded ? "See Less" : "See More"}
                     </Button>
@@ -1898,11 +1914,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             {messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`flex flex-col gap-1 ${
-                  msg.type === "sent"
-                    ? "self-end items-end"
-                    : "self-start items-start"
-                }`}
+                className={`flex flex-col gap-1 ${msg.type === "sent"
+                  ? "self-end items-end"
+                  : "self-start items-start"
+                  }`}
               >
                 {msg.loading ? (
                   <div className="flex items-center gap-2 bg-white p-3 rounded-xl shadow-sm">
@@ -1928,17 +1943,16 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   </Button>
                 ) : (
                   <div
-                    className={`p-3 rounded-xl max-w-md shadow-sm break-words ${
-                      msg.type === "sent"
-                        ? "bg-[#3EA4F9] text-white rounded-tr-none"
-                        : "bg-white text-gray-800 rounded-tl-none"
-                    }`}
+                    className={`p-3 rounded-xl max-w-md shadow-sm break-words ${msg.type === "sent"
+                      ? "bg-[#3EA4F9] text-white rounded-tr-none"
+                      : "bg-white text-gray-800 rounded-tl-none"
+                      }`}
                   >
                     {msg.text && (
                       <p className="text-sm leading-relaxed whitespace-pre-wrap">
                         {msg.text.split(/(\*\*.*?\*\*)/g).map((part, i) =>
                           part.startsWith("**") && part.endsWith("**") ? (
-                            <span key={i} className="font-bold text-blue-600">
+                            <span key={i} className="font-bold text-[#058BF4]">
                               {part.slice(2, -2)}
                             </span>
                           ) : (
@@ -2261,13 +2275,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                           Severity
                         </p>
                         <p
-                          className={`text-sm font-semibold ${
-                            contentFilterWarningData.severity === "High"
-                              ? "text-red-600"
-                              : contentFilterWarningData.severity === "Medium"
-                                ? "text-orange-600"
-                                : "text-yellow-600"
-                          }`}
+                          className={`text-sm font-semibold ${contentFilterWarningData.severity === "High"
+                            ? "text-red-600"
+                            : contentFilterWarningData.severity === "Medium"
+                              ? "text-orange-600"
+                              : "text-yellow-600"
+                            }`}
                         >
                           {contentFilterWarningData.severity}
                         </p>
@@ -2385,7 +2398,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       {mode === "listening-mode" && (
         <div className="w-full max-w-[800px] mx-auto">
           <Button
-            className="w-full mt-4 rounded-full p-5"
+            className="gradient-hover-animate w-full mt-4 rounded-full p-5 text-white shadow-lg shadow-blue-500/30 hover:brightness-110 disabled:opacity-60 disabled:shadow-none"
             onClick={() => {
               if (clickLocked.current) return;
               clickLocked.current = true;
