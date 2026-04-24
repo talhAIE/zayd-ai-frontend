@@ -9,6 +9,7 @@ interface AudioPlayerProps {
     progress: number;
     duration: number;
     onTogglePlay: () => void;
+    showTotal?: boolean;
 }
 
 const formatTime = (sec: number) => {
@@ -25,6 +26,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     progress,
     duration,
     onTogglePlay,
+    showTotal = false,
 }) => {
     const waveformRef = React.useRef<HTMLDivElement>(null);
     const [barCount, setBarCount] = React.useState(0);
@@ -89,7 +91,9 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
                 {bars}
             </div>
             <span className="text-xs font-mono text-gray-500 min-w-[45px] text-right pr-1">
-                {formatTime(progress)}
+                {showTotal
+                    ? `${formatTime(progress)}/${formatTime(duration)}`
+                    : formatTime(progress)}
             </span>
         </div>
     );
