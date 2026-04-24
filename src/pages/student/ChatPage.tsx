@@ -333,6 +333,7 @@ const Chat: React.FC = () => {
                       setListeningAudioUrl(data.kbAudioUrl);
                     }
                   }}
+                  listeningAvatarSeed={listeningAvatarSeed}
                 />
               </div>
               <FeedbackSectionModal
@@ -453,12 +454,13 @@ const Chat: React.FC = () => {
                         setListeningAudioUrl(data.kbAudioUrl);
                       }
                     }}
+                    listeningAvatarSeed={listeningAvatarSeed}
                   />
                 </div>
                 <div
-                  className={`flex flex-col gap-3 w-full min-[768px]:w-1/3 ${
-                    isAvatar3D && isDesktop ? 'min-h-0' : ''
-                  } ${mode === 'roleplay-mode' ? 'order-2 min-[768px]:order-2' : 'order-1 min-[768px]:order-2'
+                  className={`flex flex-col gap-3 w-full ${
+                    shouldShowListeningSidebar ? 'min-[768px]:w-[28%]' : 'min-[768px]:w-1/3'
+                  } ${isAvatar3D && isDesktop ? 'min-h-0' : ''} ${mode === 'roleplay-mode' ? 'order-2 min-[768px]:order-2' : 'order-1 min-[768px]:order-2'
                     }`}
                 >
                   {isAvatar3D && mode !== 'listening-mode' && (
@@ -493,7 +495,7 @@ const Chat: React.FC = () => {
                     </div>
                   )}
                   {shouldShowListeningSidebar && (
-                    <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-0">
                       <AvatarModeLayout
                         key={`listening-avatar-${listeningAvatarSeed}`}
                         compact

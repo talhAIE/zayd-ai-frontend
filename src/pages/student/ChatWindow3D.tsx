@@ -274,6 +274,7 @@ interface ChatWindowProps {
     pause: () => void;
     restart: () => void;
   }) => void;
+  listeningAvatarSeed?: number;
 }
 
 function findLastIndex<T>(
@@ -302,6 +303,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   onListeningStageChange,
   onListeningAudioState,
   onListeningAudioController,
+  listeningAvatarSeed = 0,
 }) => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -1863,38 +1865,33 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     if (
       mode === "listening-mode" &&
       isAvatar3DContext &&
-      pendingMcqs?.length &&
       skipListeningCompletionStepRef.current
     ) {
-      setListeningStage("quiz");
-      setMcqList(pendingMcqs);
-      setChatId(pendingMcqPayload.chatId);
-      setListeningData((prevData: any) => ({
-        ...prevData,
-        ...pendingMcqPayload,
-      }));
-      setCurrentMcqIndex(0);
-      setPendingMcqPayload(null);
-      onListeningStageChangeRef.current?.("quiz", {
-        kbAudioUrl: pendingMcqPayload.kbAudioUrl,
-      });
-      wantsQuizRef.current = false;
-      skipListeningCompletionStepRef.current = false;
-      return;
-    }
-
-    if (
-      mode === "listening-mode" &&
-      isAvatar3DContext &&
-      skipListeningCompletionStepRef.current &&
-      !pendingMcqs?.length
-    ) {
-      wantsQuizRef.current = true;
-      if (!prefetchedQuizRef.current) {
-        prefetchedQuizRef.current = true;
-        requestNextListeningStage();
+      const currentMcqs = pendingMcqPayload?.mcqs || pendingMcqPayload?.questions || [];
+      if (currentMcqs.length > 0) {
+        setListeningStage("quiz");
+        setMcqList(currentMcqs);
+        setChatId(pendingMcqPayload.chatId);
+        setListeningData((prevData: any) => ({
+          ...prevData,
+          ...pendingMcqPayload,
+        }));
+        setCurrentMcqIndex(0);
+        setPendingMcqPayload(null);
+        onListeningStageChangeRef.current?.("quiz", {
+          kbAudioUrl: pendingMcqPayload.kbAudioUrl,
+        });
+        wantsQuizRef.current = false;
+        skipListeningCompletionStepRef.current = false;
+      } else {
+        setListeningStage("quiz"); // Enter quiz stage anyway to show loading
+        wantsQuizRef.current = true;
+        if (!prefetchedQuizRef.current) {
+          prefetchedQuizRef.current = true;
+          requestNextListeningStage();
+        }
+        toast.info("Loading quiz...");
       }
-      toast.info("Loading quiz...");
       return;
     }
 
@@ -2097,57 +2094,85 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         </DialogContent>
       </Dialog>
 
-      {listeningStage === "quiz" && mcqList.length > 0 && (
-        <div className="w-full flex flex-col items-center gap-4">
-          <div className="p-6 md:p-8 border rounded-3xl bg-white shadow-lg w-full max-w-[820px] my-4 text-left">
-            <div className="flex items-start justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-[#E6F3FF] flex items-center justify-center">
-                  <Check className="h-5 w-5 text-[#3EA4F9]" />
+      {listeningStage === "quiz" && (
+        <div
+          className={`flex flex-col max-w-[850px] mx-auto bg-gray-50 rounded-3xl overflow-hidden shadow-2xl border border-gray-100 ${isAvatar3DContext ? "h-[calc(100svh-9.5rem)]" : "min-h-[70vh]"}`}
+        >
+          {mcqList.length > 0 ? (
+            <div className="w-full flex flex-col items-center p-4 md:p-8 overflow-y-auto">
+              <div className="w-full max-w-[780px] bg-white p-8 md:p-10 rounded-[32px] shadow-sm border border-gray-50">
+                {/* Header Section */}
+                <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center gap-4">
+                    <div className="h-11 w-11 rounded-xl bg-[#3EA4F9] flex items-center justify-center shadow-md shadow-blue-100">
+                      <Check className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="flex flex-col">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0">
+                        Step 4: Quiz
+                      </p>
+                      <h2 className="text-lg font-bold text-[#2B3A67]">
+                        Test Your Knowledge
+                      </h2>
+                    </div>
+                  </div>
+                  <div className="bg-gray-100/50 px-3 py-1 rounded-lg border border-gray-100">
+                    <span className="text-[13px] font-bold text-[#2B3A67]">
+                      <span className="text-[#3EA4F9]">{currentMcqIndex + 1}</span>
+                      <span className="text-gray-300 mx-1.5">/</span>
+                      <span className="text-gray-400">{mcqList.length}</span>
+                    </span>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs font-semibold text-[#6B8BB8] uppercase tracking-wide">
-                    Step 4: Quiz
-                  </p>
-                  <p className="text-lg font-semibold text-[#2B3A67]">
-                    Test Your Knowledge
-                  </p>
+
+                {/* Question */}
+                <h3 className="text-xl font-bold text-[#1e293b] mb-8 leading-snug">
+                  {mcqList[currentMcqIndex].question}
+                </h3>
+
+                {/* Options Grid */}
+                <div className="grid grid-cols-1 gap-3.5">
+                  {mcqList[currentMcqIndex].options.map(
+                    (option: string, index: number) => (
+                      <Button
+                        key={index}
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedAnswer(index);
+                          resetInactivityTimer();
+                        }}
+                        className={`w-full justify-start p-5 h-auto transition-all duration-200 rounded-2xl group border-[1.5px] ${selectedAnswer === index
+                          ? "border-[#3EA4F9] bg-[#F8FBFF] shadow-sm"
+                          : "border-gray-100 bg-white hover:border-gray-200 hover:bg-gray-50"
+                          }`}
+                      >
+                        <div
+                          className={`w-5 h-5 mr-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all duration-200 ${selectedAnswer === index
+                            ? "border-[#3EA4F9] bg-white"
+                            : "border-gray-200 bg-white group-hover:border-gray-300"
+                            }`}
+                        >
+                          {selectedAnswer === index && (
+                            <div className="w-2.5 h-2.5 rounded-full bg-[#3EA4F9] animate-in fade-in zoom-in duration-200" />
+                          )}
+                        </div>
+                        <span className={`text-[16px] font-semibold transition-colors duration-200 ${selectedAnswer === index ? "text-[#2B3A67]" : "text-gray-600"}`}>
+                          {option}
+                        </span>
+                      </Button>
+                    ),
+                  )}
                 </div>
               </div>
-              <span className="text-xs font-semibold text-[#6B8BB8] bg-[#F1F6FF] px-3 py-1 rounded-full">
-                {currentMcqIndex + 1}/{mcqList.length}
-              </span>
             </div>
-            <p className="text-lg font-semibold mb-4 text-[#2B3A67]">
-              {mcqList[currentMcqIndex].question}
-            </p>
-            <div className="flex flex-col gap-2">
-              {mcqList[currentMcqIndex].options.map(
-                (option: string, index: number) => (
-                  <Button
-                    key={index}
-                    variant={selectedAnswer === index ? "default" : "outline"}
-                    onClick={() => {
-                      setSelectedAnswer(index);
-                      resetInactivityTimer();
-                    }}
-                    className={`w-full justify-start p-4 h-auto transition-colors rounded-2xl ${selectedAnswer === index
-                      ? "bg-[#3EA4F9] text-white hover:bg-[#2F93F0] border-transparent"
-                      : "bg-white border-[#E1E7F0] text-[#2B3A67]"
-                      }`}
-                  >
-                    <div
-                      className={`w-5 h-5 mr-4 rounded-full border flex-shrink-0 ${selectedAnswer === index
-                        ? "bg-white border-white"
-                        : "border-[#C9D6E6]"
-                        }`}
-                    />
-                    <span>{option}</span>
-                  </Button>
-                ),
-              )}
+          ) : (
+            <div className="flex-1 flex items-center justify-center bg-white">
+              <div className="flex flex-col items-center gap-4">
+                <div className="w-12 h-12 border-4 border-[#3EA4F9] border-t-transparent rounded-full animate-spin shadow-sm" />
+                <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">Preparing Quiz...</p>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 
@@ -2293,11 +2318,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               <div className={`rounded-2xl bg-white border border-slate-200 shadow-sm ${isAvatar3DContext ? "p-3 md:p-4" : "p-4 md:p-6"}`}>
                 <div className={`relative rounded-2xl bg-[#F8FAFC] border border-slate-200 overflow-hidden ${isAvatar3DContext ? "p-2 md:p-0" : "p-4 md:p-6"}`}>
                   {isAvatar3D && (
-                    <div className={isAvatar3DContext ? "max-w-[65%] mx-auto" : ""}>
+                    <div className={isAvatar3DContext ? "max-w-full mx-auto" : ""}>
                       <AvatarModeLayout
-                        syncPlaying={
-                          playingAudioId === "kb-audio" && isCurrentlyPlaying
-                        }
+                        key={`listening-avatar-${listeningAvatarSeed}`}
+                        compact
+                        syncPlaying={playingAudioId === "kb-audio" && isCurrentlyPlaying}
                         videoSrc={avatarVideoSrc}
                         heightClassName="h-auto"
                         videoClassName="w-full h-auto object-contain"
