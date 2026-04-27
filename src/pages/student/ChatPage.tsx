@@ -505,6 +505,7 @@ const Chat: React.FC = () => {
                         isPlaying={listeningAudioState.isPlaying}
                         progress={listeningAudioState.progress}
                         duration={listeningAudioState.duration}
+                        showTotal={true}
                         onTogglePlay={() => {
                           if (listeningAudioState.isPlaying) {
                             listeningAudioControlRef.current?.pause?.();
@@ -512,7 +513,6 @@ const Chat: React.FC = () => {
                             listeningAudioControlRef.current?.play?.();
                           }
                         }}
-                        showTotal
                       />
                     </div>
                   )}

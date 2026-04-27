@@ -1661,6 +1661,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 progress={playingAudioId === "kb-audio" ? audioProgress : 0}
                 duration={playingAudioId === "kb-audio" ? audioDuration : 0}
                 variant="gradient"
+                showTotal={true}
                 onTogglePlay={() =>
                   toggleAudio("kb-audio", listeningData?.kbAudioUrl, () =>
                     setIsContextCompleted(true),
