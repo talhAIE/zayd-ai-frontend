@@ -491,14 +491,14 @@ const Chat: React.FC = () => {
                     </div>
                   )}
                   {shouldShowListeningSidebar && (
-                    <div className="flex flex-col gap-0">
+                    <div className="flex flex-col gap-4">
                       <AvatarModeLayout
                         key={`listening-avatar-${listeningAvatarSeed}`}
                         compact
                         syncPlaying={listeningAudioState.isPlaying}
                         videoSrc={avatarVideoSrc}
                         heightClassName="h-auto"
-                        videoClassName="w-full h-auto object-contain mx-auto"
+                        videoClassName="relative left-1/2 -translate-x-1/2 w-[160%] max-w-none h-auto object-contain object-center"
                       />
                       <AudioPlayer3D
                         audioSrc={listeningAudioUrl || ''}

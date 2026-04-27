@@ -1118,10 +1118,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         setMcqList(payload.questions);
         setChatId(payload.chatId);
         setIsQuestionnaireOpen(true);
-      } else if (mode === "listening-mode") {
-        if (payload.mcqs || payload.questions) {
-          setPendingMcqPayload(payload);
-        }
+      } else if (mode === "listening-mode" && payload.mcqs) {
+        setListeningStage("quiz");
+        setMcqList(payload.mcqs);
+        setChatId(payload.chatId);
+        setListeningData((prevData: any) => ({ ...prevData, ...payload }));
+        setCurrentMcqIndex(0);
       }
     });
 
