@@ -2104,7 +2104,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
       {listeningStage === "quiz" && mcqList.length > 0 && (
         <div className="w-full flex flex-col items-center gap-4">
-          <div className="p-6 md:p-8 border rounded-3xl bg-white shadow-lg w-full max-w-[820px] my-4 text-left">
+          <div className="p-6 md:p-8 border rounded-3xl bg-white shadow-lg w-full max-w-[820px] mt-4 mb-2 text-left">
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-[#E6F3FF] flex items-center justify-center">

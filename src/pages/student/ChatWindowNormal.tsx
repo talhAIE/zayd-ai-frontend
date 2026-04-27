@@ -1744,7 +1744,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
       {listeningStage === "quiz" && mcqList.length > 0 && (
         <div className="w-full flex flex-col items-center gap-4">
-          <div className="p-6 border rounded-xl bg-white shadow-lg w-full max-w-[800px] my-4 text-left">
+          <div className="p-6 border rounded-xl bg-white shadow-lg w-full max-w-[800px] mt-4 mb-2 text-left">
             <div className="flex justify-end mb-2">
               <span className="text-sm font-semibold text-gray-600">
                 Question {currentMcqIndex + 1}/{mcqList.length}
