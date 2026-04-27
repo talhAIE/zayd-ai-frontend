@@ -1472,6 +1472,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         setPlayingAudioId(null);
         setIsCurrentlyPlaying(false);
         clearAudioProgress();
+        if (id === "kb-audio" && mode === "listening-mode") {
+          setHasStartedContextAudio(false);
+        }
       },
       onend: () => {
         setPlayingAudioId(null);
