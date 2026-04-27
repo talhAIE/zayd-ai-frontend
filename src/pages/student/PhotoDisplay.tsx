@@ -30,7 +30,7 @@ const PhotoDisplay: React.FC<PhotoDisplayProps> = ({ imageUrl }) => {
           <img
             src={imageUrl}
             alt="Topic Image"
-            className="w-full h-auto max-h-96 object-contain"
+            className="max-w-full h-auto max-h-96 object-contain"
           />
         </div>
       </CardContent>
