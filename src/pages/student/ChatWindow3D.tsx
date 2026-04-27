@@ -41,7 +41,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import QuestionnaireModal from "@/components/ui/QuestionaireModal";
-import AudioPlayer3DListening from "./AudioPlayer3D";
+import AudioPlayer from "./AudioPlayer3D";
 import ReadingPassageCard from "@/components/ui/ReadingPassageCard";
 import AvatarModeLayout from "@/components/3d/AvatarModeLayout";
 import birdWithHeadphones from "@/assets/images/bird-with-headphones.png";
@@ -274,6 +274,7 @@ interface ChatWindowProps {
     pause: () => void;
     restart: () => void;
   }) => void;
+  listeningAvatarSeed?: number;
 }
 
 function findLastIndex<T>(
@@ -302,6 +303,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   onListeningStageChange,
   onListeningAudioState,
   onListeningAudioController,
+  listeningAvatarSeed = 0,
 }) => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -338,6 +340,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       );
       if (sessionTimerLastEmittedRef.current !== nextRemaining) {
         sessionTimerLastEmittedRef.current = nextRemaining;
+        _setSessionLimitReached(nextRemaining === 0);
         emitSessionRemaining(nextRemaining);
       }
     };
@@ -1066,6 +1069,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       if (typeof rawRemaining !== "number" || Number.isNaN(rawRemaining)) {
         sessionTimerBaseRef.current = null;
         sessionTimerLastEmittedRef.current = null;
+        _setSessionLimitReached(false);
         emitSessionRemaining(null);
         return;
       }
@@ -1075,6 +1079,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         receivedAt: Date.now(),
       };
       sessionTimerLastEmittedRef.current = normalizedRemaining;
+      _setSessionLimitReached(normalizedRemaining === 0);
       emitSessionRemaining(normalizedRemaining);
     });
 
@@ -1860,38 +1865,33 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     if (
       mode === "listening-mode" &&
       isAvatar3DContext &&
-      pendingMcqs?.length &&
       skipListeningCompletionStepRef.current
     ) {
-      setListeningStage("quiz");
-      setMcqList(pendingMcqs);
-      setChatId(pendingMcqPayload.chatId);
-      setListeningData((prevData: any) => ({
-        ...prevData,
-        ...pendingMcqPayload,
-      }));
-      setCurrentMcqIndex(0);
-      setPendingMcqPayload(null);
-      onListeningStageChangeRef.current?.("quiz", {
-        kbAudioUrl: pendingMcqPayload.kbAudioUrl,
-      });
-      wantsQuizRef.current = false;
-      skipListeningCompletionStepRef.current = false;
-      return;
-    }
-
-    if (
-      mode === "listening-mode" &&
-      isAvatar3DContext &&
-      skipListeningCompletionStepRef.current &&
-      !pendingMcqs?.length
-    ) {
-      wantsQuizRef.current = true;
-      if (!prefetchedQuizRef.current) {
-        prefetchedQuizRef.current = true;
-        requestNextListeningStage();
+      const currentMcqs = pendingMcqPayload?.mcqs || pendingMcqPayload?.questions || [];
+      if (currentMcqs.length > 0) {
+        setListeningStage("quiz");
+        setMcqList(currentMcqs);
+        setChatId(pendingMcqPayload.chatId);
+        setListeningData((prevData: any) => ({
+          ...prevData,
+          ...pendingMcqPayload,
+        }));
+        setCurrentMcqIndex(0);
+        setPendingMcqPayload(null);
+        onListeningStageChangeRef.current?.("quiz", {
+          kbAudioUrl: pendingMcqPayload.kbAudioUrl,
+        });
+        wantsQuizRef.current = false;
+        skipListeningCompletionStepRef.current = false;
+      } else {
+        setListeningStage("quiz"); // Enter quiz stage anyway to show loading
+        wantsQuizRef.current = true;
+        if (!prefetchedQuizRef.current) {
+          prefetchedQuizRef.current = true;
+          requestNextListeningStage();
+        }
+        toast.info("Loading quiz...");
       }
-      toast.info("Loading quiz...");
       return;
     }
 
@@ -2151,10 +2151,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       {listeningStage !== "quiz" && (
         <div
           className={`flex flex-col max-w-[800px] mx-auto bg-gray-100 rounded-xl overflow-hidden shadow-2xl ${mode === "listening-mode"
-            ? "min-h-[70vh] max-h-[80vh]"
+            ? isAvatar3DContext
+              ? "h-[calc(100svh-9.5rem)] max-h-[calc(100svh-9.5rem)]"
+              : "min-h-[70vh] max-h-[80vh]"
             : readingHeroActive
               ? "min-h-[calc(100vh-340px)] max-h-[calc(100vh-340px)] md:min-h-[calc(100vh-340px)] md:max-h-[calc(100vh-340px)]"
-              : "max-h-[86vh] min-h-[86vh] md:min-h-[82vh] md:max-h-[82vh]"
+              : "max-h-[76vh] min-h-[76vh] md:min-h-[74vh] md:max-h-[74vh]"
             }`}
         >
           {mode === "listening-mode" && (
@@ -2289,9 +2291,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 <div className="relative rounded-2xl bg-[#F8FAFC] border border-slate-200 overflow-hidden p-4 md:p-6">
                   {isAvatar3D && (
                     <AvatarModeLayout
-                      syncPlaying={
-                        playingAudioId === "kb-audio" && isCurrentlyPlaying
-                      }
+                      key={`listening-avatar-${listeningAvatarSeed}`}
+                      syncPlaying={playingAudioId === "kb-audio" && isCurrentlyPlaying}
                       videoSrc={avatarVideoSrc}
                       heightClassName="h-auto"
                       videoClassName="w-full h-auto object-contain"
@@ -2299,7 +2300,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   )}
                 </div>
                 <div className="mt-4">
-                  <AudioPlayer3DListening
+                  <AudioPlayer
                     audioSrc={listeningData?.kbAudioUrl || ""}
                     isPlaying={
                       playingAudioId === "kb-audio" && isCurrentlyPlaying
@@ -2313,7 +2314,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                         handleKbAudioEnd,
                       )
                     }
-                    showTotal={isAvatar3DContext}
                   />
                 </div>
               </div>

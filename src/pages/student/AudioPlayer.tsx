@@ -10,6 +10,7 @@ interface AudioPlayerProps {
     duration: number;
     onTogglePlay: () => void;
     showTotal?: boolean;
+    variant?: 'default' | 'gradient';
 }
 
 const formatTime = (sec: number) => {
@@ -27,6 +28,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     duration,
     onTogglePlay,
     showTotal = false,
+    variant = 'default',
 }) => {
     const waveformRef = React.useRef<HTMLDivElement>(null);
     const [barCount, setBarCount] = React.useState(0);
@@ -63,18 +65,34 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         return Array.from({ length: barCount }, (_, i) => (
             <div
                 key={i}
-                className={`w-[3px] rounded-full ${i < coloredBars ? 'bg-primary' : 'bg-gray-300'
+                className={`w-[3px] rounded-full ${i < coloredBars
+                    ? variant === 'gradient'
+                        ? 'bg-[#1C7ED6]'
+                        : 'bg-primary'
+                    : variant === 'gradient'
+                        ? 'bg-[#B9D9F8]'
+                        : 'bg-gray-300'
                     }`}
                 style={{ height: `${heights[i % heights.length]}px` }}
             />
         ));
-    }, [barCount, progress, duration]);
+    }, [barCount, progress, duration, variant]);
+
+    const isGradient = variant === 'gradient';
 
     return (
-        <div className="flex items-center gap-2 w-full max-w-xs p-2 rounded-full bg-gray-100 border">
+        <div
+            className={`flex items-center gap-2 w-full max-w-xs p-2 rounded-full border ${isGradient
+                ? 'bg-[#EAF5FF] border-[#A7D1F7] shadow-sm'
+                : 'bg-gray-100'
+                }`}
+        >
             <Button
                 size="icon"
-                className="rounded-full bg-primary text-white hover:bg-primary/90 shadow-md h-8 w-8 flex-shrink-0"
+                className={`rounded-full text-white shadow-md h-8 w-8 flex-shrink-0 ${isGradient
+                    ? 'bg-[linear-gradient(90deg,#3EA4F9_0%,#0267B5_50%,#3EA4F9_100%)] bg-[length:200%_100%] hover:bg-[position:100%_50%]'
+                    : 'bg-primary hover:bg-primary/90'
+                    }`}
                 onClick={onTogglePlay}
             >
                 {isPlaying ? (
@@ -90,7 +108,10 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
             >
                 {bars}
             </div>
-            <span className="text-xs font-mono text-gray-500 min-w-[45px] text-right pr-1">
+            <span
+                className={`text-xs font-mono min-w-[45px] text-right pr-1 ${isGradient ? 'text-[#1F5F9B]' : 'text-gray-500'
+                    }`}
+            >
                 {showTotal
                     ? `${formatTime(progress)}/${formatTime(duration)}`
                     : formatTime(progress)}
