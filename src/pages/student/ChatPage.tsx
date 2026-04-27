@@ -221,14 +221,14 @@ const Chat: React.FC = () => {
                 />
               </div>
               <div className="flex flex-col gap-3 w-full md:w-1/3">
-                {!isSmallScreen && (
+                {!isSmallScreen && mode !== 'listening-mode' && (
                   <FeedbackSection
                     isOpen={isFeedbackOpen}
                     onClose={() => setIsFeedbackOpen(false)}
                     feedback={currentFeedback}
                   />
                 )}
-                {isSmallScreen && (
+                {isSmallScreen && mode !== 'listening-mode' && (
                   <FeedbackSectionModal
                     isOpen={isFeedbackMobile}
                     onClose={() => setIsFeedbackMobile(false)}
