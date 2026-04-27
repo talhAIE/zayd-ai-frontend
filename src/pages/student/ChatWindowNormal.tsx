@@ -1467,6 +1467,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         if (progressIntervalRef.current)
           clearInterval(progressIntervalRef.current);
         setIsCurrentlyPlaying(false);
+        if (id === "kb-audio" && mode === "listening-mode") {
+          setIsContextCompleted(false);
+          setHasStartedContextAudio(false);
+        }
       },
       onstop: () => {
         setPlayingAudioId(null);
@@ -1474,6 +1478,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         clearAudioProgress();
         if (id === "kb-audio" && mode === "listening-mode") {
           setHasStartedContextAudio(false);
+          setIsContextCompleted(false);
         }
       },
       onend: () => {

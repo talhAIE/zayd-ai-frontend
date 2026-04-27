@@ -1733,6 +1733,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         onAudioPlaybackChange?.(false);
         if (id === "kb-audio") {
           kbAudioSeekRef.current = Number(sound.seek() || 0);
+          if (mode === "listening-mode") {
+            setIsContextCompleted(false);
+            setHasStartedContextAudio(false);
+          }
         }
       },
       onstop: () => {
@@ -1744,6 +1748,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           kbAudioSeekRef.current = 0;
           if (mode === "listening-mode") {
             setHasStartedContextAudio(false);
+            setIsContextCompleted(false);
           }
         }
       },
