@@ -437,6 +437,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const onListeningAudioStateRef = useRef(onListeningAudioState);
   const onListeningAudioControllerRef = useRef(onListeningAudioController);
   const onListeningStageChangeRef = useRef(onListeningStageChange);
+  const [isListeningLoading, setIsListeningLoading] = useState(false);
+  const listeningLoadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   // const [barCount, setBarCount] = useState(0);
   // --- End Listening Mode State ---
 
@@ -529,6 +531,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       clearTimeout(quizPrefetchTimerRef.current);
       quizPrefetchTimerRef.current = null;
     }
+    if (listeningLoadingTimeoutRef.current) {
+      clearTimeout(listeningLoadingTimeoutRef.current);
+      listeningLoadingTimeoutRef.current = null;
+    }
+    clickLocked.current = false;
+    setIsListeningLoading(false);
   }, [mode, topicId]);
 
   const isIOS = () =>
@@ -789,6 +797,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     });
 
     socket.on("listening_payload", ({ chatId: newChatId, ...data }) => {
+      // Clear loading state and click lock when response received
+      if (listeningLoadingTimeoutRef.current) {
+        clearTimeout(listeningLoadingTimeoutRef.current);
+        listeningLoadingTimeoutRef.current = null;
+      }
+      clickLocked.current = false;
+      setIsListeningLoading(false);
+
       setChatId(newChatId);
       setListeningData(data);
 
@@ -1238,6 +1254,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     return () => {
       logger.info("Component unmounting. Disconnecting socket.");
       if (activityTimerRef.current) clearTimeout(activityTimerRef.current);
+      if (listeningLoadingTimeoutRef.current) {
+        clearTimeout(listeningLoadingTimeoutRef.current);
+      }
       socket.disconnect();
       if (soundRef.current) {
         soundRef.current.unload();
@@ -1829,6 +1848,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   };
 
   const handleNextStage = () => {
+    // Prevent double-clicks and rapid successive calls
+    if (clickLocked.current || isListeningLoading) {
+      logger.info("Next stage click blocked - already processing");
+      return;
+    }
+
     // Reset inactivity timer when user clicks next
     resetInactivityTimer();
 
@@ -1909,9 +1934,25 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       const payload = { userId, topicId, chatId };
       logger.emitting(ChatEvents.NEXT_STAGE, payload);
       if (mode === "listening-mode" && socketRef.current && chatId) {
+        // Lock clicks and show loading state
+        clickLocked.current = true;
+        setIsListeningLoading(true);
         logger.emitting("next_listening_stage", { chatId });
         requestNextListeningStage();
         toast.info(listeningStage === "question_text" ? "Loading quiz..." : "Loading next part...");
+
+        // Set timeout to unlock if response takes too long (8 seconds)
+        if (listeningLoadingTimeoutRef.current) {
+          clearTimeout(listeningLoadingTimeoutRef.current);
+        }
+        listeningLoadingTimeoutRef.current = setTimeout(() => {
+          if (clickLocked.current || isListeningLoading) {
+            clickLocked.current = false;
+            setIsListeningLoading(false);
+            toast.error("Request timed out. Please try again.");
+            logger.error("Next listening stage request timed out after 8s");
+          }
+        }, 8000);
         return;
       }
       socketRef.current.emit(ChatEvents.NEXT_STAGE, payload);
