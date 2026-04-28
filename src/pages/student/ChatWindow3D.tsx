@@ -804,12 +804,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     });
 
     socket.on("listening_payload", ({ chatId: newChatId, ...data }) => {
+      // Always reset click lock when response received to prevent stuck state
+      clickLocked.current = false;
       // Clear loading state and click lock when response received
       if (listeningLoadingTimeoutRef.current) {
         clearTimeout(listeningLoadingTimeoutRef.current);
         listeningLoadingTimeoutRef.current = null;
       }
-      clickLocked.current = false;
       setIsListeningLoading(false);
 
       setChatId(newChatId);
@@ -916,6 +917,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       logger.error(`Socket disconnected. Reason: ${reason}`);
       setIsSocketConnected(false);
       setIsWaitingForResponse(false);
+      // Reset click locks on disconnect to prevent stuck button state
+      clickLocked.current = false;
+      setIsListeningLoading(false);
 
       if (reason === "ping timeout" || reason === "transport close") {
         if (!isInactiveDialogOpen) {
@@ -930,6 +934,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
     socket.on("connect_error", (err) => {
       logger.error("Socket connection error:", err);
+      // Reset click locks on connection errors to prevent stuck button state
+      clickLocked.current = false;
+      setIsListeningLoading(false);
 
       // Handle authentication errors
       if (err.message.includes("401") || err.message.includes("Unauthorized")) {
@@ -948,6 +955,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     // Handle authentication errors from server
     socket.on("auth_error", (error) => {
       logger.error("WebSocket authentication error:", error);
+      // Reset click locks on auth errors to prevent stuck button state
+      clickLocked.current = false;
+      setIsListeningLoading(false);
       toast.error("Authentication failed. Please log in again.");
       // Clear auth data and redirect to login
       localStorage.removeItem("AiTutorUser");
@@ -1186,6 +1196,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       logger.receiving(ChatEvents.ERROR, payload);
       setIsWaitingForResponse(false);
       removeLoadingMessage();
+      // Reset click lock on errors to prevent stuck button state
+      clickLocked.current = false;
+      setIsListeningLoading(false);
 
       const errorMessage = (payload.message || "").toLowerCase();
       const errorCode = payload.code;
@@ -1869,12 +1882,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   };
 
   const handleNextStage = () => {
-    // Prevent double-clicks and rapid successive calls
-    if (clickLocked.current || isListeningLoading) {
-      logger.info("Next stage click blocked - already processing");
-      return;
-    }
-
     // Reset inactivity timer when user clicks next
     resetInactivityTimer();
 
@@ -1967,7 +1974,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           clearTimeout(listeningLoadingTimeoutRef.current);
         }
         listeningLoadingTimeoutRef.current = setTimeout(() => {
-          if (clickLocked.current || isListeningLoading) {
+          if (clickLocked.current) {
             clickLocked.current = false;
             setIsListeningLoading(false);
             toast.error("Request timed out. Please try again.");
