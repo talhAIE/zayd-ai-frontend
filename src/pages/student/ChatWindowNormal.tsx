@@ -416,6 +416,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) ||
     (navigator.userAgent.includes("Mac") && "ontouchend" in document);
 
+  // Check if user is one of the unlimited session demo accounts (3d-student-01 to 3d-student-10)
+  const hasUnlimitedSessions = () => {
+    const username = userData?.username;
+    if (!username) return false;
+    return /^3d-student-(0[1-9]|10)$/.test(username);
+  };
+
   // --- MODIFIED: Universal Audio Unlocker ---
   const unlockAudio = useCallback(() => {
     if (isAudioUnlocked) return;
@@ -767,6 +774,16 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
     socket.on(ChatEvents.SESSION_STATUS_UPDATE, (payload) => {
       logger.receiving(ChatEvents.SESSION_STATUS_UPDATE, payload);
+
+      // Skip session limit for unlimited demo accounts
+      if (hasUnlimitedSessions()) {
+        sessionTimerBaseRef.current = null;
+        sessionTimerLastEmittedRef.current = null;
+        _setSessionLimitReached(false);
+        emitSessionRemaining(null);
+        return;
+      }
+
       const rawRemaining = payload?.remainingSeconds;
       if (typeof rawRemaining !== "number" || Number.isNaN(rawRemaining)) {
         sessionTimerBaseRef.current = null;
@@ -903,6 +920,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       ) {
         setIsDuplicateConnectionModalOpen(true);
       } else if (errorMessage.includes("daily session limit")) {
+        // Skip session limit for unlimited demo accounts
+        if (hasUnlimitedSessions()) {
+          return;
+        }
         _setSessionLimitReached(true);
         toast.error("You have reached your daily session limit.");
       } else if (errorMessage.includes("user not found")) {
@@ -2450,18 +2471,19 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             className="gradient-hover-animate w-full mt-4 rounded-full p-5 text-white shadow-lg shadow-blue-500/30 hover:brightness-110 disabled:opacity-60 disabled:shadow-none"
             onClick={() => {
               if (clickLocked.current) return;
-              clickLocked.current = true;
-              setTimeout(() => (clickLocked.current = false), 2000);
 
-              (listeningStage === "quiz"
-                ? handleSubmitAnswer
-                : handleNextStage)();
+              if (listeningStage === "quiz") {
+                handleSubmitAnswer();
+              } else {
+                handleNextStage();
+              }
             }}
             disabled={
               (mode === "listening-mode" &&
                 (listeningStage === "initial" ||
                   listeningStage === "question_text") &&
-                !isContextCompleted) ||
+                !isContextCompleted &&
+                !hasStartedContextAudio) ||
               (mode === "listening-mode" &&
                 listeningStage === "quiz" &&
                 selectedAnswer === null)
