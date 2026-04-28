@@ -357,8 +357,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showReplayPopup, setShowReplayPopup] = useState(false);
   const [mcqAnswers, setMcqAnswers] = useState<{ [key: string]: number }>({});
-  const [isListeningLoading, setIsListeningLoading] = useState(false);
-  const listeningLoadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   // const [barCount, setBarCount] = useState(0);
   const [listeningSteps, setListeningSteps] = useState(1);
   // --- End Listening Mode State ---
@@ -556,14 +554,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     });
 
     socket.on("listening_payload", ({ chatId: newChatId, ...data }) => {
-      // Clear loading state and click lock when response received
-      if (listeningLoadingTimeoutRef.current) {
-        clearTimeout(listeningLoadingTimeoutRef.current);
-        listeningLoadingTimeoutRef.current = null;
-      }
-      clickLocked.current = false;
-      setIsListeningLoading(false);
-
       setChatId(newChatId);
       setListeningData(data);
       setProgress(30);
@@ -856,14 +846,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     });
 
     socket.on("listening_payload", ({ chatId: newChatId, ...data }) => {
-      // Clear loading state and click lock when response received
-      if (listeningLoadingTimeoutRef.current) {
-        clearTimeout(listeningLoadingTimeoutRef.current);
-        listeningLoadingTimeoutRef.current = null;
-      }
-      clickLocked.current = false;
-      setIsListeningLoading(false);
-
       setChatId(newChatId);
       setListeningData(data);
 
@@ -996,9 +978,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     return () => {
       logger.info("Component unmounting. Disconnecting socket.");
       if (activityTimerRef.current) clearTimeout(activityTimerRef.current);
-      if (listeningLoadingTimeoutRef.current) {
-        clearTimeout(listeningLoadingTimeoutRef.current);
-      }
       socket.disconnect();
       if (soundRef.current) {
         soundRef.current.unload();
@@ -1549,12 +1528,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   };
 
   const handleNextStage = () => {
-    // Prevent double-clicks and rapid successive calls
-    if (clickLocked.current || isListeningLoading) {
-      logger.info("Next stage click blocked - already processing");
-      return;
-    }
-
     // Reset inactivity timer when user clicks next
     resetInactivityTimer();
 
@@ -1564,33 +1537,20 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       socketRef.current.emit(ChatEvents.NEXT_STAGE, payload);
 
       // If we are on the hint screen, we wait for the MCQ_LIST event.
+      // Otherwise, we reload to get the next stage (the hint screen).
       if (mode === "listening-mode" && socketRef.current && chatId) {
-        // Lock clicks and show loading state
-        clickLocked.current = true;
-        setIsListeningLoading(true);
         logger.emitting("next_listening_stage", { chatId });
         socketRef.current.emit("next_listening_stage", { chatId });
         toast.info("Loading next part...");
-
-        // Set timeout to unlock if response takes too long (8 seconds)
-        if (listeningLoadingTimeoutRef.current) {
-          clearTimeout(listeningLoadingTimeoutRef.current);
-        }
-        listeningLoadingTimeoutRef.current = setTimeout(() => {
-          if (clickLocked.current || isListeningLoading) {
-            clickLocked.current = false;
-            setIsListeningLoading(false);
-            toast.error("Request timed out. Please try again.");
-            logger.error("Next listening stage request timed out after 8s");
-          }
-        }, 8000);
         return;
       }
       if (listeningStage === "question_text") {
         toast.info("Loading quiz...");
       } else {
         toast.info("Loading next part...");
-        // Removed page reload - let the socket event drive state changes
+        setTimeout(() => {
+          window.location.reload();
+        }, 500); // Small delay to ensure event is sent
       }
     } else {
       toast.error("Cannot proceed to next stage. Connection issue.");
@@ -2466,24 +2426,23 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       </Dialog>
 
       {mode === "listening-mode" && (
-        <div className="w-full max-w-[800px] mx-auto">
+        <div>
           <Button
-            className="gradient-hover-animate w-full mt-4 rounded-full p-5 text-white shadow-lg shadow-blue-500/30 hover:brightness-110 disabled:opacity-60 disabled:shadow-none"
+            className="w-full mt-4 rounded-full p-5"
             onClick={() => {
               if (clickLocked.current) return;
+              clickLocked.current = true;
+              setTimeout(() => (clickLocked.current = false), 2000);
 
-              if (listeningStage === "quiz") {
-                handleSubmitAnswer();
-              } else {
-                handleNextStage();
-              }
+              (listeningStage === "quiz"
+                ? handleSubmitAnswer
+                : handleNextStage)();
             }}
             disabled={
               (mode === "listening-mode" &&
                 (listeningStage === "initial" ||
                   listeningStage === "question_text") &&
-                !isContextCompleted &&
-                !hasStartedContextAudio) ||
+                !isContextCompleted) ||
               (mode === "listening-mode" &&
                 listeningStage === "quiz" &&
                 selectedAnswer === null)
