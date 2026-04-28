@@ -276,6 +276,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       const nextRemaining = Math.max(0, base.remainingSeconds - elapsedSeconds);
       if (sessionTimerLastEmittedRef.current !== nextRemaining) {
         sessionTimerLastEmittedRef.current = nextRemaining;
+        _setSessionLimitReached(nextRemaining === 0);
         emitSessionRemaining(nextRemaining);
       }
     };
@@ -356,6 +357,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showReplayPopup, setShowReplayPopup] = useState(false);
   const [mcqAnswers, setMcqAnswers] = useState<{ [key: string]: number }>({});
+  const [isListeningLoading, setIsListeningLoading] = useState(false);
+  const listeningLoadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   // const [barCount, setBarCount] = useState(0);
   const [listeningSteps, setListeningSteps] = useState(1);
   // --- End Listening Mode State ---
@@ -412,6 +415,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     /iPad|iPhone|iPod/.test(navigator.userAgent) ||
     (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) ||
     (navigator.userAgent.includes("Mac") && "ontouchend" in document);
+
+  // Check if user is one of the unlimited session demo accounts (3d-student-01 to 3d-student-10)
+  const hasUnlimitedSessions = () => {
+    const username = userData?.username;
+    if (!username) return false;
+    return /^3d-student-(0[1-9]|10)$/.test(username);
+  };
 
   // --- MODIFIED: Universal Audio Unlocker ---
   const unlockAudio = useCallback(() => {
@@ -546,6 +556,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     });
 
     socket.on("listening_payload", ({ chatId: newChatId, ...data }) => {
+      // Clear loading state and click lock when response received
+      if (listeningLoadingTimeoutRef.current) {
+        clearTimeout(listeningLoadingTimeoutRef.current);
+        listeningLoadingTimeoutRef.current = null;
+      }
+      clickLocked.current = false;
+      setIsListeningLoading(false);
+
       setChatId(newChatId);
       setListeningData(data);
       setProgress(30);
@@ -756,10 +774,21 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
     socket.on(ChatEvents.SESSION_STATUS_UPDATE, (payload) => {
       logger.receiving(ChatEvents.SESSION_STATUS_UPDATE, payload);
+
+      // Skip session limit for unlimited demo accounts
+      if (hasUnlimitedSessions()) {
+        sessionTimerBaseRef.current = null;
+        sessionTimerLastEmittedRef.current = null;
+        _setSessionLimitReached(false);
+        emitSessionRemaining(null);
+        return;
+      }
+
       const rawRemaining = payload?.remainingSeconds;
       if (typeof rawRemaining !== "number" || Number.isNaN(rawRemaining)) {
         sessionTimerBaseRef.current = null;
         sessionTimerLastEmittedRef.current = null;
+        _setSessionLimitReached(false);
         emitSessionRemaining(null);
         return;
       }
@@ -769,6 +798,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         receivedAt: Date.now(),
       };
       sessionTimerLastEmittedRef.current = normalizedRemaining;
+      _setSessionLimitReached(normalizedRemaining === 0);
       emitSessionRemaining(normalizedRemaining);
     });
 
@@ -826,6 +856,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     });
 
     socket.on("listening_payload", ({ chatId: newChatId, ...data }) => {
+      // Clear loading state and click lock when response received
+      if (listeningLoadingTimeoutRef.current) {
+        clearTimeout(listeningLoadingTimeoutRef.current);
+        listeningLoadingTimeoutRef.current = null;
+      }
+      clickLocked.current = false;
+      setIsListeningLoading(false);
+
       setChatId(newChatId);
       setListeningData(data);
 
@@ -882,6 +920,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       ) {
         setIsDuplicateConnectionModalOpen(true);
       } else if (errorMessage.includes("daily session limit")) {
+        // Skip session limit for unlimited demo accounts
+        if (hasUnlimitedSessions()) {
+          return;
+        }
         _setSessionLimitReached(true);
         toast.error("You have reached your daily session limit.");
       } else if (errorMessage.includes("user not found")) {
@@ -954,6 +996,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     return () => {
       logger.info("Component unmounting. Disconnecting socket.");
       if (activityTimerRef.current) clearTimeout(activityTimerRef.current);
+      if (listeningLoadingTimeoutRef.current) {
+        clearTimeout(listeningLoadingTimeoutRef.current);
+      }
       socket.disconnect();
       if (soundRef.current) {
         soundRef.current.unload();
@@ -1464,11 +1509,19 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         if (progressIntervalRef.current)
           clearInterval(progressIntervalRef.current);
         setIsCurrentlyPlaying(false);
+        if (id === "kb-audio" && mode === "listening-mode") {
+          setIsContextCompleted(false);
+          setHasStartedContextAudio(false);
+        }
       },
       onstop: () => {
         setPlayingAudioId(null);
         setIsCurrentlyPlaying(false);
         clearAudioProgress();
+        if (id === "kb-audio" && mode === "listening-mode") {
+          setHasStartedContextAudio(false);
+          setIsContextCompleted(false);
+        }
       },
       onend: () => {
         setPlayingAudioId(null);
@@ -1496,6 +1549,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   };
 
   const handleNextStage = () => {
+    // Prevent double-clicks and rapid successive calls
+    if (clickLocked.current || isListeningLoading) {
+      logger.info("Next stage click blocked - already processing");
+      return;
+    }
+
     // Reset inactivity timer when user clicks next
     resetInactivityTimer();
 
@@ -1505,20 +1564,33 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       socketRef.current.emit(ChatEvents.NEXT_STAGE, payload);
 
       // If we are on the hint screen, we wait for the MCQ_LIST event.
-      // Otherwise, we reload to get the next stage (the hint screen).
       if (mode === "listening-mode" && socketRef.current && chatId) {
+        // Lock clicks and show loading state
+        clickLocked.current = true;
+        setIsListeningLoading(true);
         logger.emitting("next_listening_stage", { chatId });
         socketRef.current.emit("next_listening_stage", { chatId });
         toast.info("Loading next part...");
+
+        // Set timeout to unlock if response takes too long (8 seconds)
+        if (listeningLoadingTimeoutRef.current) {
+          clearTimeout(listeningLoadingTimeoutRef.current);
+        }
+        listeningLoadingTimeoutRef.current = setTimeout(() => {
+          if (clickLocked.current || isListeningLoading) {
+            clickLocked.current = false;
+            setIsListeningLoading(false);
+            toast.error("Request timed out. Please try again.");
+            logger.error("Next listening stage request timed out after 8s");
+          }
+        }, 8000);
         return;
       }
       if (listeningStage === "question_text") {
         toast.info("Loading quiz...");
       } else {
         toast.info("Loading next part...");
-        setTimeout(() => {
-          window.location.reload();
-        }, 500); // Small delay to ensure event is sent
+        // Removed page reload - let the socket event drive state changes
       }
     } else {
       toast.error("Cannot proceed to next stage. Connection issue.");
@@ -1610,14 +1682,29 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     <>
       {mode === "listening-mode" && (
         <>
-          <div className="w-full max-w-[800px] mx-auto space-y-4 border border-blue-400 p-4 rounded-xl bg-white/70 backdrop-blur mb-4">
-            <Progress value={progress} className="h-2 bg-gray-200" />
+          <style>{`
+            .gradient-hover-animate {
+              background: linear-gradient(to right, #3EA4F9 0%, #0267B5 50%, #3EA4F9 100%);
+              background-size: 200% 100%;
+              background-position: 0% 50%;
+              transition: background-position 0.6s ease;
+            }
+            .gradient-hover-animate:hover {
+              background-position: 100% 50%;
+            }
+          `}</style>
+          <div className="w-full max-w-[800px] mx-auto space-y-4 border border-[#058BF4] p-4 rounded-xl bg-white/70 backdrop-blur mb-4">
+            <Progress
+              value={progress}
+              className="h-2 bg-[#D9ECFD]"
+              indicatorClassName="bg-[linear-gradient(90deg,#3EA4F9_0%,#0267B5_50%,#3EA4F9_100%)]"
+            />
 
             <div className="flex items-center justify-between">
-              <span className="font-medium text-blue-700">
+              <span className="font-medium text-[#058BF4]">
                 Step {listeningSteps}/3
               </span>
-              <span className="flex items-center gap-1 px-3 py-1.5 rounded-lg border-2 border-[#3EA4F9] bg-white text-blue-700">
+              <span className="flex items-center gap-1 px-3 py-1.5 rounded-lg border-2 border-[#3EA4F9] bg-white text-[#058BF4]">
                 <Clock className="h-6 w-6 text-[#3EA4F9]" />
                 <span>
                   {sessionTimeRemaining !== null
@@ -1634,6 +1721,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 isPlaying={playingAudioId === "kb-audio" && isCurrentlyPlaying}
                 progress={playingAudioId === "kb-audio" ? audioProgress : 0}
                 duration={playingAudioId === "kb-audio" ? audioDuration : 0}
+                variant="gradient"
+                showTotal={true}
                 onTogglePlay={() =>
                   toggleAudio("kb-audio", listeningData?.kbAudioUrl, () =>
                     setIsContextCompleted(true),
@@ -1643,7 +1732,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               {mode === "listening-mode" && (
                 <div className="flex justify-end items-center h-4 pr-2 mt-2 md:mt-0">
                   {!hasStartedContextAudio ? (
-                    <span className="text-blue-500 text-xs flex items-center gap-1 animate-pulse">
+                    <span className="text-[#058BF4] text-xs flex items-center gap-1 animate-pulse">
                       ▶ Play to proceed to next step
                     </span>
                   ) : !isContextCompleted ? (
@@ -1716,7 +1805,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
       {listeningStage === "quiz" && mcqList.length > 0 && (
         <div className="w-full flex flex-col items-center gap-4">
-          <div className="p-6 border rounded-xl bg-white shadow-lg w-full max-w-[800px] my-4 text-left">
+          <div className="p-6 border rounded-xl bg-white shadow-lg w-full max-w-[800px] mt-4 mb-2 text-left">
             <div className="flex justify-end mb-2">
               <span className="text-sm font-semibold text-gray-600">
                 Question {currentMcqIndex + 1}/{mcqList.length}
@@ -1738,9 +1827,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                     className="w-full justify-start p-4 h-auto transition-colors"
                   >
                     <div
-                      className={`w-5 h-5 mr-4 rounded-full border border-primary flex-shrink-0 ${
-                        selectedAnswer === index ? "bg-primary" : ""
-                      }`}
+                      className={`w-5 h-5 mr-4 rounded-full border border-primary flex-shrink-0 ${selectedAnswer === index ? "bg-primary" : ""
+                        }`}
                     />
                     <span>{option}</span>
                   </Button>
@@ -1753,11 +1841,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
       {listeningStage !== "quiz" && (
         <div
-          className={`flex flex-col max-w-[800px] mx-auto bg-gray-100 rounded-xl overflow-hidden shadow-2xl ${
-            mode === "listening-mode"
-              ? "min-h-[49vh] max-h-[49vh]"
-              : "max-h-[86vh] min-h-[86vh] md:min-h-[82vh] md:max-h-[82vh]"
-          }`}
+          className={`flex flex-col max-w-[800px] mx-auto bg-gray-100 rounded-xl overflow-hidden shadow-2xl ${mode === "listening-mode"
+            ? "min-h-[49vh] max-h-[49vh]"
+            : "max-h-[86vh] min-h-[86vh] md:min-h-[82vh] md:max-h-[82vh]"
+            }`}
         >
           {mode !== "listening-mode" && (
             <header className="flex justify-between items-center px-6 py-4 border-b bg-white">
@@ -1843,15 +1930,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               <div className="p-4 rounded-lg shadow-sm bg-white border border-gray-200">
                 <p
                   ref={contentRef}
-                  className={`text-gray-800 text-base leading-relaxed whitespace-pre-wrap transition-all duration-300 ${
-                    !isContentExpanded ? "line-clamp-3" : "line-clamp-none"
-                  }`}
+                  className={`text-gray-800 text-base leading-relaxed whitespace-pre-wrap transition-all duration-300 ${!isContentExpanded ? "line-clamp-3" : "line-clamp-none"
+                    }`}
                 >
                   {contentPayload.content
                     .split(/(\*\*.*?\*\*)/g)
                     .map((part, i) =>
                       part.startsWith("**") && part.endsWith("**") ? (
-                        <span key={i} className="font-bold text-blue-600">
+                        <span key={i} className="font-bold text-[#058BF4]">
                           {part.slice(2, -2)}
                         </span>
                       ) : (
@@ -1872,7 +1958,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                       }
                     >
                       {playingAudioId === "content-payload-audio" &&
-                      isCurrentlyPlaying ? (
+                        isCurrentlyPlaying ? (
                         <Pause className="h-5 w-5" />
                       ) : (
                         <Play className="h-5 w-5" />
@@ -1887,7 +1973,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                         setIsContentExpanded(!isContentExpanded);
                         resetInactivityTimer();
                       }}
-                      className="text-sm text-blue-600 p-0 h-auto"
+                      className="text-sm text-[#058BF4] p-0 h-auto"
                     >
                       {isContentExpanded ? "See Less" : "See More"}
                     </Button>
@@ -1898,11 +1984,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             {messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`flex flex-col gap-1 ${
-                  msg.type === "sent"
-                    ? "self-end items-end"
-                    : "self-start items-start"
-                }`}
+                className={`flex flex-col gap-1 ${msg.type === "sent"
+                  ? "self-end items-end"
+                  : "self-start items-start"
+                  }`}
               >
                 {msg.loading ? (
                   <div className="flex items-center gap-2 bg-white p-3 rounded-xl shadow-sm">
@@ -1928,17 +2013,16 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   </Button>
                 ) : (
                   <div
-                    className={`p-3 rounded-xl max-w-md shadow-sm break-words ${
-                      msg.type === "sent"
-                        ? "bg-[#3EA4F9] text-white rounded-tr-none"
-                        : "bg-white text-gray-800 rounded-tl-none"
-                    }`}
+                    className={`p-3 rounded-xl max-w-md shadow-sm break-words ${msg.type === "sent"
+                      ? "bg-[#3EA4F9] text-white rounded-tr-none"
+                      : "bg-white text-gray-800 rounded-tl-none"
+                      }`}
                   >
                     {msg.text && (
                       <p className="text-sm leading-relaxed whitespace-pre-wrap">
                         {msg.text.split(/(\*\*.*?\*\*)/g).map((part, i) =>
                           part.startsWith("**") && part.endsWith("**") ? (
-                            <span key={i} className="font-bold text-blue-600">
+                            <span key={i} className="font-bold text-[#058BF4]">
                               {part.slice(2, -2)}
                             </span>
                           ) : (
@@ -2261,13 +2345,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                           Severity
                         </p>
                         <p
-                          className={`text-sm font-semibold ${
-                            contentFilterWarningData.severity === "High"
-                              ? "text-red-600"
-                              : contentFilterWarningData.severity === "Medium"
-                                ? "text-orange-600"
-                                : "text-yellow-600"
-                          }`}
+                          className={`text-sm font-semibold ${contentFilterWarningData.severity === "High"
+                            ? "text-red-600"
+                            : contentFilterWarningData.severity === "Medium"
+                              ? "text-orange-600"
+                              : "text-yellow-600"
+                            }`}
                         >
                           {contentFilterWarningData.severity}
                         </p>
@@ -2385,21 +2468,22 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       {mode === "listening-mode" && (
         <div className="w-full max-w-[800px] mx-auto">
           <Button
-            className="w-full mt-4 rounded-full p-5"
+            className="gradient-hover-animate w-full mt-4 rounded-full p-5 text-white shadow-lg shadow-blue-500/30 hover:brightness-110 disabled:opacity-60 disabled:shadow-none"
             onClick={() => {
               if (clickLocked.current) return;
-              clickLocked.current = true;
-              setTimeout(() => (clickLocked.current = false), 2000);
 
-              (listeningStage === "quiz"
-                ? handleSubmitAnswer
-                : handleNextStage)();
+              if (listeningStage === "quiz") {
+                handleSubmitAnswer();
+              } else {
+                handleNextStage();
+              }
             }}
             disabled={
               (mode === "listening-mode" &&
                 (listeningStage === "initial" ||
                   listeningStage === "question_text") &&
-                !isContextCompleted) ||
+                !isContextCompleted &&
+                !hasStartedContextAudio) ||
               (mode === "listening-mode" &&
                 listeningStage === "quiz" &&
                 selectedAnswer === null)

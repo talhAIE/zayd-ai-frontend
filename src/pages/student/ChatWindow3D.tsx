@@ -41,7 +41,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import QuestionnaireModal from "@/components/ui/QuestionaireModal";
-import AudioPlayer3DListening from "./AudioPlayer3D";
+import AudioPlayer from "./AudioPlayer3D";
 import ReadingPassageCard from "@/components/ui/ReadingPassageCard";
 import AvatarModeLayout from "@/components/3d/AvatarModeLayout";
 import birdWithHeadphones from "@/assets/images/bird-with-headphones.png";
@@ -274,6 +274,7 @@ interface ChatWindowProps {
     pause: () => void;
     restart: () => void;
   }) => void;
+  listeningAvatarSeed?: number;
 }
 
 function findLastIndex<T>(
@@ -302,6 +303,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   onListeningStageChange,
   onListeningAudioState,
   onListeningAudioController,
+  listeningAvatarSeed = 0,
 }) => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -338,6 +340,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       );
       if (sessionTimerLastEmittedRef.current !== nextRemaining) {
         sessionTimerLastEmittedRef.current = nextRemaining;
+        _setSessionLimitReached(nextRemaining === 0);
         emitSessionRemaining(nextRemaining);
       }
     };
@@ -434,6 +437,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const onListeningAudioStateRef = useRef(onListeningAudioState);
   const onListeningAudioControllerRef = useRef(onListeningAudioController);
   const onListeningStageChangeRef = useRef(onListeningStageChange);
+  const [isListeningLoading, setIsListeningLoading] = useState(false);
+  const listeningLoadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   // const [barCount, setBarCount] = useState(0);
   // --- End Listening Mode State ---
 
@@ -526,12 +531,25 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       clearTimeout(quizPrefetchTimerRef.current);
       quizPrefetchTimerRef.current = null;
     }
+    if (listeningLoadingTimeoutRef.current) {
+      clearTimeout(listeningLoadingTimeoutRef.current);
+      listeningLoadingTimeoutRef.current = null;
+    }
+    clickLocked.current = false;
+    setIsListeningLoading(false);
   }, [mode, topicId]);
 
   const isIOS = () =>
     /iPad|iPhone|iPod/.test(navigator.userAgent) ||
     (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) ||
     (navigator.userAgent.includes("Mac") && "ontouchend" in document);
+
+  // Check if user is one of the unlimited session demo accounts (3d-student-01 to 3d-student-10)
+  const hasUnlimitedSessions = () => {
+    const username = userData?.username;
+    if (!username) return false;
+    return /^3d-student-(0[1-9]|10)$/.test(username);
+  };
 
   // --- MODIFIED: Universal Audio Unlocker ---
   const unlockAudio = useCallback(() => {
@@ -786,6 +804,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     });
 
     socket.on("listening_payload", ({ chatId: newChatId, ...data }) => {
+      // Clear loading state and click lock when response received
+      if (listeningLoadingTimeoutRef.current) {
+        clearTimeout(listeningLoadingTimeoutRef.current);
+        listeningLoadingTimeoutRef.current = null;
+      }
+      clickLocked.current = false;
+      setIsListeningLoading(false);
+
       setChatId(newChatId);
       setListeningData(data);
 
@@ -1062,10 +1088,21 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
     socket.on(ChatEvents.SESSION_STATUS_UPDATE, (payload) => {
       logger.receiving(ChatEvents.SESSION_STATUS_UPDATE, payload);
+
+      // Skip session limit for unlimited demo accounts
+      if (hasUnlimitedSessions()) {
+        sessionTimerBaseRef.current = null;
+        sessionTimerLastEmittedRef.current = null;
+        _setSessionLimitReached(false);
+        emitSessionRemaining(null);
+        return;
+      }
+
       const rawRemaining = payload?.remainingSeconds;
       if (typeof rawRemaining !== "number" || Number.isNaN(rawRemaining)) {
         sessionTimerBaseRef.current = null;
         sessionTimerLastEmittedRef.current = null;
+        _setSessionLimitReached(false);
         emitSessionRemaining(null);
         return;
       }
@@ -1075,6 +1112,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         receivedAt: Date.now(),
       };
       sessionTimerLastEmittedRef.current = normalizedRemaining;
+      _setSessionLimitReached(normalizedRemaining === 0);
       emitSessionRemaining(normalizedRemaining);
     });
 
@@ -1113,10 +1151,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         setMcqList(payload.questions);
         setChatId(payload.chatId);
         setIsQuestionnaireOpen(true);
-      } else if (mode === "listening-mode") {
-        if (payload.mcqs || payload.questions) {
-          setPendingMcqPayload(payload);
-        }
+      } else if (mode === "listening-mode" && payload.mcqs) {
+        setListeningStage("quiz");
+        setMcqList(payload.mcqs);
+        setChatId(payload.chatId);
+        setListeningData((prevData: any) => ({ ...prevData, ...payload }));
+        setCurrentMcqIndex(0);
       }
     });
 
@@ -1159,6 +1199,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       ) {
         setIsDuplicateConnectionModalOpen(true);
       } else if (errorMessage.includes("daily session limit")) {
+        // Skip session limit for unlimited demo accounts
+        if (hasUnlimitedSessions()) {
+          return;
+        }
         _setSessionLimitReached(true);
         toast.error("You have reached your daily session limit.");
       } else if (errorMessage.includes("user not found")) {
@@ -1231,6 +1275,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     return () => {
       logger.info("Component unmounting. Disconnecting socket.");
       if (activityTimerRef.current) clearTimeout(activityTimerRef.current);
+      if (listeningLoadingTimeoutRef.current) {
+        clearTimeout(listeningLoadingTimeoutRef.current);
+      }
       socket.disconnect();
       if (soundRef.current) {
         soundRef.current.unload();
@@ -1728,6 +1775,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         onAudioPlaybackChange?.(false);
         if (id === "kb-audio") {
           kbAudioSeekRef.current = Number(sound.seek() || 0);
+          if (mode === "listening-mode") {
+            setIsContextCompleted(false);
+            setHasStartedContextAudio(false);
+          }
         }
       },
       onstop: () => {
@@ -1737,6 +1788,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         onAudioPlaybackChange?.(false);
         if (id === "kb-audio") {
           kbAudioSeekRef.current = 0;
+          if (mode === "listening-mode") {
+            setHasStartedContextAudio(false);
+            setIsContextCompleted(false);
+          }
         }
       },
       onend: () => {
@@ -1814,6 +1869,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   };
 
   const handleNextStage = () => {
+    // Prevent double-clicks and rapid successive calls
+    if (clickLocked.current || isListeningLoading) {
+      logger.info("Next stage click blocked - already processing");
+      return;
+    }
+
     // Reset inactivity timer when user clicks next
     resetInactivityTimer();
 
@@ -1860,38 +1921,33 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     if (
       mode === "listening-mode" &&
       isAvatar3DContext &&
-      pendingMcqs?.length &&
       skipListeningCompletionStepRef.current
     ) {
-      setListeningStage("quiz");
-      setMcqList(pendingMcqs);
-      setChatId(pendingMcqPayload.chatId);
-      setListeningData((prevData: any) => ({
-        ...prevData,
-        ...pendingMcqPayload,
-      }));
-      setCurrentMcqIndex(0);
-      setPendingMcqPayload(null);
-      onListeningStageChangeRef.current?.("quiz", {
-        kbAudioUrl: pendingMcqPayload.kbAudioUrl,
-      });
-      wantsQuizRef.current = false;
-      skipListeningCompletionStepRef.current = false;
-      return;
-    }
-
-    if (
-      mode === "listening-mode" &&
-      isAvatar3DContext &&
-      skipListeningCompletionStepRef.current &&
-      !pendingMcqs?.length
-    ) {
-      wantsQuizRef.current = true;
-      if (!prefetchedQuizRef.current) {
-        prefetchedQuizRef.current = true;
-        requestNextListeningStage();
+      const currentMcqs = pendingMcqPayload?.mcqs || pendingMcqPayload?.questions || [];
+      if (currentMcqs.length > 0) {
+        setListeningStage("quiz");
+        setMcqList(currentMcqs);
+        setChatId(pendingMcqPayload.chatId);
+        setListeningData((prevData: any) => ({
+          ...prevData,
+          ...pendingMcqPayload,
+        }));
+        setCurrentMcqIndex(0);
+        setPendingMcqPayload(null);
+        onListeningStageChangeRef.current?.("quiz", {
+          kbAudioUrl: pendingMcqPayload.kbAudioUrl,
+        });
+        wantsQuizRef.current = false;
+        skipListeningCompletionStepRef.current = false;
+      } else {
+        setListeningStage("quiz"); // Enter quiz stage anyway to show loading
+        wantsQuizRef.current = true;
+        if (!prefetchedQuizRef.current) {
+          prefetchedQuizRef.current = true;
+          requestNextListeningStage();
+        }
+        toast.info("Loading quiz...");
       }
-      toast.info("Loading quiz...");
       return;
     }
 
@@ -1899,9 +1955,25 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       const payload = { userId, topicId, chatId };
       logger.emitting(ChatEvents.NEXT_STAGE, payload);
       if (mode === "listening-mode" && socketRef.current && chatId) {
+        // Lock clicks and show loading state
+        clickLocked.current = true;
+        setIsListeningLoading(true);
         logger.emitting("next_listening_stage", { chatId });
         requestNextListeningStage();
         toast.info(listeningStage === "question_text" ? "Loading quiz..." : "Loading next part...");
+
+        // Set timeout to unlock if response takes too long (8 seconds)
+        if (listeningLoadingTimeoutRef.current) {
+          clearTimeout(listeningLoadingTimeoutRef.current);
+        }
+        listeningLoadingTimeoutRef.current = setTimeout(() => {
+          if (clickLocked.current || isListeningLoading) {
+            clickLocked.current = false;
+            setIsListeningLoading(false);
+            toast.error("Request timed out. Please try again.");
+            logger.error("Next listening stage request timed out after 8s");
+          }
+        }, 8000);
         return;
       }
       socketRef.current.emit(ChatEvents.NEXT_STAGE, payload);
@@ -2096,7 +2168,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
       {listeningStage === "quiz" && mcqList.length > 0 && (
         <div className="w-full flex flex-col items-center gap-4">
-          <div className="p-6 md:p-8 border rounded-3xl bg-white shadow-lg w-full max-w-[820px] my-4 text-left">
+          <div className="p-6 md:p-8 border rounded-3xl bg-white shadow-lg w-full max-w-[820px] mt-4 mb-2 text-left">
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-[#E6F3FF] flex items-center justify-center">
@@ -2151,10 +2223,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       {listeningStage !== "quiz" && (
         <div
           className={`flex flex-col max-w-[800px] mx-auto bg-gray-100 rounded-xl overflow-hidden shadow-2xl ${mode === "listening-mode"
-            ? "min-h-[70vh] max-h-[80vh]"
+            ? isAvatar3DContext
+              ? "h-[calc(100svh-9.5rem)] max-h-[calc(100svh-9.5rem)]"
+              : "min-h-[70vh] max-h-[80vh]"
             : readingHeroActive
               ? "min-h-[calc(100vh-340px)] max-h-[calc(100vh-340px)] md:min-h-[calc(100vh-340px)] md:max-h-[calc(100vh-340px)]"
-              : "max-h-[86vh] min-h-[86vh] md:min-h-[82vh] md:max-h-[82vh]"
+              : "max-h-[76vh] min-h-[76vh] md:min-h-[74vh] md:max-h-[74vh]"
             }`}
         >
           {mode === "listening-mode" && (
@@ -2289,9 +2363,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 <div className="relative rounded-2xl bg-[#F8FAFC] border border-slate-200 overflow-hidden p-4 md:p-6">
                   {isAvatar3D && (
                     <AvatarModeLayout
-                      syncPlaying={
-                        playingAudioId === "kb-audio" && isCurrentlyPlaying
-                      }
+                      key={`listening-avatar-${listeningAvatarSeed}`}
+                      syncPlaying={playingAudioId === "kb-audio" && isCurrentlyPlaying}
                       videoSrc={avatarVideoSrc}
                       heightClassName="h-auto"
                       videoClassName="w-full h-auto object-contain"
@@ -2299,13 +2372,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   )}
                 </div>
                 <div className="mt-4">
-                  <AudioPlayer3DListening
+                  <AudioPlayer
                     audioSrc={listeningData?.kbAudioUrl || ""}
                     isPlaying={
                       playingAudioId === "kb-audio" && isCurrentlyPlaying
                     }
                     progress={playingAudioId === "kb-audio" ? audioProgress : 0}
                     duration={playingAudioId === "kb-audio" ? audioDuration : 0}
+                    showTotal={true}
                     onTogglePlay={() =>
                       toggleAudio(
                         "kb-audio",
@@ -2313,7 +2387,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                         handleKbAudioEnd,
                       )
                     }
-                    showTotal={isAvatar3DContext}
                   />
                 </div>
               </div>

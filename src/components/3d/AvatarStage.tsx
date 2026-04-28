@@ -59,6 +59,7 @@ const AvatarStage: React.FC<AvatarStageProps> = ({
             preload="auto"
             onEnded={onEnded}
             className={`relative block -scale-x-100 ${videoSizingClass}`}
+            style={{ objectPosition: 'center' }}
           />
         </div>
       </div>
