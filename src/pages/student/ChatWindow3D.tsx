@@ -2188,54 +2188,92 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       </Dialog>
 
       {listeningStage === "quiz" && mcqList.length > 0 && (
-        <div className="w-full flex flex-col items-center gap-4">
-          <div className="p-6 md:p-8 border rounded-3xl bg-white shadow-lg w-full max-w-[820px] mt-4 mb-2 text-left">
-            <div className="flex items-start justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-[#E6F3FF] flex items-center justify-center">
-                  <Check className="h-5 w-5 text-[#3EA4F9]" />
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-[#6B8BB8] uppercase tracking-wide">
-                    Step 4: Quiz
-                  </p>
-                  <p className="text-lg font-semibold text-[#2B3A67]">
-                    Test Your Knowledge
-                  </p>
-                </div>
+        <div className="w-full flex flex-col lg:flex-row gap-6 px-4 md:px-6">
+          {/* Sidebar Avatar */}
+          <div className="lg:w-1/3 xl:w-1/4">
+            <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 md:p-6 sticky top-4">
+              <div className="relative rounded-2xl bg-[#F8FAFC] border border-slate-200 overflow-hidden p-4 md:p-6">
+                {isAvatar3D && (
+                  <AvatarModeLayout
+                    key={`listening-avatar-${listeningAvatarSeed}`}
+                    syncPlaying={playingAudioId === "kb-audio" && isCurrentlyPlaying}
+                    videoSrc={avatarVideoSrc}
+                    heightClassName="h-auto"
+                    videoClassName="w-full h-auto object-contain"
+                  />
+                )}
               </div>
-              <span className="text-xs font-semibold text-[#6B8BB8] bg-[#F1F6FF] px-3 py-1 rounded-full">
-                {currentMcqIndex + 1}/{mcqList.length}
-              </span>
+              <div className="mt-4">
+                <AudioPlayer
+                  audioSrc={listeningData?.kbAudioUrl || ""}
+                  isPlaying={
+                    playingAudioId === "kb-audio" && isCurrentlyPlaying
+                  }
+                  progress={playingAudioId === "kb-audio" ? audioProgress : 0}
+                  duration={playingAudioId === "kb-audio" ? audioDuration : 0}
+                  showTotal={true}
+                  onTogglePlay={() =>
+                    toggleAudio(
+                      "kb-audio",
+                      listeningData?.kbAudioUrl,
+                      handleKbAudioEnd,
+                    )
+                  }
+                />
+              </div>
             </div>
-            <p className="text-lg font-semibold mb-4 text-[#2B3A67]">
-              {mcqList[currentMcqIndex].question}
-            </p>
-            <div className="flex flex-col gap-2">
-              {mcqList[currentMcqIndex].options.map(
-                (option: string, index: number) => (
-                  <Button
-                    key={index}
-                    variant={selectedAnswer === index ? "default" : "outline"}
-                    onClick={() => {
-                      setSelectedAnswer(index);
-                      resetInactivityTimer();
-                    }}
-                    className={`w-full justify-start p-4 h-auto transition-colors rounded-2xl ${selectedAnswer === index
-                      ? "bg-[#3EA4F9] text-white hover:bg-[#2F93F0] border-transparent"
-                      : "bg-white border-[#E1E7F0] text-[#2B3A67]"
-                      }`}
-                  >
-                    <div
-                      className={`w-5 h-5 mr-4 rounded-full border flex-shrink-0 ${selectedAnswer === index
-                        ? "bg-white border-white"
-                        : "border-[#C9D6E6]"
+          </div>
+
+          {/* MCQ Section */}
+          <div className="lg:flex-1 lg:w-2/3 xl:w-3/4">
+            <div className="p-6 md:p-8 border rounded-3xl bg-white shadow-lg w-full max-w-[820px] mt-4 mb-2 text-left">
+              <div className="flex items-start justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-[#E6F3FF] flex items-center justify-center">
+                    <Check className="h-5 w-5 text-[#3EA4F9]" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-[#6B8BB8] uppercase tracking-wide">
+                      Step 4: Quiz
+                    </p>
+                    <p className="text-lg font-semibold text-[#2B3A67]">
+                      Test Your Knowledge
+                    </p>
+                  </div>
+                </div>
+                <span className="text-xs font-semibold text-[#6B8BB8] bg-[#F1F6FF] px-3 py-1 rounded-full">
+                  {currentMcqIndex + 1}/{mcqList.length}
+                </span>
+              </div>
+              <p className="text-lg font-semibold mb-4 text-[#2B3A67]">
+                {mcqList[currentMcqIndex].question}
+              </p>
+              <div className="flex flex-col gap-2">
+                {mcqList[currentMcqIndex].options.map(
+                  (option: string, index: number) => (
+                    <Button
+                      key={index}
+                      variant={selectedAnswer === index ? "default" : "outline"}
+                      onClick={() => {
+                        setSelectedAnswer(index);
+                        resetInactivityTimer();
+                      }}
+                      className={`w-full justify-start p-4 h-auto transition-colors rounded-2xl ${selectedAnswer === index
+                        ? "bg-[#3EA4F9] text-white hover:bg-[#2F93F0] border-transparent"
+                        : "bg-white border-[#E1E7F0] text-[#2B3A67]"
                         }`}
-                    />
-                    <span>{option}</span>
-                  </Button>
-                ),
-              )}
+                    >
+                      <div
+                        className={`w-5 h-5 mr-4 rounded-full border flex-shrink-0 ${selectedAnswer === index
+                          ? "bg-white border-white"
+                          : "border-[#C9D6E6]"
+                          }`}
+                      />
+                      <span>{option}</span>
+                    </Button>
+                  ),
+                )}
+              </div>
             </div>
           </div>
         </div>
