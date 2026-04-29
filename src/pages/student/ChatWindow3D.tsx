@@ -806,6 +806,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     socket.on("listening_payload", ({ chatId: newChatId, ...data }) => {
       // Always reset click lock when response received to prevent stuck state
       clickLocked.current = false;
+      // Always reset click lock when response received to prevent stuck state
+      clickLocked.current = false;
       // Clear loading state and click lock when response received
       if (listeningLoadingTimeoutRef.current) {
         clearTimeout(listeningLoadingTimeoutRef.current);
@@ -920,6 +922,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       // Reset click locks on disconnect to prevent stuck button state
       clickLocked.current = false;
       setIsListeningLoading(false);
+      // Reset click locks on disconnect to prevent stuck button state
+      clickLocked.current = false;
+      setIsListeningLoading(false);
 
       if (reason === "ping timeout" || reason === "transport close") {
         if (!isInactiveDialogOpen) {
@@ -934,6 +939,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
     socket.on("connect_error", (err) => {
       logger.error("Socket connection error:", err);
+      // Reset click locks on connection errors to prevent stuck button state
+      clickLocked.current = false;
+      setIsListeningLoading(false);
       // Reset click locks on connection errors to prevent stuck button state
       clickLocked.current = false;
       setIsListeningLoading(false);
@@ -955,6 +963,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     // Handle authentication errors from server
     socket.on("auth_error", (error) => {
       logger.error("WebSocket authentication error:", error);
+      // Reset click locks on auth errors to prevent stuck button state
+      clickLocked.current = false;
+      setIsListeningLoading(false);
       // Reset click locks on auth errors to prevent stuck button state
       clickLocked.current = false;
       setIsListeningLoading(false);
@@ -1196,6 +1207,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       logger.receiving(ChatEvents.ERROR, payload);
       setIsWaitingForResponse(false);
       removeLoadingMessage();
+      // Reset click lock on errors to prevent stuck button state
+      clickLocked.current = false;
+      setIsListeningLoading(false);
       // Reset click lock on errors to prevent stuck button state
       clickLocked.current = false;
       setIsListeningLoading(false);

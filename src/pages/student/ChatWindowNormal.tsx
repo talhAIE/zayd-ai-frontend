@@ -1774,7 +1774,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             <p className="text-lg font-semibold mb-4">
               {mcqList[currentMcqIndex].question}
             </p>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 ">
               {mcqList[currentMcqIndex].options.map(
                 (option: string, index: number) => (
                   <Button
@@ -1784,10 +1784,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                       setSelectedAnswer(index);
                       resetInactivityTimer();
                     }}
-                    className="w-full justify-start p-4 h-auto transition-colors"
+                    className={`w-full justify-start p-4 h-auto transition-colors ${
+                      selectedAnswer === index
+                        ? "bg-[#5EA9FF] text-white hover:bg-[#4E98F0]"
+                        : "bg-white hover:bg-gray-100 text-black"
+                    }`}
                   >
                     <div
-                      className={`w-5 h-5 mr-4 rounded-full border border-primary flex-shrink-0 ${selectedAnswer === index ? "bg-primary" : ""
+                      className={`w-5 h-5 mr-4 rounded-full bg-[#5EA9FF] hover:bg-[#4E98F0] text-whiteborder border-primary flex-shrink-0 ${selectedAnswer === index ? "bg-primary" : ""
                         }`}
                     />
                     <span>{option}</span>
@@ -2428,7 +2432,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       {mode === "listening-mode" && (
         <div>
           <Button
-            className="w-full mt-4 rounded-full p-5"
+            className="w-full mt-4 rounded-full p-5 bg-[#5EA9FF] hover:bg-[#4E98F0] text-white"
             onClick={() => {
               if (clickLocked.current) return;
               clickLocked.current = true;
