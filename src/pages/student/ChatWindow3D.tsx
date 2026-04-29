@@ -437,7 +437,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const onListeningAudioStateRef = useRef(onListeningAudioState);
   const onListeningAudioControllerRef = useRef(onListeningAudioController);
   const onListeningStageChangeRef = useRef(onListeningStageChange);
-  const [isListeningLoading, setIsListeningLoading] = useState(false);
+  const [, setIsListeningLoading] = useState(false);
   const listeningLoadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   // const [barCount, setBarCount] = useState(0);
   // --- End Listening Mode State ---
