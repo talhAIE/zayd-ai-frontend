@@ -109,7 +109,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
                 {bars}
             </div>
             <span
-                className={`text-xs font-mono min-w-[45px] text-right pr-1 ${isGradient ? 'text-[#1F5F9B]' : 'text-gray-500'
+                className={`text-xs font-mono min-w-[90px] text-right pr-1 whitespace-nowrap ${isGradient ? 'text-[#1F5F9B]' : 'text-gray-500'
                     }`}
             >
                 {showTotal

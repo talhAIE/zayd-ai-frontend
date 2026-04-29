@@ -221,14 +221,14 @@ const Chat: React.FC = () => {
                 />
               </div>
               <div className="flex flex-col gap-3 w-full md:w-1/3">
-                {!isSmallScreen && (
+                {!isSmallScreen && mode !== 'listening-mode' && (
                   <FeedbackSection
                     isOpen={isFeedbackOpen}
                     onClose={() => setIsFeedbackOpen(false)}
                     feedback={currentFeedback}
                   />
                 )}
-                {isSmallScreen && (
+                {isSmallScreen && mode !== 'listening-mode' && (
                   <FeedbackSectionModal
                     isOpen={isFeedbackMobile}
                     onClose={() => setIsFeedbackMobile(false)}
@@ -491,20 +491,21 @@ const Chat: React.FC = () => {
                     </div>
                   )}
                   {shouldShowListeningSidebar && (
-                    <div className="flex flex-col gap-0">
+                    <div className="flex flex-col gap-4">
                       <AvatarModeLayout
                         key={`listening-avatar-${listeningAvatarSeed}`}
                         compact
                         syncPlaying={listeningAudioState.isPlaying}
                         videoSrc={avatarVideoSrc}
                         heightClassName="h-auto"
-                        videoClassName="w-full h-auto object-contain mx-auto"
+                        videoClassName="relative left-1/2 -translate-x-1/2 w-[160%] max-w-none h-auto object-contain object-center"
                       />
                       <AudioPlayer3D
                         audioSrc={listeningAudioUrl || ''}
                         isPlaying={listeningAudioState.isPlaying}
                         progress={listeningAudioState.progress}
                         duration={listeningAudioState.duration}
+                        showTotal={true}
                         onTogglePlay={() => {
                           if (listeningAudioState.isPlaying) {
                             listeningAudioControlRef.current?.pause?.();
@@ -512,7 +513,6 @@ const Chat: React.FC = () => {
                             listeningAudioControlRef.current?.play?.();
                           }
                         }}
-                        showTotal
                       />
                     </div>
                   )}

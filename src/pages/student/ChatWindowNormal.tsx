@@ -414,6 +414,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) ||
     (navigator.userAgent.includes("Mac") && "ontouchend" in document);
 
+  // Check if user is one of the unlimited session demo accounts (3d-student-01 to 3d-student-10)
+  const hasUnlimitedSessions = () => {
+    const username = userData?.username;
+    if (!username) return false;
+    return /^3d-student-(0[1-9]|10)$/.test(username);
+  };
+
   // --- MODIFIED: Universal Audio Unlocker ---
   const unlockAudio = useCallback(() => {
     if (isAudioUnlocked) return;
@@ -757,6 +764,16 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
     socket.on(ChatEvents.SESSION_STATUS_UPDATE, (payload) => {
       logger.receiving(ChatEvents.SESSION_STATUS_UPDATE, payload);
+
+      // Skip session limit for unlimited demo accounts
+      if (hasUnlimitedSessions()) {
+        sessionTimerBaseRef.current = null;
+        sessionTimerLastEmittedRef.current = null;
+        _setSessionLimitReached(false);
+        emitSessionRemaining(null);
+        return;
+      }
+
       const rawRemaining = payload?.remainingSeconds;
       if (typeof rawRemaining !== "number" || Number.isNaN(rawRemaining)) {
         sessionTimerBaseRef.current = null;
@@ -885,6 +902,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       ) {
         setIsDuplicateConnectionModalOpen(true);
       } else if (errorMessage.includes("daily session limit")) {
+        // Skip session limit for unlimited demo accounts
+        if (hasUnlimitedSessions()) {
+          return;
+        }
         _setSessionLimitReached(true);
         toast.error("You have reached your daily session limit.");
       } else if (errorMessage.includes("user not found")) {
@@ -1467,11 +1488,19 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         if (progressIntervalRef.current)
           clearInterval(progressIntervalRef.current);
         setIsCurrentlyPlaying(false);
+        if (id === "kb-audio" && mode === "listening-mode") {
+          setIsContextCompleted(false);
+          setHasStartedContextAudio(false);
+        }
       },
       onstop: () => {
         setPlayingAudioId(null);
         setIsCurrentlyPlaying(false);
         clearAudioProgress();
+        if (id === "kb-audio" && mode === "listening-mode") {
+          setHasStartedContextAudio(false);
+          setIsContextCompleted(false);
+        }
       },
       onend: () => {
         setPlayingAudioId(null);
@@ -1653,6 +1682,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 progress={playingAudioId === "kb-audio" ? audioProgress : 0}
                 duration={playingAudioId === "kb-audio" ? audioDuration : 0}
                 variant="gradient"
+                showTotal={true}
                 onTogglePlay={() =>
                   toggleAudio("kb-audio", listeningData?.kbAudioUrl, () =>
                     setIsContextCompleted(true),
@@ -1735,7 +1765,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
       {listeningStage === "quiz" && mcqList.length > 0 && (
         <div className="w-full flex flex-col items-center gap-4">
-          <div className="p-6 border rounded-xl bg-white shadow-lg w-full max-w-[800px] my-4 text-left">
+          <div className="p-6 border rounded-xl bg-white shadow-lg w-full max-w-[800px] mt-4 mb-2 text-left">
             <div className="flex justify-end mb-2">
               <span className="text-sm font-semibold text-gray-600">
                 Question {currentMcqIndex + 1}/{mcqList.length}
@@ -2396,9 +2426,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       </Dialog>
 
       {mode === "listening-mode" && (
-        <div className="w-full max-w-[800px] mx-auto">
+        <div>
           <Button
-            className="gradient-hover-animate w-full mt-4 rounded-full p-5 text-white shadow-lg shadow-blue-500/30 hover:brightness-110 disabled:opacity-60 disabled:shadow-none"
+            className="w-full mt-4 rounded-full p-5"
             onClick={() => {
               if (clickLocked.current) return;
               clickLocked.current = true;

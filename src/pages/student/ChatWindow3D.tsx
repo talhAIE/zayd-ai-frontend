@@ -437,6 +437,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const onListeningAudioStateRef = useRef(onListeningAudioState);
   const onListeningAudioControllerRef = useRef(onListeningAudioController);
   const onListeningStageChangeRef = useRef(onListeningStageChange);
+  const [isListeningLoading, setIsListeningLoading] = useState(false);
+  const listeningLoadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   // const [barCount, setBarCount] = useState(0);
   // --- End Listening Mode State ---
 
@@ -529,12 +531,25 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       clearTimeout(quizPrefetchTimerRef.current);
       quizPrefetchTimerRef.current = null;
     }
+    if (listeningLoadingTimeoutRef.current) {
+      clearTimeout(listeningLoadingTimeoutRef.current);
+      listeningLoadingTimeoutRef.current = null;
+    }
+    clickLocked.current = false;
+    setIsListeningLoading(false);
   }, [mode, topicId]);
 
   const isIOS = () =>
     /iPad|iPhone|iPod/.test(navigator.userAgent) ||
     (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) ||
     (navigator.userAgent.includes("Mac") && "ontouchend" in document);
+
+  // Check if user is one of the unlimited session demo accounts (3d-student-01 to 3d-student-10)
+  const hasUnlimitedSessions = () => {
+    const username = userData?.username;
+    if (!username) return false;
+    return /^3d-student-(0[1-9]|10)$/.test(username);
+  };
 
   // --- MODIFIED: Universal Audio Unlocker ---
   const unlockAudio = useCallback(() => {
@@ -789,6 +804,15 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     });
 
     socket.on("listening_payload", ({ chatId: newChatId, ...data }) => {
+      // Always reset click lock when response received to prevent stuck state
+      clickLocked.current = false;
+      // Clear loading state and click lock when response received
+      if (listeningLoadingTimeoutRef.current) {
+        clearTimeout(listeningLoadingTimeoutRef.current);
+        listeningLoadingTimeoutRef.current = null;
+      }
+      setIsListeningLoading(false);
+
       setChatId(newChatId);
       setListeningData(data);
 
@@ -893,6 +917,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       logger.error(`Socket disconnected. Reason: ${reason}`);
       setIsSocketConnected(false);
       setIsWaitingForResponse(false);
+      // Reset click locks on disconnect to prevent stuck button state
+      clickLocked.current = false;
+      setIsListeningLoading(false);
 
       if (reason === "ping timeout" || reason === "transport close") {
         if (!isInactiveDialogOpen) {
@@ -907,6 +934,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
     socket.on("connect_error", (err) => {
       logger.error("Socket connection error:", err);
+      // Reset click locks on connection errors to prevent stuck button state
+      clickLocked.current = false;
+      setIsListeningLoading(false);
 
       // Handle authentication errors
       if (err.message.includes("401") || err.message.includes("Unauthorized")) {
@@ -925,6 +955,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     // Handle authentication errors from server
     socket.on("auth_error", (error) => {
       logger.error("WebSocket authentication error:", error);
+      // Reset click locks on auth errors to prevent stuck button state
+      clickLocked.current = false;
+      setIsListeningLoading(false);
       toast.error("Authentication failed. Please log in again.");
       // Clear auth data and redirect to login
       localStorage.removeItem("AiTutorUser");
@@ -1065,6 +1098,16 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
     socket.on(ChatEvents.SESSION_STATUS_UPDATE, (payload) => {
       logger.receiving(ChatEvents.SESSION_STATUS_UPDATE, payload);
+
+      // Skip session limit for unlimited demo accounts
+      if (hasUnlimitedSessions()) {
+        sessionTimerBaseRef.current = null;
+        sessionTimerLastEmittedRef.current = null;
+        _setSessionLimitReached(false);
+        emitSessionRemaining(null);
+        return;
+      }
+
       const rawRemaining = payload?.remainingSeconds;
       if (typeof rawRemaining !== "number" || Number.isNaN(rawRemaining)) {
         sessionTimerBaseRef.current = null;
@@ -1118,10 +1161,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         setMcqList(payload.questions);
         setChatId(payload.chatId);
         setIsQuestionnaireOpen(true);
-      } else if (mode === "listening-mode") {
-        if (payload.mcqs || payload.questions) {
-          setPendingMcqPayload(payload);
-        }
+      } else if (mode === "listening-mode" && payload.mcqs) {
+        setListeningStage("quiz");
+        setMcqList(payload.mcqs);
+        setChatId(payload.chatId);
+        setListeningData((prevData: any) => ({ ...prevData, ...payload }));
+        setCurrentMcqIndex(0);
       }
     });
 
@@ -1151,6 +1196,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       logger.receiving(ChatEvents.ERROR, payload);
       setIsWaitingForResponse(false);
       removeLoadingMessage();
+      // Reset click lock on errors to prevent stuck button state
+      clickLocked.current = false;
+      setIsListeningLoading(false);
 
       const errorMessage = (payload.message || "").toLowerCase();
       const errorCode = payload.code;
@@ -1164,6 +1212,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       ) {
         setIsDuplicateConnectionModalOpen(true);
       } else if (errorMessage.includes("daily session limit")) {
+        // Skip session limit for unlimited demo accounts
+        if (hasUnlimitedSessions()) {
+          return;
+        }
         _setSessionLimitReached(true);
         toast.error("You have reached your daily session limit.");
       } else if (errorMessage.includes("user not found")) {
@@ -1236,6 +1288,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     return () => {
       logger.info("Component unmounting. Disconnecting socket.");
       if (activityTimerRef.current) clearTimeout(activityTimerRef.current);
+      if (listeningLoadingTimeoutRef.current) {
+        clearTimeout(listeningLoadingTimeoutRef.current);
+      }
       socket.disconnect();
       if (soundRef.current) {
         soundRef.current.unload();
@@ -1733,6 +1788,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         onAudioPlaybackChange?.(false);
         if (id === "kb-audio") {
           kbAudioSeekRef.current = Number(sound.seek() || 0);
+          if (mode === "listening-mode") {
+            setIsContextCompleted(false);
+            setHasStartedContextAudio(false);
+          }
         }
       },
       onstop: () => {
@@ -1742,6 +1801,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         onAudioPlaybackChange?.(false);
         if (id === "kb-audio") {
           kbAudioSeekRef.current = 0;
+          if (mode === "listening-mode") {
+            setHasStartedContextAudio(false);
+            setIsContextCompleted(false);
+          }
         }
       },
       onend: () => {
@@ -1899,9 +1962,25 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       const payload = { userId, topicId, chatId };
       logger.emitting(ChatEvents.NEXT_STAGE, payload);
       if (mode === "listening-mode" && socketRef.current && chatId) {
+        // Lock clicks and show loading state
+        clickLocked.current = true;
+        setIsListeningLoading(true);
         logger.emitting("next_listening_stage", { chatId });
         requestNextListeningStage();
         toast.info(listeningStage === "question_text" ? "Loading quiz..." : "Loading next part...");
+
+        // Set timeout to unlock if response takes too long (8 seconds)
+        if (listeningLoadingTimeoutRef.current) {
+          clearTimeout(listeningLoadingTimeoutRef.current);
+        }
+        listeningLoadingTimeoutRef.current = setTimeout(() => {
+          if (clickLocked.current) {
+            clickLocked.current = false;
+            setIsListeningLoading(false);
+            toast.error("Request timed out. Please try again.");
+            logger.error("Next listening stage request timed out after 8s");
+          }
+        }, 8000);
         return;
       }
       socketRef.current.emit(ChatEvents.NEXT_STAGE, payload);
@@ -2096,7 +2175,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
       {listeningStage === "quiz" && mcqList.length > 0 && (
         <div className="w-full flex flex-col items-center gap-4">
-          <div className="p-6 md:p-8 border rounded-3xl bg-white shadow-lg w-full max-w-[820px] my-4 text-left">
+          <div className="p-6 md:p-8 border rounded-3xl bg-white shadow-lg w-full max-w-[820px] mt-4 mb-2 text-left">
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-[#E6F3FF] flex items-center justify-center">
@@ -2307,6 +2386,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                     }
                     progress={playingAudioId === "kb-audio" ? audioProgress : 0}
                     duration={playingAudioId === "kb-audio" ? audioDuration : 0}
+                    showTotal={true}
                     onTogglePlay={() =>
                       toggleAudio(
                         "kb-audio",
