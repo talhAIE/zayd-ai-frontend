@@ -8,6 +8,7 @@ export interface Topic {
   attachmentUrl: string;
   description?: string;
   unlocksAt?: string | null;
+  isCompleted?: boolean;
 }
 
 interface TopicsState {
