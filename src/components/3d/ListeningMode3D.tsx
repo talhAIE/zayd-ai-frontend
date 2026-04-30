@@ -531,13 +531,13 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
 
   const requestNextListeningStage = useCallback(
     (delayMs = 0) => {
-      if (!socketRef.current || !chatId) return;
+      if (!socketRef.current || !chatIdRef.current) return;
       if (quizPrefetchTimerRef.current) {
         clearTimeout(quizPrefetchTimerRef.current);
       }
       const emitNextStage = () => {
         lastListeningStageRequestRef.current = Date.now();
-        socketRef.current?.emit("next_listening_stage", { chatId });
+        socketRef.current?.emit("next_listening_stage", { chatId: chatIdRef.current });
       };
       if (delayMs > 0) {
         quizPrefetchTimerRef.current = setTimeout(emitNextStage, delayMs);
@@ -545,7 +545,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       }
       emitNextStage();
     },
-    [chatId]
+    []
   );
 
   const openListeningQuiz = useCallback(
@@ -843,9 +843,39 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
         onVideoUrlChangeRef.current?.(undefined);
       }
 
-      const inQuiz = listeningStageRef.current === "quiz" && mcqListRef.current.length > 0;
       const payloadMcqs = data.mcqs || data.questions || [];
       const backendStage = normalizeListeningStage(data?.stage, data);
+
+      // If we already have cached quiz data loaded from localStorage, skip socket processing
+      if (listeningStageRef.current === "quiz" && mcqListRef.current.length > 0) {
+        logger.info("Quiz already loaded from cache, skipping socket payload");
+        return;
+      }
+
+      // Check if this is a new session (different chatId from saved progress)
+      const savedStateRaw = progressStorageKey ? localStorage.getItem(progressStorageKey) : null;
+      let isNewSession = false;
+      if (savedStateRaw) {
+        try {
+          const savedState = JSON.parse(savedStateRaw);
+          if (savedState.chatId && savedState.chatId !== newChatId) {
+            // New session started, clear old progress
+            isNewSession = true;
+            clearSavedProgress();
+            // Reset all refs for fresh start
+            listeningStageRef.current = null;
+            mcqListRef.current = [];
+            prefetchedQuizRef.current = false;
+            wantsQuizRef.current = false;
+            wantsHintsRef.current = false;
+            skipListeningCompletionStepRef.current = false;
+          }
+        } catch {
+          clearSavedProgress();
+        }
+      }
+
+      const inQuiz = listeningStageRef.current === "quiz" && mcqListRef.current.length > 0;
 
       if (inQuiz && backendStage !== "quiz") {
         return;
@@ -1120,6 +1150,18 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       setMcqAnswers(savedState.mcqAnswers ?? {});
       setMcqList(restoredMcqList);
       setListeningData(savedState.listeningData ?? null);
+
+      // Sync refs immediately so socket handlers see correct state
+      listeningStageRef.current = restoredStage;
+      chatIdRef.current = savedState.chatId ?? null;
+      mcqListRef.current = restoredMcqList;
+      hasListeningStartedRef.current = true;
+
+      if (restoredStage === "quiz" && restoredMcqList.length > 0) {
+        // Already have quiz data, mark as prefetched
+        prefetchedQuizRef.current = true;
+        wantsQuizRef.current = false;
+      }
 
       if (restoredMcqList.length > 0) {
         setPendingMcqPayload({
@@ -1544,6 +1586,8 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
                       setShowListeningHints(false);
                       skipListeningCompletionStepRef.current = true;
                       wantsQuizRef.current = true;
+                      wantsHintsRef.current = false;
+                      prefetchedQuizRef.current = false;
                       handleNextStage();
                     }}
                   >
