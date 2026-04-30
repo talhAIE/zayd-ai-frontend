@@ -71,6 +71,17 @@ export interface ListeningAudioController {
   restart: () => void;
 }
 
+interface Listening3DProgressSnapshot {
+  chatId: string | null;
+  listeningStage: string | null;
+  showListeningHints: boolean;
+  showListeningCompletionCard: boolean;
+  currentMcqIndex: number;
+  mcqAnswers: { [key: string]: number };
+  mcqList: McqItem[];
+  listeningData: ListeningData | null;
+}
+
 // --- Logger ---
 const logger = {
   log: (message: string, ...optionalParams: any[]) => {
@@ -264,6 +275,8 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
   const SOCKET_URL = import.meta.env.VITE_API_BASE_URL;
 
   const isSessionExpired = sessionLimitReached || sessionTimeRemaining === 0;
+  const progressStorageKey =
+    userId && topicId ? `listening3d-progress:${userId}:${topicId}` : null;
 
   // Check if user is one of the unlimited session demo accounts
   const hasUnlimitedSessions = () => {
@@ -334,6 +347,11 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       .map((part) => part.trim().replace(/^[,-]\s*/, ""))
       .filter((part) => part.length > 0);
   };
+
+  const clearSavedProgress = useCallback(() => {
+    if (!progressStorageKey) return;
+    localStorage.removeItem(progressStorageKey);
+  }, [progressStorageKey]);
 
   // --- Audio Functions ---
   const clearAudioProgress = () => {
@@ -606,6 +624,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
         });
         setChatCompleted(true);
         setIsCompleteDialogOpen(true);
+        clearSavedProgress();
         onChatCompletedRef.current?.();
       }
     } else {
@@ -624,6 +643,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
     resetActivityTimer,
     pauseKbAudio,
     submitFinalAnswers,
+    clearSavedProgress,
   ]);
 
   const handleNextStage = useCallback(() => {
@@ -725,6 +745,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
   const handleResetChat = useCallback(() => {
     logger.info("Handling chat reset - disconnecting and reconnecting socket.");
     if (!socketRef.current) return toast.error("Socket not available.");
+    clearSavedProgress();
 
     socketRef.current.disconnect();
 
@@ -744,7 +765,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
         });
       }
     }, 500);
-  }, [topicId, userId]);
+  }, [topicId, userId, clearSavedProgress]);
 
   const handleStillThere = useCallback((isContinuing: boolean) => {
     setIsInactiveDialogOpen(false);
@@ -761,6 +782,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
   }, []);
 
   const handleLogout = useCallback(() => {
+    clearSavedProgress();
     localStorage.removeItem("AiTutorUser");
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
@@ -768,7 +790,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       socketRef.current.disconnect();
     }
     window.location.href = "/login";
-  }, []);
+  }, [clearSavedProgress]);
 
   // --- Socket Initialization ---
   useEffect(() => {
@@ -877,9 +899,20 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       onStageChangeRef.current?.(currentStage, { stage: currentStage, kbAudioUrl: data.kbAudioUrl });
     });
 
+    socket.on(ChatEvents.MCQ_LIST, (payload: any) => {
+      logger.receiving(ChatEvents.MCQ_LIST, payload);
+      const quizItems = payload?.mcqs || payload?.questions || [];
+      if (!quizItems.length) return;
+      openListeningQuiz({
+        chatId: payload?.chatId ?? chatId,
+        ...payload,
+      });
+    });
+
     socket.on("listening_completed", () => {
       setChatCompleted(true);
       setIsCompleteDialogOpen(true);
+      clearSavedProgress();
       toast.success("🎉 Listening session completed!");
       onChatCompletedRef.current?.();
     });
@@ -1031,12 +1064,88 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
         soundRef.current.unload();
       }
     };
-  }, [userId, topicId, navigate, resetActivityTimer, requestNextListeningStage, openListeningQuiz]);
+  }, [
+    userId,
+    topicId,
+    navigate,
+    resetActivityTimer,
+    requestNextListeningStage,
+    openListeningQuiz,
+    chatId,
+    clearSavedProgress,
+  ]);
 
   // --- Effects ---
   useEffect(() => {
     listeningStageRef.current = listeningStage;
   }, [listeningStage]);
+
+  useEffect(() => {
+    if (!progressStorageKey) return;
+
+    setListeningStage("initial");
+    setShowListeningHints(false);
+    setShowListeningCompletionCard(false);
+    setCurrentMcqIndex(0);
+    setSelectedAnswer(null);
+    setMcqAnswers({});
+    setMcqList([]);
+    setPendingMcqPayload(null);
+
+    const savedStateRaw = localStorage.getItem(progressStorageKey);
+    if (!savedStateRaw) return;
+
+    try {
+      const savedState = JSON.parse(savedStateRaw) as Listening3DProgressSnapshot;
+      setChatId(savedState.chatId ?? null);
+      setListeningStage(savedState.listeningStage ?? "initial");
+      setShowListeningHints(Boolean(savedState.showListeningHints));
+      setShowListeningCompletionCard(Boolean(savedState.showListeningCompletionCard));
+      setCurrentMcqIndex(Math.max(0, savedState.currentMcqIndex ?? 0));
+      setMcqAnswers(savedState.mcqAnswers ?? {});
+      setMcqList(savedState.mcqList ?? []);
+      setListeningData(savedState.listeningData ?? null);
+
+      if ((savedState.mcqList ?? []).length > 0) {
+        setPendingMcqPayload({
+          chatId: savedState.chatId,
+          mcqs: savedState.mcqList,
+          questions: savedState.mcqList,
+        });
+      }
+    } catch (error) {
+      logger.error("Failed to restore listening progress snapshot", error);
+      clearSavedProgress();
+    }
+  }, [progressStorageKey, clearSavedProgress]);
+
+  useEffect(() => {
+    if (!progressStorageKey || chatCompleted) return;
+
+    const snapshot: Listening3DProgressSnapshot = {
+      chatId,
+      listeningStage,
+      showListeningHints,
+      showListeningCompletionCard,
+      currentMcqIndex,
+      mcqAnswers,
+      mcqList,
+      listeningData,
+    };
+
+    localStorage.setItem(progressStorageKey, JSON.stringify(snapshot));
+  }, [
+    progressStorageKey,
+    chatCompleted,
+    chatId,
+    listeningStage,
+    showListeningHints,
+    showListeningCompletionCard,
+    currentMcqIndex,
+    mcqAnswers,
+    mcqList,
+    listeningData,
+  ]);
 
   useEffect(() => {
     if (listeningStage === "question_text") {
