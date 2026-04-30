@@ -854,13 +854,10 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
 
       // Check if this is a new session (different chatId from saved progress)
       const savedStateRaw = progressStorageKey ? localStorage.getItem(progressStorageKey) : null;
-      let isNewSession = false;
       if (savedStateRaw) {
         try {
           const savedState = JSON.parse(savedStateRaw);
           if (savedState.chatId && savedState.chatId !== newChatId) {
-            // New session started, clear old progress
-            isNewSession = true;
             clearSavedProgress();
             // Reset all refs for fresh start
             listeningStageRef.current = null;
