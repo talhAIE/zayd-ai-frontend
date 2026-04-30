@@ -224,6 +224,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
   const sessionTimerLastEmittedRef = useRef<number | null>(null);
   const listeningStageRef = useRef<string | null>(null);
   const chatIdRef = useRef<string | null>(null);
+  const mcqListRef = useRef<McqItem[]>([]);
   const quizPrefetchTimerRef = useRef<NodeJS.Timeout | null>(null);
   const listeningLoadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const transcriptRef = useRef<HTMLParagraphElement>(null);
@@ -842,7 +843,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
         onVideoUrlChangeRef.current?.(undefined);
       }
 
-      const inQuiz = listeningStageRef.current === "quiz";
+      const inQuiz = listeningStageRef.current === "quiz" && mcqListRef.current.length > 0;
       const payloadMcqs = data.mcqs || data.questions || [];
       const backendStage = normalizeListeningStage(data?.stage, data);
 
@@ -1085,6 +1086,10 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
   }, [chatId]);
 
   useEffect(() => {
+    mcqListRef.current = mcqList;
+  }, [mcqList]);
+
+  useEffect(() => {
     if (!progressStorageKey) return;
 
     setListeningStage("initial");
@@ -1101,20 +1106,26 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
 
     try {
       const savedState = JSON.parse(savedStateRaw) as Listening3DProgressSnapshot;
+      const restoredMcqList = savedState.mcqList ?? [];
+      const restoredStage =
+        savedState.listeningStage === "quiz" && restoredMcqList.length === 0
+          ? "initial"
+          : savedState.listeningStage ?? "initial";
+
       setChatId(savedState.chatId ?? null);
-      setListeningStage(savedState.listeningStage ?? "initial");
+      setListeningStage(restoredStage);
       setShowListeningHints(Boolean(savedState.showListeningHints));
       setShowListeningCompletionCard(Boolean(savedState.showListeningCompletionCard));
       setCurrentMcqIndex(Math.max(0, savedState.currentMcqIndex ?? 0));
       setMcqAnswers(savedState.mcqAnswers ?? {});
-      setMcqList(savedState.mcqList ?? []);
+      setMcqList(restoredMcqList);
       setListeningData(savedState.listeningData ?? null);
 
-      if ((savedState.mcqList ?? []).length > 0) {
+      if (restoredMcqList.length > 0) {
         setPendingMcqPayload({
           chatId: savedState.chatId,
-          mcqs: savedState.mcqList,
-          questions: savedState.mcqList,
+          mcqs: restoredMcqList,
+          questions: restoredMcqList,
         });
       }
     } catch (error) {
