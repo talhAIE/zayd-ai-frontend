@@ -1279,7 +1279,9 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:justify-center">
-            <Button onClick={() => setShowReplayPopup(false)}>OK</Button>
+            <Button 
+            className="bg-[#5EA9FF] hover:bg-[#4E98F0] text-white"
+            onClick={() => setShowReplayPopup(false)}>OK</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1300,7 +1302,9 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
             <Button variant="outline" onClick={() => navigate(-1)}>
               End Session
             </Button>
-            <Button onClick={handleResetChat}>Reset Chat</Button>
+            <Button
+            className="bg-[#5EA9FF] hover:bg-[#4E98F0] text-white"
+            onClick={handleResetChat}>Reset Chat</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1539,6 +1543,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
                       setShowListeningCompletionCard(false);
                       setShowListeningHints(false);
                       skipListeningCompletionStepRef.current = true;
+                      wantsQuizRef.current = true;
                       handleNextStage();
                     }}
                   >
