@@ -491,7 +491,7 @@ const Chat: React.FC = () => {
                     </div>
                   )}
                   {shouldShowListeningSidebar && (
-                    <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-4 mt-4">
                       <AvatarModeLayout
                         key={`listening-avatar-${listeningAvatarSeed}`}
                         compact
