@@ -1156,6 +1156,14 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
     mcqListRef.current = mcqList;
   }, [mcqList]);
 
+  // Trigger video URL callback when listeningData changes (for sidebar avatar)
+  useEffect(() => {
+    if (listeningData?.narrationVideoUrl) {
+      logger.info(`[VIDEO] URL changed: ${listeningData.narrationVideoUrl}`);
+      onVideoUrlChangeRef.current?.(listeningData.narrationVideoUrl);
+    }
+  }, [listeningData?.narrationVideoUrl]);
+
   useEffect(() => {
     if (!progressStorageKey) return;
 
@@ -1178,12 +1186,22 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
 
       setChatId(savedState.chatId ?? null);
       setListeningStage(restoredStage);
+      logger.info(`[RESTORE] Calling onStageChangeRef with stage: ${restoredStage}, ref exists: ${!!onStageChangeRef.current}`);
+      onStageChangeRef.current?.(restoredStage);
       setShowListeningHints(Boolean(savedState.showListeningHints));
       setShowListeningCompletionCard(Boolean(savedState.showListeningCompletionCard));
       setCurrentMcqIndex(Math.max(0, savedState.currentMcqIndex ?? 0));
       setMcqAnswers(savedState.mcqAnswers ?? {});
       setMcqList(restoredMcqList);
       setListeningData(savedState.listeningData ?? null);
+
+      // Trigger video URL callback for sidebar avatar
+      if (savedState.listeningData?.narrationVideoUrl) {
+        logger.info(`[RESTORE] Triggering video URL: ${savedState.listeningData.narrationVideoUrl}`);
+        onVideoUrlChangeRef.current?.(savedState.listeningData.narrationVideoUrl);
+      } else {
+        logger.info(`[RESTORE] No video URL in saved state: ${JSON.stringify(savedState.listeningData)}`);
+      }
 
       // Sync refs immediately so socket handlers see correct state
       listeningStageRef.current = restoredStage;
