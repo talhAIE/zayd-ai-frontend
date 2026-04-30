@@ -223,6 +223,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
   const sessionTimerBaseRef = useRef<{ remainingSeconds: number; receivedAt: number } | null>(null);
   const sessionTimerLastEmittedRef = useRef<number | null>(null);
   const listeningStageRef = useRef<string | null>(null);
+  const chatIdRef = useRef<string | null>(null);
   const quizPrefetchTimerRef = useRef<NodeJS.Timeout | null>(null);
   const listeningLoadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const transcriptRef = useRef<HTMLParagraphElement>(null);
@@ -904,7 +905,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       const quizItems = payload?.mcqs || payload?.questions || [];
       if (!quizItems.length) return;
       openListeningQuiz({
-        chatId: payload?.chatId ?? chatId,
+        chatId: payload?.chatId ?? chatIdRef.current,
         ...payload,
       });
     });
@@ -1071,7 +1072,6 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
     resetActivityTimer,
     requestNextListeningStage,
     openListeningQuiz,
-    chatId,
     clearSavedProgress,
   ]);
 
@@ -1079,6 +1079,10 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
   useEffect(() => {
     listeningStageRef.current = listeningStage;
   }, [listeningStage]);
+
+  useEffect(() => {
+    chatIdRef.current = chatId;
+  }, [chatId]);
 
   useEffect(() => {
     if (!progressStorageKey) return;
