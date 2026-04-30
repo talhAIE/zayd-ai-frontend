@@ -8,6 +8,7 @@ import ChatWindowNormal from './ChatWindowNormal';
 import AudioPlayer3D from './AudioPlayer3D';
 import AvatarModeLayout from '@/components/3d/AvatarModeLayout';
 import AvatarHeaderBar from '@/components/3d/AvatarHeaderBar';
+import ListeningMode3D from '@/components/3d/ListeningMode3D';
 
 interface Assessment {
   accuracyScore: number;
@@ -145,6 +146,31 @@ const Chat: React.FC = () => {
       setIsNarrationComplete(completed);
     }
   }, [isReading3D]);
+
+  // Stable callbacks for ListeningMode3D to prevent infinite re-render loop
+  const handleListeningStageChange = useCallback((stage: string | null, data?: { kbAudioUrl?: string }) => {
+    setListeningStage(stage ?? null);
+    if (data?.kbAudioUrl) {
+      setListeningAudioUrl(data.kbAudioUrl);
+    }
+  }, []);
+
+  const handleListeningAudioStateChange = useCallback((state: { isPlaying: boolean; progress: number; duration: number }) => {
+    setListeningAudioState((prev) => {
+      if (
+        prev.isPlaying === state.isPlaying &&
+        prev.progress === state.progress &&
+        prev.duration === state.duration
+      ) {
+        return prev;
+      }
+      return state;
+    });
+  }, []);
+
+  const handleListeningAudioController = useCallback((controller: { toggle: () => void; play: () => void; pause: () => void; restart: () => void }) => {
+    listeningAudioControlRef.current = controller;
+  }, []);
 
   useEffect(() => {
     if (!isHeroMode3D) {
@@ -298,42 +324,33 @@ const Chat: React.FC = () => {
                 )}
               </div>
               <div className="flex-1 min-h-0">
-                <ChatWindow
-                  onShowFeedback={handleShowFeedback}
-                  onTopicImage={handleTopicImage}
-                  onContentPayload={handleContentPayload}
-                  onAudioPlaybackChange={handleAudioPlaybackChange}
-                  onNarrationComplete={handleNarrationComplete}
-                  readingHeroActive={shouldShowReadingHero}
-                  isAvatar3D={isAvatar3D}
-                  avatarVideoSrc={avatarVideoSrc}
-                  chatLocked={shouldLockChat}
-                  onContentAudioComplete={handleContentAudioComplete}
-                  onListeningVideoUrl={handleListeningVideoUrl}
-                  onSessionTimeRemaining={setSessionTimeRemaining}
-                  onListeningAudioController={(controller) => {
-                    listeningAudioControlRef.current = controller;
-                  }}
-                  onListeningAudioState={(state) => {
-                    setListeningAudioState((prev) => {
-                      if (
-                        prev.isPlaying === state.isPlaying &&
-                        prev.progress === state.progress &&
-                        prev.duration === state.duration
-                      ) {
-                        return prev;
-                      }
-                      return state;
-                    });
-                  }}
-                  onListeningStageChange={(stage, data) => {
-                    setListeningStage(stage ?? null);
-                    if (data?.kbAudioUrl) {
-                      setListeningAudioUrl(data.kbAudioUrl);
-                    }
-                  }}
-                  listeningAvatarSeed={listeningAvatarSeed}
-                />
+                {mode === 'listening-mode' ? (
+                  <ListeningMode3D
+                    isAvatar3D={isAvatar3D}
+                    avatarVideoSrc={avatarVideoSrc}
+                    avatarSeed={listeningAvatarSeed}
+                    onStageChange={handleListeningStageChange}
+                    onAudioStateChange={handleListeningAudioStateChange}
+                    onAudioController={handleListeningAudioController}
+                    onVideoUrlChange={handleListeningVideoUrl}
+                    onSessionTimeRemaining={setSessionTimeRemaining}
+                  />
+                ) : (
+                  <ChatWindow
+                    onShowFeedback={handleShowFeedback}
+                    onTopicImage={handleTopicImage}
+                    onContentPayload={handleContentPayload}
+                    onAudioPlaybackChange={handleAudioPlaybackChange}
+                    onNarrationComplete={handleNarrationComplete}
+                    readingHeroActive={shouldShowReadingHero}
+                    isAvatar3D={isAvatar3D}
+                    avatarVideoSrc={avatarVideoSrc}
+                    chatLocked={shouldLockChat}
+                    onContentAudioComplete={handleContentAudioComplete}
+                    onSessionTimeRemaining={setSessionTimeRemaining}
+                    listeningAvatarSeed={listeningAvatarSeed}
+                  />
+                )}
               </div>
               <FeedbackSectionModal
                 isOpen={isFeedbackMobile}
@@ -426,33 +443,33 @@ const Chat: React.FC = () => {
                       </div>
                     </div>
                   )}
-                  <ChatWindow
-                    onShowFeedback={handleShowFeedback}
-                    onTopicImage={handleTopicImage}
-                    onContentPayload={handleContentPayload}
-                    onAudioPlaybackChange={handleAudioPlaybackChange}
-                    onNarrationComplete={handleNarrationComplete}
-                    readingHeroActive={shouldShowReadingHero}
-                    isAvatar3D={isAvatar3D}
-                    avatarVideoSrc={avatarVideoSrc}
-                    chatLocked={shouldLockChat}
-                    onContentAudioComplete={handleContentAudioComplete}
-                    onListeningVideoUrl={handleListeningVideoUrl}
-                    onSessionTimeRemaining={setSessionTimeRemaining}
-                    onListeningAudioController={(controller) => {
-                      listeningAudioControlRef.current = controller;
-                    }}
-                    onListeningAudioState={(state) => {
-                      setListeningAudioState(state);
-                    }}
-                    onListeningStageChange={(stage, data) => {
-                      setListeningStage(stage ?? null);
-                      if (data?.kbAudioUrl) {
-                        setListeningAudioUrl(data.kbAudioUrl);
-                      }
-                    }}
-                    listeningAvatarSeed={listeningAvatarSeed}
-                  />
+                  {mode === 'listening-mode' ? (
+                    <ListeningMode3D
+                      isAvatar3D={isAvatar3D}
+                      avatarVideoSrc={avatarVideoSrc}
+                      avatarSeed={listeningAvatarSeed}
+                      onStageChange={handleListeningStageChange}
+                      onAudioStateChange={handleListeningAudioStateChange}
+                      onAudioController={handleListeningAudioController}
+                      onVideoUrlChange={handleListeningVideoUrl}
+                      onSessionTimeRemaining={setSessionTimeRemaining}
+                    />
+                  ) : (
+                    <ChatWindow
+                      onShowFeedback={handleShowFeedback}
+                      onTopicImage={handleTopicImage}
+                      onContentPayload={handleContentPayload}
+                      onAudioPlaybackChange={handleAudioPlaybackChange}
+                      onNarrationComplete={handleNarrationComplete}
+                      readingHeroActive={shouldShowReadingHero}
+                      isAvatar3D={isAvatar3D}
+                      avatarVideoSrc={avatarVideoSrc}
+                      chatLocked={shouldLockChat}
+                      onContentAudioComplete={handleContentAudioComplete}
+                      onSessionTimeRemaining={setSessionTimeRemaining}
+                      listeningAvatarSeed={listeningAvatarSeed}
+                    />
+                  )}
                 </div>
                 <div
                   className={`flex flex-col gap-3 w-full ${shouldShowListeningSidebar ? 'min-[768px]:w-[28%]' : 'min-[768px]:w-1/3'
@@ -484,7 +501,7 @@ const Chat: React.FC = () => {
                           mode === 'roleplay-mode'
                             ? 'relative left-1/2 -translate-x-1/2 w-[150%] max-w-none h-auto object-contain object-center'
                             : mode === 'reading-mode'
-                              ? 'w-full h-auto object-contain'
+                              ? 'relative left-1/2 -translate-x-1/2 w-[160%] max-w-none h-auto object-contain object-center'
                               : undefined
                         }
                       />

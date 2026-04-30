@@ -57,6 +57,7 @@ const AvatarStage: React.FC<AvatarStageProps> = ({
             playsInline
             muted
             preload="auto"
+            disablePictureInPicture
             onEnded={onEnded}
             className={`relative block -scale-x-100 ${videoSizingClass}`}
             style={{ objectPosition: 'center' }}
