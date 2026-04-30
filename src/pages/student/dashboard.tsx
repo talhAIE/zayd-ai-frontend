@@ -513,7 +513,7 @@ export default function LanguageLearningDashboard() {
               </div>
             ) : data?.completedTopics &&
               Object.keys(data.completedTopics).length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">
                 {Object.entries(data.completedTopics).map(([topic, count]) => (
                   <div
                     key={topic}
