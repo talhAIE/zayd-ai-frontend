@@ -235,6 +235,8 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
   const prefetchedQuizRef = useRef(false);
   const lastListeningStageRequestRef = useRef<number>(0);
   const skipListeningCompletionStepRef = useRef(false);
+  const hasCachedQuizRef = useRef<boolean>(false);
+  const [isRestoreComplete, setIsRestoreComplete] = useState(false);
 
   // Callback refs to prevent effect re-triggering
   const onStageChangeRef = useRef(onStageChange);
@@ -279,6 +281,25 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
   const isSessionExpired = sessionLimitReached || sessionTimeRemaining === 0;
   const progressStorageKey =
     userId && topicId ? `listening3d-progress:${userId}:${topicId}` : null;
+
+  // Check for cached quiz progress on mount
+  useEffect(() => {
+    if (!progressStorageKey || hasCachedQuizRef.current) return;
+    
+    try {
+      const saved = localStorage.getItem(progressStorageKey);
+      logger.info(`[CACHE CHECK] key=${progressStorageKey}, hasData=${!!saved}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        logger.info(`[CACHE CHECK] data: stage=${parsed.listeningStage}, mcqListLen=${parsed.mcqList?.length}`);
+        hasCachedQuizRef.current = parsed.listeningStage === "quiz" && (parsed.mcqList?.length > 0 || parsed.mcqs?.length > 0);
+        logger.info(`[CACHE CHECK] hasCachedQuizRef = ${hasCachedQuizRef.current}`);
+      }
+    } catch (e) {
+      logger.error(`[CACHE CHECK] Error: ${e}`);
+      hasCachedQuizRef.current = false;
+    }
+  }, [progressStorageKey]);
 
   // Check if user is one of the unlimited session demo accounts
   const hasUnlimitedSessions = () => {
@@ -816,8 +837,13 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       setIsSocketConnected(true);
       toast.success("Connection established.");
 
-      logger.emitting("start_listening", { userId, topicId });
-      socket.emit("start_listening", { userId, topicId });
+      // Skip start_listening if we have cached quiz - we load from localStorage instead
+      if (hasCachedQuizRef.current) {
+        logger.info("Cached quiz found - skipping start_listening, loading from localStorage");
+      } else {
+        logger.emitting("start_listening", { userId, topicId });
+        socket.emit("start_listening", { userId, topicId });
+      }
 
       const sessionPayload = { userId };
       logger.emitting(ChatEvents.SESSION_STATUS, sessionPayload);
@@ -858,14 +884,28 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
         try {
           const savedState = JSON.parse(savedStateRaw);
           if (savedState.chatId && savedState.chatId !== newChatId) {
-            clearSavedProgress();
-            // Reset all refs for fresh start
-            listeningStageRef.current = null;
-            mcqListRef.current = [];
-            prefetchedQuizRef.current = false;
-            wantsQuizRef.current = false;
-            wantsHintsRef.current = false;
-            skipListeningCompletionStepRef.current = false;
+            // If we have cached quiz progress, update chatId but keep quiz state
+            if (savedState.listeningStage === "quiz" && savedState.mcqList?.length > 0) {
+              logger.info(`Updating cached chatId from ${savedState.chatId} to ${newChatId}`);
+              const updatedSnapshot = {
+                ...savedState,
+                chatId: newChatId,
+              };
+              if (progressStorageKey) {
+                localStorage.setItem(progressStorageKey, JSON.stringify(updatedSnapshot));
+              }
+              // Also update refs
+              chatIdRef.current = newChatId;
+            } else {
+              // Not in quiz - clear progress for fresh start
+              clearSavedProgress();
+              listeningStageRef.current = null;
+              mcqListRef.current = [];
+              prefetchedQuizRef.current = false;
+              wantsQuizRef.current = false;
+              wantsHintsRef.current = false;
+              skipListeningCompletionStepRef.current = false;
+            }
           }
         } catch {
           clearSavedProgress();
@@ -1119,17 +1159,12 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
   useEffect(() => {
     if (!progressStorageKey) return;
 
-    setListeningStage("initial");
-    setShowListeningHints(false);
-    setShowListeningCompletionCard(false);
-    setCurrentMcqIndex(0);
-    setSelectedAnswer(null);
-    setMcqAnswers({});
-    setMcqList([]);
-    setPendingMcqPayload(null);
-
     const savedStateRaw = localStorage.getItem(progressStorageKey);
-    if (!savedStateRaw) return;
+    if (!savedStateRaw) {
+      // No saved progress, just mark restore as complete
+      setIsRestoreComplete(true);
+      return;
+    }
 
     try {
       const savedState = JSON.parse(savedStateRaw) as Listening3DProgressSnapshot;
@@ -1138,6 +1173,8 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
         savedState.listeningStage === "quiz" && restoredMcqList.length === 0
           ? "initial"
           : savedState.listeningStage ?? "initial";
+
+      logger.info(`[RESTORE] Restoring: stage=${restoredStage}, mcqListLen=${restoredMcqList.length}`);
 
       setChatId(savedState.chatId ?? null);
       setListeningStage(restoredStage);
@@ -1168,13 +1205,18 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
         });
       }
     } catch (error) {
-      logger.error("Failed to restore listening progress snapshot", error);
+      logger.error("[RESTORE] Failed to restore listening progress snapshot", error);
       clearSavedProgress();
+    } finally {
+      setIsRestoreComplete(true);
     }
   }, [progressStorageKey, clearSavedProgress]);
 
   useEffect(() => {
-    if (!progressStorageKey || chatCompleted) return;
+    if (!progressStorageKey || chatCompleted || !isRestoreComplete) {
+      logger.info(`[SAVE] Skipping: storageKey=${!!progressStorageKey}, completed=${chatCompleted}, restoreDone=${isRestoreComplete}`);
+      return;
+    }
 
     const snapshot: Listening3DProgressSnapshot = {
       chatId,
@@ -1187,6 +1229,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       listeningData,
     };
 
+    logger.info(`SAVING progress: stage=${listeningStage}, mcqListLen=${mcqList.length}, chatId=${chatId?.slice(0,8)}`);
     localStorage.setItem(progressStorageKey, JSON.stringify(snapshot));
   }, [
     progressStorageKey,
@@ -1199,6 +1242,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
     mcqAnswers,
     mcqList,
     listeningData,
+    isRestoreComplete,
   ]);
 
   useEffect(() => {
