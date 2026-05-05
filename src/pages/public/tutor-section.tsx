@@ -83,7 +83,11 @@ export default function TutorSection() {
   const tutor = tutors[activeTutor];
 
   return (
-    <section id="tutors" className="py-12 sm:py-24 bg-white relative">
+    <section
+      id="tutors"
+      className="py-12 sm:py-24 bg-white relative"
+      dir={isAr ? "rtl" : "ltr"}
+    >
       <div className="max-w-7xl mx-auto px-4">
         {/* Header - Centered */}
         <div className="text-center mb-12 sm:mb-16">
@@ -217,7 +221,7 @@ export default function TutorSection() {
                     className="sm:w-[28px] sm:h-[28px]"
                   />
                 </div>
-                <div className="text-left">
+                <div className={isAr ? "text-right" : "text-left"}>
                   <h3 className="text-lg sm:text-[22px] font-extrabold text-gray-900 mb-1 sm:mb-2 leading-tight">
                     {isAr ? feature.arabicTitle : feature.title}
                   </h3>
