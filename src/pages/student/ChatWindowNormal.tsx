@@ -18,6 +18,7 @@ import {
   AlertTriangle,
   RotateCcw,
   Check,
+  Info,
 } from "lucide-react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -249,6 +250,72 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   onShowFeedback,
   onTopicImage,
 }) => {
+  const HintBubble = ({
+    title,
+    content,
+    icon: Icon,
+    timestamp,
+    onClick,
+    children,
+  }: {
+    title?: string;
+    content: React.ReactNode;
+    icon?: any;
+    timestamp: string;
+    onClick?: () => void;
+    children?: React.ReactNode;
+  }) => {
+    return (
+      <div
+        className="flex flex-col items-start p-2 px-3 gap-2 w-full max-w-[341px] bg-[#5FB8FB80] shadow-[0px_4px_4px_rgba(0,0,0,0.25)] rounded-[0px_16px_16px_16px] mt-2 relative overflow-hidden cursor-pointer hover:bg-[#A9D8FD] transition-colors"
+        style={{ opacity: 0.8 }}
+        onClick={onClick}
+      >
+        {title && Icon && (
+          <div className="flex flex-row items-center gap-[10px] h-6">
+            <Icon className="w-6 h-6 text-[#065FF0]" />
+            <span className="font-['Outfit'] font-medium text-base leading-5 flex items-center text-[#003DC2]">
+              {title}
+            </span>
+          </div>
+        )}
+        <div className="w-full font-['Outfit'] font-normal text-sm leading-[18px] flex items-center text-[#434343] self-stretch break-words">
+          {content}
+        </div>
+        {children}
+        <div className="flex flex-row justify-end items-center w-full h-[18px] self-stretch mt-1">
+          <span className="font-['Poppins'] font-normal text-[12px] leading-[18px] flex items-center text-right capitalize text-[#949494]">
+            {timestamp}
+          </span>
+        </div>
+      </div>
+    );
+  };
+
+  const getDisplayTime = () => {
+    const now = new Date();
+    let hours = now.getHours();
+    const minutes = now.getMinutes();
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    const strMinutes = minutes < 10 ? "0" + minutes : minutes;
+    const strHours = hours < 10 ? "0" + hours : hours;
+    return strHours + ":" + strMinutes + " " + ampm;
+  };
+
+  const formatAssessment = (assessments: any) => {
+    if (typeof assessments === "string") return assessments;
+    if (assessments && typeof assessments === "object") {
+      const scores = [];
+      if (assessments.accuracyScore !== undefined)
+        scores.push(`Accuracy: ${assessments.accuracyScore}%`);
+      if (assessments.fluencyScore !== undefined)
+        scores.push(`Fluency: ${assessments.fluencyScore}%`);
+      return scores.length > 0 ? scores.join(", ") : "No scores available";
+    }
+    return "Assessment available";
+  };
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [isRecording, setIsRecording] = useState(false);
@@ -1617,11 +1684,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     socketRef.current?.connect();
   };
 
-  const handleShowAssessment = (assessments: any) => {
-    logger.info("Showing assessment.", { assessments });
-    onShowFeedback({ type: "assessment", content: assessments });
-  };
-
   const handleLogout = () => {
     logger.info("Logging out user due to account block.");
     localStorage.removeItem("AiTutorUser");
@@ -1798,16 +1860,18 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                       setSelectedAnswer(index);
                       resetInactivityTimer();
                     }}
-                    className={`w-full justify-start p-4 h-auto transition-colors rounded-2xl ${selectedAnswer === index
-                      ? "bg-[#3EA4F9] text-white hover:bg-[#2F93F0] border-transparent"
-                      : "bg-white border-[#E1E7F0] text-[#2B3A67]"
-                      }`}
+                    className={`w-full justify-start p-4 h-auto transition-colors rounded-2xl ${
+                      selectedAnswer === index
+                        ? "bg-[#3EA4F9] text-white hover:bg-[#2F93F0] border-transparent"
+                        : "bg-white border-[#E1E7F0] text-[#2B3A67]"
+                    }`}
                   >
                     <div
-                      className={`w-5 h-5 mr-4 rounded-full border flex-shrink-0 ${selectedAnswer === index
-                        ? "bg-white border-white"
-                        : "border-[#C9D6E6]"
-                        }`}
+                      className={`w-5 h-5 mr-4 rounded-full border flex-shrink-0 ${
+                        selectedAnswer === index
+                          ? "bg-white border-white"
+                          : "border-[#C9D6E6]"
+                      }`}
                     />
                     <span>{option}</span>
                   </Button>
@@ -1820,10 +1884,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
       {listeningStage !== "quiz" && (
         <div
-          className={`flex flex-col max-w-[800px] mx-auto bg-gray-100 rounded-xl overflow-hidden shadow-2xl ${mode === "listening-mode"
-            ? "min-h-[49vh] max-h-[49vh]"
-            : "max-h-[86vh] min-h-[86vh] md:min-h-[82vh] md:max-h-[82vh]"
-            }`}
+          className={`flex flex-col max-w-[800px] mx-auto bg-gray-100 rounded-xl overflow-hidden shadow-2xl ${
+            mode === "listening-mode"
+              ? "min-h-[49vh] max-h-[49vh]"
+              : "max-h-[86vh] min-h-[86vh] md:min-h-[82vh] md:max-h-[82vh]"
+          }`}
         >
           {mode !== "listening-mode" && (
             <header className="flex justify-between items-center px-6 py-4 border-b bg-white">
@@ -1909,8 +1974,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               <div className="p-4 rounded-lg shadow-sm bg-white border border-gray-200">
                 <p
                   ref={contentRef}
-                  className={`text-gray-800 text-base leading-relaxed whitespace-pre-wrap transition-all duration-300 ${!isContentExpanded ? "line-clamp-3" : "line-clamp-none"
-                    }`}
+                  className={`text-gray-800 text-base leading-relaxed whitespace-pre-wrap transition-all duration-300 ${
+                    !isContentExpanded ? "line-clamp-3" : "line-clamp-none"
+                  }`}
                 >
                   {contentPayload.content
                     .split(/(\*\*.*?\*\*)/g)
@@ -1937,7 +2003,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                       }
                     >
                       {playingAudioId === "content-payload-audio" &&
-                        isCurrentlyPlaying ? (
+                      isCurrentlyPlaying ? (
                         <Pause className="h-5 w-5" />
                       ) : (
                         <Play className="h-5 w-5" />
@@ -1963,10 +2029,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             {messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`flex flex-col gap-1 ${msg.type === "sent"
-                  ? "self-end items-end"
-                  : "self-start items-start"
-                  }`}
+                className={`flex flex-col gap-1 ${
+                  msg.type === "sent"
+                    ? "self-end items-end"
+                    : "self-start items-start"
+                }`}
               >
                 {msg.loading ? (
                   <div className="flex items-center gap-2 bg-white p-3 rounded-xl shadow-sm">
@@ -1990,13 +2057,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                       <Play className="h-5 w-5" />
                     )}
                   </Button>
-                ) : (
-                  <div
-                    className={`p-3 rounded-xl max-w-md shadow-sm break-words ${msg.type === "sent"
-                      ? "bg-[#3EA4F9] text-white rounded-tr-none"
-                      : "bg-white text-gray-800 rounded-tl-none"
-                      }`}
-                  >
+                ) : msg.type === "sent" ? (
+                  <div className="p-3 rounded-xl max-w-md shadow-sm break-words bg-[#3EA4F9] text-white rounded-tr-none">
                     {msg.text && (
                       <p className="text-sm leading-relaxed whitespace-pre-wrap">
                         {msg.text.split(/(\*\*.*?\*\*)/g).map((part, i) =>
@@ -2010,53 +2072,70 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                         )}
                       </p>
                     )}
+                    {msg.hasAssessment && (
+                      <HintBubble
+                        title="Assessment"
+                        content={formatAssessment(msg.assessments)}
+                        icon={BarChart2}
+                        timestamp={getDisplayTime()}
+                        onClick={() => {
+                          onShowFeedback({
+                            type: "assessment",
+                            content: msg.assessments,
+                          });
+                          resetInactivityTimer();
+                        }}
+                      />
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    <HintBubble
+                      title="Hint"
+                      icon={Info}
+                      timestamp={getDisplayTime()}
+                      content={
+                        msg.text ? (
+                          <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                            {msg.text.split(/(\*\*.*?\*\*)/g).map((part, i) =>
+                              part.startsWith("**") && part.endsWith("**") ? (
+                                <span
+                                  key={i}
+                                  className="font-bold text-[#058BF4]"
+                                >
+                                  {part.slice(2, -2)}
+                                </span>
+                              ) : (
+                                part
+                              ),
+                            )}
+                          </p>
+                        ) : (
+                          ""
+                        )
+                      }
+                    />
 
-                    <div className="flex gap-2 items-center mt-2 flex-wrap">
-                      {msg.type === "received" && msg.audioUrl && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => toggleAudio(msg.id, msg.audioUrl)}
-                        >
-                          {playingAudioId === msg.id && isCurrentlyPlaying ? (
-                            <Pause className="h-5 w-5" />
-                          ) : (
-                            <Play className="h-5 w-5" />
-                          )}
-                        </Button>
-                      )}
-                      {msg.type === "received" && msg.hasFeedback && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            onShowFeedback({
-                              type: "feedback",
-                              content: msg.feedback,
-                            });
-                            resetInactivityTimer();
-                          }}
-                          className="flex items-center gap-1 text-primary text-xs p-1 h-auto"
-                        >
-                          <MessageCircle className="h-4 w-4" />
-                          View Feedback
-                        </Button>
-                      )}
-                      {msg.type === "sent" && msg.hasAssessment && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            handleShowAssessment(msg.assessments);
-                            resetInactivityTimer();
-                          }}
-                          className="flex items-center gap-1 bg-white text-primary text-xs p-1 h-auto rounded-md shadow-sm border"
-                        >
-                          <BarChart2 className="h-4 w-4" />
-                          View Assessment
-                        </Button>
-                      )}
-                    </div>
+
+                    {msg.hasFeedback && (
+                      <HintBubble
+                        title="Hint"
+                        content={
+                          typeof msg.feedback === "string"
+                            ? msg.feedback
+                            : "Feedback available"
+                        }
+                        icon={Info}
+                        timestamp={getDisplayTime()}
+                        onClick={() => {
+                          onShowFeedback({
+                            type: "feedback",
+                            content: msg.feedback,
+                          });
+                          resetInactivityTimer();
+                        }}
+                      />
+                    )}
                   </div>
                 )}
               </div>
@@ -2324,12 +2403,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                           Severity
                         </p>
                         <p
-                          className={`text-sm font-semibold ${contentFilterWarningData.severity === "High"
-                            ? "text-red-600"
-                            : contentFilterWarningData.severity === "Medium"
-                              ? "text-orange-600"
-                              : "text-yellow-600"
-                            }`}
+                          className={`text-sm font-semibold ${
+                            contentFilterWarningData.severity === "High"
+                              ? "text-red-600"
+                              : contentFilterWarningData.severity === "Medium"
+                                ? "text-orange-600"
+                                : "text-yellow-600"
+                          }`}
                         >
                           {contentFilterWarningData.severity}
                         </p>
