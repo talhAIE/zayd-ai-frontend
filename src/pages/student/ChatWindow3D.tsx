@@ -6,7 +6,6 @@ import {
   Mic,
   Send,
   ChevronLeft,
-  MessageCircle,
   Clock,
   BarChart2,
   Play,
@@ -2126,11 +2125,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     );
     setIsContentFilterWarningOpen(false);
     socketRef.current?.connect();
-  };
-
-  const handleShowAssessment = (assessments: any) => {
-    logger.info("Showing assessment.", { assessments });
-    onShowFeedback({ type: "assessment", content: assessments });
   };
 
   const handleLogout = () => {
