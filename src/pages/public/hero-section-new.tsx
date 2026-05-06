@@ -20,8 +20,8 @@ export default function HeroSection() {
       <div className="absolute inset-0 pointer-events-none hidden lg:block">
         {/* Left: dumbbell - Responsive positioning and sizing */}
         <motion.div
-          className={`absolute left-[2vw] ${isAr ? "2xl:left-[4vw] top-[30%] lg:top-[35%]" : "2xl:left-[6vw] top-[45%] lg:top-[50%]"} -translate-y-1/2 z-0`}
-          style={{ width: "clamp(140px, 18vw, 340px)" }}
+          className={`absolute left-[1vw] xl:left-[2vw] ${isAr ? "2xl:left-[4vw] top-[30%] lg:top-[35%]" : "2xl:left-[6vw] top-[45%] lg:top-[50%]"} -translate-y-1/2 z-0`}
+          style={{ width: "clamp(120px, 12vw, 340px)" }}
           initial={{ x: -40, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.9, ease: "easeOut", delay: 0.4 }}
@@ -36,8 +36,8 @@ export default function HeroSection() {
 
         {/* Right: bird - Responsive positioning and sizing */}
         <motion.div
-          className={`absolute right-[2vw] ${isAr ? "2xl:right-[4vw] top-[30%] lg:top-[35%]" : "2xl:left-[6vw] top-[45%] lg:top-[50%]"} -translate-y-1/2 z-0`}
-          style={{ width: "clamp(140px, 18vw, 340px)" }}
+          className={`absolute right-[1vw] xl:right-[2vw] ${isAr ? "2xl:right-[4vw] top-[30%] lg:top-[35%]" : "2xl:right-[6vw] top-[45%] lg:top-[50%]"} -translate-y-1/2 z-0`}
+          style={{ width: "clamp(120px, 12vw, 340px)" }}
           initial={{ x: 40, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.9, ease: "easeOut", delay: 0.4 }}
@@ -86,9 +86,9 @@ export default function HeroSection() {
             <LanguageTabSwitcher />
           </motion.div>
 
-          {/* Headline — Font size adjusted for mobile */}
+          {/* Headline — Font size adjusted for mobile and tablets */}
           <motion.h1
-            className={`text-4xl sm:text-6xl lg:text-7xl xl:text-8xl font-extrabold text-gray-900 leading-[1.1] tracking-tight mb-5 px-4 sm:px-0 ${isAr ? "max-w-4xl" : ""}`}
+            className={`text-4xl sm:text-6xl lg:text-7xl xl:text-8xl font-extrabold text-gray-900 leading-[1.1] tracking-tight mb-5 px-4 lg:px-8 w-full mx-auto ${isAr ? "max-w-4xl lg:max-w-2xl xl:max-w-4xl 2xl:max-w-5xl" : "max-w-5xl xl:max-w-7xl"}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}

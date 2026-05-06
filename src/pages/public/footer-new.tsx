@@ -37,7 +37,7 @@ export default function Footer() {
         { label: isAr ? "معلومات عنا" : "About Us", href: "#" },
         { label: isAr ? "رؤية 2030" : "Vision 2030", href: "#" },
         { label: isAr ? "الوظائف" : "Careers", href: "#" },
-        { label: isAr ? "اتصل بنا" : "Contact", href: "#" },
+        { label: isAr ? "اتصل بنا" : "Contact", href: "/contact-us" },
         { label: isAr ? "المدونة" : "Blog", href: "#" },
       ],
     },
@@ -115,7 +115,7 @@ export default function Footer() {
                 <ul className="space-y-3 sm:space-y-4">
                   {column.links.map((link, lIdx) => (
                     <li key={lIdx}>
-                      {idx === 0 ? (
+                      {link.href !== "#" ? (
                         <a
                           href={link.href}
                           className="text-gray-500 text-sm sm:text-base font-medium hover:text-[#058BF4] transition-colors"

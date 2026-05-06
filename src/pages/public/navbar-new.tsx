@@ -11,7 +11,7 @@ const menuItems = [
   { name: { en: "Challenge", ar: "التحدي" }, href: "#challenge", isRoute: false },
   { name: { en: "Compliance", ar: "الامتثال" }, href: "#compliance", isRoute: false },
   { name: { en: "Join Now", ar: "انضم الآن" }, href: "#join-now", isRoute: false },
-  { name: { en: "Contact Us", ar: "اتصل بنا" }, href: "#contact-us", isRoute: false },
+  { name: { en: "Contact Us", ar: "اتصل بنا" }, href: "/contact-us", isRoute: true },
 ];
 
 export default function Navbar() {
@@ -113,8 +113,9 @@ export default function Navbar() {
         
         {/* Logo - Left aligned */}
         <div
-          className="w-24 sm:w-32 lg:w-40 h-8 sm:h-10 lg:h-14 flex items-center shrink-0"
+          className="w-24 sm:w-32 lg:w-40 h-8 sm:h-10 lg:h-14 flex items-center shrink-0 cursor-pointer"
           dir="ltr"
+          onClick={() => scrollToSection("#home")}
         >
           <img
             src={navLogoPng}
@@ -190,14 +191,6 @@ export default function Navbar() {
                 {isAr ? "تسجيل الدخول" : "Sign In"}
               </Button>
             </Link>
-            <Link to="/register">
-              <Button
-                className="rounded-full text-white hover:opacity-90 transition-opacity"
-                style={{ background: "linear-gradient(90deg, #76ABF8 0%, #058BF4 48.56%, #63B3F6 80%)" }}
-              >
-                {isAr ? "التسجيل" : "Signup"}
-              </Button>
-            </Link>
           </div>
 
           {/* Mobile/Tablet Controls (Toggle + Hamburger) */}
@@ -242,8 +235,9 @@ export default function Navbar() {
           {/* Mobile header with logo and close button */}
           <div className="flex justify-between items-center p-4 border-b">
             <div
-              className="w-24 h-8 sm:w-32 sm:h-10 flex items-center"
+              className="w-24 h-8 sm:w-32 sm:h-10 flex items-center cursor-pointer"
               dir="ltr"
+              onClick={() => scrollToSection("#home")}
             >
               <img
                 src={navLogoPng}
