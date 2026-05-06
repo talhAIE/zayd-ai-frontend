@@ -304,18 +304,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     return strHours + ":" + strMinutes + " " + ampm;
   };
 
-  const formatAssessment = (assessments: any) => {
-    if (typeof assessments === "string") return assessments;
-    if (assessments && typeof assessments === "object") {
-      const scores = [];
-      if (assessments.accuracyScore !== undefined)
-        scores.push(`Accuracy: ${assessments.accuracyScore}%`);
-      if (assessments.fluencyScore !== undefined)
-        scores.push(`Fluency: ${assessments.fluencyScore}%`);
-      return scores.length > 0 ? scores.join(", ") : "No scores available";
-    }
-    return "Assessment available";
-  };
+
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [isRecording, setIsRecording] = useState(false);
@@ -2063,7 +2052,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                       <p className="text-sm leading-relaxed whitespace-pre-wrap">
                         {msg.text.split(/(\*\*.*?\*\*)/g).map((part, i) =>
                           part.startsWith("**") && part.endsWith("**") ? (
-                            <span key={i} className="font-bold text-[#058BF4]">
+                            <span key={i} className="font-bold text-white">
                               {part.slice(2, -2)}
                             </span>
                           ) : (
@@ -2073,11 +2062,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                       </p>
                     )}
                     {msg.hasAssessment && (
-                      <HintBubble
-                        title="Assessment"
-                        content={formatAssessment(msg.assessments)}
-                        icon={BarChart2}
-                        timestamp={getDisplayTime()}
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => {
                           onShowFeedback({
                             type: "assessment",
@@ -2085,17 +2072,45 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                           });
                           resetInactivityTimer();
                         }}
-                      />
+                        className="flex items-center gap-1 bg-white text-primary text-xs p-1 h-auto rounded-md shadow-sm border mt-2"
+                      >
+                        <BarChart2 className="h-4 w-4" />
+                        View Assessment
+                      </Button>
                     )}
                   </div>
                 ) : (
                   <div className="flex flex-col gap-2">
-                    <HintBubble
-                      title="Hint"
-                      icon={Info}
-                      timestamp={getDisplayTime()}
-                      content={
-                        msg.text ? (
+                    {mode === "listening-mode" &&
+                    listeningStage === "question_text" ? (
+                      <HintBubble
+                        title="Hint"
+                        icon={Info}
+                        timestamp={getDisplayTime()}
+                        content={
+                          msg.text ? (
+                            <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                              {msg.text.split(/(\*\*.*?\*\*)/g).map((part, i) =>
+                                part.startsWith("**") && part.endsWith("**") ? (
+                                  <span
+                                    key={i}
+                                    className="font-bold text-[#058BF4]"
+                                  >
+                                    {part.slice(2, -2)}
+                                  </span>
+                                ) : (
+                                  part
+                                ),
+                              )}
+                            </p>
+                          ) : (
+                            ""
+                          )
+                        }
+                      />
+                    ) : (
+                      <div className="p-3 rounded-xl max-w-md shadow-sm break-words bg-white text-gray-800 rounded-tl-none">
+                        {msg.text && (
                           <p className="text-sm leading-relaxed whitespace-pre-wrap">
                             {msg.text.split(/(\*\*.*?\*\*)/g).map((part, i) =>
                               part.startsWith("**") && part.endsWith("**") ? (
@@ -2110,31 +2125,42 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                               ),
                             )}
                           </p>
-                        ) : (
-                          ""
-                        )
-                      }
-                    />
+                        )}
 
-
-                    {msg.hasFeedback && (
-                      <HintBubble
-                        title="Hint"
-                        content={
-                          typeof msg.feedback === "string"
-                            ? msg.feedback
-                            : "Feedback available"
-                        }
-                        icon={Info}
-                        timestamp={getDisplayTime()}
-                        onClick={() => {
-                          onShowFeedback({
-                            type: "feedback",
-                            content: msg.feedback,
-                          });
-                          resetInactivityTimer();
-                        }}
-                      />
+                        <div className="flex gap-2 items-center mt-2 flex-wrap">
+                          {msg.audioUrl && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => toggleAudio(msg.id, msg.audioUrl)}
+                            >
+                              {playingAudioId === msg.id &&
+                              isCurrentlyPlaying ? (
+                                <Pause className="h-5 w-5" />
+                              ) : (
+                                <Play className="h-5 w-5" />
+                              )}
+                            </Button>
+                          )}
+                          {msg.hasFeedback && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                onShowFeedback({
+                                  type: "feedback",
+                                  content: msg.feedback,
+                                });
+                                resetInactivityTimer();
+                              }}
+                              className="flex items-center gap-1 text-primary text-xs p-1 h-auto"
+                            >
+                              <MessageCircle className="h-4 w-4" />
+                              View Feedback
+                            </Button>
+                          )}
+                        </div>
+                      </div>
                     )}
                   </div>
                 )}
