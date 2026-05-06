@@ -2,22 +2,25 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import navLogoPng from "@/assets/images/landingpage/zayd-logo.png";
+import { useLanguage } from "@/components/language-provider";
 
 const menuItems = [
-  { name: "Home", href: "#home", isRoute: false },
-  { name: "Features", href: "#features", isRoute: false },
-  { name: "Tutors", href: "#tutors", isRoute: false },
-  { name: "Challenge", href: "#challenge", isRoute: false },
-  { name: "Compliance", href: "#compliance", isRoute: false },
-  { name: "Join Now", href: "#join-now", isRoute: false },
-  { name: "Contact Us", href: "/contact-us", isRoute: true },
+  { name: { en: "Home", ar: "الرئيسية" }, href: "#home", isRoute: false },
+  { name: { en: "Features", ar: "الميزات" }, href: "#features", isRoute: false },
+  { name: { en: "Tutors", ar: "المدرسون" }, href: "#tutors", isRoute: false },
+  { name: { en: "Challenge", ar: "التحدي" }, href: "#challenge", isRoute: false },
+  { name: { en: "Compliance", ar: "الامتثال" }, href: "#compliance", isRoute: false },
+  { name: { en: "Join Now", ar: "انضم الآن" }, href: "#join-now", isRoute: false },
+  { name: { en: "Contact Us", ar: "اتصل بنا" }, href: "#contact-us", isRoute: false },
 ];
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
+  const { language, setLanguage } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
+  const isAr = language === "ar";
 
   const isMainPath = location.pathname === "/" || location.pathname === "/chinese";
 
@@ -105,8 +108,8 @@ export default function Navbar() {
   }, [isMainPath]);
 
   return (
-    <nav className="w-full h-16 sm:h-20 shadow-sm sticky top-0 bg-white z-[9999] flex items-center">
-      <div className="flex items-center justify-between w-full px-4 sm:px-6">
+    <nav className={`w-full h-16 sm:h-20 shadow-sm sticky top-0 bg-white z-[9999] flex items-center ${isAr ? 'font-almarai' : ''}`} dir={isAr ? "rtl" : "ltr"}>
+      <div className="flex items-center justify-between w-full px-4 sm:px-6 relative">
         
         {/* Logo - Left aligned */}
         <div
@@ -120,6 +123,16 @@ export default function Navbar() {
           />
         </div>
 
+        {/* Mobile/Tablet language toggle centered between logo and menu */}
+        <div className="lg:hidden absolute left-1/2 -translate-x-1/2">
+          <button
+            onClick={() => setLanguage(language === "ar" ? "en" : "ar")}
+            className="text-sm text-gray-700 hover:text-[#058BF4] transition-colors px-2 py-1"
+          >
+            العربية | English
+          </button>
+        </div>
+
         {/* Desktop Menu - Responsive spacing */}
         <ul className="hidden lg:flex items-center gap-1 xl:gap-4 bg-[#E1EEFF] px-4 xl:px-6 py-2 rounded-full text-gray-700 font-medium text-sm xl:text-base">
           {menuItems.map((item) => {
@@ -128,16 +141,18 @@ export default function Navbar() {
               ? location.pathname === item.href
               : isMainPath && activeSection === sectionId;
             
+            const itemName = isAr ? item.name.ar : item.name.en;
+
             if (item.isRoute) {
               return (
-                <li key={item.name}>
+                <li key={itemName}>
                   <Link
                     to={item.href}
                     className={`cursor-pointer px-2 xl:px-3 py-1 rounded-full transition-colors block whitespace-nowrap ${
                       isActive ? "bg-[#058BF4] text-white" : "hover:text-blue-800"
                     }`}
                   >
-                    {item.name}
+                    {itemName}
                   </Link>
                 </li>
               );
@@ -145,13 +160,13 @@ export default function Navbar() {
             
             return (
               <li
-                key={item.name}
+                key={itemName}
                 className={`cursor-pointer px-2 xl:px-3 py-1 rounded-full transition-colors whitespace-nowrap ${
                   isActive ? "bg-[#058BF4] text-white" : "hover:text-blue-800"
                 }`}
                 onClick={() => scrollToSection(item.href, item.isRoute)}
               >
-                {item.name}
+                {itemName}
               </li>
             );
           })}
@@ -161,12 +176,18 @@ export default function Navbar() {
         <div className="flex items-center gap-2 sm:gap-4">
           {/* Desktop Auth Buttons */}
           <div className="hidden lg:flex gap-2 items-center">
+            <button
+              onClick={() => setLanguage(language === "ar" ? "en" : "ar")}
+              className="text-sm text-gray-700 hover:text-[#058BF4] transition-colors px-2 py-1"
+            >
+              العربية | English
+            </button>
             <Link to="/login">
               <Button
                 variant="outline"
                 className="rounded-full border-[#058BF4] text-[#058BF4] hover:text-[#058BF4]"
               >
-                Sign In
+                {isAr ? "تسجيل الدخول" : "Sign In"}
               </Button>
             </Link>
             <Link to="/register">
@@ -174,7 +195,7 @@ export default function Navbar() {
                 className="rounded-full text-white hover:opacity-90 transition-opacity"
                 style={{ background: "linear-gradient(90deg, #76ABF8 0%, #058BF4 48.56%, #63B3F6 80%)" }}
               >
-                Signup
+                {isAr ? "التسجيل" : "Signup"}
               </Button>
             </Link>
           </div>
@@ -247,10 +268,12 @@ export default function Navbar() {
                 ? location.pathname === item.href
                 : isMainPath && activeSection === sectionId;
               
+              const itemName = isAr ? item.name.ar : item.name.en;
+
               if (item.isRoute) {
                 return (
                   <Link
-                    key={item.name}
+                    key={itemName}
                     to={item.href}
                     className={`text-xl font-medium transition-all duration-300 ${
                       isActive
@@ -268,14 +291,14 @@ export default function Navbar() {
                     }}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    {item.name}
+                    {itemName}
                   </Link>
                 );
               }
               
               return (
                 <button
-                  key={item.name}
+                  key={itemName}
                   className={`text-xl font-medium transition-all duration-300 ${
                     isActive
                       ? "text-[#058BF4]"
@@ -292,7 +315,7 @@ export default function Navbar() {
                   }}
                   onClick={() => scrollToSection(item.href, item.isRoute)}
                 >
-                  {item.name}
+                  {itemName}
                 </button>
               );
             })}
@@ -309,13 +332,22 @@ export default function Navbar() {
               transitionDelay: isMobileMenuOpen ? "400ms" : "0ms",
             }}
           >
+            <button
+              onClick={() => {
+                setLanguage(language === "ar" ? "en" : "ar");
+                setIsMobileMenuOpen(false);
+              }}
+              className="text-sm text-gray-700 hover:text-[#058BF4] transition-colors px-2 py-1 text-center"
+            >
+              العربية | English
+            </button>
             <Link to="/login">
               <Button
                 variant="outline"
                 className="rounded-full border-[#058BF4] text-[#058BF4] hover:text-[#058BF4] w-full"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Sign In
+                {isAr ? "تسجيل الدخول" : "Sign In"}
               </Button>
             </Link>
             <Link to="/register">
@@ -324,7 +356,7 @@ export default function Navbar() {
                 style={{ background: "linear-gradient(90deg, #76ABF8 0%, #058BF4 48.56%, #63B3F6 80%)" }}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Signup
+                {isAr ? "التسجيل" : "Signup"}
               </Button>
             </Link>
           </div>

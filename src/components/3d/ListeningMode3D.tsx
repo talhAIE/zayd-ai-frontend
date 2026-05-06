@@ -71,6 +71,17 @@ export interface ListeningAudioController {
   restart: () => void;
 }
 
+interface Listening3DProgressSnapshot {
+  chatId: string | null;
+  listeningStage: string | null;
+  showListeningHints: boolean;
+  showListeningCompletionCard: boolean;
+  currentMcqIndex: number;
+  mcqAnswers: { [key: string]: number };
+  mcqList: McqItem[];
+  listeningData: ListeningData | null;
+}
+
 // --- Logger ---
 const logger = {
   log: (message: string, ...optionalParams: any[]) => {
@@ -212,6 +223,8 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
   const sessionTimerBaseRef = useRef<{ remainingSeconds: number; receivedAt: number } | null>(null);
   const sessionTimerLastEmittedRef = useRef<number | null>(null);
   const listeningStageRef = useRef<string | null>(null);
+  const chatIdRef = useRef<string | null>(null);
+  const mcqListRef = useRef<McqItem[]>([]);
   const quizPrefetchTimerRef = useRef<NodeJS.Timeout | null>(null);
   const listeningLoadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const transcriptRef = useRef<HTMLParagraphElement>(null);
@@ -222,6 +235,8 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
   const prefetchedQuizRef = useRef(false);
   const lastListeningStageRequestRef = useRef<number>(0);
   const skipListeningCompletionStepRef = useRef(false);
+  const hasCachedQuizRef = useRef<boolean>(false);
+  const [isRestoreComplete, setIsRestoreComplete] = useState(false);
 
   // Callback refs to prevent effect re-triggering
   const onStageChangeRef = useRef(onStageChange);
@@ -264,6 +279,27 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
   const SOCKET_URL = import.meta.env.VITE_API_BASE_URL;
 
   const isSessionExpired = sessionLimitReached || sessionTimeRemaining === 0;
+  const progressStorageKey =
+    userId && topicId ? `listening3d-progress:${userId}:${topicId}` : null;
+
+  // Check for cached quiz progress on mount
+  useEffect(() => {
+    if (!progressStorageKey || hasCachedQuizRef.current) return;
+    
+    try {
+      const saved = localStorage.getItem(progressStorageKey);
+      logger.info(`[CACHE CHECK] key=${progressStorageKey}, hasData=${!!saved}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        logger.info(`[CACHE CHECK] data: stage=${parsed.listeningStage}, mcqListLen=${parsed.mcqList?.length}`);
+        hasCachedQuizRef.current = parsed.listeningStage === "quiz" && (parsed.mcqList?.length > 0 || parsed.mcqs?.length > 0);
+        logger.info(`[CACHE CHECK] hasCachedQuizRef = ${hasCachedQuizRef.current}`);
+      }
+    } catch (e) {
+      logger.error(`[CACHE CHECK] Error: ${e}`);
+      hasCachedQuizRef.current = false;
+    }
+  }, [progressStorageKey]);
 
   // Check if user is one of the unlimited session demo accounts
   const hasUnlimitedSessions = () => {
@@ -334,6 +370,11 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       .map((part) => part.trim().replace(/^[,-]\s*/, ""))
       .filter((part) => part.length > 0);
   };
+
+  const clearSavedProgress = useCallback(() => {
+    if (!progressStorageKey) return;
+    localStorage.removeItem(progressStorageKey);
+  }, [progressStorageKey]);
 
   // --- Audio Functions ---
   const clearAudioProgress = () => {
@@ -511,13 +552,13 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
 
   const requestNextListeningStage = useCallback(
     (delayMs = 0) => {
-      if (!socketRef.current || !chatId) return;
+      if (!socketRef.current || !chatIdRef.current) return;
       if (quizPrefetchTimerRef.current) {
         clearTimeout(quizPrefetchTimerRef.current);
       }
       const emitNextStage = () => {
         lastListeningStageRequestRef.current = Date.now();
-        socketRef.current?.emit("next_listening_stage", { chatId });
+        socketRef.current?.emit("next_listening_stage", { chatId: chatIdRef.current });
       };
       if (delayMs > 0) {
         quizPrefetchTimerRef.current = setTimeout(emitNextStage, delayMs);
@@ -525,7 +566,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       }
       emitNextStage();
     },
-    [chatId]
+    []
   );
 
   const openListeningQuiz = useCallback(
@@ -606,6 +647,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
         });
         setChatCompleted(true);
         setIsCompleteDialogOpen(true);
+        clearSavedProgress();
         onChatCompletedRef.current?.();
       }
     } else {
@@ -624,6 +666,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
     resetActivityTimer,
     pauseKbAudio,
     submitFinalAnswers,
+    clearSavedProgress,
   ]);
 
   const handleNextStage = useCallback(() => {
@@ -725,6 +768,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
   const handleResetChat = useCallback(() => {
     logger.info("Handling chat reset - disconnecting and reconnecting socket.");
     if (!socketRef.current) return toast.error("Socket not available.");
+    clearSavedProgress();
 
     socketRef.current.disconnect();
 
@@ -744,7 +788,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
         });
       }
     }, 500);
-  }, [topicId, userId]);
+  }, [topicId, userId, clearSavedProgress]);
 
   const handleStillThere = useCallback((isContinuing: boolean) => {
     setIsInactiveDialogOpen(false);
@@ -761,6 +805,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
   }, []);
 
   const handleLogout = useCallback(() => {
+    clearSavedProgress();
     localStorage.removeItem("AiTutorUser");
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
@@ -768,7 +813,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       socketRef.current.disconnect();
     }
     window.location.href = "/login";
-  }, []);
+  }, [clearSavedProgress]);
 
   // --- Socket Initialization ---
   useEffect(() => {
@@ -792,8 +837,13 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       setIsSocketConnected(true);
       toast.success("Connection established.");
 
-      logger.emitting("start_listening", { userId, topicId });
-      socket.emit("start_listening", { userId, topicId });
+      // Skip start_listening if we have cached quiz - we load from localStorage instead
+      if (hasCachedQuizRef.current) {
+        logger.info("Cached quiz found - skipping start_listening, loading from localStorage");
+      } else {
+        logger.emitting("start_listening", { userId, topicId });
+        socket.emit("start_listening", { userId, topicId });
+      }
 
       const sessionPayload = { userId };
       logger.emitting(ChatEvents.SESSION_STATUS, sessionPayload);
@@ -819,9 +869,50 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
         onVideoUrlChangeRef.current?.(undefined);
       }
 
-      const inQuiz = listeningStageRef.current === "quiz";
       const payloadMcqs = data.mcqs || data.questions || [];
       const backendStage = normalizeListeningStage(data?.stage, data);
+
+      // If we already have cached quiz data loaded from localStorage, skip socket processing
+      if (listeningStageRef.current === "quiz" && mcqListRef.current.length > 0) {
+        logger.info("Quiz already loaded from cache, skipping socket payload");
+        return;
+      }
+
+      // Check if this is a new session (different chatId from saved progress)
+      const savedStateRaw = progressStorageKey ? localStorage.getItem(progressStorageKey) : null;
+      if (savedStateRaw) {
+        try {
+          const savedState = JSON.parse(savedStateRaw);
+          if (savedState.chatId && savedState.chatId !== newChatId) {
+            // If we have cached quiz progress, update chatId but keep quiz state
+            if (savedState.listeningStage === "quiz" && savedState.mcqList?.length > 0) {
+              logger.info(`Updating cached chatId from ${savedState.chatId} to ${newChatId}`);
+              const updatedSnapshot = {
+                ...savedState,
+                chatId: newChatId,
+              };
+              if (progressStorageKey) {
+                localStorage.setItem(progressStorageKey, JSON.stringify(updatedSnapshot));
+              }
+              // Also update refs
+              chatIdRef.current = newChatId;
+            } else {
+              // Not in quiz - clear progress for fresh start
+              clearSavedProgress();
+              listeningStageRef.current = null;
+              mcqListRef.current = [];
+              prefetchedQuizRef.current = false;
+              wantsQuizRef.current = false;
+              wantsHintsRef.current = false;
+              skipListeningCompletionStepRef.current = false;
+            }
+          }
+        } catch {
+          clearSavedProgress();
+        }
+      }
+
+      const inQuiz = listeningStageRef.current === "quiz" && mcqListRef.current.length > 0;
 
       if (inQuiz && backendStage !== "quiz") {
         return;
@@ -877,9 +968,20 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       onStageChangeRef.current?.(currentStage, { stage: currentStage, kbAudioUrl: data.kbAudioUrl });
     });
 
+    socket.on(ChatEvents.MCQ_LIST, (payload: any) => {
+      logger.receiving(ChatEvents.MCQ_LIST, payload);
+      const quizItems = payload?.mcqs || payload?.questions || [];
+      if (!quizItems.length) return;
+      openListeningQuiz({
+        chatId: payload?.chatId ?? chatIdRef.current,
+        ...payload,
+      });
+    });
+
     socket.on("listening_completed", () => {
       setChatCompleted(true);
       setIsCompleteDialogOpen(true);
+      clearSavedProgress();
       toast.success("🎉 Listening session completed!");
       onChatCompletedRef.current?.();
     });
@@ -1031,12 +1133,135 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
         soundRef.current.unload();
       }
     };
-  }, [userId, topicId, navigate, resetActivityTimer, requestNextListeningStage, openListeningQuiz]);
+  }, [
+    userId,
+    topicId,
+    navigate,
+    resetActivityTimer,
+    requestNextListeningStage,
+    openListeningQuiz,
+    clearSavedProgress,
+  ]);
 
   // --- Effects ---
   useEffect(() => {
     listeningStageRef.current = listeningStage;
   }, [listeningStage]);
+
+  useEffect(() => {
+    chatIdRef.current = chatId;
+  }, [chatId]);
+
+  useEffect(() => {
+    mcqListRef.current = mcqList;
+  }, [mcqList]);
+
+  // Trigger video URL callback when listeningData changes (for sidebar avatar)
+  useEffect(() => {
+    if (listeningData?.narrationVideoUrl) {
+      logger.info(`[VIDEO] URL changed: ${listeningData.narrationVideoUrl}`);
+      onVideoUrlChangeRef.current?.(listeningData.narrationVideoUrl);
+    }
+  }, [listeningData?.narrationVideoUrl]);
+
+  useEffect(() => {
+    if (!progressStorageKey) return;
+
+    const savedStateRaw = localStorage.getItem(progressStorageKey);
+    if (!savedStateRaw) {
+      // No saved progress, just mark restore as complete
+      setIsRestoreComplete(true);
+      return;
+    }
+
+    try {
+      const savedState = JSON.parse(savedStateRaw) as Listening3DProgressSnapshot;
+      const restoredMcqList = savedState.mcqList ?? [];
+      const restoredStage =
+        savedState.listeningStage === "quiz" && restoredMcqList.length === 0
+          ? "initial"
+          : savedState.listeningStage ?? "initial";
+
+      logger.info(`[RESTORE] Restoring: stage=${restoredStage}, mcqListLen=${restoredMcqList.length}`);
+
+      setChatId(savedState.chatId ?? null);
+      setListeningStage(restoredStage);
+      logger.info(`[RESTORE] Calling onStageChangeRef with stage: ${restoredStage}, ref exists: ${!!onStageChangeRef.current}`);
+      onStageChangeRef.current?.(restoredStage);
+      setShowListeningHints(Boolean(savedState.showListeningHints));
+      setShowListeningCompletionCard(Boolean(savedState.showListeningCompletionCard));
+      setCurrentMcqIndex(Math.max(0, savedState.currentMcqIndex ?? 0));
+      setMcqAnswers(savedState.mcqAnswers ?? {});
+      setMcqList(restoredMcqList);
+      setListeningData(savedState.listeningData ?? null);
+
+      // Trigger video URL callback for sidebar avatar
+      if (savedState.listeningData?.narrationVideoUrl) {
+        logger.info(`[RESTORE] Triggering video URL: ${savedState.listeningData.narrationVideoUrl}`);
+        onVideoUrlChangeRef.current?.(savedState.listeningData.narrationVideoUrl);
+      } else {
+        logger.info(`[RESTORE] No video URL in saved state: ${JSON.stringify(savedState.listeningData)}`);
+      }
+
+      // Sync refs immediately so socket handlers see correct state
+      listeningStageRef.current = restoredStage;
+      chatIdRef.current = savedState.chatId ?? null;
+      mcqListRef.current = restoredMcqList;
+      hasListeningStartedRef.current = true;
+
+      if (restoredStage === "quiz" && restoredMcqList.length > 0) {
+        // Already have quiz data, mark as prefetched
+        prefetchedQuizRef.current = true;
+        wantsQuizRef.current = false;
+      }
+
+      if (restoredMcqList.length > 0) {
+        setPendingMcqPayload({
+          chatId: savedState.chatId,
+          mcqs: restoredMcqList,
+          questions: restoredMcqList,
+        });
+      }
+    } catch (error) {
+      logger.error("[RESTORE] Failed to restore listening progress snapshot", error);
+      clearSavedProgress();
+    } finally {
+      setIsRestoreComplete(true);
+    }
+  }, [progressStorageKey, clearSavedProgress]);
+
+  useEffect(() => {
+    if (!progressStorageKey || chatCompleted || !isRestoreComplete) {
+      logger.info(`[SAVE] Skipping: storageKey=${!!progressStorageKey}, completed=${chatCompleted}, restoreDone=${isRestoreComplete}`);
+      return;
+    }
+
+    const snapshot: Listening3DProgressSnapshot = {
+      chatId,
+      listeningStage,
+      showListeningHints,
+      showListeningCompletionCard,
+      currentMcqIndex,
+      mcqAnswers,
+      mcqList,
+      listeningData,
+    };
+
+    logger.info(`SAVING progress: stage=${listeningStage}, mcqListLen=${mcqList.length}, chatId=${chatId?.slice(0,8)}`);
+    localStorage.setItem(progressStorageKey, JSON.stringify(snapshot));
+  }, [
+    progressStorageKey,
+    chatCompleted,
+    chatId,
+    listeningStage,
+    showListeningHints,
+    showListeningCompletionCard,
+    currentMcqIndex,
+    mcqAnswers,
+    mcqList,
+    listeningData,
+    isRestoreComplete,
+  ]);
 
   useEffect(() => {
     if (listeningStage === "question_text") {
@@ -1155,7 +1380,9 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:justify-center">
-            <Button onClick={() => setShowReplayPopup(false)}>OK</Button>
+            <Button 
+            className="bg-[#5EA9FF] hover:bg-[#4E98F0] text-white"
+            onClick={() => setShowReplayPopup(false)}>OK</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1176,7 +1403,9 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
             <Button variant="outline" onClick={() => navigate(-1)}>
               End Session
             </Button>
-            <Button onClick={handleResetChat}>Reset Chat</Button>
+            <Button
+            className="bg-[#5EA9FF] hover:bg-[#4E98F0] text-white"
+            onClick={handleResetChat}>Reset Chat</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1415,6 +1644,9 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
                       setShowListeningCompletionCard(false);
                       setShowListeningHints(false);
                       skipListeningCompletionStepRef.current = true;
+                      wantsQuizRef.current = true;
+                      wantsHintsRef.current = false;
+                      prefetchedQuizRef.current = false;
                       handleNextStage();
                     }}
                   >
