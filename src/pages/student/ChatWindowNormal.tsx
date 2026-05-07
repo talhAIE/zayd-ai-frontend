@@ -1505,9 +1505,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     }
 
     if (soundRef.current) {
+      soundRef.current.off();
       soundRef.current.stop();
     }
 
+    setPlayingAudioId(id);
+    setIsCurrentlyPlaying(false);
     clearAudioProgress();
     onEndCalledRef.current = false;
 
@@ -1544,15 +1547,23 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       onpause: () => {
         if (progressIntervalRef.current)
           clearInterval(progressIntervalRef.current);
-        setIsCurrentlyPlaying(false);
+        setPlayingAudioId((prev) => {
+          if (prev === id) setIsCurrentlyPlaying(false);
+          return prev;
+        });
         if (id === "kb-audio" && mode === "listening-mode") {
           setIsContextCompleted(false);
           setHasStartedContextAudio(false);
         }
       },
       onstop: () => {
-        setPlayingAudioId(null);
-        setIsCurrentlyPlaying(false);
+        setPlayingAudioId((prev) => {
+          if (prev === id) {
+            setIsCurrentlyPlaying(false);
+            return null;
+          }
+          return prev;
+        });
         clearAudioProgress();
         if (id === "kb-audio" && mode === "listening-mode") {
           setHasStartedContextAudio(false);
@@ -1560,8 +1571,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         }
       },
       onend: () => {
-        setPlayingAudioId(null);
-        setIsCurrentlyPlaying(false);
+        setPlayingAudioId((prev) => {
+          if (prev === id) {
+            setIsCurrentlyPlaying(false);
+            return null;
+          }
+          return prev;
+        });
         clearAudioProgress();
         if (onEnd && !onEndCalledRef.current) {
           onEndCalledRef.current = true;
@@ -1571,11 +1587,28 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       onload: () => {
         setAudioDuration(sound.duration());
       },
+      onloaderror: (soundId: number, error: any) => {
+        logger.error("Howler load error:", { soundId, error });
+        toast.error("Could not load audio.");
+        setPlayingAudioId((prev) => {
+          if (prev === id) {
+            setIsCurrentlyPlaying(false);
+            return null;
+          }
+          return prev;
+        });
+        clearAudioProgress();
+      },
       onplayerror: (soundId: number, error: any) => {
         logger.error("Howler play error:", { soundId, error });
         toast.error("Could not play audio.");
-        setPlayingAudioId(null);
-        setIsCurrentlyPlaying(false);
+        setPlayingAudioId((prev) => {
+          if (prev === id) {
+            setIsCurrentlyPlaying(false);
+            return null;
+          }
+          return prev;
+        });
         clearAudioProgress();
       },
     });
@@ -1731,6 +1764,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               <AudioPlayer
                 audioSrc={listeningData?.kbAudioUrl || ""}
                 isPlaying={playingAudioId === "kb-audio" && isCurrentlyPlaying}
+                isLoading={playingAudioId === "kb-audio" && !isCurrentlyPlaying}
                 progress={playingAudioId === "kb-audio" ? audioProgress : 0}
                 duration={playingAudioId === "kb-audio" ? audioDuration : 0}
                 variant="gradient"
@@ -2034,14 +2068,18 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                       AI is thinking...
                     </span>
                   </div>
-                ) : msg.messageType === "audio" && msg.audioURL ? (
+                ) : msg.messageType === "audio" && (msg.audioURL || msg.audioUrl) ? (
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => toggleAudio(msg.id, msg.audioURL)}
+                    onClick={() => toggleAudio(msg.id, msg.audioURL || msg.audioUrl)}
                   >
-                    {playingAudioId === msg.id && isCurrentlyPlaying ? (
-                      <Pause className="h-5 w-5" />
+                    {playingAudioId === msg.id ? (
+                      isCurrentlyPlaying ? (
+                        <Pause className="h-5 w-5" />
+                      ) : (
+                        <LoaderPinwheel className="h-5 w-5 animate-spin text-primary" />
+                      )
                     ) : (
                       <Play className="h-5 w-5" />
                     )}
@@ -2128,15 +2166,20 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                         )}
 
                         <div className="flex gap-2 items-center mt-2 flex-wrap">
-                          {msg.audioUrl && (
+                          {(msg.audioUrl || msg.audioURL) && (
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => toggleAudio(msg.id, msg.audioUrl)}
+                              onClick={() =>
+                                toggleAudio(msg.id, msg.audioUrl || msg.audioURL)
+                              }
                             >
-                              {playingAudioId === msg.id &&
-                              isCurrentlyPlaying ? (
-                                <Pause className="h-5 w-5" />
+                              {playingAudioId === msg.id ? (
+                                isCurrentlyPlaying ? (
+                                  <Pause className="h-5 w-5" />
+                                ) : (
+                                  <LoaderPinwheel className="h-5 w-5 animate-spin text-primary" />
+                                )
                               ) : (
                                 <Play className="h-5 w-5" />
                               )}
