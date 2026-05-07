@@ -6,7 +6,6 @@ import {
   Mic,
   Send,
   ChevronLeft,
-  MessageCircle,
   Clock,
   BarChart2,
   Play,
