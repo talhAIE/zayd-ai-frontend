@@ -452,14 +452,6 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
     clearAudioProgress();
   }, [primaryAudioUrl]);
 
-  useEffect(() => {
-    if (!primaryAudioUrl) return;
-    if (pendingAudioPlayRef.current) {
-      pendingAudioPlayRef.current = false;
-      toggleAudio("kb-audio", primaryAudioUrl, handleKbAudioEnd);
-    }
-  }, [primaryAudioUrl, toggleAudio, handleKbAudioEnd]);
-
   const toggleAudio = useCallback(
     (id: string, audioUrl: string | undefined, onEnd?: () => void) => {
       if (!audioUrl) {
@@ -578,6 +570,14 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
     },
     [ensureAudioContext, playingAudioId, requestStartListening]
   );
+
+  useEffect(() => {
+    if (!primaryAudioUrl) return;
+    if (pendingAudioPlayRef.current) {
+      pendingAudioPlayRef.current = false;
+      toggleAudio("kb-audio", primaryAudioUrl, handleKbAudioEnd);
+    }
+  }, [primaryAudioUrl, toggleAudio, handleKbAudioEnd]);
 
   const playKbAudio = useCallback(() => {
     if (!primaryAudioUrl) {
