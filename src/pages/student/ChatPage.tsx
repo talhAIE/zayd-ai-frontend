@@ -1,14 +1,14 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import FeedbackSection from './FeedbackSection';
-import FeedbackSectionModal from './FeedbackSectionModel';
-import PhotoDisplay from './PhotoDisplay';
-import ChatWindow from './ChatWindow3D';
-import ChatWindowNormal from './ChatWindowNormal';
-import AudioPlayer3D from './AudioPlayer3D';
-import AvatarModeLayout from '@/components/3d/AvatarModeLayout';
-import AvatarHeaderBar from '@/components/3d/AvatarHeaderBar';
-import ListeningMode3D from '@/components/3d/ListeningMode3D';
+import React, { useState, useCallback, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import FeedbackSection from "./FeedbackSection";
+import FeedbackSectionModal from "./FeedbackSectionModel";
+import PhotoDisplay from "./PhotoDisplay";
+import ChatWindow from "./ChatWindow3D";
+import ChatWindowNormal from "./ChatWindowNormal";
+import AudioPlayer3D from "./AudioPlayer3D";
+import AvatarModeLayout from "@/components/3d/AvatarModeLayout";
+import AvatarHeaderBar from "@/components/3d/AvatarHeaderBar";
+import ListeningMode3D from "@/components/3d/ListeningMode3D";
 
 interface Assessment {
   accuracyScore: number;
@@ -24,9 +24,10 @@ interface Feedback {
 }
 
 const formatTime = (sec: number) =>
-  `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(
-    sec % 60,
-  ).padStart(2, '0')}`;
+  `${String(Math.floor(sec / 60)).padStart(2, "0")}:${String(sec % 60).padStart(
+    2,
+    "0",
+  )}`;
 
 const Chat: React.FC = () => {
   const [isFeedbackOpen, setIsFeedbackOpen] = useState<boolean>(true);
@@ -42,11 +43,13 @@ const Chat: React.FC = () => {
   );
   const [isNarrationComplete, setIsNarrationComplete] = useState(false);
   const [isContentAudioComplete, setIsContentAudioComplete] = useState(true);
-  const [sessionTimeRemaining, setSessionTimeRemaining] = useState<number | null>(
+  const [sessionTimeRemaining, setSessionTimeRemaining] = useState<
+    number | null
+  >(null);
+  const [listeningStage, setListeningStage] = useState<string | null>(null);
+  const [listeningAudioUrl, setListeningAudioUrl] = useState<string | null>(
     null,
   );
-  const [listeningStage, setListeningStage] = useState<string | null>(null);
-  const [listeningAudioUrl, setListeningAudioUrl] = useState<string | null>(null);
   const [listeningAudioState, setListeningAudioState] = useState({
     isPlaying: false,
     progress: 0,
@@ -62,22 +65,22 @@ const Chat: React.FC = () => {
   const lastListeningProgressRef = React.useRef(0);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const mode = searchParams.get('mode') || 'chat-mode';
-  const variant = searchParams.get('variant') || 'default';
-  const isAvatar3D = variant === '3d';
-  const isReading3D = isAvatar3D && mode === 'reading-mode';
+  const mode = searchParams.get("mode") || "chat-mode";
+  const variant = searchParams.get("variant") || "default";
+  const isAvatar3D = variant === "3d";
+  const isReading3D = isAvatar3D && mode === "reading-mode";
   const isHeroMode3D = isReading3D;
-  const loopVideoUrl = '/avatar/placeholder.mp4';
+  const loopVideoUrl = "/avatar/placeholder.mp4";
 
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const [isNarrowScreen, setIsNarrowScreen] = useState(false);
   const [isTabletOrBelow, setIsTabletOrBelow] = useState(false);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const smallQuery = window.matchMedia('(max-width: 640px)');
-    const narrowQuery = window.matchMedia('(max-width: 768px)');
-    const tabletQuery = window.matchMedia('(max-width: 1024px)');
+    if (typeof window === "undefined") return;
+    const smallQuery = window.matchMedia("(max-width: 640px)");
+    const narrowQuery = window.matchMedia("(max-width: 768px)");
+    const tabletQuery = window.matchMedia("(max-width: 1024px)");
 
     const update = () => {
       setIsSmallScreen(smallQuery.matches);
@@ -86,14 +89,14 @@ const Chat: React.FC = () => {
     };
 
     update();
-    smallQuery.addEventListener?.('change', update);
-    narrowQuery.addEventListener?.('change', update);
-    tabletQuery.addEventListener?.('change', update);
+    smallQuery.addEventListener?.("change", update);
+    narrowQuery.addEventListener?.("change", update);
+    tabletQuery.addEventListener?.("change", update);
 
     return () => {
-      smallQuery.removeEventListener?.('change', update);
-      narrowQuery.removeEventListener?.('change', update);
-      tabletQuery.removeEventListener?.('change', update);
+      smallQuery.removeEventListener?.("change", update);
+      narrowQuery.removeEventListener?.("change", update);
+      tabletQuery.removeEventListener?.("change", update);
     };
   }, []);
 
@@ -129,48 +132,62 @@ const Chat: React.FC = () => {
     }
   }, []);
 
-  const handleAudioPlaybackChange = useCallback(
-    (isPlaying: boolean) => {
-      setIsAvatarSyncPlaying(isPlaying);
-    },
-    [],
-  );
+  const handleAudioPlaybackChange = useCallback((isPlaying: boolean) => {
+    setIsAvatarSyncPlaying(isPlaying);
+  }, []);
 
   const handleNarrationComplete = useCallback(() => {
     setIsNarrationComplete(true);
   }, []);
 
-  const handleContentAudioComplete = useCallback((completed: boolean) => {
-    setIsContentAudioComplete(completed);
-    if (isReading3D) {
-      setIsNarrationComplete(completed);
-    }
-  }, [isReading3D]);
+  const handleContentAudioComplete = useCallback(
+    (completed: boolean) => {
+      setIsContentAudioComplete(completed);
+      if (isReading3D) {
+        setIsNarrationComplete(completed);
+      }
+    },
+    [isReading3D],
+  );
 
   // Stable callbacks for ListeningMode3D to prevent infinite re-render loop
-  const handleListeningStageChange = useCallback((stage: string | null, data?: { kbAudioUrl?: string }) => {
-    setListeningStage(stage ?? null);
-    if (data?.kbAudioUrl) {
-      setListeningAudioUrl(data.kbAudioUrl);
-    }
-  }, []);
-
-  const handleListeningAudioStateChange = useCallback((state: { isPlaying: boolean; progress: number; duration: number }) => {
-    setListeningAudioState((prev) => {
-      if (
-        prev.isPlaying === state.isPlaying &&
-        prev.progress === state.progress &&
-        prev.duration === state.duration
-      ) {
-        return prev;
+  const handleListeningStageChange = useCallback(
+    (stage: string | null, data?: { kbAudioUrl?: string }) => {
+      setListeningStage(stage ?? null);
+      if (data?.kbAudioUrl) {
+        setListeningAudioUrl(data.kbAudioUrl);
       }
-      return state;
-    });
-  }, []);
+    },
+    [],
+  );
 
-  const handleListeningAudioController = useCallback((controller: { toggle: () => void; play: () => void; pause: () => void; restart: () => void }) => {
-    listeningAudioControlRef.current = controller;
-  }, []);
+  const handleListeningAudioStateChange = useCallback(
+    (state: { isPlaying: boolean; progress: number; duration: number }) => {
+      setListeningAudioState((prev) => {
+        if (
+          prev.isPlaying === state.isPlaying &&
+          prev.progress === state.progress &&
+          prev.duration === state.duration
+        ) {
+          return prev;
+        }
+        return state;
+      });
+    },
+    [],
+  );
+
+  const handleListeningAudioController = useCallback(
+    (controller: {
+      toggle: () => void;
+      play: () => void;
+      pause: () => void;
+      restart: () => void;
+    }) => {
+      listeningAudioControlRef.current = controller;
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!isHeroMode3D) {
@@ -191,7 +208,7 @@ const Chat: React.FC = () => {
   }, [isReading3D]);
 
   useEffect(() => {
-    if (mode !== 'listening-mode') return;
+    if (mode !== "listening-mode") return;
     if (!listeningAudioState.isPlaying) {
       lastListeningProgressRef.current = listeningAudioState.progress;
       return;
@@ -208,8 +225,8 @@ const Chat: React.FC = () => {
   const avatarVideoSrc = isAvatar3D
     ? isReading3D
       ? readingHeroVideoSrc
-      : mode === 'listening-mode'
-        ? listeningVideoUrl ?? loopVideoUrl
+      : mode === "listening-mode"
+        ? (listeningVideoUrl ?? loopVideoUrl)
         : loopVideoUrl
     : undefined;
   const isDesktop = !isTabletOrBelow;
@@ -220,19 +237,19 @@ const Chat: React.FC = () => {
   const shouldShowSideAvatar =
     isAvatar3D && (!isHeroMode3D || !isDesktop || isAvatarIntroComplete);
   const shouldShowListeningSidebar =
-    isAvatar3D && mode === 'listening-mode' && listeningStage === 'quiz';
+    isAvatar3D && mode === "listening-mode" && listeningStage === "quiz";
   const modeTitle =
-    mode === 'photo-mode'
-      ? 'Photo Mode'
-      : mode === 'reading-mode'
-        ? 'Reading Mode'
-        : mode === 'roleplay-mode'
-          ? 'Roleplay Mode'
-          : mode === 'debate-mode'
-            ? 'Debate Mode'
-            : mode === 'curriculum-mode'
-              ? 'Curriculum Mode'
-              : 'Chat Mode';
+    mode === "photo-mode"
+      ? "Photo Mode"
+      : mode === "reading-mode"
+        ? "Reading Mode"
+        : mode === "roleplay-mode"
+          ? "Roleplay Mode"
+          : mode === "debate-mode"
+            ? "Debate Mode"
+            : mode === "curriculum-mode"
+              ? "Curriculum Mode"
+              : "Chat Mode";
 
   if (!isAvatar3D) {
     return (
@@ -247,14 +264,14 @@ const Chat: React.FC = () => {
                 />
               </div>
               <div className="flex flex-col gap-3 w-full md:w-1/3">
-                {!isSmallScreen && mode !== 'listening-mode' && (
+                {!isSmallScreen && mode !== "listening-mode" && (
                   <FeedbackSection
                     isOpen={isFeedbackOpen}
                     onClose={() => setIsFeedbackOpen(false)}
                     feedback={currentFeedback}
                   />
                 )}
-                {isSmallScreen && mode !== 'listening-mode' && (
+                {isSmallScreen && mode !== "listening-mode" && (
                   <FeedbackSectionModal
                     isOpen={isFeedbackMobile}
                     onClose={() => setIsFeedbackMobile(false)}
@@ -262,7 +279,7 @@ const Chat: React.FC = () => {
                   />
                 )}
                 <div className="hidden md:block">
-                  {mode === 'photo-mode' && (
+                  {mode === "photo-mode" && (
                     <PhotoDisplay imageUrl={topicImage} />
                   )}
                 </div>
@@ -278,22 +295,23 @@ const Chat: React.FC = () => {
     <div className="flex max-h-screen">
       <main className="flex-1 transition-all duration-300">
         <div
-          className={`mx-auto md:px-6 ${isAvatar3D && isDesktop ? "min-h-0 xl:h-[calc(100vh-9.5rem)]" : ""
-            }`}
+          className={`mx-auto md:px-6 ${
+            isAvatar3D && isDesktop ? "min-h-0 xl:h-[calc(100vh-9.5rem)]" : ""
+          }`}
         >
-          {isNarrowScreen && isAvatar3D && mode !== 'listening-mode' ? (
+          {isNarrowScreen && isAvatar3D && mode !== "listening-mode" ? (
             <div className="flex flex-col gap-3 h-[calc(100vh-120px)] min-h-0">
               <div className="flex-none shrink-0">
                 {isAvatar3D ? (
                   <div className="w-full rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white">
-                    {(mode === 'reading-mode' || mode === 'roleplay-mode') && (
+                    {(mode === "reading-mode" || mode === "roleplay-mode") && (
                       <AvatarHeaderBar
                         title={modeTitle}
                         onBack={() => navigate(-1)}
                         timerLabel={
                           sessionTimeRemaining !== null
                             ? formatTime(sessionTimeRemaining)
-                            : '...'
+                            : "..."
                         }
                       />
                     )}
@@ -302,15 +320,17 @@ const Chat: React.FC = () => {
                       syncPlaying={isAvatarSyncPlaying}
                       videoSrc={avatarVideoSrc}
                       loop={isReading3D ? false : undefined}
-                      onEnded={isReading3D ? handleNarrationComplete : undefined}
+                      onEnded={
+                        isReading3D ? handleNarrationComplete : undefined
+                      }
                       heightClassName={
-                        mode === 'roleplay-mode' || mode === 'reading-mode'
-                          ? 'h-auto'
+                        mode === "roleplay-mode" || mode === "reading-mode"
+                          ? "h-auto"
                           : undefined
                       }
                       videoClassName={
-                        mode === 'roleplay-mode' || mode === 'reading-mode'
-                          ? 'w-full h-auto object-contain'
+                        mode === "roleplay-mode" || mode === "reading-mode"
+                          ? "w-full h-auto object-contain"
                           : undefined
                       }
                     />
@@ -324,7 +344,7 @@ const Chat: React.FC = () => {
                 )}
               </div>
               <div className="flex-1 min-h-0">
-                {mode === 'listening-mode' ? (
+                {mode === "listening-mode" ? (
                   <ListeningMode3D
                     isAvatar3D={isAvatar3D}
                     avatarVideoSrc={avatarVideoSrc}
@@ -360,47 +380,58 @@ const Chat: React.FC = () => {
             </div>
           ) : (
             <div
-              className={`flex flex-col w-full gap-4 lg:gap-6 ${isAvatar3D && isDesktop ? "min-h-0 h-full" : ""
-                }`}
+              className={`flex flex-col w-full gap-4 lg:gap-6 ${
+                isAvatar3D && isDesktop ? "min-h-0 h-full" : ""
+              }`}
             >
               <div
-                className={`flex flex-col min-[768px]:flex-row justify-between w-full gap-4 lg:gap-6 ${isAvatar3D && isDesktop ? "min-h-0 h-full" : ""
-                  }`}
+                className={`flex flex-col min-[768px]:flex-row justify-between w-full gap-4 lg:gap-6 ${
+                  isAvatar3D && isDesktop ? "min-h-0 h-full" : ""
+                }`}
               >
                 <div
-                  className={`flex-1 min-[768px]:flex-grow-2 w-full min-[768px]:w-auto flex flex-col min-h-0 ${mode === 'roleplay-mode' ? 'order-1 min-[768px]:order-1' : 'order-2 min-[768px]:order-1'
-                    }`}
+                  className={`flex-1 min-[768px]:flex-grow-2 w-full min-[768px]:w-auto flex flex-col min-h-0 ${
+                    mode === "roleplay-mode"
+                      ? "order-1 min-[768px]:order-1"
+                      : "order-2 min-[768px]:order-1"
+                  }`}
                 >
-                  {!isNarrowScreen && isAvatar3D && mode === 'roleplay-mode' && (
-                    <div className="flex-none w-full max-w-[800px] mx-auto rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white mb-0">
-                      <AvatarHeaderBar
-                        title={modeTitle}
-                        onBack={() => navigate(-1)}
-                        timerLabel={
-                          sessionTimeRemaining !== null
-                            ? formatTime(sessionTimeRemaining)
-                            : '...'
-                        }
-                      />
-                    </div>
-                  )}
-                  {!isNarrowScreen && isDesktop && isAvatar3D && mode === 'reading-mode' && !shouldShowReadingHero && (
-                    <div className="flex-none w-full max-w-[800px] mx-auto rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white mb-0">
-                      <AvatarHeaderBar
-                        title={modeTitle}
-                        onBack={() => navigate(-1)}
-                        timerLabel={
-                          sessionTimeRemaining !== null
-                            ? formatTime(sessionTimeRemaining)
-                            : '...'
-                        }
-                      />
-                    </div>
-                  )}
+                  {!isNarrowScreen &&
+                    isAvatar3D &&
+                    mode === "roleplay-mode" && (
+                      <div className="flex-none w-full max-w-[800px] mx-auto rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white mb-0">
+                        <AvatarHeaderBar
+                          title={modeTitle}
+                          onBack={() => navigate(-1)}
+                          timerLabel={
+                            sessionTimeRemaining !== null
+                              ? formatTime(sessionTimeRemaining)
+                              : "..."
+                          }
+                        />
+                      </div>
+                    )}
+                  {!isNarrowScreen &&
+                    isDesktop &&
+                    isAvatar3D &&
+                    mode === "reading-mode" &&
+                    !shouldShowReadingHero && (
+                      <div className="flex-none w-full max-w-[800px] mx-auto rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white mb-0">
+                        <AvatarHeaderBar
+                          title={modeTitle}
+                          onBack={() => navigate(-1)}
+                          timerLabel={
+                            sessionTimeRemaining !== null
+                              ? formatTime(sessionTimeRemaining)
+                              : "..."
+                          }
+                        />
+                      </div>
+                    )}
                   {!isNarrowScreen &&
                     !isDesktop &&
                     isAvatar3D &&
-                    mode === 'reading-mode' && (
+                    mode === "reading-mode" && (
                       <div className="w-full rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white mb-0">
                         <AvatarHeaderBar
                           title={modeTitle}
@@ -408,17 +439,18 @@ const Chat: React.FC = () => {
                           timerLabel={
                             sessionTimeRemaining !== null
                               ? formatTime(sessionTimeRemaining)
-                              : '...'
+                              : "..."
                           }
                         />
                       </div>
                     )}
                   {isHeroMode3D && isDesktop && (
                     <div
-                      className={`flex-none transition-all duration-700 ease-in-out overflow-hidden ${shouldShowReadingHero
-                        ? 'opacity-100 translate-y-0 scale-100 max-h-[1000px] mb-4'
-                        : 'opacity-0 -translate-y-2 scale-95 max-h-0 mb-0 pointer-events-none'
-                        }`}
+                      className={`flex-none transition-all duration-700 ease-in-out overflow-hidden ${
+                        shouldShowReadingHero
+                          ? "opacity-100 translate-y-0 scale-100 max-h-[1000px] mb-4"
+                          : "opacity-0 -translate-y-2 scale-95 max-h-0 mb-0 pointer-events-none"
+                      }`}
                     >
                       <div className="w-full max-w-[800px] mx-auto rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white">
                         {isAvatar3D && (
@@ -428,7 +460,7 @@ const Chat: React.FC = () => {
                             timerLabel={
                               sessionTimeRemaining !== null
                                 ? formatTime(sessionTimeRemaining)
-                                : '...'
+                                : "..."
                             }
                           />
                         )}
@@ -443,7 +475,7 @@ const Chat: React.FC = () => {
                       </div>
                     </div>
                   )}
-                  {mode === 'listening-mode' ? (
+                  {mode === "listening-mode" ? (
                     <ListeningMode3D
                       isAvatar3D={isAvatar3D}
                       avatarVideoSrc={avatarVideoSrc}
@@ -472,19 +504,34 @@ const Chat: React.FC = () => {
                   )}
                 </div>
                 <div
-                  className={`flex flex-col gap-3 w-full ${shouldShowListeningSidebar ? 'min-[768px]:w-[28%]' : 'min-[768px]:w-1/3'
-                    } ${isAvatar3D && isDesktop ? 'min-h-0' : ''} ${mode === 'roleplay-mode' ? 'order-2 min-[768px]:order-2' : 'order-1 min-[768px]:order-2'
-                    }`}
+                  className={`flex flex-col gap-3 w-full ${
+                    mode === "listening-mode" &&
+                    !shouldShowListeningSidebar &&
+                    !isDesktop
+                      ? "hidden"
+                      : ""
+                  } ${
+                    shouldShowListeningSidebar
+                      ? "min-[768px]:w-[28%]"
+                      : "min-[768px]:w-1/3"
+                  } ${isAvatar3D && isDesktop ? "min-h-0" : ""} ${
+                    mode === "roleplay-mode"
+                      ? "order-2 min-[768px]:order-2"
+                      : "order-1 min-[768px]:order-2"
+                  }`}
                 >
-                  {isAvatar3D && mode !== 'listening-mode' && (
+                  {isAvatar3D && mode !== "listening-mode" && (
                     <div
-                      className={`transition-all duration-700 ease-in-out ${shouldShowSideAvatar
-                        ? `opacity-100 translate-y-0 scale-100 ${mode === 'roleplay-mode' || mode === 'reading-mode'
-                          ? 'max-h-none overflow-visible'
-                          : 'max-h-[420px] overflow-hidden'
-                        }`
-                        : 'opacity-0 translate-y-2 scale-95 max-h-0 pointer-events-none overflow-hidden'
-                        }`}
+                      className={`transition-all duration-700 ease-in-out ${
+                        shouldShowSideAvatar
+                          ? `opacity-100 translate-y-0 scale-100 ${
+                              mode === "roleplay-mode" ||
+                              mode === "reading-mode"
+                                ? "max-h-none overflow-visible"
+                                : "max-h-[420px] overflow-hidden"
+                            }`
+                          : "opacity-0 translate-y-2 scale-95 max-h-0 pointer-events-none overflow-hidden"
+                      }`}
                     >
                       <AvatarModeLayout
                         compact
@@ -493,15 +540,15 @@ const Chat: React.FC = () => {
                           isReading3D ? readingSideVideoSrc : avatarVideoSrc
                         }
                         heightClassName={
-                          mode === 'roleplay-mode' || mode === 'reading-mode'
-                            ? 'h-auto'
+                          mode === "roleplay-mode" || mode === "reading-mode"
+                            ? "h-auto"
                             : undefined
                         }
                         videoClassName={
-                          mode === 'roleplay-mode'
-                            ? 'relative left-1/2 -translate-x-1/2 w-[150%] max-w-none h-auto object-contain object-center'
-                            : mode === 'reading-mode'
-                              ? 'relative left-1/2 -translate-x-1/2 w-[160%] max-w-none h-auto object-contain object-center'
+                          mode === "roleplay-mode"
+                            ? "relative left-1/2 -translate-x-1/2 w-[150%] max-w-none h-auto object-contain object-center"
+                            : mode === "reading-mode"
+                              ? "relative left-1/2 -translate-x-1/2 w-[160%] max-w-none h-auto object-contain object-center"
                               : undefined
                         }
                       />
@@ -518,7 +565,7 @@ const Chat: React.FC = () => {
                         videoClassName="relative left-1/2 -translate-x-1/2 w-[160%] max-w-none h-auto object-contain object-center"
                       />
                       <AudioPlayer3D
-                        audioSrc={listeningAudioUrl || ''}
+                        audioSrc={listeningAudioUrl || ""}
                         isPlaying={listeningAudioState.isPlaying}
                         progress={listeningAudioState.progress}
                         duration={listeningAudioState.duration}
@@ -533,22 +580,24 @@ const Chat: React.FC = () => {
                       />
                     </div>
                   )}
-                  {!isSmallScreen && !(isAvatar3D && mode === 'listening-mode') && (
-                    <FeedbackSection
-                      isOpen={isFeedbackOpen}
-                      onClose={() => setIsFeedbackOpen(false)}
-                      feedback={currentFeedback}
-                    />
-                  )}
-                  {isSmallScreen && !(isAvatar3D && mode === 'listening-mode') && (
-                    <FeedbackSectionModal
-                      isOpen={isFeedbackMobile}
-                      onClose={() => setIsFeedbackMobile(false)}
-                      feedback={currentFeedback}
-                    />
-                  )}
+                  {!isSmallScreen &&
+                    !(isAvatar3D && mode === "listening-mode") && (
+                      <FeedbackSection
+                        isOpen={isFeedbackOpen}
+                        onClose={() => setIsFeedbackOpen(false)}
+                        feedback={currentFeedback}
+                      />
+                    )}
+                  {isSmallScreen &&
+                    !(isAvatar3D && mode === "listening-mode") && (
+                      <FeedbackSectionModal
+                        isOpen={isFeedbackMobile}
+                        onClose={() => setIsFeedbackMobile(false)}
+                        feedback={currentFeedback}
+                      />
+                    )}
                   <div className="hidden md:block">
-                    {mode === 'photo-mode' && (
+                    {mode === "photo-mode" && (
                       <PhotoDisplay imageUrl={topicImage} />
                     )}
                   </div>
