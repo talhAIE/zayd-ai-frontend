@@ -9,6 +9,7 @@ import {
   Info,
   BookOpen,
   ArrowRight,
+  Loader2,
   Menu,
   Bell,
   X,
@@ -177,6 +178,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
   const [hasPlayedIntroAudio, setHasPlayedIntroAudio] = useState(false);
   const [isContextCompleted, setIsContextCompleted] = useState(false);
   const [isListeningStepTransitioning, setIsListeningStepTransitioning] = useState(false);
+  const [isQuizLoading, setIsQuizLoading] = useState(false);
   const [, setIsListeningLoading] = useState(false);
 
   const [isTranscriptExpanded, setIsTranscriptExpanded] = useState(false);
@@ -597,6 +599,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       const quizItems = payload?.mcqs || payload?.questions || [];
       if (!quizItems.length) return;
       clearQuizRetry();
+      setIsQuizLoading(false);
       setListeningStage("quiz");
       setMcqList(quizItems);
       setCurrentMcqIndex(0);
@@ -750,6 +753,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
           requestNextListeningStage();
         }
         toast.info("Loading quiz...");
+        setIsQuizLoading(true);
         scheduleQuizRetry();
         return;
       }
@@ -762,6 +766,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       requestNextListeningStage();
       toast.info(listeningStage === "question_text" ? "Loading quiz..." : "Loading next part...");
       if (listeningStage === "question_text") {
+        setIsQuizLoading(true);
         scheduleQuizRetry();
       }
 
@@ -1014,6 +1019,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       setChatCompleted(true);
       setIsCompleteDialogOpen(true);
       clearSavedProgress();
+      setIsQuizLoading(false);
       toast.success("🎉 Listening session completed!");
       onChatCompletedRef.current?.();
     });
@@ -1311,6 +1317,13 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       setHasPlayedIntroAudio(false);
       setShowListeningCompletionCard(false);
       setShowListeningHints(false);
+      setIsQuizLoading(false);
+    }
+  }, [listeningStage]);
+
+  useEffect(() => {
+    if (listeningStage === "quiz") {
+      setIsQuizLoading(false);
     }
   }, [listeningStage]);
 
@@ -1506,7 +1519,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       )}
 
       {/* Main Content */}
-      {listeningStage !== "quiz" && (
+      {listeningStage !== "quiz" && !isQuizLoading && (
         <div
           className={`flex flex-col max-w-[800px] mx-auto bg-gray-100 rounded-xl overflow-hidden shadow-2xl h-[calc(100svh-9.5rem)] max-h-[calc(100svh-9.5rem)]`}
         >
@@ -1704,6 +1717,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
                         skipListeningCompletionStepRef.current = false;
                         setListeningStage("initial");
                         setShowListeningHints(true);
+                        setIsQuizLoading(false);
                         restartKbAudio();
                       }}
                       disabled={!listeningData?.kbAudioUrl}
@@ -1718,8 +1732,22 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
         </div>
       )}
 
+      {isQuizLoading && (
+        <div className="w-full max-w-[800px] mx-auto">
+          <div className="mt-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-lg">
+            <div className="flex items-center gap-3 text-[#2B3A67]">
+              <Loader2 className="h-5 w-5 animate-spin text-[#3EA4F9]" />
+              <div>
+                <p className="text-sm font-semibold">Loading quiz...</p>
+                <p className="text-xs text-gray-500">Getting your questions ready.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Next Button */}
-      {!showListeningCompletionCard && (
+      {!showListeningCompletionCard && !isQuizLoading && (
         <div className="w-full max-w-[800px] mx-auto">
           <Button
             className="w-full mt-4 rounded-full p-5 bg-[#5EA9FF] hover:bg-[#4E98F0] text-white flex items-center justify-center gap-2"
