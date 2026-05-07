@@ -231,6 +231,8 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
   const quizRetryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const listeningLoadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastAudioUrlRef = useRef<string | null>(null);
+  const pendingAudioPlayRef = useRef(false);
+  const lastStartListeningRef = useRef<number>(0);
   const transcriptRef = useRef<HTMLParagraphElement>(null);
   const clickLocked = useRef(false);
   const hasListeningStartedRef = useRef(false);
@@ -400,12 +402,25 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
     }
   }, []);
 
-  const handleKbAudioEnd = () => {
+  const handleKbAudioEnd = useCallback(() => {
     setIsContextCompleted(true);
     if (listeningStage === "initial") {
       setHasPlayedIntroAudio(true);
     }
-  };
+  }, [listeningStage]);
+
+  const requestStartListening = useCallback(
+    (reason?: string) => {
+      if (!socketRef.current || !userId || !topicId) return;
+      if (!socketRef.current.connected) return;
+      const now = Date.now();
+      if (now - lastStartListeningRef.current < 1000) return;
+      lastStartListeningRef.current = now;
+      logger.emitting("start_listening", { userId, topicId, reason });
+      socketRef.current.emit("start_listening", { userId, topicId });
+    },
+    [userId, topicId]
+  );
 
   const primaryAudioUrl = React.useMemo(() => {
     if (listeningData?.kbAudioUrl) return listeningData.kbAudioUrl;
@@ -437,10 +452,25 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
     clearAudioProgress();
   }, [primaryAudioUrl]);
 
+  useEffect(() => {
+    if (!primaryAudioUrl) return;
+    if (pendingAudioPlayRef.current) {
+      pendingAudioPlayRef.current = false;
+      toggleAudio("kb-audio", primaryAudioUrl, handleKbAudioEnd);
+    }
+  }, [primaryAudioUrl, toggleAudio, handleKbAudioEnd]);
+
   const toggleAudio = useCallback(
     (id: string, audioUrl: string | undefined, onEnd?: () => void) => {
       if (!audioUrl) {
+        pendingAudioPlayRef.current = true;
         toast.info("Audio is still loading. Please try again.");
+        if (socketRef.current) {
+          if (!socketRef.current.connected) {
+            socketRef.current.connect();
+          }
+          requestStartListening("audio_missing");
+        }
         return;
       }
 
@@ -541,11 +571,12 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
         },
       });
 
+      pendingAudioPlayRef.current = false;
       void ensureAudioContext();
       sound.play();
       soundRef.current = sound;
     },
-    [ensureAudioContext, playingAudioId]
+    [ensureAudioContext, playingAudioId, requestStartListening]
   );
 
   const playKbAudio = useCallback(() => {
@@ -923,11 +954,10 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       toast.success("Connection established.");
 
       // Skip start_listening if we have cached quiz - we load from localStorage instead
-      if (hasCachedQuizRef.current) {
+      if (hasCachedQuizRef.current && !pendingAudioPlayRef.current) {
         logger.info("Cached quiz found - skipping start_listening, loading from localStorage");
       } else {
-        logger.emitting("start_listening", { userId, topicId });
-        socket.emit("start_listening", { userId, topicId });
+        requestStartListening("socket_connect");
       }
 
       const sessionPayload = { userId };
@@ -1236,6 +1266,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
     clearSavedProgress,
     clearQuizRetry,
     scheduleQuizRetry,
+    requestStartListening,
   ]);
 
   // --- Effects ---
