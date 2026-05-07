@@ -226,6 +226,8 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
   const chatIdRef = useRef<string | null>(null);
   const mcqListRef = useRef<McqItem[]>([]);
   const quizPrefetchTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingNextStageRef = useRef<{ delayMs: number; requestedAt: number } | null>(null);
+  const quizRetryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const listeningLoadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const transcriptRef = useRef<HTMLParagraphElement>(null);
   const clickLocked = useRef(false);
@@ -552,7 +554,11 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
 
   const requestNextListeningStage = useCallback(
     (delayMs = 0) => {
-      if (!socketRef.current || !chatIdRef.current) return;
+      if (!socketRef.current) return;
+      if (!chatIdRef.current) {
+        pendingNextStageRef.current = { delayMs, requestedAt: Date.now() };
+        return;
+      }
       if (quizPrefetchTimerRef.current) {
         clearTimeout(quizPrefetchTimerRef.current);
       }
@@ -569,10 +575,28 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
     []
   );
 
+  const clearQuizRetry = useCallback(() => {
+    if (quizRetryTimeoutRef.current) {
+      clearTimeout(quizRetryTimeoutRef.current);
+      quizRetryTimeoutRef.current = null;
+    }
+  }, []);
+
+  const scheduleQuizRetry = useCallback(() => {
+    clearQuizRetry();
+    quizRetryTimeoutRef.current = setTimeout(() => {
+      if (wantsQuizRef.current && mcqListRef.current.length === 0) {
+        logger.info("Quiz not received yet, retrying next_listening_stage");
+        requestNextListeningStage();
+      }
+    }, 6000);
+  }, [clearQuizRetry, requestNextListeningStage]);
+
   const openListeningQuiz = useCallback(
     (payload: any) => {
       const quizItems = payload?.mcqs || payload?.questions || [];
       if (!quizItems.length) return;
+      clearQuizRetry();
       setListeningStage("quiz");
       setMcqList(quizItems);
       setCurrentMcqIndex(0);
@@ -589,7 +613,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       }));
       onStageChangeRef.current?.("quiz", { stage: "quiz", kbAudioUrl: payload?.kbAudioUrl });
     },
-    []
+    [clearQuizRetry]
   );
 
   const submitFinalAnswers = useCallback(
@@ -720,13 +744,13 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
         setPendingMcqPayload(null);
         return;
       } else {
-        setListeningStage("quiz");
         wantsQuizRef.current = true;
         if (!prefetchedQuizRef.current) {
           prefetchedQuizRef.current = true;
           requestNextListeningStage();
         }
         toast.info("Loading quiz...");
+        scheduleQuizRetry();
         return;
       }
     }
@@ -737,6 +761,9 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       logger.emitting("next_listening_stage", { chatId });
       requestNextListeningStage();
       toast.info(listeningStage === "question_text" ? "Loading quiz..." : "Loading next part...");
+      if (listeningStage === "question_text") {
+        scheduleQuizRetry();
+      }
 
       if (listeningLoadingTimeoutRef.current) {
         clearTimeout(listeningLoadingTimeoutRef.current);
@@ -758,6 +785,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
     pendingMcqPayload,
     requestNextListeningStage,
     resetActivityTimer,
+    scheduleQuizRetry,
     showListeningCompletionCard,
     showListeningHints,
     topicId,
@@ -870,6 +898,9 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       }
 
       const payloadMcqs = data.mcqs || data.questions || [];
+      if (payloadMcqs.length > 0) {
+        clearQuizRetry();
+      }
       const backendStage = normalizeListeningStage(data?.stage, data);
 
       // If we already have cached quiz data loaded from localStorage, skip socket processing
@@ -972,6 +1003,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       logger.receiving(ChatEvents.MCQ_LIST, payload);
       const quizItems = payload?.mcqs || payload?.questions || [];
       if (!quizItems.length) return;
+      clearQuizRetry();
       openListeningQuiz({
         chatId: payload?.chatId ?? chatIdRef.current,
         ...payload,
@@ -1128,6 +1160,9 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       if (listeningLoadingTimeoutRef.current) {
         clearTimeout(listeningLoadingTimeoutRef.current);
       }
+      if (quizRetryTimeoutRef.current) {
+        clearTimeout(quizRetryTimeoutRef.current);
+      }
       socket.disconnect();
       if (soundRef.current) {
         soundRef.current.unload();
@@ -1141,6 +1176,8 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
     requestNextListeningStage,
     openListeningQuiz,
     clearSavedProgress,
+    clearQuizRetry,
+    scheduleQuizRetry,
   ]);
 
   // --- Effects ---
@@ -1150,7 +1187,12 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
 
   useEffect(() => {
     chatIdRef.current = chatId;
-  }, [chatId]);
+    if (chatId && pendingNextStageRef.current) {
+      const { delayMs } = pendingNextStageRef.current;
+      pendingNextStageRef.current = null;
+      requestNextListeningStage(delayMs);
+    }
+  }, [chatId, requestNextListeningStage]);
 
   useEffect(() => {
     mcqListRef.current = mcqList;
