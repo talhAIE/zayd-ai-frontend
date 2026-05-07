@@ -10,7 +10,6 @@ interface AudioPlayerProps {
   duration: number;
   onTogglePlay: () => void;
   showTotal?: boolean;
-  disabled?: boolean;
 }
 
 const formatTime = (sec: number, placeholder = '00:00') => {
@@ -23,15 +22,12 @@ const formatTime = (sec: number, placeholder = '00:00') => {
 };
 
 const AudioPlayer: React.FC<AudioPlayerProps> = ({
-  audioSrc,
   isPlaying,
   progress,
   duration,
   onTogglePlay,
   showTotal = false,
-  disabled = false,
 }) => {
-  const isDisabled = disabled || !audioSrc;
   const waveformRef = React.useRef<HTMLDivElement>(null);
   const [barCount, setBarCount] = React.useState(0);
 
@@ -78,13 +74,8 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     <div className="flex items-center gap-3 w-full rounded-full bg-[#2B2B2B] px-3 py-2 shadow-lg">
       <Button
         size="icon"
-        className={`rounded-full shadow-md h-8 w-8 flex-shrink-0 ${
-          isDisabled
-            ? "bg-white/5 text-white/40 cursor-not-allowed"
-            : "bg-white/10 text-white hover:bg-white/20"
-        }`}
+        className="rounded-full bg-white/10 text-white hover:bg-white/20 shadow-md h-8 w-8 flex-shrink-0"
         onClick={onTogglePlay}
-        disabled={isDisabled}
       >
         {isPlaying ? (
           <Pause className="h-4 w-4" />
