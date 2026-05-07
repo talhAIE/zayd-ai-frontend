@@ -177,7 +177,6 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
   const [hasPlayedIntroAudio, setHasPlayedIntroAudio] = useState(false);
   const [isContextCompleted, setIsContextCompleted] = useState(false);
   const [isListeningStepTransitioning, setIsListeningStepTransitioning] = useState(false);
-  const [isQuizLoading, setIsQuizLoading] = useState(false);
   const [, setIsListeningLoading] = useState(false);
 
   const [isTranscriptExpanded, setIsTranscriptExpanded] = useState(false);
@@ -227,12 +226,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
   const chatIdRef = useRef<string | null>(null);
   const mcqListRef = useRef<McqItem[]>([]);
   const quizPrefetchTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const pendingNextStageRef = useRef<{ delayMs: number; requestedAt: number } | null>(null);
-  const quizRetryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const listeningLoadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const lastAudioUrlRef = useRef<string | null>(null);
-  const pendingAudioPlayRef = useRef(false);
-  const lastStartListeningRef = useRef<number>(0);
   const transcriptRef = useRef<HTMLParagraphElement>(null);
   const clickLocked = useRef(false);
   const hasListeningStartedRef = useRef(false);
@@ -392,79 +386,16 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
     setAudioDuration(0);
   };
 
-  const ensureAudioContext = useCallback(async () => {
-    if (Howler.ctx && Howler.ctx.state !== "running") {
-      try {
-        await Howler.ctx.resume();
-      } catch {
-        // ignore resume errors; play will surface issues if any
-      }
-    }
-  }, []);
-
-  const handleKbAudioEnd = useCallback(() => {
+  const handleKbAudioEnd = () => {
     setIsContextCompleted(true);
     if (listeningStage === "initial") {
       setHasPlayedIntroAudio(true);
     }
-  }, [listeningStage]);
-
-  const requestStartListening = useCallback(
-    (reason?: string) => {
-      if (!socketRef.current || !userId || !topicId) return;
-      if (!socketRef.current.connected) return;
-      const now = Date.now();
-      if (now - lastStartListeningRef.current < 1000) return;
-      lastStartListeningRef.current = now;
-      logger.emitting("start_listening", { userId, topicId, reason });
-      socketRef.current.emit("start_listening", { userId, topicId });
-    },
-    [userId, topicId]
-  );
-
-  const primaryAudioUrl = React.useMemo(() => {
-    if (listeningData?.kbAudioUrl) return listeningData.kbAudioUrl;
-    if (listeningStage === "initial") {
-      return listeningData?.narrationAudioUrl || null;
-    }
-    if (listeningStage === "question_text") {
-      return listeningData?.questionAudioUrl || null;
-    }
-    return (
-      listeningData?.narrationAudioUrl ||
-      listeningData?.questionAudioUrl ||
-      null
-    );
-  }, [listeningData, listeningStage]);
-
-  useEffect(() => {
-    if (primaryAudioUrl === lastAudioUrlRef.current) return;
-    lastAudioUrlRef.current = primaryAudioUrl;
-
-    if (soundRef.current) {
-      soundRef.current.stop();
-      soundRef.current.unload();
-      soundRef.current = null;
-    }
-    kbAudioSeekRef.current = 0;
-    setPlayingAudioId(null);
-    setIsCurrentlyPlaying(false);
-    clearAudioProgress();
-  }, [primaryAudioUrl]);
+  };
 
   const toggleAudio = useCallback(
     (id: string, audioUrl: string | undefined, onEnd?: () => void) => {
-      if (!audioUrl) {
-        pendingAudioPlayRef.current = true;
-        toast.info("Audio is still loading. Please try again.");
-        if (socketRef.current) {
-          if (!socketRef.current.connected) {
-            socketRef.current.connect();
-          }
-          requestStartListening("audio_missing");
-        }
-        return;
-      }
+      if (!audioUrl) return;
 
       if (soundRef.current && playingAudioId === id) {
         if (soundRef.current.playing()) {
@@ -477,7 +408,6 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
           if (id === "kb-audio" && kbAudioSeekRef.current > 0) {
             soundRef.current.seek(kbAudioSeekRef.current);
           }
-          void ensureAudioContext();
           soundRef.current.play();
           setIsCurrentlyPlaying(true);
           if (id === "kb-audio") {
@@ -563,27 +493,14 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
         },
       });
 
-      pendingAudioPlayRef.current = false;
-      void ensureAudioContext();
       sound.play();
       soundRef.current = sound;
     },
-    [ensureAudioContext, playingAudioId, requestStartListening]
+    [playingAudioId]
   );
 
-  useEffect(() => {
-    if (!primaryAudioUrl) return;
-    if (pendingAudioPlayRef.current) {
-      pendingAudioPlayRef.current = false;
-      toggleAudio("kb-audio", primaryAudioUrl, handleKbAudioEnd);
-    }
-  }, [primaryAudioUrl, toggleAudio, handleKbAudioEnd]);
-
   const playKbAudio = useCallback(() => {
-    if (!primaryAudioUrl) {
-      toast.info("Audio is still loading. Please try again.");
-      return;
-    }
+    if (!listeningData?.kbAudioUrl) return;
     if (soundRef.current) {
       if (playingAudioId !== "kb-audio") {
         setPlayingAudioId("kb-audio");
@@ -591,13 +508,12 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       if (kbAudioSeekRef.current > 0) {
         soundRef.current.seek(kbAudioSeekRef.current);
       }
-      void ensureAudioContext();
       soundRef.current.play();
       setIsCurrentlyPlaying(true);
       return;
     }
-    toggleAudio("kb-audio", primaryAudioUrl, handleKbAudioEnd);
-  }, [ensureAudioContext, primaryAudioUrl, playingAudioId, toggleAudio]);
+    toggleAudio("kb-audio", listeningData.kbAudioUrl, handleKbAudioEnd);
+  }, [listeningData?.kbAudioUrl, playingAudioId, toggleAudio]);
 
   const pauseKbAudio = useCallback(() => {
     if (soundRef.current) {
@@ -608,10 +524,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
   }, []);
 
   const restartKbAudio = useCallback(() => {
-    if (!primaryAudioUrl) {
-      toast.info("Audio is still loading. Please try again.");
-      return;
-    }
+    if (!listeningData?.kbAudioUrl) return;
     if (soundRef.current) {
       soundRef.current.stop();
       soundRef.current.unload();
@@ -621,8 +534,8 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
     setIsCurrentlyPlaying(false);
     clearAudioProgress();
     onEndCalledRef.current = false;
-    toggleAudio("kb-audio", primaryAudioUrl, handleKbAudioEnd);
-  }, [primaryAudioUrl, toggleAudio]);
+    toggleAudio("kb-audio", listeningData.kbAudioUrl, handleKbAudioEnd);
+  }, [listeningData?.kbAudioUrl, toggleAudio]);
 
   // --- Socket Functions ---
   const resetActivityTimer = useCallback(() => {
@@ -639,11 +552,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
 
   const requestNextListeningStage = useCallback(
     (delayMs = 0) => {
-      if (!socketRef.current) return;
-      if (!chatIdRef.current) {
-        pendingNextStageRef.current = { delayMs, requestedAt: Date.now() };
-        return;
-      }
+      if (!socketRef.current || !chatIdRef.current) return;
       if (quizPrefetchTimerRef.current) {
         clearTimeout(quizPrefetchTimerRef.current);
       }
@@ -660,29 +569,10 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
     []
   );
 
-  const clearQuizRetry = useCallback(() => {
-    if (quizRetryTimeoutRef.current) {
-      clearTimeout(quizRetryTimeoutRef.current);
-      quizRetryTimeoutRef.current = null;
-    }
-  }, []);
-
-  const scheduleQuizRetry = useCallback(() => {
-    clearQuizRetry();
-    quizRetryTimeoutRef.current = setTimeout(() => {
-      if (wantsQuizRef.current && mcqListRef.current.length === 0) {
-        logger.info("Quiz not received yet, retrying next_listening_stage");
-        requestNextListeningStage();
-      }
-    }, 6000);
-  }, [clearQuizRetry, requestNextListeningStage]);
-
   const openListeningQuiz = useCallback(
     (payload: any) => {
       const quizItems = payload?.mcqs || payload?.questions || [];
       if (!quizItems.length) return;
-      clearQuizRetry();
-      setIsQuizLoading(false);
       setListeningStage("quiz");
       setMcqList(quizItems);
       setCurrentMcqIndex(0);
@@ -699,7 +589,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       }));
       onStageChangeRef.current?.("quiz", { stage: "quiz", kbAudioUrl: payload?.kbAudioUrl });
     },
-    [clearQuizRetry]
+    []
   );
 
   const submitFinalAnswers = useCallback(
@@ -830,14 +720,13 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
         setPendingMcqPayload(null);
         return;
       } else {
+        setListeningStage("quiz");
         wantsQuizRef.current = true;
         if (!prefetchedQuizRef.current) {
           prefetchedQuizRef.current = true;
           requestNextListeningStage();
         }
         toast.info("Loading quiz...");
-        setIsQuizLoading(true);
-        scheduleQuizRetry();
         return;
       }
     }
@@ -848,10 +737,6 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       logger.emitting("next_listening_stage", { chatId });
       requestNextListeningStage();
       toast.info(listeningStage === "question_text" ? "Loading quiz..." : "Loading next part...");
-      if (listeningStage === "question_text") {
-        setIsQuizLoading(true);
-        scheduleQuizRetry();
-      }
 
       if (listeningLoadingTimeoutRef.current) {
         clearTimeout(listeningLoadingTimeoutRef.current);
@@ -873,7 +758,6 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
     pendingMcqPayload,
     requestNextListeningStage,
     resetActivityTimer,
-    scheduleQuizRetry,
     showListeningCompletionCard,
     showListeningHints,
     topicId,
@@ -954,10 +838,11 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       toast.success("Connection established.");
 
       // Skip start_listening if we have cached quiz - we load from localStorage instead
-      if (hasCachedQuizRef.current && !pendingAudioPlayRef.current) {
+      if (hasCachedQuizRef.current) {
         logger.info("Cached quiz found - skipping start_listening, loading from localStorage");
       } else {
-        requestStartListening("socket_connect");
+        logger.emitting("start_listening", { userId, topicId });
+        socket.emit("start_listening", { userId, topicId });
       }
 
       const sessionPayload = { userId };
@@ -985,9 +870,6 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       }
 
       const payloadMcqs = data.mcqs || data.questions || [];
-      if (payloadMcqs.length > 0) {
-        clearQuizRetry();
-      }
       const backendStage = normalizeListeningStage(data?.stage, data);
 
       // If we already have cached quiz data loaded from localStorage, skip socket processing
@@ -1090,7 +972,6 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       logger.receiving(ChatEvents.MCQ_LIST, payload);
       const quizItems = payload?.mcqs || payload?.questions || [];
       if (!quizItems.length) return;
-      clearQuizRetry();
       openListeningQuiz({
         chatId: payload?.chatId ?? chatIdRef.current,
         ...payload,
@@ -1101,7 +982,6 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       setChatCompleted(true);
       setIsCompleteDialogOpen(true);
       clearSavedProgress();
-      setIsQuizLoading(false);
       toast.success("🎉 Listening session completed!");
       onChatCompletedRef.current?.();
     });
@@ -1248,9 +1128,6 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       if (listeningLoadingTimeoutRef.current) {
         clearTimeout(listeningLoadingTimeoutRef.current);
       }
-      if (quizRetryTimeoutRef.current) {
-        clearTimeout(quizRetryTimeoutRef.current);
-      }
       socket.disconnect();
       if (soundRef.current) {
         soundRef.current.unload();
@@ -1264,9 +1141,6 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
     requestNextListeningStage,
     openListeningQuiz,
     clearSavedProgress,
-    clearQuizRetry,
-    scheduleQuizRetry,
-    requestStartListening,
   ]);
 
   // --- Effects ---
@@ -1276,12 +1150,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
 
   useEffect(() => {
     chatIdRef.current = chatId;
-    if (chatId && pendingNextStageRef.current) {
-      const { delayMs } = pendingNextStageRef.current;
-      pendingNextStageRef.current = null;
-      requestNextListeningStage(delayMs);
-    }
-  }, [chatId, requestNextListeningStage]);
+  }, [chatId]);
 
   useEffect(() => {
     mcqListRef.current = mcqList;
@@ -1400,13 +1269,6 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       setHasPlayedIntroAudio(false);
       setShowListeningCompletionCard(false);
       setShowListeningHints(false);
-      setIsQuizLoading(false);
-    }
-  }, [listeningStage]);
-
-  useEffect(() => {
-    if (listeningStage === "quiz") {
-      setIsQuizLoading(false);
     }
   }, [listeningStage]);
 
@@ -1440,12 +1302,12 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
   // Audio controller registration
   useEffect(() => {
     onAudioControllerRef.current?.({
-      toggle: () => toggleAudio("kb-audio", primaryAudioUrl ?? undefined, handleKbAudioEnd),
+      toggle: () => toggleAudio("kb-audio", listeningData?.kbAudioUrl, handleKbAudioEnd),
       play: playKbAudio,
       pause: pauseKbAudio,
       restart: restartKbAudio,
     });
-  }, [primaryAudioUrl, toggleAudio, playKbAudio, pauseKbAudio, restartKbAudio]);
+  }, [listeningData?.kbAudioUrl, toggleAudio, playKbAudio, pauseKbAudio, restartKbAudio]);
 
   // Audio state updates
   useEffect(() => {
@@ -1602,7 +1464,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       )}
 
       {/* Main Content */}
-      {listeningStage !== "quiz" && !isQuizLoading && (
+      {listeningStage !== "quiz" && (
         <div
           className={`flex flex-col max-w-[800px] mx-auto bg-gray-100 rounded-xl overflow-hidden shadow-2xl h-[calc(100svh-9.5rem)] max-h-[calc(100svh-9.5rem)]`}
         >
@@ -1687,14 +1549,13 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
               </div>
               <div className="mt-4">
                 <AudioPlayer
-                  audioSrc={primaryAudioUrl || ""}
+                  audioSrc={listeningData?.kbAudioUrl || ""}
                   isPlaying={playingAudioId === "kb-audio" && isCurrentlyPlaying}
                   progress={playingAudioId === "kb-audio" ? audioProgress : 0}
                   duration={playingAudioId === "kb-audio" ? audioDuration : 0}
                   showTotal={true}
-                  disabled={!primaryAudioUrl}
                   onTogglePlay={() =>
-                    toggleAudio("kb-audio", primaryAudioUrl ?? undefined, handleKbAudioEnd)
+                    toggleAudio("kb-audio", listeningData?.kbAudioUrl, handleKbAudioEnd)
                   }
                 />
               </div>
@@ -1801,7 +1662,6 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
                         skipListeningCompletionStepRef.current = false;
                         setListeningStage("initial");
                         setShowListeningHints(true);
-                        setIsQuizLoading(false);
                         restartKbAudio();
                       }}
                       disabled={!listeningData?.kbAudioUrl}
@@ -1816,9 +1676,8 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
         </div>
       )}
 
-
       {/* Next Button */}
-      {!showListeningCompletionCard && !isQuizLoading && (
+      {!showListeningCompletionCard && (
         <div className="w-full max-w-[800px] mx-auto">
           <Button
             className="w-full mt-4 rounded-full p-5 bg-[#5EA9FF] hover:bg-[#4E98F0] text-white flex items-center justify-center gap-2"
