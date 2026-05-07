@@ -92,7 +92,7 @@ const logger = {
       `%c[Socket.IO EMIT] >> %c${event}`,
       "color: #f39c12; font-weight: bold;",
       "color: #f39c12;",
-      { payload }
+      { payload },
     );
   },
   receiving: (event: string, payload: any) => {
@@ -100,7 +100,7 @@ const logger = {
       `%c[Socket.IO RECEIVE] << %c${event}`,
       "color: #2ecc71; font-weight: bold;",
       "color: #2ecc71;",
-      { payload }
+      { payload },
     );
   },
   info: (message: string, data?: any) => {
@@ -108,7 +108,7 @@ const logger = {
       `%c[INFO] %c${message}`,
       "color: #3498db; font-weight: bold;",
       "color: inherit;",
-      data || ""
+      data || "",
     );
   },
   error: (message: string, error?: any) => {
@@ -116,7 +116,7 @@ const logger = {
       `%c[ERROR] %c${message}`,
       "color: #e74c3c; font-weight: bold;",
       "color: inherit;",
-      error || ""
+      error || "",
     );
   },
 };
@@ -163,8 +163,12 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
 }) => {
   // --- State ---
   const [chatId, setChatId] = useState<string | null>(null);
-  const [listeningStage, setListeningStage] = useState<string | null>("initial");
-  const [listeningData, setListeningData] = useState<ListeningData | null>(null);
+  const [listeningStage, setListeningStage] = useState<string | null>(
+    "initial",
+  );
+  const [listeningData, setListeningData] = useState<ListeningData | null>(
+    null,
+  );
   const [currentMcqIndex, setCurrentMcqIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [mcqAnswers, setMcqAnswers] = useState<{ [key: string]: number }>({});
@@ -172,17 +176,24 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
   const [pendingMcqPayload, setPendingMcqPayload] = useState<any>(null);
 
   const [showListeningHints, setShowListeningHints] = useState(false);
-  const [showListeningCompletionCard, setShowListeningCompletionCard] = useState(false);
+  const [showListeningCompletionCard, setShowListeningCompletionCard] =
+    useState(false);
   const [showReplayPopup, setShowReplayPopup] = useState(false);
   const [hasPlayedIntroAudio, setHasPlayedIntroAudio] = useState(false);
   const [isContextCompleted, setIsContextCompleted] = useState(false);
-  const [isListeningStepTransitioning, setIsListeningStepTransitioning] = useState(false);
+  const [isListeningStepTransitioning, setIsListeningStepTransitioning] =
+    useState(false);
   const [, setIsListeningLoading] = useState(false);
 
   const [isTranscriptExpanded, setIsTranscriptExpanded] = useState(false);
-  const [shouldShowTranscriptExpandButton, setShouldShowTranscriptExpandButton] = useState(false);
+  const [
+    shouldShowTranscriptExpandButton,
+    setShouldShowTranscriptExpandButton,
+  ] = useState(false);
 
-  const [sessionTimeRemaining, setSessionTimeRemaining] = useState<number | null>(null);
+  const [sessionTimeRemaining, setSessionTimeRemaining] = useState<
+    number | null
+  >(null);
   const [sessionLimitReached, setSessionLimitReached] = useState(false);
   const [chatCompleted, setChatCompleted] = useState(false);
   const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false);
@@ -207,11 +218,14 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
   } | null>(null);
 
   // Content filter / Account blocked
-  const [isContentFilterWarningOpen, setIsContentFilterWarningOpen] = useState(false);
-  const [contentFilterWarningData, setContentFilterWarningData] = useState<any>(null);
+  const [isContentFilterWarningOpen, setIsContentFilterWarningOpen] =
+    useState(false);
+  const [contentFilterWarningData, setContentFilterWarningData] =
+    useState<any>(null);
   const [isAccountBlockedOpen, setIsAccountBlockedOpen] = useState(false);
   const [accountBlockedData, setAccountBlockedData] = useState<any>(null);
-  const [isDuplicateConnectionModalOpen, setIsDuplicateConnectionModalOpen] = useState(false);
+  const [isDuplicateConnectionModalOpen, setIsDuplicateConnectionModalOpen] =
+    useState(false);
 
   // --- Refs ---
   const socketRef = useRef<Socket<any, any> | null>(null);
@@ -220,7 +234,10 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
   const kbAudioSeekRef = useRef(0);
   const onEndCalledRef = useRef(false);
   const activityTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const sessionTimerBaseRef = useRef<{ remainingSeconds: number; receivedAt: number } | null>(null);
+  const sessionTimerBaseRef = useRef<{
+    remainingSeconds: number;
+    receivedAt: number;
+  } | null>(null);
   const sessionTimerLastEmittedRef = useRef<number | null>(null);
   const listeningStageRef = useRef<string | null>(null);
   const chatIdRef = useRef<string | null>(null);
@@ -285,15 +302,23 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
   // Check for cached quiz progress on mount
   useEffect(() => {
     if (!progressStorageKey || hasCachedQuizRef.current) return;
-    
+
     try {
       const saved = localStorage.getItem(progressStorageKey);
-      logger.info(`[CACHE CHECK] key=${progressStorageKey}, hasData=${!!saved}`);
+      logger.info(
+        `[CACHE CHECK] key=${progressStorageKey}, hasData=${!!saved}`,
+      );
       if (saved) {
         const parsed = JSON.parse(saved);
-        logger.info(`[CACHE CHECK] data: stage=${parsed.listeningStage}, mcqListLen=${parsed.mcqList?.length}`);
-        hasCachedQuizRef.current = parsed.listeningStage === "quiz" && (parsed.mcqList?.length > 0 || parsed.mcqs?.length > 0);
-        logger.info(`[CACHE CHECK] hasCachedQuizRef = ${hasCachedQuizRef.current}`);
+        logger.info(
+          `[CACHE CHECK] data: stage=${parsed.listeningStage}, mcqListLen=${parsed.mcqList?.length}`,
+        );
+        hasCachedQuizRef.current =
+          parsed.listeningStage === "quiz" &&
+          (parsed.mcqList?.length > 0 || parsed.mcqs?.length > 0);
+        logger.info(
+          `[CACHE CHECK] hasCachedQuizRef = ${hasCachedQuizRef.current}`,
+        );
       }
     } catch (e) {
       logger.error(`[CACHE CHECK] Error: ${e}`);
@@ -345,7 +370,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
   // --- Helpers ---
   const normalizeListeningStage = (
     incomingStage: string | null | undefined,
-    payload: any
+    payload: any,
   ): string | null => {
     if (incomingStage === "initial") return "initial";
     if (incomingStage === "question") return "question_text";
@@ -435,14 +460,19 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
             onEndCalledRef.current = false;
           }
           setAudioDuration(sound.duration());
-          if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+          if (progressIntervalRef.current)
+            clearInterval(progressIntervalRef.current);
           progressIntervalRef.current = setInterval(() => {
             const seek = sound.seek() || 0;
             setAudioProgress(seek);
             if (id === "kb-audio") {
               kbAudioSeekRef.current = Number(seek);
             }
-            if (seek >= sound.duration() - 0.1 && onEnd && !onEndCalledRef.current) {
+            if (
+              seek >= sound.duration() - 0.1 &&
+              onEnd &&
+              !onEndCalledRef.current
+            ) {
               onEndCalledRef.current = true;
               onEnd();
               if (progressIntervalRef.current) {
@@ -453,7 +483,8 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
           }, 100);
         },
         onpause: () => {
-          if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+          if (progressIntervalRef.current)
+            clearInterval(progressIntervalRef.current);
           setIsCurrentlyPlaying(false);
           if (id === "kb-audio") {
             kbAudioSeekRef.current = Number(sound.seek() || 0);
@@ -496,7 +527,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       sound.play();
       soundRef.current = sound;
     },
-    [playingAudioId]
+    [playingAudioId],
   );
 
   const playKbAudio = useCallback(() => {
@@ -546,51 +577,50 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
         socketRef.current?.disconnect();
         setIsInactiveDialogOpen(true);
       },
-      5 * 60 * 1000
+      5 * 60 * 1000,
     );
   }, []);
 
-  const requestNextListeningStage = useCallback(
-    (delayMs = 0) => {
-      if (!socketRef.current || !chatIdRef.current) return;
-      if (quizPrefetchTimerRef.current) {
-        clearTimeout(quizPrefetchTimerRef.current);
-      }
-      const emitNextStage = () => {
-        lastListeningStageRequestRef.current = Date.now();
-        socketRef.current?.emit("next_listening_stage", { chatId: chatIdRef.current });
-      };
-      if (delayMs > 0) {
-        quizPrefetchTimerRef.current = setTimeout(emitNextStage, delayMs);
-        return;
-      }
-      emitNextStage();
-    },
-    []
-  );
+  const requestNextListeningStage = useCallback((delayMs = 0) => {
+    if (!socketRef.current || !chatIdRef.current) return;
+    if (quizPrefetchTimerRef.current) {
+      clearTimeout(quizPrefetchTimerRef.current);
+    }
+    const emitNextStage = () => {
+      lastListeningStageRequestRef.current = Date.now();
+      socketRef.current?.emit("next_listening_stage", {
+        chatId: chatIdRef.current,
+      });
+    };
+    if (delayMs > 0) {
+      quizPrefetchTimerRef.current = setTimeout(emitNextStage, delayMs);
+      return;
+    }
+    emitNextStage();
+  }, []);
 
-  const openListeningQuiz = useCallback(
-    (payload: any) => {
-      const quizItems = payload?.mcqs || payload?.questions || [];
-      if (!quizItems.length) return;
-      setListeningStage("quiz");
-      setMcqList(quizItems);
-      setCurrentMcqIndex(0);
-      setSelectedAnswer(null);
-      setPendingMcqPayload(null);
-      wantsQuizRef.current = false;
-      skipListeningCompletionStepRef.current = false;
-      if (payload?.chatId) {
-        setChatId(payload.chatId);
-      }
-      setListeningData((prevData: any) => ({
-        ...prevData,
-        ...payload,
-      }));
-      onStageChangeRef.current?.("quiz", { stage: "quiz", kbAudioUrl: payload?.kbAudioUrl });
-    },
-    []
-  );
+  const openListeningQuiz = useCallback((payload: any) => {
+    const quizItems = payload?.mcqs || payload?.questions || [];
+    if (!quizItems.length) return;
+    setListeningStage("quiz");
+    setMcqList(quizItems);
+    setCurrentMcqIndex(0);
+    setSelectedAnswer(null);
+    setPendingMcqPayload(null);
+    wantsQuizRef.current = false;
+    skipListeningCompletionStepRef.current = false;
+    if (payload?.chatId) {
+      setChatId(payload.chatId);
+    }
+    setListeningData((prevData: any) => ({
+      ...prevData,
+      ...payload,
+    }));
+    onStageChangeRef.current?.("quiz", {
+      stage: "quiz",
+      kbAudioUrl: payload?.kbAudioUrl,
+    });
+  }, []);
 
   const submitFinalAnswers = useCallback(
     (finalAnswers: { [key: string]: number }) => {
@@ -603,14 +633,14 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
         ([questionId, answerIndex]) => ({
           questionId,
           answerIndex,
-        })
+        }),
       );
 
       const payload = { chatId, answers };
       logger.emitting(ChatEvents.SUBMIT_MCQS, payload);
       socketRef.current.emit(ChatEvents.SUBMIT_MCQS, payload);
     },
-    [chatId]
+    [chatId],
   );
 
   const handleSubmitAnswer = useCallback(() => {
@@ -672,7 +702,8 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
   const handleNextStage = useCallback(() => {
     resetActivityTimer();
 
-    const nextMcqs = pendingMcqPayload?.mcqs || pendingMcqPayload?.questions || [];
+    const nextMcqs =
+      pendingMcqPayload?.mcqs || pendingMcqPayload?.questions || [];
 
     // Step 2: show hints after intro before advancing
     if (
@@ -736,7 +767,11 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       setIsListeningLoading(true);
       logger.emitting("next_listening_stage", { chatId });
       requestNextListeningStage();
-      toast.info(listeningStage === "question_text" ? "Loading quiz..." : "Loading next part...");
+      toast.info(
+        listeningStage === "question_text"
+          ? "Loading quiz..."
+          : "Loading next part...",
+      );
 
       if (listeningLoadingTimeoutRef.current) {
         clearTimeout(listeningLoadingTimeoutRef.current);
@@ -790,14 +825,17 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
     }, 500);
   }, [topicId, userId, clearSavedProgress]);
 
-  const handleStillThere = useCallback((isContinuing: boolean) => {
-    setIsInactiveDialogOpen(false);
-    if (isContinuing) {
-      socketRef.current?.connect();
-    } else {
-      navigate(-1);
-    }
-  }, [navigate]);
+  const handleStillThere = useCallback(
+    (isContinuing: boolean) => {
+      setIsInactiveDialogOpen(false);
+      if (isContinuing) {
+        socketRef.current?.connect();
+      } else {
+        navigate(-1);
+      }
+    },
+    [navigate],
+  );
 
   const handleContentFilterWarningAcknowledge = useCallback(() => {
     setIsContentFilterWarningOpen(false);
@@ -839,7 +877,9 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
 
       // Skip start_listening if we have cached quiz - we load from localStorage instead
       if (hasCachedQuizRef.current) {
-        logger.info("Cached quiz found - skipping start_listening, loading from localStorage");
+        logger.info(
+          "Cached quiz found - skipping start_listening, loading from localStorage",
+        );
       } else {
         logger.emitting("start_listening", { userId, topicId });
         socket.emit("start_listening", { userId, topicId });
@@ -873,26 +913,39 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       const backendStage = normalizeListeningStage(data?.stage, data);
 
       // If we already have cached quiz data loaded from localStorage, skip socket processing
-      if (listeningStageRef.current === "quiz" && mcqListRef.current.length > 0) {
+      if (
+        listeningStageRef.current === "quiz" &&
+        mcqListRef.current.length > 0
+      ) {
         logger.info("Quiz already loaded from cache, skipping socket payload");
         return;
       }
 
       // Check if this is a new session (different chatId from saved progress)
-      const savedStateRaw = progressStorageKey ? localStorage.getItem(progressStorageKey) : null;
+      const savedStateRaw = progressStorageKey
+        ? localStorage.getItem(progressStorageKey)
+        : null;
       if (savedStateRaw) {
         try {
           const savedState = JSON.parse(savedStateRaw);
           if (savedState.chatId && savedState.chatId !== newChatId) {
             // If we have cached quiz progress, update chatId but keep quiz state
-            if (savedState.listeningStage === "quiz" && savedState.mcqList?.length > 0) {
-              logger.info(`Updating cached chatId from ${savedState.chatId} to ${newChatId}`);
+            if (
+              savedState.listeningStage === "quiz" &&
+              savedState.mcqList?.length > 0
+            ) {
+              logger.info(
+                `Updating cached chatId from ${savedState.chatId} to ${newChatId}`,
+              );
               const updatedSnapshot = {
                 ...savedState,
                 chatId: newChatId,
               };
               if (progressStorageKey) {
-                localStorage.setItem(progressStorageKey, JSON.stringify(updatedSnapshot));
+                localStorage.setItem(
+                  progressStorageKey,
+                  JSON.stringify(updatedSnapshot),
+                );
               }
               // Also update refs
               chatIdRef.current = newChatId;
@@ -912,7 +965,8 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
         }
       }
 
-      const inQuiz = listeningStageRef.current === "quiz" && mcqListRef.current.length > 0;
+      const inQuiz =
+        listeningStageRef.current === "quiz" && mcqListRef.current.length > 0;
 
       if (inQuiz && backendStage !== "quiz") {
         return;
@@ -965,7 +1019,10 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
 
       setListeningStage(currentStage);
       logger.info(`Listening mode stage inferred: ${currentStage}`, data);
-      onStageChangeRef.current?.(currentStage, { stage: currentStage, kbAudioUrl: data.kbAudioUrl });
+      onStageChangeRef.current?.(currentStage, {
+        stage: currentStage,
+        kbAudioUrl: data.kbAudioUrl,
+      });
     });
 
     socket.on(ChatEvents.MCQ_LIST, (payload: any) => {
@@ -1117,8 +1174,13 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
         toast.error("User authentication failed. Please log in again.");
         setTimeout(() => navigate("/login"), 3000);
       } else {
-        toast.error("An internal server error occurred. Please try again later.");
-        logger.error("Unhandled Internal Server Error:", payload.error || payload);
+        toast.error(
+          "An internal server error occurred. Please try again later.",
+        );
+        logger.error(
+          "Unhandled Internal Server Error:",
+          payload.error || payload,
+        );
       }
     });
 
@@ -1175,21 +1237,29 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
     }
 
     try {
-      const savedState = JSON.parse(savedStateRaw) as Listening3DProgressSnapshot;
+      const savedState = JSON.parse(
+        savedStateRaw,
+      ) as Listening3DProgressSnapshot;
       const restoredMcqList = savedState.mcqList ?? [];
       const restoredStage =
         savedState.listeningStage === "quiz" && restoredMcqList.length === 0
           ? "initial"
-          : savedState.listeningStage ?? "initial";
+          : (savedState.listeningStage ?? "initial");
 
-      logger.info(`[RESTORE] Restoring: stage=${restoredStage}, mcqListLen=${restoredMcqList.length}`);
+      logger.info(
+        `[RESTORE] Restoring: stage=${restoredStage}, mcqListLen=${restoredMcqList.length}`,
+      );
 
       setChatId(savedState.chatId ?? null);
       setListeningStage(restoredStage);
-      logger.info(`[RESTORE] Calling onStageChangeRef with stage: ${restoredStage}, ref exists: ${!!onStageChangeRef.current}`);
+      logger.info(
+        `[RESTORE] Calling onStageChangeRef with stage: ${restoredStage}, ref exists: ${!!onStageChangeRef.current}`,
+      );
       onStageChangeRef.current?.(restoredStage);
       setShowListeningHints(Boolean(savedState.showListeningHints));
-      setShowListeningCompletionCard(Boolean(savedState.showListeningCompletionCard));
+      setShowListeningCompletionCard(
+        Boolean(savedState.showListeningCompletionCard),
+      );
       setCurrentMcqIndex(Math.max(0, savedState.currentMcqIndex ?? 0));
       setMcqAnswers(savedState.mcqAnswers ?? {});
       setMcqList(restoredMcqList);
@@ -1197,10 +1267,16 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
 
       // Trigger video URL callback for sidebar avatar
       if (savedState.listeningData?.narrationVideoUrl) {
-        logger.info(`[RESTORE] Triggering video URL: ${savedState.listeningData.narrationVideoUrl}`);
-        onVideoUrlChangeRef.current?.(savedState.listeningData.narrationVideoUrl);
+        logger.info(
+          `[RESTORE] Triggering video URL: ${savedState.listeningData.narrationVideoUrl}`,
+        );
+        onVideoUrlChangeRef.current?.(
+          savedState.listeningData.narrationVideoUrl,
+        );
       } else {
-        logger.info(`[RESTORE] No video URL in saved state: ${JSON.stringify(savedState.listeningData)}`);
+        logger.info(
+          `[RESTORE] No video URL in saved state: ${JSON.stringify(savedState.listeningData)}`,
+        );
       }
 
       // Sync refs immediately so socket handlers see correct state
@@ -1223,7 +1299,10 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
         });
       }
     } catch (error) {
-      logger.error("[RESTORE] Failed to restore listening progress snapshot", error);
+      logger.error(
+        "[RESTORE] Failed to restore listening progress snapshot",
+        error,
+      );
       clearSavedProgress();
     } finally {
       setIsRestoreComplete(true);
@@ -1232,7 +1311,9 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
 
   useEffect(() => {
     if (!progressStorageKey || chatCompleted || !isRestoreComplete) {
-      logger.info(`[SAVE] Skipping: storageKey=${!!progressStorageKey}, completed=${chatCompleted}, restoreDone=${isRestoreComplete}`);
+      logger.info(
+        `[SAVE] Skipping: storageKey=${!!progressStorageKey}, completed=${chatCompleted}, restoreDone=${isRestoreComplete}`,
+      );
       return;
     }
 
@@ -1247,7 +1328,9 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       listeningData,
     };
 
-    logger.info(`SAVING progress: stage=${listeningStage}, mcqListLen=${mcqList.length}, chatId=${chatId?.slice(0,8)}`);
+    logger.info(
+      `SAVING progress: stage=${listeningStage}, mcqListLen=${mcqList.length}, chatId=${chatId?.slice(0, 8)}`,
+    );
     localStorage.setItem(progressStorageKey, JSON.stringify(snapshot));
   }, [
     progressStorageKey,
@@ -1302,12 +1385,19 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
   // Audio controller registration
   useEffect(() => {
     onAudioControllerRef.current?.({
-      toggle: () => toggleAudio("kb-audio", listeningData?.kbAudioUrl, handleKbAudioEnd),
+      toggle: () =>
+        toggleAudio("kb-audio", listeningData?.kbAudioUrl, handleKbAudioEnd),
       play: playKbAudio,
       pause: pauseKbAudio,
       restart: restartKbAudio,
     });
-  }, [listeningData?.kbAudioUrl, toggleAudio, playKbAudio, pauseKbAudio, restartKbAudio]);
+  }, [
+    listeningData?.kbAudioUrl,
+    toggleAudio,
+    playKbAudio,
+    pauseKbAudio,
+    restartKbAudio,
+  ]);
 
   // Audio state updates
   useEffect(() => {
@@ -1325,7 +1415,10 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
 
     const element = transcriptRef.current;
     const originalClass = element.className;
-    element.className = originalClass.replace("line-clamp-5", "line-clamp-none");
+    element.className = originalClass.replace(
+      "line-clamp-5",
+      "line-clamp-none",
+    );
     const fullHeight = element.scrollHeight;
     element.className = originalClass;
 
@@ -1336,18 +1429,19 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
 
   // --- Computed Values ---
   const shouldShowListeningIntro =
-    listeningStage === "initial" && !showListeningHints && !showListeningCompletionCard;
+    listeningStage === "initial" &&
+    !showListeningHints &&
+    !showListeningCompletionCard;
 
-  const shouldShowListeningHint = showListeningHints && !showListeningCompletionCard;
+  const shouldShowListeningHint =
+    showListeningHints && !showListeningCompletionCard;
 
-  const pendingMcqs = pendingMcqPayload?.mcqs || pendingMcqPayload?.questions || [];
+  const pendingMcqs =
+    pendingMcqPayload?.mcqs || pendingMcqPayload?.questions || [];
 
-  const listeningHints = [
-    ...(pendingMcqs || []),
-    ...(mcqList || []),
-  ]
+  const listeningHints = [...(pendingMcqs || []), ...(mcqList || [])]
     .flatMap((mcq: any) =>
-      typeof mcq?.hint === "string" ? parseListeningHintLines(mcq.hint) : []
+      typeof mcq?.hint === "string" ? parseListeningHintLines(mcq.hint) : [],
     )
     .filter((hint: string) => hint.length > 0);
 
@@ -1355,8 +1449,8 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
     listeningHints.length > 0
       ? listeningHints
       : listeningData?.questionText
-      ? [listeningData.questionText]
-      : [];
+        ? [listeningData.questionText]
+        : [];
 
   // --- Render ---
   return (
@@ -1375,14 +1469,17 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
           <DialogHeader>
             <DialogTitle>That&apos;s not quite right</DialogTitle>
             <DialogDescription>
-              Would you like to listen to the audio again for a hint before you try
-              again?
+              Would you like to listen to the audio again for a hint before you
+              try again?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:justify-center">
-            <Button 
-            className="bg-[#5EA9FF] hover:bg-[#4E98F0] text-white"
-            onClick={() => setShowReplayPopup(false)}>OK</Button>
+            <Button
+              className="bg-[#5EA9FF] hover:bg-[#4E98F0] text-white"
+              onClick={() => setShowReplayPopup(false)}
+            >
+              OK
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1396,7 +1493,8 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
           <DialogHeader>
             <DialogTitle>Practice Complete</DialogTitle>
             <DialogDescription>
-              Great job! You&apos;ve successfully completed the listening exercise.
+              Great job! You&apos;ve successfully completed the listening
+              exercise.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -1404,8 +1502,11 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
               End Session
             </Button>
             <Button
-            className="bg-[#5EA9FF] hover:bg-[#4E98F0] text-white"
-            onClick={handleResetChat}>Reset Chat</Button>
+              className="bg-[#5EA9FF] hover:bg-[#4E98F0] text-white"
+              onClick={handleResetChat}
+            >
+              Reset Chat
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1436,28 +1537,32 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
               {mcqList[currentMcqIndex].question}
             </p>
             <div className="flex flex-col gap-2">
-              {mcqList[currentMcqIndex].options.map((option: string, index: number) => (
-                <Button
-                  key={index}
-                  variant={selectedAnswer === index ? "default" : "outline"}
-                  onClick={() => {
-                    setSelectedAnswer(index);
-                    resetActivityTimer();
-                  }}
-                  className={`w-full justify-start p-4 h-auto transition-colors rounded-2xl ${
-                    selectedAnswer === index
-                      ? "bg-[#3EA4F9] text-white hover:bg-[#2F93F0] border-transparent"
-                      : "bg-white border-[#E1E7F0] text-[#2B3A67]"
-                  }`}
-                >
-                  <div
-                    className={`w-5 h-5 mr-4 rounded-full border flex-shrink-0 ${
-                      selectedAnswer === index ? "bg-white border-white" : "border-[#C9D6E6]"
+              {mcqList[currentMcqIndex].options.map(
+                (option: string, index: number) => (
+                  <Button
+                    key={index}
+                    variant={selectedAnswer === index ? "default" : "outline"}
+                    onClick={() => {
+                      setSelectedAnswer(index);
+                      resetActivityTimer();
+                    }}
+                    className={`w-full justify-start p-4 h-auto transition-colors rounded-2xl ${
+                      selectedAnswer === index
+                        ? "bg-[#3EA4F9] text-white hover:bg-[#2F93F0] border-transparent"
+                        : "bg-white border-[#E1E7F0] text-[#2B3A67]"
                     }`}
-                  />
-                  <span>{option}</span>
-                </Button>
-              ))}
+                  >
+                    <div
+                      className={`w-5 h-5 mr-4 rounded-full border flex-shrink-0 ${
+                        selectedAnswer === index
+                          ? "bg-white border-white"
+                          : "border-[#C9D6E6]"
+                      }`}
+                    />
+                    <span>{option}</span>
+                  </Button>
+                ),
+              )}
             </div>
           </div>
         </div>
@@ -1466,7 +1571,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       {/* Main Content */}
       {listeningStage !== "quiz" && (
         <div
-          className={`flex flex-col max-w-[800px] mx-auto bg-gray-100 rounded-xl overflow-hidden shadow-2xl h-[calc(100svh-9.5rem)] max-h-[calc(100svh-9.5rem)]`}
+          className={`flex flex-col w-full max-w-[800px] mx-auto bg-gray-100 rounded-xl overflow-hidden shadow-2xl h-[calc(100svh-9.5rem)] max-h-[calc(100svh-9.5rem)]`}
         >
           {/* Header */}
           <header className="grid grid-cols-[auto,1fr,auto] items-center gap-3 px-4 md:px-6 py-4 border-b bg-white">
@@ -1495,7 +1600,9 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
               <div className="hidden md:flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border-2 border-[#3EA4F9] bg-white text-gray-500">
                 <Clock className="h-5 w-5 text-[#3EA4F9]" />
                 <span>
-                  {sessionTimeRemaining !== null ? formatTime(sessionTimeRemaining) : "..."}
+                  {sessionTimeRemaining !== null
+                    ? formatTime(sessionTimeRemaining)
+                    : "..."}
                 </span>
               </div>
               <Button variant="ghost" size="icon" className="md:hidden">
@@ -1521,7 +1628,9 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
           {/* Main Listening Content */}
           <div
             className={`relative flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-4 transition-all duration-500 ease-out ${
-              isListeningStepTransitioning ? "opacity-0 translate-x-6" : "opacity-100 translate-x-0"
+              isListeningStepTransitioning
+                ? "opacity-0 translate-x-6"
+                : "opacity-100 translate-x-0"
             }`}
           >
             {/* Mobile Timer */}
@@ -1529,7 +1638,9 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
               <div className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border-2 border-[#3EA4F9] bg-white text-gray-500">
                 <Clock className="h-5 w-5 text-[#3EA4F9]" />
                 <span>
-                  {sessionTimeRemaining !== null ? formatTime(sessionTimeRemaining) : "..."}
+                  {sessionTimeRemaining !== null
+                    ? formatTime(sessionTimeRemaining)
+                    : "..."}
                 </span>
               </div>
             </div>
@@ -1540,7 +1651,9 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
                 {isAvatar3D && (
                   <AvatarModeLayout
                     key={`listening-avatar-${avatarSeed}`}
-                    syncPlaying={playingAudioId === "kb-audio" && isCurrentlyPlaying}
+                    syncPlaying={
+                      playingAudioId === "kb-audio" && isCurrentlyPlaying
+                    }
                     videoSrc={avatarVideoSrc}
                     heightClassName="h-auto"
                     videoClassName="w-full h-auto object-contain"
@@ -1550,12 +1663,18 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
               <div className="mt-4">
                 <AudioPlayer
                   audioSrc={listeningData?.kbAudioUrl || ""}
-                  isPlaying={playingAudioId === "kb-audio" && isCurrentlyPlaying}
+                  isPlaying={
+                    playingAudioId === "kb-audio" && isCurrentlyPlaying
+                  }
                   progress={playingAudioId === "kb-audio" ? audioProgress : 0}
                   duration={playingAudioId === "kb-audio" ? audioDuration : 0}
                   showTotal={true}
                   onTogglePlay={() =>
-                    toggleAudio("kb-audio", listeningData?.kbAudioUrl, handleKbAudioEnd)
+                    toggleAudio(
+                      "kb-audio",
+                      listeningData?.kbAudioUrl,
+                      handleKbAudioEnd,
+                    )
                   }
                 />
               </div>
@@ -1597,32 +1716,36 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
             )}
 
             {/* Transcript */}
-            {listeningStage === "question_text" && !showListeningCompletionCard && (
-              <div className="rounded-2xl bg-white border border-[#B9E1FF] p-4 md:p-5 shadow-sm">
-                <div className="inline-flex items-center gap-2 rounded-full bg-[#E6F3FF] px-3 py-1 text-sm font-semibold text-[#2B6CB0] mb-3">
-                  <BookOpen className="h-4 w-4" />
-                  Character Transcript
-                </div>
-                <p
-                  ref={transcriptRef}
-                  className={`text-sm text-[#2F4B66] whitespace-pre-wrap transition-all duration-300 ${
-                    !isTranscriptExpanded ? "line-clamp-5" : "line-clamp-none"
-                  }`}
-                >
-                  {listeningData?.questionText || "Transcript will appear here as you progress."}
-                </p>
-                {shouldShowTranscriptExpandButton && (
-                  <Button
-                    variant="link"
-                    size="sm"
-                    onClick={() => setIsTranscriptExpanded(!isTranscriptExpanded)}
-                    className="text-sm text-[#3EA4F9] p-0 h-auto mt-2"
+            {listeningStage === "question_text" &&
+              !showListeningCompletionCard && (
+                <div className="rounded-2xl bg-white border border-[#B9E1FF] p-4 md:p-5 shadow-sm">
+                  <div className="inline-flex items-center gap-2 rounded-full bg-[#E6F3FF] px-3 py-1 text-sm font-semibold text-[#2B6CB0] mb-3">
+                    <BookOpen className="h-4 w-4" />
+                    Character Transcript
+                  </div>
+                  <p
+                    ref={transcriptRef}
+                    className={`text-sm text-[#2F4B66] whitespace-pre-wrap transition-all duration-300 ${
+                      !isTranscriptExpanded ? "line-clamp-5" : "line-clamp-none"
+                    }`}
                   >
-                    {isTranscriptExpanded ? "See Less" : "See More"}
-                  </Button>
-                )}
-              </div>
-            )}
+                    {listeningData?.questionText ||
+                      "Transcript will appear here as you progress."}
+                  </p>
+                  {shouldShowTranscriptExpandButton && (
+                    <Button
+                      variant="link"
+                      size="sm"
+                      onClick={() =>
+                        setIsTranscriptExpanded(!isTranscriptExpanded)
+                      }
+                      className="text-sm text-[#3EA4F9] p-0 h-auto mt-2"
+                    >
+                      {isTranscriptExpanded ? "See Less" : "See More"}
+                    </Button>
+                  )}
+                </div>
+              )}
 
             {/* Completion Card */}
             {showListeningCompletionCard && (
@@ -1634,9 +1757,12 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
                     alt="Listening helper"
                     className="h-28 w-auto mx-auto mb-4"
                   />
-                  <h3 className="text-xl font-semibold text-[#2B3A67]">Done with it?</h3>
+                  <h3 className="text-xl font-semibold text-[#2B3A67]">
+                    Done with it?
+                  </h3>
                   <p className="text-sm text-gray-500 mt-2">
-                    Ready for the quiz? You can continue or replay the avatar explanation.
+                    Ready for the quiz? You can continue or replay the avatar
+                    explanation.
                   </p>
                   <Button
                     className="w-full mt-5 rounded-full bg-[#5EA9FF] hover:bg-[#4E98F0] text-white"
@@ -1686,12 +1812,17 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
               clickLocked.current = true;
               setTimeout(() => (clickLocked.current = false), 2000);
 
-              if (listeningStage === "question_text" && !showListeningCompletionCard) {
+              if (
+                listeningStage === "question_text" &&
+                !showListeningCompletionCard
+              ) {
                 setShowListeningCompletionCard(true);
                 return;
               }
 
-              listeningStage === "quiz" ? handleSubmitAnswer() : handleNextStage();
+              listeningStage === "quiz"
+                ? handleSubmitAnswer()
+                : handleNextStage();
             }}
             disabled={
               (listeningStage === "initial" && !hasPlayedIntroAudio) ||
@@ -1711,12 +1842,15 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
           <DialogHeader>
             <DialogTitle>Reset Chat Session?</DialogTitle>
             <DialogDescription>
-              This will clear all current messages and restart the chat from the beginning. This
-              action cannot be undone.
+              This will clear all current messages and restart the chat from the
+              beginning. This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsResetConfirmOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsResetConfirmOpen(false)}
+            >
               Cancel
             </Button>
             <Button
@@ -1740,14 +1874,17 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
           <DialogHeader>
             <DialogTitle>Are you still there?</DialogTitle>
             <DialogDescription>
-              Your session was paused due to inactivity. Do you want to continue?
+              Your session was paused due to inactivity. Do you want to
+              continue?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => handleStillThere(false)}>
               No, End Session
             </Button>
-            <Button onClick={() => handleStillThere(true)}>Yes, I&apos;m Here</Button>
+            <Button onClick={() => handleStillThere(true)}>
+              Yes, I&apos;m Here
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1770,15 +1907,22 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
                 alt={unlockedBadgeInfo.name}
                 className="w-24 h-24 mb-4 drop-shadow-lg"
               />
-              <h3 className="text-xl font-semibold text-primary">{unlockedBadgeInfo.name}</h3>
-              <p className="text-sm text-gray-600 mt-1">{unlockedBadgeInfo.description}</p>
+              <h3 className="text-xl font-semibold text-primary">
+                {unlockedBadgeInfo.name}
+              </h3>
+              <p className="text-sm text-gray-600 mt-1">
+                {unlockedBadgeInfo.description}
+              </p>
               <p className="text-lg font-bold text-yellow-600 mt-4">
                 +{unlockedBadgeInfo.pointValue} Points
               </p>
             </div>
           )}
           <DialogFooter className="sm:justify-center">
-            <Button onClick={() => setIsBadgeModalOpen(false)} className="w-full">
+            <Button
+              onClick={() => setIsBadgeModalOpen(false)}
+              className="w-full"
+            >
               Claim & Continue
             </Button>
           </DialogFooter>
@@ -1796,18 +1940,20 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
               Duplicate Session Detected
             </DialogTitle>
             <DialogDescription className="text-center pt-2">
-              You are already connected from another session. Please logout from other sessions and
-              try again.
+              You are already connected from another session. Please logout from
+              other sessions and try again.
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col items-center justify-center p-4 my-4 bg-red-50 rounded-lg border border-red-200">
             <div className="w-16 h-16 mb-4 bg-red-100 rounded-full flex items-center justify-center">
               <X className="h-8 w-8 text-red-600" />
             </div>
-            <h3 className="text-lg font-semibold text-red-700 mb-2">Connection Blocked</h3>
+            <h3 className="text-lg font-semibold text-red-700 mb-2">
+              Connection Blocked
+            </h3>
             <p className="text-sm text-red-600 text-center">
-              Only one active session is allowed per account. Please close other browser tabs or
-              devices where you&apos;re logged in.
+              Only one active session is allowed per account. Please close other
+              browser tabs or devices where you&apos;re logged in.
             </p>
           </div>
           <DialogFooter className="sm:justify-center space-y-2">
@@ -1853,23 +1999,29 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
           {contentFilterWarningData && (
             <div className="flex flex-col gap-4 p-4 my-4 bg-orange-50 rounded-lg border border-orange-200">
               <div className="space-y-2">
-                <p className="text-sm font-medium text-gray-800">{contentFilterWarningData.message}</p>
+                <p className="text-sm font-medium text-gray-800">
+                  {contentFilterWarningData.message}
+                </p>
                 <div className="grid grid-cols-2 gap-3 pt-2 border-t border-orange-200">
                   <div>
-                    <p className="text-xs text-gray-600 font-medium">Violation Type</p>
+                    <p className="text-xs text-gray-600 font-medium">
+                      Violation Type
+                    </p>
                     <p className="text-sm font-semibold text-orange-700">
                       {contentFilterWarningData.violationType}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 font-medium">Severity</p>
+                    <p className="text-xs text-gray-600 font-medium">
+                      Severity
+                    </p>
                     <p
                       className={`text-sm font-semibold ${
                         contentFilterWarningData.severity === "High"
                           ? "text-red-600"
                           : contentFilterWarningData.severity === "Medium"
-                          ? "text-orange-600"
-                          : "text-yellow-600"
+                            ? "text-orange-600"
+                            : "text-yellow-600"
                       }`}
                     >
                       {contentFilterWarningData.severity}
@@ -1880,7 +2032,10 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
             </div>
           )}
           <DialogFooter className="sm:justify-center">
-            <Button onClick={handleContentFilterWarningAcknowledge} className="w-full">
+            <Button
+              onClick={handleContentFilterWarningAcknowledge}
+              className="w-full"
+            >
               I Understand
             </Button>
           </DialogFooter>
@@ -1900,16 +2055,22 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
           </DialogHeader>
           {accountBlockedData && (
             <div className="flex flex-col gap-4 p-4 my-4 bg-red-50 rounded-lg border border-red-200">
-              <p className="text-sm font-medium text-gray-800">{accountBlockedData.message}</p>
+              <p className="text-sm font-medium text-gray-800">
+                {accountBlockedData.message}
+              </p>
               <div className="grid grid-cols-2 gap-3 pt-2 border-t border-red-200">
                 <div>
-                  <p className="text-xs text-gray-600 font-medium">Total Violations</p>
+                  <p className="text-xs text-gray-600 font-medium">
+                    Total Violations
+                  </p>
                   <p className="text-sm font-semibold text-red-700">
                     {accountBlockedData.violationCount}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-600 font-medium">Account Status</p>
+                  <p className="text-xs text-gray-600 font-medium">
+                    Account Status
+                  </p>
                   <p className="text-sm font-semibold text-red-700 uppercase">
                     {accountBlockedData.accountStatus}
                   </p>
@@ -1918,7 +2079,10 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
             </div>
           )}
           <DialogFooter className="sm:justify-center">
-            <Button onClick={handleLogout} className="w-full bg-red-600 hover:bg-red-700 text-white">
+            <Button
+              onClick={handleLogout}
+              className="w-full bg-red-600 hover:bg-red-700 text-white"
+            >
               OK
             </Button>
           </DialogFooter>
