@@ -9,7 +9,6 @@ import {
   Info,
   BookOpen,
   ArrowRight,
-  Loader2,
   Menu,
   Bell,
   X,
@@ -231,6 +230,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
   const pendingNextStageRef = useRef<{ delayMs: number; requestedAt: number } | null>(null);
   const quizRetryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const listeningLoadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastAudioUrlRef = useRef<string | null>(null);
   const transcriptRef = useRef<HTMLParagraphElement>(null);
   const clickLocked = useRef(false);
   const hasListeningStartedRef = useRef(false);
@@ -390,6 +390,16 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
     setAudioDuration(0);
   };
 
+  const ensureAudioContext = useCallback(async () => {
+    if (Howler.ctx && Howler.ctx.state !== "running") {
+      try {
+        await Howler.ctx.resume();
+      } catch {
+        // ignore resume errors; play will surface issues if any
+      }
+    }
+  }, []);
+
   const handleKbAudioEnd = () => {
     setIsContextCompleted(true);
     if (listeningStage === "initial") {
@@ -397,9 +407,42 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
     }
   };
 
+  const primaryAudioUrl = React.useMemo(() => {
+    if (listeningData?.kbAudioUrl) return listeningData.kbAudioUrl;
+    if (listeningStage === "initial") {
+      return listeningData?.narrationAudioUrl || null;
+    }
+    if (listeningStage === "question_text") {
+      return listeningData?.questionAudioUrl || null;
+    }
+    return (
+      listeningData?.narrationAudioUrl ||
+      listeningData?.questionAudioUrl ||
+      null
+    );
+  }, [listeningData, listeningStage]);
+
+  useEffect(() => {
+    if (primaryAudioUrl === lastAudioUrlRef.current) return;
+    lastAudioUrlRef.current = primaryAudioUrl;
+
+    if (soundRef.current) {
+      soundRef.current.stop();
+      soundRef.current.unload();
+      soundRef.current = null;
+    }
+    kbAudioSeekRef.current = 0;
+    setPlayingAudioId(null);
+    setIsCurrentlyPlaying(false);
+    clearAudioProgress();
+  }, [primaryAudioUrl]);
+
   const toggleAudio = useCallback(
     (id: string, audioUrl: string | undefined, onEnd?: () => void) => {
-      if (!audioUrl) return;
+      if (!audioUrl) {
+        toast.info("Audio is still loading. Please try again.");
+        return;
+      }
 
       if (soundRef.current && playingAudioId === id) {
         if (soundRef.current.playing()) {
@@ -412,6 +455,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
           if (id === "kb-audio" && kbAudioSeekRef.current > 0) {
             soundRef.current.seek(kbAudioSeekRef.current);
           }
+          void ensureAudioContext();
           soundRef.current.play();
           setIsCurrentlyPlaying(true);
           if (id === "kb-audio") {
@@ -497,14 +541,18 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
         },
       });
 
+      void ensureAudioContext();
       sound.play();
       soundRef.current = sound;
     },
-    [playingAudioId]
+    [ensureAudioContext, playingAudioId]
   );
 
   const playKbAudio = useCallback(() => {
-    if (!listeningData?.kbAudioUrl) return;
+    if (!primaryAudioUrl) {
+      toast.info("Audio is still loading. Please try again.");
+      return;
+    }
     if (soundRef.current) {
       if (playingAudioId !== "kb-audio") {
         setPlayingAudioId("kb-audio");
@@ -512,12 +560,13 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       if (kbAudioSeekRef.current > 0) {
         soundRef.current.seek(kbAudioSeekRef.current);
       }
+      void ensureAudioContext();
       soundRef.current.play();
       setIsCurrentlyPlaying(true);
       return;
     }
-    toggleAudio("kb-audio", listeningData.kbAudioUrl, handleKbAudioEnd);
-  }, [listeningData?.kbAudioUrl, playingAudioId, toggleAudio]);
+    toggleAudio("kb-audio", primaryAudioUrl, handleKbAudioEnd);
+  }, [ensureAudioContext, primaryAudioUrl, playingAudioId, toggleAudio]);
 
   const pauseKbAudio = useCallback(() => {
     if (soundRef.current) {
@@ -528,7 +577,10 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
   }, []);
 
   const restartKbAudio = useCallback(() => {
-    if (!listeningData?.kbAudioUrl) return;
+    if (!primaryAudioUrl) {
+      toast.info("Audio is still loading. Please try again.");
+      return;
+    }
     if (soundRef.current) {
       soundRef.current.stop();
       soundRef.current.unload();
@@ -538,8 +590,8 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
     setIsCurrentlyPlaying(false);
     clearAudioProgress();
     onEndCalledRef.current = false;
-    toggleAudio("kb-audio", listeningData.kbAudioUrl, handleKbAudioEnd);
-  }, [listeningData?.kbAudioUrl, toggleAudio]);
+    toggleAudio("kb-audio", primaryAudioUrl, handleKbAudioEnd);
+  }, [primaryAudioUrl, toggleAudio]);
 
   // --- Socket Functions ---
   const resetActivityTimer = useCallback(() => {
@@ -1357,12 +1409,12 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
   // Audio controller registration
   useEffect(() => {
     onAudioControllerRef.current?.({
-      toggle: () => toggleAudio("kb-audio", listeningData?.kbAudioUrl, handleKbAudioEnd),
+      toggle: () => toggleAudio("kb-audio", primaryAudioUrl ?? undefined, handleKbAudioEnd),
       play: playKbAudio,
       pause: pauseKbAudio,
       restart: restartKbAudio,
     });
-  }, [listeningData?.kbAudioUrl, toggleAudio, playKbAudio, pauseKbAudio, restartKbAudio]);
+  }, [primaryAudioUrl, toggleAudio, playKbAudio, pauseKbAudio, restartKbAudio]);
 
   // Audio state updates
   useEffect(() => {
@@ -1604,13 +1656,14 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
               </div>
               <div className="mt-4">
                 <AudioPlayer
-                  audioSrc={listeningData?.kbAudioUrl || ""}
+                  audioSrc={primaryAudioUrl || ""}
                   isPlaying={playingAudioId === "kb-audio" && isCurrentlyPlaying}
                   progress={playingAudioId === "kb-audio" ? audioProgress : 0}
                   duration={playingAudioId === "kb-audio" ? audioDuration : 0}
                   showTotal={true}
+                  disabled={!primaryAudioUrl}
                   onTogglePlay={() =>
-                    toggleAudio("kb-audio", listeningData?.kbAudioUrl, handleKbAudioEnd)
+                    toggleAudio("kb-audio", primaryAudioUrl ?? undefined, handleKbAudioEnd)
                   }
                 />
               </div>
@@ -1732,19 +1785,6 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
         </div>
       )}
 
-      {isQuizLoading && (
-        <div className="w-full max-w-[800px] mx-auto">
-          <div className="mt-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-lg">
-            <div className="flex items-center gap-3 text-[#2B3A67]">
-              <Loader2 className="h-5 w-5 animate-spin text-[#3EA4F9]" />
-              <div>
-                <p className="text-sm font-semibold">Loading quiz...</p>
-                <p className="text-xs text-gray-500">Getting your questions ready.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Next Button */}
       {!showListeningCompletionCard && !isQuizLoading && (
