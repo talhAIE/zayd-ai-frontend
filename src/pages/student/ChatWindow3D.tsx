@@ -2275,13 +2275,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
       {listeningStage !== "quiz" && (
         <div
-          className={`flex flex-col max-w-[800px] mx-auto bg-gray-100 rounded-xl overflow-hidden shadow-2xl ${mode === "listening-mode"
+          className={`flex flex-col w-full max-w-none lg:max-w-[1000px] mx-auto bg-gray-100 rounded-xl overflow-hidden shadow-2xl ${mode === "listening-mode"
             ? isAvatar3DContext
-              ? "h-[calc(100svh-9.5rem)] max-h-[calc(100svh-9.5rem)]"
+              ? "h-full max-h-full lg:h-[calc(100svh-9.5rem)] lg:max-h-[calc(100svh-9.5rem)]"
               : "min-h-[70vh] max-h-[80vh]"
             : readingHeroActive
               ? "min-h-[calc(100vh-340px)] max-h-[calc(100vh-340px)] md:min-h-[calc(100vh-340px)] md:max-h-[calc(100vh-340px)]"
-              : "max-h-[76vh] min-h-[76vh] md:min-h-[74vh] md:max-h-[74vh]"
+              : "h-full max-h-full lg:min-h-[74vh] lg:max-h-[74vh]"
             }`}
         >
           {mode === "listening-mode" && (
@@ -2291,7 +2291,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   variant="ghost"
                   size="icon"
                   onClick={() => navigate(-1)}
-                  className="md:hidden"
+                  className="lg:hidden"
                 >
                   <Menu className="h-5 w-5" />
                 </Button>
@@ -2299,16 +2299,16 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   variant="ghost"
                   size="icon"
                   onClick={() => navigate(-1)}
-                  className="hidden md:inline-flex"
+                  className="hidden lg:inline-flex"
                 >
                   <ChevronLeft className="h-5 w-5" />
                 </Button>
               </div>
-              <h2 className="min-w-0 truncate text-center text-base md:text-lg font-semibold">
+              <h2 className="min-w-0 truncate text-center text-base lg:text-lg font-semibold">
                 Listening Mode
               </h2>
               <div className="flex items-center gap-2 justify-self-end">
-                <div className="hidden md:flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border-2 border-[#3EA4F9] bg-white text-gray-500">
+                <div className="hidden lg:flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border-2 border-[#3EA4F9] bg-white text-gray-500">
                   <Clock className="h-5 w-5 text-[#3EA4F9]" />
                   <span>
                     {sessionTimeRemaining !== null
@@ -2316,7 +2316,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                       : "..."}
                   </span>
                 </div>
-                <Button variant="ghost" size="icon" className="md:hidden">
+                <Button variant="ghost" size="icon" className="lg:hidden">
                   <Bell className="h-5 w-5" />
                 </Button>
               </div>
@@ -2396,12 +2396,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           )}
           {mode === "listening-mode" ? (
             <div
-              className={`relative flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-4 transition-all duration-500 ease-out ${isListeningStepTransitioning
+              className={`relative flex-1 overflow-y-auto p-4 lg:p-6 flex flex-col gap-4 transition-all duration-500 ease-out ${isListeningStepTransitioning
                 ? "opacity-0 translate-x-6"
                 : "opacity-100 translate-x-0"
                 }`}
             >
-              <div className="md:hidden flex justify-start">
+              <div className="lg:hidden flex justify-start">
                 <div className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border-2 border-[#3EA4F9] bg-white text-gray-500">
                   <Clock className="h-5 w-5 text-[#3EA4F9]" />
                   <span>
@@ -2412,8 +2412,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 </div>
               </div>
 
-              <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 md:p-6">
-                <div className="relative rounded-2xl bg-[#F8FAFC] border border-slate-200 overflow-hidden p-4 md:p-6">
+              <div className="sticky top-0 z-10 rounded-2xl bg-white border border-slate-200 shadow-sm p-4 lg:p-6">
+                <div className="relative rounded-2xl bg-[#F8FAFC] border border-slate-200 overflow-hidden p-4 lg:p-6">
                   {isAvatar3D && (
                     <AvatarModeLayout
                       key={`listening-avatar-${listeningAvatarSeed}`}
@@ -2445,7 +2445,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               </div>
 
               {shouldShowListeningIntro && (
-                <div className="rounded-2xl bg-white border border-[#B9E1FF] p-4 md:p-5 shadow-sm">
+                <div className="rounded-2xl bg-white border border-[#B9E1FF] p-4 lg:p-5 shadow-sm">
                   <div className="inline-flex items-center gap-2 rounded-full bg-[#E6F3FF] px-3 py-1 text-sm font-semibold text-[#2B6CB0] mb-3">
                     <Info className="h-4 w-4" />
                     Listening Intro
@@ -2458,7 +2458,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               )}
 
               {shouldShowListeningHint && (
-                <div className="rounded-2xl bg-[#CFE9FF] border border-[#8CC7FF] p-4 md:p-5 shadow-sm text-left">
+                <div className="rounded-2xl bg-[#CFE9FF] border border-[#8CC7FF] p-4 lg:p-5 shadow-sm text-left">
                   <div className="flex items-center gap-2 text-[#2B6CB0] font-semibold mb-2">
                     <Info className="h-4 w-4" />
                     Hints
@@ -2479,7 +2479,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
               {listeningStage === "question_text" &&
                 !showListeningCompletionCard && (
-                  <div className="rounded-2xl bg-white border border-[#B9E1FF] p-4 md:p-5 shadow-sm">
+                  <div className="rounded-2xl bg-white border border-[#B9E1FF] p-4 lg:p-5 shadow-sm">
                     <div className="inline-flex items-center gap-2 rounded-full bg-[#E6F3FF] px-3 py-1 text-sm font-semibold text-[#2B6CB0] mb-3">
                       <BookOpen className="h-4 w-4" />
                       Character Transcript
@@ -2510,9 +2510,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 )}
 
               {showListeningCompletionCard && (
-                <div className="absolute inset-0 z-20 flex items-center justify-center px-3 md:px-6">
+                <div className="absolute inset-0 z-20 flex items-center justify-center px-3 lg:px-6">
                   <div className="absolute inset-0 bg-white/70 backdrop-blur-sm" />
-                  <div className="relative w-full max-w-[720px] mx-auto text-center px-4 md:px-8 py-6 bg-white border border-slate-200 rounded-2xl shadow-xl">
+                  <div className="relative w-full max-w-[720px] mx-auto text-center px-4 lg:px-8 py-6 bg-white border border-slate-200 rounded-2xl shadow-xl">
                     <img
                       src={birdWithHeadphones}
                       alt="Listening helper"

@@ -301,8 +301,8 @@ const Chat: React.FC = () => {
             isAvatar3D && isDesktop ? "min-h-0 xl:h-[calc(100vh-9.5rem)]" : ""
           }`}
         >
-          {isNarrowScreen && isAvatar3D && mode !== "listening-mode" ? (
-            <div className="flex flex-col gap-3 h-[calc(100vh-120px)] min-h-0">
+          {isTabletOrBelow && isAvatar3D && mode !== "listening-mode" ? (
+            <div className="flex flex-col gap-3 h-[calc(100vh-120px)] min-h-0 w-full mx-auto">
               <div className="flex-none shrink-0">
                 {isAvatar3D ? (
                   <div className="w-full rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white">

@@ -1599,16 +1599,16 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       {/* Main Content */}
       {listeningStage !== "quiz" && (
         <div
-          className={`flex flex-col w-full max-w-[800px] mx-auto bg-gray-100 rounded-xl overflow-hidden shadow-2xl h-[calc(100svh-9.5rem)] max-h-[calc(100svh-9.5rem)]`}
+          className={`flex flex-col w-full max-w-none lg:max-w-[1000px] mx-auto bg-gray-100 rounded-xl overflow-hidden shadow-2xl h-full max-h-full lg:h-[calc(100svh-9.5rem)] lg:max-h-[calc(100svh-9.5rem)]`}
         >
           {/* Header */}
-          <header className="grid grid-cols-[auto,1fr,auto] items-center gap-3 px-4 md:px-6 py-4 border-b bg-white">
+          <header className="grid grid-cols-[auto,1fr,auto] items-center gap-3 px-4 lg:px-6 py-4 border-b bg-white">
             <div className="flex items-center gap-2 justify-self-start">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => navigate(-1)}
-                className="md:hidden"
+                className="lg:hidden"
               >
                 <Menu className="h-5 w-5" />
               </Button>
@@ -1616,16 +1616,16 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
                 variant="ghost"
                 size="icon"
                 onClick={() => navigate(-1)}
-                className="hidden md:inline-flex"
+                className="hidden lg:inline-flex"
               >
                 <ChevronLeft className="h-5 w-5" />
               </Button>
             </div>
-            <h2 className="min-w-0 truncate text-center text-base md:text-lg font-semibold">
+            <h2 className="min-w-0 truncate text-center text-base lg:text-lg font-semibold">
               Listening Mode
             </h2>
             <div className="flex items-center gap-2 justify-self-end">
-              <div className="hidden md:flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border-2 border-[#3EA4F9] bg-white text-gray-500">
+              <div className="hidden lg:flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border-2 border-[#3EA4F9] bg-white text-gray-500">
                 <Clock className="h-5 w-5 text-[#3EA4F9]" />
                 <span>
                   {sessionTimeRemaining !== null
@@ -1633,7 +1633,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
                     : "..."}
                 </span>
               </div>
-              <Button variant="ghost" size="icon" className="md:hidden">
+              <Button variant="ghost" size="icon" className="lg:hidden">
                 <Bell className="h-5 w-5" />
               </Button>
             </div>
@@ -1655,14 +1655,14 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
 
           {/* Main Listening Content */}
           <div
-            className={`relative flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-4 transition-all duration-500 ease-out ${
+            className={`relative flex-1 overflow-y-auto p-4 lg:p-6 flex flex-col gap-4 transition-all duration-500 ease-out ${
               isListeningStepTransitioning
                 ? "opacity-0 translate-x-6"
                 : "opacity-100 translate-x-0"
             }`}
           >
             {/* Mobile Timer */}
-            <div className="md:hidden flex justify-start">
+            <div className="lg:hidden flex justify-start">
               <div className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border-2 border-[#3EA4F9] bg-white text-gray-500">
                 <Clock className="h-5 w-5 text-[#3EA4F9]" />
                 <span>
@@ -1674,8 +1674,8 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
             </div>
 
             {/* Avatar + Audio Player */}
-            <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 md:p-6">
-              <div className="relative rounded-2xl bg-[#F8FAFC] border border-slate-200 overflow-hidden p-4 md:p-6">
+            <div className="sticky top-0 z-10 rounded-2xl bg-white border border-slate-200 shadow-sm p-4 lg:p-6">
+              <div className="relative rounded-2xl bg-[#F8FAFC] border border-slate-200 overflow-hidden p-4 lg:p-6">
                 {isAvatar3D && (
                   <AvatarModeLayout
                     key={`listening-avatar-${avatarSeed}`}
