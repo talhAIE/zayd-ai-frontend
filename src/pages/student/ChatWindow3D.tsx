@@ -6,7 +6,6 @@ import {
   Mic,
   Send,
   ChevronLeft,
-  MessageCircle,
   Clock,
   BarChart2,
   Play,
@@ -306,18 +305,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   onListeningAudioController,
   listeningAvatarSeed = 0,
 }) => {
-
-  const getDisplayTime = () => {
-    const now = new Date();
-    let hours = now.getHours();
-    const minutes = now.getMinutes();
-    const ampm = hours >= 12 ? "PM" : "AM";
-    hours = hours % 12;
-    hours = hours ? hours : 12;
-    const strMinutes = minutes < 10 ? "0" + minutes : minutes;
-    const strHours = hours < 10 ? "0" + hours : hours;
-    return strHours + ":" + strMinutes + " " + ampm;
-  };
 
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
