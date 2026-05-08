@@ -265,6 +265,7 @@ interface ChatWindowProps {
   ) => void;
   onListeningAudioState?: (state: {
     isPlaying: boolean;
+    isLoading: boolean;
     progress: number;
     duration: number;
   }) => void;
@@ -305,47 +306,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   onListeningAudioController,
   listeningAvatarSeed = 0,
 }) => {
-  const HintBubble = ({
-    title,
-    content,
-    icon: Icon,
-    timestamp,
-    onClick,
-    children,
-  }: {
-    title?: string;
-    content: React.ReactNode;
-    icon?: any;
-    timestamp: string;
-    onClick?: () => void;
-    children?: React.ReactNode;
-  }) => {
-    return (
-      <div
-        className="flex flex-col items-start p-2 px-3 gap-2 w-full max-w-[341px] bg-[#5FB8FB80] shadow-[0px_4px_4px_rgba(0,0,0,0.25)] rounded-[0px_16px_16px_16px] mt-2 relative overflow-hidden cursor-pointer hover:bg-[#A9D8FD] transition-colors"
-        style={{ opacity: 0.8 }}
-        onClick={onClick}
-      >
-        {title && Icon && (
-          <div className="flex flex-row items-center gap-[10px] h-6">
-            <Icon className="w-6 h-6 text-[#065FF0]" />
-            <span className="font-['Outfit'] font-medium text-base leading-5 flex items-center text-[#003DC2]">
-              {title}
-            </span>
-          </div>
-        )}
-        <div className="w-full font-['Outfit'] font-normal text-sm leading-[18px] flex items-center text-[#434343] self-stretch break-words">
-          {content}
-        </div>
-        {children}
-        <div className="flex flex-row justify-end items-center w-full h-[18px] self-stretch mt-1">
-          <span className="font-['Poppins'] font-normal text-[12px] leading-[18px] flex items-center text-right capitalize text-[#949494]">
-            {timestamp}
-          </span>
-        </div>
-      </div>
-    );
-  };
 
   const getDisplayTime = () => {
     const now = new Date();
@@ -419,6 +379,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
   // --- MODIFIED: Simplified audio state management
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
+  const [loadingAudioId, setLoadingAudioId] = useState<string | null>(null);
   const [isCurrentlyPlaying, setIsCurrentlyPlaying] = useState(false);
   const soundRef = useRef<Howl | null>(null);
   const [isAudioUnlocked, setIsAudioUnlocked] = useState(false);
@@ -730,6 +691,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     if (mode !== "listening-mode" || !isAvatar3DContext) return;
     onListeningAudioStateRef.current?.({
       isPlaying: playingAudioId === "kb-audio" && isCurrentlyPlaying,
+      isLoading: loadingAudioId === "kb-audio",
       progress: playingAudioId === "kb-audio" ? audioProgress : 0,
       duration: playingAudioId === "kb-audio" ? audioDuration : 0,
     });
@@ -1809,9 +1771,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     }
 
     if (soundRef.current) {
+      soundRef.current.off();
       soundRef.current.stop();
     }
 
+    setPlayingAudioId(id);
+    setIsCurrentlyPlaying(false);
+    setLoadingAudioId(id);
     clearAudioProgress();
     onEndCalledRef.current = false;
 
@@ -1821,6 +1787,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       onplay: () => {
         setPlayingAudioId(id);
         setIsCurrentlyPlaying(true);
+        setLoadingAudioId(null);
         onAudioPlaybackChange?.(true);
         if (id === "kb-audio" && mode === "listening-mode") {
           setHasStartedContextAudio(true);
@@ -1865,6 +1832,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       onstop: () => {
         setPlayingAudioId(null);
         setIsCurrentlyPlaying(false);
+        setLoadingAudioId(null);
         clearAudioProgress();
         onAudioPlaybackChange?.(false);
         if (id === "kb-audio") {
@@ -1878,6 +1846,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       onend: () => {
         setPlayingAudioId(null);
         setIsCurrentlyPlaying(false);
+        setLoadingAudioId(null);
         clearAudioProgress();
         onAudioPlaybackChange?.(false);
         if (id === "kb-audio") {
@@ -1896,6 +1865,15 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         toast.error("Could not play audio.");
         setPlayingAudioId(null);
         setIsCurrentlyPlaying(false);
+        setLoadingAudioId(null);
+        clearAudioProgress();
+      },
+      onloaderror: (soundId: number, error: any) => {
+        logger.error("Howler load error:", { soundId, error });
+        toast.error("Could not load audio.");
+        setPlayingAudioId(null);
+        setIsCurrentlyPlaying(false);
+        setLoadingAudioId(null);
         clearAudioProgress();
       },
     });
@@ -2297,13 +2275,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
       {listeningStage !== "quiz" && (
         <div
-          className={`flex flex-col max-w-[800px] mx-auto bg-gray-100 rounded-xl overflow-hidden shadow-2xl ${mode === "listening-mode"
+          className={`flex flex-col w-full max-w-none lg:max-w-[1000px] mx-auto bg-gray-100 rounded-xl overflow-hidden shadow-2xl ${mode === "listening-mode"
             ? isAvatar3DContext
-              ? "h-[calc(100svh-9.5rem)] max-h-[calc(100svh-9.5rem)]"
+              ? "h-full max-h-full lg:h-[calc(100svh-9.5rem)] lg:max-h-[calc(100svh-9.5rem)]"
               : "min-h-[70vh] max-h-[80vh]"
             : readingHeroActive
               ? "min-h-[calc(100vh-340px)] max-h-[calc(100vh-340px)] md:min-h-[calc(100vh-340px)] md:max-h-[calc(100vh-340px)]"
-              : "max-h-[76vh] min-h-[76vh] md:min-h-[74vh] md:max-h-[74vh]"
+              : "h-full max-h-full lg:min-h-[74vh] lg:max-h-[74vh]"
             }`}
         >
           {mode === "listening-mode" && (
@@ -2313,7 +2291,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   variant="ghost"
                   size="icon"
                   onClick={() => navigate(-1)}
-                  className="md:hidden"
+                  className="lg:hidden"
                 >
                   <Menu className="h-5 w-5" />
                 </Button>
@@ -2321,16 +2299,16 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   variant="ghost"
                   size="icon"
                   onClick={() => navigate(-1)}
-                  className="hidden md:inline-flex"
+                  className="hidden lg:inline-flex"
                 >
                   <ChevronLeft className="h-5 w-5" />
                 </Button>
               </div>
-              <h2 className="min-w-0 truncate text-center text-base md:text-lg font-semibold">
+              <h2 className="min-w-0 truncate text-center text-base lg:text-lg font-semibold">
                 Listening Mode
               </h2>
               <div className="flex items-center gap-2 justify-self-end">
-                <div className="hidden md:flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border-2 border-[#3EA4F9] bg-white text-gray-500">
+                <div className="hidden lg:flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border-2 border-[#3EA4F9] bg-white text-gray-500">
                   <Clock className="h-5 w-5 text-[#3EA4F9]" />
                   <span>
                     {sessionTimeRemaining !== null
@@ -2338,7 +2316,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                       : "..."}
                   </span>
                 </div>
-                <Button variant="ghost" size="icon" className="md:hidden">
+                <Button variant="ghost" size="icon" className="lg:hidden">
                   <Bell className="h-5 w-5" />
                 </Button>
               </div>
@@ -2418,12 +2396,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           )}
           {mode === "listening-mode" ? (
             <div
-              className={`relative flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-4 transition-all duration-500 ease-out ${isListeningStepTransitioning
+              className={`relative flex-1 overflow-y-auto p-4 lg:p-6 flex flex-col gap-4 transition-all duration-500 ease-out ${isListeningStepTransitioning
                 ? "opacity-0 translate-x-6"
                 : "opacity-100 translate-x-0"
                 }`}
             >
-              <div className="md:hidden flex justify-start">
+              <div className="lg:hidden flex justify-start">
                 <div className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border-2 border-[#3EA4F9] bg-white text-gray-500">
                   <Clock className="h-5 w-5 text-[#3EA4F9]" />
                   <span>
@@ -2434,8 +2412,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 </div>
               </div>
 
-              <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 md:p-6">
-                <div className="relative rounded-2xl bg-[#F8FAFC] border border-slate-200 overflow-hidden p-4 md:p-6">
+              <div className="sticky top-0 z-10 rounded-2xl bg-white border border-slate-200 shadow-sm p-4 lg:p-6">
+                <div className="relative rounded-2xl bg-[#F8FAFC] border border-slate-200 overflow-hidden p-4 lg:p-6">
                   {isAvatar3D && (
                     <AvatarModeLayout
                       key={`listening-avatar-${listeningAvatarSeed}`}
@@ -2467,7 +2445,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               </div>
 
               {shouldShowListeningIntro && (
-                <div className="rounded-2xl bg-white border border-[#B9E1FF] p-4 md:p-5 shadow-sm">
+                <div className="rounded-2xl bg-white border border-[#B9E1FF] p-4 lg:p-5 shadow-sm">
                   <div className="inline-flex items-center gap-2 rounded-full bg-[#E6F3FF] px-3 py-1 text-sm font-semibold text-[#2B6CB0] mb-3">
                     <Info className="h-4 w-4" />
                     Listening Intro
@@ -2480,7 +2458,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               )}
 
               {shouldShowListeningHint && (
-                <div className="rounded-2xl bg-[#CFE9FF] border border-[#8CC7FF] p-4 md:p-5 shadow-sm text-left">
+                <div className="rounded-2xl bg-[#CFE9FF] border border-[#8CC7FF] p-4 lg:p-5 shadow-sm text-left">
                   <div className="flex items-center gap-2 text-[#2B6CB0] font-semibold mb-2">
                     <Info className="h-4 w-4" />
                     Hints
@@ -2501,7 +2479,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
               {listeningStage === "question_text" &&
                 !showListeningCompletionCard && (
-                  <div className="rounded-2xl bg-white border border-[#B9E1FF] p-4 md:p-5 shadow-sm">
+                  <div className="rounded-2xl bg-white border border-[#B9E1FF] p-4 lg:p-5 shadow-sm">
                     <div className="inline-flex items-center gap-2 rounded-full bg-[#E6F3FF] px-3 py-1 text-sm font-semibold text-[#2B6CB0] mb-3">
                       <BookOpen className="h-4 w-4" />
                       Character Transcript
@@ -2532,9 +2510,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 )}
 
               {showListeningCompletionCard && (
-                <div className="absolute inset-0 z-20 flex items-center justify-center px-3 md:px-6">
+                <div className="absolute inset-0 z-20 flex items-center justify-center px-3 lg:px-6">
                   <div className="absolute inset-0 bg-white/70 backdrop-blur-sm" />
-                  <div className="relative w-full max-w-[720px] mx-auto text-center px-4 md:px-8 py-6 bg-white border border-slate-200 rounded-2xl shadow-xl">
+                  <div className="relative w-full max-w-[720px] mx-auto text-center px-4 lg:px-8 py-6 bg-white border border-slate-200 rounded-2xl shadow-xl">
                     <img
                       src={birdWithHeadphones}
                       alt="Listening helper"
@@ -2683,8 +2661,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                           size="icon"
                           onClick={() => toggleAudio(msg.id, msg.audioURL)}
                         >
-                          {playingAudioId === msg.id && isCurrentlyPlaying ? (
-                            <Pause className="h-5 w-5" />
+                          {playingAudioId === msg.id ? (
+                            isCurrentlyPlaying ? (
+                              <Pause className="h-5 w-5" />
+                            ) : loadingAudioId === msg.id ? (
+                              <LoaderPinwheel className="h-5 w-5 animate-spin text-primary" />
+                            ) : (
+                              <Play className="h-5 w-5" />
+                            )
                           ) : (
                             <Play className="h-5 w-5" />
                           )}
@@ -2761,15 +2745,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                           </div>
 
                           {msg.hasFeedback && (
-                            <HintBubble
-                              title="Hint"
-                              content={
-                                typeof msg.feedback === "string"
-                                  ? msg.feedback
-                                  : "Feedback available"
-                              }
-                              icon={Info}
-                              timestamp={getDisplayTime()}
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               onClick={() => {
                                 onShowFeedback({
                                   type: "feedback",
@@ -2777,7 +2755,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                                 });
                                 resetInactivityTimer();
                               }}
-                            />
+                              className="flex items-center gap-1 bg-white text-primary text-xs p-1 h-auto rounded-md shadow-sm border mt-2 w-fit"
+                            >
+                              <Info className="h-4 w-4" />
+                              View Hint
+                            </Button>
                           )}
                         </div>
                       )}

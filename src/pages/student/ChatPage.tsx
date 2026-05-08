@@ -8,7 +8,7 @@ import ChatWindowNormal from "./ChatWindowNormal";
 import AudioPlayer3D from "./AudioPlayer3D";
 import AvatarModeLayout from "@/components/3d/AvatarModeLayout";
 import AvatarHeaderBar from "@/components/3d/AvatarHeaderBar";
-import ListeningMode3D from "@/components/3d/ListeningMode3D";
+import ListeningMode3D, { ListeningAudioState } from "@/components/3d/ListeningMode3D";
 
 interface Assessment {
   accuracyScore: number;
@@ -52,6 +52,7 @@ const Chat: React.FC = () => {
   );
   const [listeningAudioState, setListeningAudioState] = useState({
     isPlaying: false,
+    isLoading: false,
     progress: 0,
     duration: 0,
   });
@@ -162,10 +163,11 @@ const Chat: React.FC = () => {
   );
 
   const handleListeningAudioStateChange = useCallback(
-    (state: { isPlaying: boolean; progress: number; duration: number }) => {
+    (state: ListeningAudioState) => {
       setListeningAudioState((prev) => {
         if (
           prev.isPlaying === state.isPlaying &&
+          prev.isLoading === state.isLoading &&
           prev.progress === state.progress &&
           prev.duration === state.duration
         ) {
@@ -299,8 +301,8 @@ const Chat: React.FC = () => {
             isAvatar3D && isDesktop ? "min-h-0 xl:h-[calc(100vh-9.5rem)]" : ""
           }`}
         >
-          {isNarrowScreen && isAvatar3D && mode !== "listening-mode" ? (
-            <div className="flex flex-col gap-3 h-[calc(100vh-120px)] min-h-0">
+          {isTabletOrBelow && isAvatar3D && mode !== "listening-mode" ? (
+            <div className="flex flex-col gap-3 h-[calc(100vh-120px)] min-h-0 w-full mx-auto">
               <div className="flex-none shrink-0">
                 {isAvatar3D ? (
                   <div className="w-full rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white">
@@ -567,6 +569,7 @@ const Chat: React.FC = () => {
                       <AudioPlayer3D
                         audioSrc={listeningAudioUrl || ""}
                         isPlaying={listeningAudioState.isPlaying}
+                        isLoading={listeningAudioState.isLoading}
                         progress={listeningAudioState.progress}
                         duration={listeningAudioState.duration}
                         showTotal={true}
