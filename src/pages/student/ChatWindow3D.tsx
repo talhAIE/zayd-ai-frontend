@@ -306,47 +306,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   onListeningAudioController,
   listeningAvatarSeed = 0,
 }) => {
-  const HintBubble = ({
-    title,
-    content,
-    icon: Icon,
-    timestamp,
-    onClick,
-    children,
-  }: {
-    title?: string;
-    content: React.ReactNode;
-    icon?: any;
-    timestamp: string;
-    onClick?: () => void;
-    children?: React.ReactNode;
-  }) => {
-    return (
-      <div
-        className="flex flex-col items-start p-2 px-3 gap-2 w-full max-w-[341px] bg-[#5FB8FB80] shadow-[0px_4px_4px_rgba(0,0,0,0.25)] rounded-[0px_16px_16px_16px] mt-2 relative overflow-hidden cursor-pointer hover:bg-[#A9D8FD] transition-colors"
-        style={{ opacity: 0.8 }}
-        onClick={onClick}
-      >
-        {title && Icon && (
-          <div className="flex flex-row items-center gap-[10px] h-6">
-            <Icon className="w-6 h-6 text-[#065FF0]" />
-            <span className="font-['Outfit'] font-medium text-base leading-5 flex items-center text-[#003DC2]">
-              {title}
-            </span>
-          </div>
-        )}
-        <div className="w-full font-['Outfit'] font-normal text-sm leading-[18px] flex items-center text-[#434343] self-stretch break-words">
-          {content}
-        </div>
-        {children}
-        <div className="flex flex-row justify-end items-center w-full h-[18px] self-stretch mt-1">
-          <span className="font-['Poppins'] font-normal text-[12px] leading-[18px] flex items-center text-right capitalize text-[#949494]">
-            {timestamp}
-          </span>
-        </div>
-      </div>
-    );
-  };
 
   const getDisplayTime = () => {
     const now = new Date();
@@ -2786,15 +2745,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                           </div>
 
                           {msg.hasFeedback && (
-                            <HintBubble
-                              title="Hint"
-                              content={
-                                typeof msg.feedback === "string"
-                                  ? msg.feedback
-                                  : "Feedback available"
-                              }
-                              icon={Info}
-                              timestamp={getDisplayTime()}
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               onClick={() => {
                                 onShowFeedback({
                                   type: "feedback",
@@ -2802,7 +2755,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                                 });
                                 resetInactivityTimer();
                               }}
-                            />
+                              className="flex items-center gap-1 bg-white text-primary text-xs p-1 h-auto rounded-md shadow-sm border mt-2 w-fit"
+                            >
+                              <Info className="h-4 w-4" />
+                              View Hint
+                            </Button>
                           )}
                         </div>
                       )}
