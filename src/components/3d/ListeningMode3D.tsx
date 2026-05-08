@@ -60,6 +60,7 @@ export interface ListeningStageData {
 
 export interface ListeningAudioState {
   isPlaying: boolean;
+  isLoading: boolean;
   progress: number;
   duration: number;
 }
@@ -203,6 +204,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
 
   // Audio state
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
+  const [loadingAudioId, setLoadingAudioId] = useState<string | null>(null);
   const [isCurrentlyPlaying, setIsCurrentlyPlaying] = useState(false);
   const [audioProgress, setAudioProgress] = useState(0);
   const [audioDuration, setAudioDuration] = useState(0);
@@ -429,12 +431,14 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
           }
           soundRef.current.pause();
           setIsCurrentlyPlaying(false);
+          setLoadingAudioId(null);
         } else {
           if (id === "kb-audio" && kbAudioSeekRef.current > 0) {
             soundRef.current.seek(kbAudioSeekRef.current);
           }
           soundRef.current.play();
           setIsCurrentlyPlaying(true);
+          setLoadingAudioId(null);
           if (id === "kb-audio") {
             onEndCalledRef.current = false;
           }
@@ -443,10 +447,14 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       }
 
       if (soundRef.current) {
+        soundRef.current.off();
         soundRef.current.stop();
       }
 
       clearAudioProgress();
+      setPlayingAudioId(id);
+      setIsCurrentlyPlaying(false);
+      setLoadingAudioId(id);
       onEndCalledRef.current = false;
 
       const sound = new Howl({
@@ -455,6 +463,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
         onplay: () => {
           setPlayingAudioId(id);
           setIsCurrentlyPlaying(true);
+          setLoadingAudioId(null);
           if (id === "kb-audio") {
             setIsContextCompleted(false);
             onEndCalledRef.current = false;
@@ -486,6 +495,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
           if (progressIntervalRef.current)
             clearInterval(progressIntervalRef.current);
           setIsCurrentlyPlaying(false);
+          setLoadingAudioId(null);
           if (id === "kb-audio") {
             kbAudioSeekRef.current = Number(sound.seek() || 0);
             setIsContextCompleted(false);
@@ -494,6 +504,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
         onstop: () => {
           setPlayingAudioId(null);
           setIsCurrentlyPlaying(false);
+          setLoadingAudioId(null);
           clearAudioProgress();
           if (id === "kb-audio") {
             kbAudioSeekRef.current = 0;
@@ -503,6 +514,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
         onend: () => {
           setPlayingAudioId(null);
           setIsCurrentlyPlaying(false);
+          setLoadingAudioId(null);
           clearAudioProgress();
           if (id === "kb-audio") {
             kbAudioSeekRef.current = 0;
@@ -520,6 +532,15 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
           toast.error("Could not play audio.");
           setPlayingAudioId(null);
           setIsCurrentlyPlaying(false);
+          setLoadingAudioId(null);
+          clearAudioProgress();
+        },
+        onloaderror: (_soundId: number, _error: any) => {
+          logger.error("Howler load error");
+          toast.error("Could not load audio.");
+          setPlayingAudioId(null);
+          setIsCurrentlyPlaying(false);
+          setLoadingAudioId(null);
           clearAudioProgress();
         },
       });
@@ -1403,10 +1424,17 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
   useEffect(() => {
     onAudioStateChangeRef.current?.({
       isPlaying: playingAudioId === "kb-audio" && isCurrentlyPlaying,
+      isLoading: loadingAudioId === "kb-audio",
       progress: playingAudioId === "kb-audio" ? audioProgress : 0,
       duration: playingAudioId === "kb-audio" ? audioDuration : 0,
     });
-  }, [playingAudioId, isCurrentlyPlaying, audioProgress, audioDuration]);
+  }, [
+    playingAudioId,
+    isCurrentlyPlaying,
+    loadingAudioId,
+    audioProgress,
+    audioDuration,
+  ]);
 
   // Transcript expand button check
   useEffect(() => {

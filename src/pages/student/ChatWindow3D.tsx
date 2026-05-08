@@ -265,6 +265,7 @@ interface ChatWindowProps {
   ) => void;
   onListeningAudioState?: (state: {
     isPlaying: boolean;
+    isLoading: boolean;
     progress: number;
     duration: number;
   }) => void;
@@ -419,6 +420,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
   // --- MODIFIED: Simplified audio state management
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
+  const [loadingAudioId, setLoadingAudioId] = useState<string | null>(null);
   const [isCurrentlyPlaying, setIsCurrentlyPlaying] = useState(false);
   const soundRef = useRef<Howl | null>(null);
   const [isAudioUnlocked, setIsAudioUnlocked] = useState(false);
@@ -730,6 +732,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     if (mode !== "listening-mode" || !isAvatar3DContext) return;
     onListeningAudioStateRef.current?.({
       isPlaying: playingAudioId === "kb-audio" && isCurrentlyPlaying,
+      isLoading: loadingAudioId === "kb-audio",
       progress: playingAudioId === "kb-audio" ? audioProgress : 0,
       duration: playingAudioId === "kb-audio" ? audioDuration : 0,
     });
@@ -1809,9 +1812,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     }
 
     if (soundRef.current) {
+      soundRef.current.off();
       soundRef.current.stop();
     }
 
+    setPlayingAudioId(id);
+    setIsCurrentlyPlaying(false);
+    setLoadingAudioId(id);
     clearAudioProgress();
     onEndCalledRef.current = false;
 
@@ -1821,6 +1828,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       onplay: () => {
         setPlayingAudioId(id);
         setIsCurrentlyPlaying(true);
+        setLoadingAudioId(null);
         onAudioPlaybackChange?.(true);
         if (id === "kb-audio" && mode === "listening-mode") {
           setHasStartedContextAudio(true);
@@ -1865,6 +1873,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       onstop: () => {
         setPlayingAudioId(null);
         setIsCurrentlyPlaying(false);
+        setLoadingAudioId(null);
         clearAudioProgress();
         onAudioPlaybackChange?.(false);
         if (id === "kb-audio") {
@@ -1878,6 +1887,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       onend: () => {
         setPlayingAudioId(null);
         setIsCurrentlyPlaying(false);
+        setLoadingAudioId(null);
         clearAudioProgress();
         onAudioPlaybackChange?.(false);
         if (id === "kb-audio") {
@@ -1896,6 +1906,15 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         toast.error("Could not play audio.");
         setPlayingAudioId(null);
         setIsCurrentlyPlaying(false);
+        setLoadingAudioId(null);
+        clearAudioProgress();
+      },
+      onloaderror: (soundId: number, error: any) => {
+        logger.error("Howler load error:", { soundId, error });
+        toast.error("Could not load audio.");
+        setPlayingAudioId(null);
+        setIsCurrentlyPlaying(false);
+        setLoadingAudioId(null);
         clearAudioProgress();
       },
     });
@@ -2683,8 +2702,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                           size="icon"
                           onClick={() => toggleAudio(msg.id, msg.audioURL)}
                         >
-                          {playingAudioId === msg.id && isCurrentlyPlaying ? (
-                            <Pause className="h-5 w-5" />
+                          {playingAudioId === msg.id ? (
+                            isCurrentlyPlaying ? (
+                              <Pause className="h-5 w-5" />
+                            ) : loadingAudioId === msg.id ? (
+                              <LoaderPinwheel className="h-5 w-5 animate-spin text-primary" />
+                            ) : (
+                              <Play className="h-5 w-5" />
+                            )
                           ) : (
                             <Play className="h-5 w-5" />
                           )}

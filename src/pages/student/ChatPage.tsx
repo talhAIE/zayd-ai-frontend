@@ -8,7 +8,7 @@ import ChatWindowNormal from "./ChatWindowNormal";
 import AudioPlayer3D from "./AudioPlayer3D";
 import AvatarModeLayout from "@/components/3d/AvatarModeLayout";
 import AvatarHeaderBar from "@/components/3d/AvatarHeaderBar";
-import ListeningMode3D from "@/components/3d/ListeningMode3D";
+import ListeningMode3D, { ListeningAudioState } from "@/components/3d/ListeningMode3D";
 
 interface Assessment {
   accuracyScore: number;
@@ -52,6 +52,7 @@ const Chat: React.FC = () => {
   );
   const [listeningAudioState, setListeningAudioState] = useState({
     isPlaying: false,
+    isLoading: false,
     progress: 0,
     duration: 0,
   });
@@ -162,10 +163,11 @@ const Chat: React.FC = () => {
   );
 
   const handleListeningAudioStateChange = useCallback(
-    (state: { isPlaying: boolean; progress: number; duration: number }) => {
+    (state: ListeningAudioState) => {
       setListeningAudioState((prev) => {
         if (
           prev.isPlaying === state.isPlaying &&
+          prev.isLoading === state.isLoading &&
           prev.progress === state.progress &&
           prev.duration === state.duration
         ) {
@@ -567,6 +569,7 @@ const Chat: React.FC = () => {
                       <AudioPlayer3D
                         audioSrc={listeningAudioUrl || ""}
                         isPlaying={listeningAudioState.isPlaying}
+                        isLoading={listeningAudioState.isLoading}
                         progress={listeningAudioState.progress}
                         duration={listeningAudioState.duration}
                         showTotal={true}
