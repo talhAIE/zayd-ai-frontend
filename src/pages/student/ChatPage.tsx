@@ -8,7 +8,9 @@ import ChatWindowNormal from "./ChatWindowNormal";
 import AudioPlayer3D from "./AudioPlayer3D";
 import AvatarModeLayout from "@/components/3d/AvatarModeLayout";
 import AvatarHeaderBar from "@/components/3d/AvatarHeaderBar";
-import ListeningMode3D, { ListeningAudioState } from "@/components/3d/ListeningMode3D";
+import ListeningMode3D, {
+  ListeningAudioState,
+} from "@/components/3d/ListeningMode3D";
 
 interface Assessment {
   accuracyScore: number;
@@ -265,7 +267,7 @@ const Chat: React.FC = () => {
                   onTopicImage={handleTopicImage}
                 />
               </div>
-              <div className="flex flex-col gap-3 w-full md:w-1/3">
+              <div className="flex flex-col w-full md:w-1/3">
                 {!isSmallScreen && mode !== "listening-mode" && (
                   <FeedbackSection
                     isOpen={isFeedbackOpen}
@@ -303,7 +305,7 @@ const Chat: React.FC = () => {
         >
           {isTabletOrBelow && isAvatar3D && mode !== "listening-mode" ? (
             <div className="flex flex-col gap-3 h-[calc(100vh-120px)] min-h-0 w-full mx-auto">
-              <div className="flex-none shrink-0">
+              <div className="flex-none shrink-0 sticky top-0 z-30">
                 {isAvatar3D ? (
                   <div className="w-full rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white">
                     {(mode === "reading-mode" || mode === "roleplay-mode") && (
@@ -393,8 +395,8 @@ const Chat: React.FC = () => {
               >
                 <div
                   className={`flex-1 min-[768px]:flex-grow-2 w-full min-[768px]:w-auto flex flex-col min-h-0 ${
-                    mode === "roleplay-mode"
-                      ? "order-1 min-[768px]:order-1"
+                    mode === "roleplay-mode" || mode === "reading-mode"
+                      ? "order-2 min-[768px]:order-1"
                       : "order-2 min-[768px]:order-1"
                   }`}
                 >
@@ -448,7 +450,7 @@ const Chat: React.FC = () => {
                     )}
                   {isHeroMode3D && isDesktop && (
                     <div
-                      className={`flex-none transition-all duration-700 ease-in-out overflow-hidden ${
+                      className={`flex-none sticky top-6 z-20 transition-all duration-700 ease-in-out overflow-hidden ${
                         shouldShowReadingHero
                           ? "opacity-100 translate-y-0 scale-100 max-h-[1000px] mb-4"
                           : "opacity-0 -translate-y-2 scale-95 max-h-0 mb-0 pointer-events-none"
@@ -506,7 +508,7 @@ const Chat: React.FC = () => {
                   )}
                 </div>
                 <div
-                  className={`flex flex-col gap-3 w-full ${
+                  className={`flex flex-col ${isAvatar3D ? "gap-3" : "gap-0"} w-full sticky top-0 min-[768px]:top-6 z-20 self-start ${
                     mode === "listening-mode" &&
                     !shouldShowListeningSidebar &&
                     !isDesktop
@@ -517,8 +519,8 @@ const Chat: React.FC = () => {
                       ? "min-[768px]:w-[28%]"
                       : "min-[768px]:w-1/3"
                   } ${isAvatar3D && isDesktop ? "min-h-0" : ""} ${
-                    mode === "roleplay-mode"
-                      ? "order-2 min-[768px]:order-2"
+                    mode === "roleplay-mode" || mode === "reading-mode"
+                      ? "order-1 min-[768px]:order-2"
                       : "order-1 min-[768px]:order-2"
                   }`}
                 >
