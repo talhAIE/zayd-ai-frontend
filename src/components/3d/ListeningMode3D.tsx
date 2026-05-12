@@ -1674,8 +1674,8 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
             </div>
 
             {/* Avatar + Audio Player */}
-            <div className="sticky top-0 z-10 rounded-2xl bg-white border border-slate-200 shadow-sm p-4 lg:p-6">
-              <div className="relative rounded-2xl bg-[#F8FAFC] border border-slate-200 overflow-hidden p-4 lg:p-6">
+            <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 lg:p-6 sticky top-0 z-10 lg:static lg:z-0 lg:shadow-none lg:border-none">
+              <div className="relative rounded-2xl bg-[#F8FAFC] border border-slate-200 overflow-hidden p-4 lg:p-0">
                 {isAvatar3D && (
                   <AvatarModeLayout
                     key={`listening-avatar-${avatarSeed}`}
