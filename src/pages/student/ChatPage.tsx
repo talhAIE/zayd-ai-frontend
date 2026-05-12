@@ -303,13 +303,15 @@ const Chat: React.FC = () => {
     <div className="flex max-h-screen">
       <main className="flex-1 transition-all duration-300">
         <div
-          className={`mx-auto md:px-6 ${
-            isAvatar3D && isDesktop ? "min-h-0 xl:h-[calc(100vh-9.5rem)]" : ""
+          className={`mx-auto md:px-6 min-h-0 ${
+            isAvatar3D
+              ? "h-[calc(100vh-6rem)] xl:h-[calc(100vh-9.5rem)]"
+              : ""
           }`}
         >
           {isTabletOrBelow && isAvatar3D ? (
-            <div className="flex flex-col gap-3 min-h-0 w-full mx-auto">
-              <div className="flex-none shrink-0 sticky top-12 z-30">
+            <div className="flex flex-col gap-3 min-h-0 w-full mx-auto h-full overflow-hidden">
+              <div className="flex-none shrink-0 sticky top-0 z-30">
                 {isAvatar3D ? (
                   <div className="w-full rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white">
                     {(mode === "reading-mode" ||
@@ -392,12 +394,12 @@ const Chat: React.FC = () => {
           ) : (
             <div
               className={`flex flex-col w-full gap-4 lg:gap-6 ${
-                isAvatar3D && isDesktop ? "min-h-0 h-full" : ""
+                isAvatar3D ? "min-h-0 h-full" : ""
               }`}
             >
               <div
                 className={`flex flex-col min-[768px]:flex-row justify-between w-full gap-4 lg:gap-6 ${
-                  isAvatar3D && isDesktop ? "min-h-0 h-full" : ""
+                  isAvatar3D ? "min-h-0 h-full" : ""
                 }`}
               >
                 <div
@@ -457,7 +459,7 @@ const Chat: React.FC = () => {
                     )}
                   {isHeroMode3D && isDesktop && (
                     <div
-                      className={`flex-none sticky top-6 z-20 transition-all duration-700 ease-in-out overflow-hidden ${
+                      className={`flex-none sticky top-0 z-20 transition-all duration-700 ease-in-out overflow-hidden ${
                         shouldShowReadingHero
                           ? "opacity-100 translate-y-0 scale-100 max-h-[1000px] mb-4"
                           : "opacity-0 -translate-y-2 scale-95 max-h-0 mb-0 pointer-events-none"
@@ -515,7 +517,7 @@ const Chat: React.FC = () => {
                   )}
                 </div>
                 <div
-                  className={`flex flex-col ${mode === "roleplay-mode" ? "gap-3" : "gap-0"} w-full sticky top-0 min-[768px]:top-6 z-20 self-start ${
+                  className={`flex flex-col ${mode === "roleplay-mode" ? "gap-3" : "gap-0"} w-full sticky top-0 z-20 self-start ${
                     mode === "listening-mode" &&
                     !shouldShowListeningSidebar &&
                     !isDesktop

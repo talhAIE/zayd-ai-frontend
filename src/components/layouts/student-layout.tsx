@@ -299,7 +299,7 @@ export function StudentLayout({ children }: StudentLayoutProps) {
 
         {/* Main Content */}
         <main className="flex-1">
-          <div className="p-4 xl:p-8">{children}</div>
+          <div className={`p-4 xl:p-8 ${location.pathname.includes('/student/learning-mode/') ? 'pt-2' : ''}`}>{children}</div>
         </main>
       </div>
 
