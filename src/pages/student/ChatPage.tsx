@@ -241,7 +241,9 @@ const Chat: React.FC = () => {
   const shouldShowSideAvatar =
     isAvatar3D && (!isHeroMode3D || !isDesktop || isAvatarIntroComplete);
   const shouldShowListeningSidebar =
-    isAvatar3D && mode === "listening-mode" && listeningStage === "quiz";
+    isAvatar3D &&
+    mode === "listening-mode" &&
+    (listeningStage === "quiz" || !isDesktop);
   const modeTitle =
     mode === "photo-mode"
       ? "Photo Mode"
@@ -249,11 +251,13 @@ const Chat: React.FC = () => {
         ? "Reading Mode"
         : mode === "roleplay-mode"
           ? "Roleplay Mode"
-          : mode === "debate-mode"
-            ? "Debate Mode"
-            : mode === "curriculum-mode"
-              ? "Curriculum Mode"
-              : "Chat Mode";
+          : mode === "listening-mode"
+            ? "Listening Mode"
+            : mode === "debate-mode"
+              ? "Debate Mode"
+              : mode === "curriculum-mode"
+                ? "Curriculum Mode"
+                : "Chat Mode";
 
   if (!isAvatar3D) {
     return (
@@ -303,12 +307,15 @@ const Chat: React.FC = () => {
             isAvatar3D && isDesktop ? "min-h-0 xl:h-[calc(100vh-9.5rem)]" : ""
           }`}
         >
-          {isTabletOrBelow && isAvatar3D && mode !== "listening-mode" ? (
-            <div className="flex flex-col gap-3 h-[calc(100vh-120px)] min-h-0 w-full mx-auto">
-              <div className="flex-none shrink-0 sticky top-0 z-30">
+          {isTabletOrBelow && isAvatar3D ? (
+            <div className="flex flex-col gap-3 min-h-0 w-full mx-auto">
+              <div className="flex-none shrink-0 sticky top-12 z-30">
                 {isAvatar3D ? (
                   <div className="w-full rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white">
-                    {(mode === "reading-mode" || mode === "roleplay-mode") && (
+                    {(mode === "reading-mode" ||
+                      mode === "roleplay-mode" ||
+                      (mode === "listening-mode" &&
+                        listeningStage !== "quiz")) && (
                       <AvatarHeaderBar
                         title={modeTitle}
                         onBack={() => navigate(-1)}
@@ -320,7 +327,7 @@ const Chat: React.FC = () => {
                       />
                     )}
                     <AvatarModeLayout
-                      compact
+                      compact={isSmallScreen}
                       syncPlaying={isAvatarSyncPlaying}
                       videoSrc={avatarVideoSrc}
                       loop={isReading3D ? false : undefined}
@@ -341,13 +348,13 @@ const Chat: React.FC = () => {
                   </div>
                 ) : (
                   <AvatarModeLayout
-                    compact
+                    compact={isSmallScreen}
                     syncPlaying={isAvatarSyncPlaying}
                     videoSrc={avatarVideoSrc}
                   />
                 )}
               </div>
-              <div className="flex-1 min-h-0">
+              <div className="flex-1 min-h-0 flex flex-col h-full">
                 {mode === "listening-mode" ? (
                   <ListeningMode3D
                     isAvatar3D={isAvatar3D}
@@ -538,7 +545,7 @@ const Chat: React.FC = () => {
                       }`}
                     >
                       <AvatarModeLayout
-                        compact
+                        compact={isSmallScreen}
                         syncPlaying={isAvatarSyncPlaying}
                         videoSrc={
                           isReading3D ? readingSideVideoSrc : avatarVideoSrc
@@ -562,7 +569,7 @@ const Chat: React.FC = () => {
                     <div className="flex flex-col gap-4 mt-4">
                       <AvatarModeLayout
                         key={`listening-avatar-${listeningAvatarSeed}`}
-                        compact
+                        compact={isSmallScreen}
                         syncPlaying={listeningAudioState.isPlaying}
                         videoSrc={avatarVideoSrc}
                         heightClassName="h-auto"

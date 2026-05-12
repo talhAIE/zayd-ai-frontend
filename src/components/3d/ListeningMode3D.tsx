@@ -9,8 +9,6 @@ import {
   Info,
   BookOpen,
   ArrowRight,
-  Menu,
-  Bell,
   X,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -1539,79 +1537,14 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
         </DialogContent>
       </Dialog>
 
-      {/* MCQ Quiz */}
-      {listeningStage === "quiz" && mcqList.length > 0 && (
-        <div className="w-full flex flex-col items-center gap-4">
-          <div className="p-6 md:p-8 border rounded-3xl bg-white shadow-lg w-full max-w-[820px] mt-4 mb-2 text-left">
-            <div className="flex items-start justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-[#E6F3FF] flex items-center justify-center">
-                  <Check className="h-5 w-5 text-[#3EA4F9]" />
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-[#6B8BB8] uppercase tracking-wide">
-                    Step 4: Quiz
-                  </p>
-                  <p className="text-lg font-semibold text-[#2B3A67]">
-                    Test Your Knowledge
-                  </p>
-                </div>
-              </div>
-              <span className="text-xs font-semibold text-[#6B8BB8] bg-[#F1F6FF] px-3 py-1 rounded-full">
-                {currentMcqIndex + 1}/{mcqList.length}
-              </span>
-            </div>
-            <p className="text-lg font-semibold mb-4 text-[#2B3A67]">
-              {mcqList[currentMcqIndex].question}
-            </p>
-            <div className="flex flex-col gap-2">
-              {mcqList[currentMcqIndex].options.map(
-                (option: string, index: number) => (
-                  <Button
-                    key={index}
-                    variant={selectedAnswer === index ? "default" : "outline"}
-                    onClick={() => {
-                      setSelectedAnswer(index);
-                      resetActivityTimer();
-                    }}
-                    className={`w-full justify-start p-4 h-auto transition-colors rounded-2xl ${
-                      selectedAnswer === index
-                        ? "bg-[#3EA4F9] text-white hover:bg-[#2F93F0] border-transparent"
-                        : "bg-white border-[#E1E7F0] text-[#2B3A67]"
-                    }`}
-                  >
-                    <div
-                      className={`w-5 h-5 mr-4 rounded-full border flex-shrink-0 ${
-                        selectedAnswer === index
-                          ? "bg-white border-white"
-                          : "border-[#C9D6E6]"
-                      }`}
-                    />
-                    <span>{option}</span>
-                  </Button>
-                ),
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Main Content */}
-      {listeningStage !== "quiz" && (
-        <div
-          className={`flex flex-col w-full max-w-none lg:max-w-[1000px] mx-auto bg-gray-100 rounded-xl overflow-hidden shadow-2xl h-full max-h-full lg:h-[calc(100svh-9.5rem)] lg:max-h-[calc(100svh-9.5rem)]`}
-        >
-          {/* Header */}
-          <header className="grid grid-cols-[auto,1fr,auto] items-center gap-3 px-4 lg:px-6 py-4 border-b bg-white">
+      <div
+        className={`flex flex-col w-full max-w-none lg:max-w-[1000px] mx-auto bg-gray-100 rounded-xl overflow-hidden shadow-2xl h-full max-h-full lg:max-h-[calc(100svh-9.5rem)]`}
+      >
+        {/* Desktop Header (Only visible on lg+) */}
+        {listeningStage !== "quiz" && (
+          <header className="hidden lg:grid grid-cols-[auto,1fr,auto] items-center gap-3 px-4 lg:px-6 py-4 border-b bg-white">
             <div className="flex items-center gap-2 justify-self-start">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate(-1)}
-                className="lg:hidden"
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
               <Button
                 variant="ghost"
                 size="icon"
@@ -1633,48 +1566,35 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
                     : "..."}
                 </span>
               </div>
-              <Button variant="ghost" size="icon" className="lg:hidden">
-                <Bell className="h-5 w-5" />
-              </Button>
             </div>
           </header>
+        )}
 
-          {/* Session Expired Banner */}
-          {isSessionExpired && (
-            <div className="bg-yellow-500 text-white text-center p-2 text-sm font-semibold">
-              You have reached your session limit.
-            </div>
-          )}
+        {/* Session Expired Banner */}
+        {isSessionExpired && (
+          <div className="bg-yellow-500 text-white text-center p-2 text-sm font-semibold">
+            You have reached your session limit.
+          </div>
+        )}
 
-          {/* Chat Completed Banner */}
-          {chatCompleted && !isCompleteDialogOpen && (
-            <div className="bg-primary/80 backdrop-blur-sm text-white text-center p-2 text-sm font-semibold">
-              This conversation has ended.
-            </div>
-          )}
+        {/* Chat Completed Banner */}
+        {chatCompleted && !isCompleteDialogOpen && (
+          <div className="bg-primary/80 backdrop-blur-sm text-white text-center p-2 text-sm font-semibold">
+            This conversation has ended.
+          </div>
+        )}
 
-          {/* Main Listening Content */}
-          <div
-            className={`relative flex-1 overflow-y-auto p-4 lg:p-6 flex flex-col gap-4 transition-all duration-500 ease-out ${
-              isListeningStepTransitioning
-                ? "opacity-0 translate-x-6"
-                : "opacity-100 translate-x-0"
-            }`}
-          >
-            {/* Mobile Timer */}
-            <div className="lg:hidden flex justify-start">
-              <div className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border-2 border-[#3EA4F9] bg-white text-gray-500">
-                <Clock className="h-5 w-5 text-[#3EA4F9]" />
-                <span>
-                  {sessionTimeRemaining !== null
-                    ? formatTime(sessionTimeRemaining)
-                    : "..."}
-                </span>
-              </div>
-            </div>
-
-            {/* Avatar + Audio Player */}
-            <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 lg:p-6 sticky top-0 z-10 lg:static lg:z-0 lg:shadow-none lg:border-none">
+        {/* Main Listening Content */}
+        <div
+          className={`relative flex-1 overflow-y-auto p-4 lg:p-6 flex flex-col gap-4 transition-all duration-500 ease-out ${
+            isListeningStepTransitioning
+              ? "opacity-0 translate-x-6"
+              : "opacity-100 translate-x-0"
+          }`}
+        >
+          {/* Desktop Avatar + Audio Player (Hidden on Mobile & Quiz) */}
+          {listeningStage !== "quiz" && (
+            <div className="hidden lg:block rounded-2xl bg-white border border-slate-200 shadow-sm p-4 lg:p-6 mb-4">
               <div className="relative rounded-2xl bg-[#F8FAFC] border border-slate-200 overflow-hidden p-4 lg:p-0">
                 {isAvatar3D && (
                   <AvatarModeLayout
@@ -1707,162 +1627,225 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
                 />
               </div>
             </div>
+          )}
 
-            {/* Listening Intro */}
-            {shouldShowListeningIntro && (
+          {/* Listening Intro */}
+          {shouldShowListeningIntro && (
+            <div className="rounded-2xl bg-white border border-[#B9E1FF] p-4 md:p-5 shadow-sm">
+              <div className="inline-flex items-center gap-2 rounded-full bg-[#E6F3FF] px-3 py-1 text-sm font-semibold text-[#2B6CB0] mb-3">
+                <Info className="h-4 w-4" />
+                Listening Intro
+              </div>
+              <p className="text-sm text-[#2F4B66] whitespace-pre-wrap">
+                {listeningData?.introText ||
+                  "Listen to the audio carefully. When you're ready, tap Next to continue."}
+              </p>
+            </div>
+          )}
+
+          {/* Hints */}
+          {shouldShowListeningHint && (
+            <div className="rounded-2xl bg-[#CFE9FF] border border-[#8CC7FF] p-4 md:p-5 shadow-sm text-left">
+              <div className="flex items-center gap-2 text-[#2B6CB0] font-semibold mb-2">
+                <Info className="h-4 w-4" />
+                Hints
+              </div>
+              {listeningHintText.length > 0 ? (
+                <ul className="text-sm text-[#2F4B66] space-y-2 list-disc pl-5">
+                  {listeningHintText.map((hint, idx) => (
+                    <li key={idx}>{hint}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-[#2F4B66]">
+                  Hints will appear here as you progress.
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Transcript */}
+          {listeningStage === "question_text" &&
+            !showListeningCompletionCard && (
               <div className="rounded-2xl bg-white border border-[#B9E1FF] p-4 md:p-5 shadow-sm">
                 <div className="inline-flex items-center gap-2 rounded-full bg-[#E6F3FF] px-3 py-1 text-sm font-semibold text-[#2B6CB0] mb-3">
-                  <Info className="h-4 w-4" />
-                  Listening Intro
+                  <BookOpen className="h-4 w-4" />
+                  Character Transcript
                 </div>
-                <p className="text-sm text-[#2F4B66] whitespace-pre-wrap">
-                  {listeningData?.introText ||
-                    "Listen to the audio carefully. When you're ready, tap Next to continue."}
+                <p
+                  ref={transcriptRef}
+                  className={`text-sm text-[#2F4B66] whitespace-pre-wrap transition-all duration-300 ${
+                    !isTranscriptExpanded ? "line-clamp-5" : "line-clamp-none"
+                  }`}
+                >
+                  {listeningData?.questionText ||
+                    "Transcript will appear here as you progress."}
                 </p>
-              </div>
-            )}
-
-            {/* Hints */}
-            {shouldShowListeningHint && (
-              <div className="rounded-2xl bg-[#CFE9FF] border border-[#8CC7FF] p-4 md:p-5 shadow-sm text-left">
-                <div className="flex items-center gap-2 text-[#2B6CB0] font-semibold mb-2">
-                  <Info className="h-4 w-4" />
-                  Hints
-                </div>
-                {listeningHintText.length > 0 ? (
-                  <ul className="text-sm text-[#2F4B66] space-y-2 list-disc pl-5">
-                    {listeningHintText.map((hint, idx) => (
-                      <li key={idx}>{hint}</li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-[#2F4B66]">
-                    Hints will appear here as you progress.
-                  </p>
+                {shouldShowTranscriptExpandButton && (
+                  <Button
+                    variant="link"
+                    size="sm"
+                    onClick={() =>
+                      setIsTranscriptExpanded(!isTranscriptExpanded)
+                    }
+                    className="text-sm text-[#3EA4F9] p-0 h-auto mt-2"
+                  >
+                    {isTranscriptExpanded ? "See Less" : "See More"}
+                  </Button>
                 )}
               </div>
             )}
 
-            {/* Transcript */}
-            {listeningStage === "question_text" &&
-              !showListeningCompletionCard && (
-                <div className="rounded-2xl bg-white border border-[#B9E1FF] p-4 md:p-5 shadow-sm">
-                  <div className="inline-flex items-center gap-2 rounded-full bg-[#E6F3FF] px-3 py-1 text-sm font-semibold text-[#2B6CB0] mb-3">
-                    <BookOpen className="h-4 w-4" />
-                    Character Transcript
+          {/* MCQ Quiz */}
+          {listeningStage === "quiz" && mcqList.length > 0 && (
+            <div className="w-full flex flex-col items-center gap-4">
+              <div className="p-6 md:p-8 border rounded-3xl bg-white shadow-lg w-full max-w-[820px] mt-4 mb-2 text-left">
+                <div className="flex items-start justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-[#E6F3FF] flex items-center justify-center">
+                      <Check className="h-5 w-5 text-[#3EA4F9]" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-[#6B8BB8] uppercase tracking-wide">
+                        Step 4: Quiz
+                      </p>
+                      <p className="text-lg font-semibold text-[#2B3A67]">
+                        Test Your Knowledge
+                      </p>
+                    </div>
                   </div>
-                  <p
-                    ref={transcriptRef}
-                    className={`text-sm text-[#2F4B66] whitespace-pre-wrap transition-all duration-300 ${
-                      !isTranscriptExpanded ? "line-clamp-5" : "line-clamp-none"
-                    }`}
-                  >
-                    {listeningData?.questionText ||
-                      "Transcript will appear here as you progress."}
-                  </p>
-                  {shouldShowTranscriptExpandButton && (
-                    <Button
-                      variant="link"
-                      size="sm"
-                      onClick={() =>
-                        setIsTranscriptExpanded(!isTranscriptExpanded)
-                      }
-                      className="text-sm text-[#3EA4F9] p-0 h-auto mt-2"
-                    >
-                      {isTranscriptExpanded ? "See Less" : "See More"}
-                    </Button>
+                  <span className="text-xs font-semibold text-[#6B8BB8] bg-[#F1F6FF] px-3 py-1 rounded-full">
+                    {currentMcqIndex + 1}/{mcqList.length}
+                  </span>
+                </div>
+                <p className="text-lg font-semibold mb-4 text-[#2B3A67]">
+                  {mcqList[currentMcqIndex].question}
+                </p>
+                <div className="flex flex-col gap-2">
+                  {mcqList[currentMcqIndex].options.map(
+                    (option: string, index: number) => (
+                      <Button
+                        key={index}
+                        variant={
+                          selectedAnswer === index ? "default" : "outline"
+                        }
+                        onClick={() => {
+                          setSelectedAnswer(index);
+                          resetActivityTimer();
+                        }}
+                        className={`w-full justify-start p-4 h-auto transition-colors rounded-2xl ${
+                          selectedAnswer === index
+                            ? "bg-[#3EA4F9] text-white hover:bg-[#2F93F0] border-transparent"
+                            : "bg-white border-[#E1E7F0] text-[#2B3A67]"
+                        }`}
+                      >
+                        <div
+                          className={`w-5 h-5 mr-4 rounded-full border flex-shrink-0 ${
+                            selectedAnswer === index
+                              ? "bg-white border-white"
+                              : "border-[#C9D6E6]"
+                          }`}
+                        />
+                        <span>{option}</span>
+                      </Button>
+                    ),
                   )}
                 </div>
-              )}
+              </div>
+            </div>
+          )}
 
-            {/* Completion Card */}
-            {showListeningCompletionCard && (
-              <div className="absolute inset-0 z-20 flex items-center justify-center px-3 md:px-6">
-                <div className="absolute inset-0 bg-white/70 backdrop-blur-sm" />
-                <div className="relative w-full max-w-[720px] mx-auto text-center px-4 md:px-8 py-6 bg-white border border-slate-200 rounded-2xl shadow-xl">
-                  <img
-                    src={birdWithHeadphones}
-                    alt="Listening helper"
-                    className="h-28 w-auto mx-auto mb-4"
-                  />
-                  <h3 className="text-xl font-semibold text-[#2B3A67]">
-                    Done with it?
-                  </h3>
-                  <p className="text-sm text-gray-500 mt-2">
-                    Ready for the quiz? You can continue or replay the avatar
-                    explanation.
-                  </p>
+          {/* Completion Card */}
+          {showListeningCompletionCard && (
+            <div className="absolute inset-0 z-20 flex items-center justify-center px-3 md:px-6">
+              <div className="absolute inset-0 bg-white/70 backdrop-blur-sm" />
+              <div className="relative w-full max-w-[720px] mx-auto text-center px-4 md:px-8 py-6 bg-white border border-slate-200 rounded-2xl shadow-xl">
+                <img
+                  src={birdWithHeadphones}
+                  alt="Listening helper"
+                  className="h-28 w-auto mx-auto mb-4"
+                />
+                <h3 className="text-xl font-semibold text-[#2B3A67]">
+                  Done with it?
+                </h3>
+                <p className="text-sm text-gray-500 mt-2">
+                  Ready for the quiz? You can continue or replay the avatar
+                  explanation.
+                </p>
+                <Button
+                  className="w-full mt-5 rounded-full bg-[#5EA9FF] hover:bg-[#4E98F0] text-white"
+                  onClick={() => {
+                    setShowListeningCompletionCard(false);
+                    setShowListeningHints(false);
+                    skipListeningCompletionStepRef.current = true;
+                    wantsQuizRef.current = true;
+                    wantsHintsRef.current = false;
+                    prefetchedQuizRef.current = false;
+                    handleNextStage();
+                  }}
+                >
+                  Continue to Quiz
+                </Button>
+                <div className="mt-3">
                   <Button
-                    className="w-full mt-5 rounded-full bg-[#5EA9FF] hover:bg-[#4E98F0] text-white"
+                    variant="outline"
+                    className="w-full rounded-full text-gray-500 hover:bg-gray-100 h-10 px-3 md:px-4 text-[11px] sm:text-sm leading-none whitespace-nowrap min-w-0 justify-center gap-2"
                     onClick={() => {
                       setShowListeningCompletionCard(false);
                       setShowListeningHints(false);
-                      skipListeningCompletionStepRef.current = true;
-                      wantsQuizRef.current = true;
-                      wantsHintsRef.current = false;
-                      prefetchedQuizRef.current = false;
-                      handleNextStage();
+                      skipListeningCompletionStepRef.current = false;
+                      setListeningStage("initial");
+                      setShowListeningHints(true);
+                      restartKbAudio();
                     }}
+                    disabled={!listeningData?.kbAudioUrl}
                   >
-                    Continue to Quiz
+                    Replay Avatar Video
                   </Button>
-                  <div className="mt-3">
-                    <Button
-                      variant="outline"
-                      className="w-full rounded-full text-gray-500 hover:bg-gray-100 h-10 px-3 md:px-4 text-[11px] sm:text-sm leading-none whitespace-nowrap min-w-0 justify-center gap-2"
-                      onClick={() => {
-                        setShowListeningCompletionCard(false);
-                        setShowListeningHints(false);
-                        skipListeningCompletionStepRef.current = false;
-                        setListeningStage("initial");
-                        setShowListeningHints(true);
-                        restartKbAudio();
-                      }}
-                      disabled={!listeningData?.kbAudioUrl}
-                    >
-                      Replay Avatar Video
-                    </Button>
-                  </div>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
-      )}
 
-      {/* Next Button */}
-      {!showListeningCompletionCard && (
-        <div className="w-full max-w-[800px] mx-auto">
-          <Button
-            className="w-full mt-4 rounded-full p-5 bg-[#5EA9FF] hover:bg-[#4E98F0] text-white flex items-center justify-center gap-2"
-            onClick={() => {
-              if (clickLocked.current) return;
-              clickLocked.current = true;
-              setTimeout(() => (clickLocked.current = false), 2000);
+        {/* Next Button */}
+        {!showListeningCompletionCard && (
+          <div className="flex-none w-full mx-auto px-4 pb-4">
+            <Button
+              className="w-full mt-4 rounded-full p-5 bg-[#5EA9FF] hover:bg-[#4E98F0] text-white flex items-center justify-center gap-2"
+              onClick={() => {
+                if (clickLocked.current) return;
+                clickLocked.current = true;
+                setTimeout(() => (clickLocked.current = false), 2000);
 
-              if (
-                listeningStage === "question_text" &&
-                !showListeningCompletionCard
-              ) {
-                setShowListeningCompletionCard(true);
-                return;
+                if (
+                  listeningStage === "question_text" &&
+                  !showListeningCompletionCard
+                ) {
+                  setShowListeningCompletionCard(true);
+                  return;
+                }
+
+                listeningStage === "quiz"
+                  ? handleSubmitAnswer()
+                  : handleNextStage();
+              }}
+              disabled={
+                (listeningStage === "initial" && !hasPlayedIntroAudio) ||
+                (listeningStage === "question_text" && !isContextCompleted) ||
+                (listeningStage === "quiz" && selectedAnswer === null)
               }
+            >
+              <span>
+                {listeningStage === "quiz" ? "Submit Answer" : "Next"}
+              </span>
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+      </div>
 
-              listeningStage === "quiz"
-                ? handleSubmitAnswer()
-                : handleNextStage();
-            }}
-            disabled={
-              (listeningStage === "initial" && !hasPlayedIntroAudio) ||
-              (listeningStage === "question_text" && !isContextCompleted) ||
-              (listeningStage === "quiz" && selectedAnswer === null)
-            }
-          >
-            <span>{listeningStage === "quiz" ? "Submit Answer" : "Next"}</span>
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
+
 
       {/* Reset Confirm Dialog */}
       <Dialog open={isResetConfirmOpen} onOpenChange={setIsResetConfirmOpen}>
