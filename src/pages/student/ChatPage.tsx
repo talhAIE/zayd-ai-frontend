@@ -515,7 +515,7 @@ const Chat: React.FC = () => {
                   )}
                 </div>
                 <div
-                  className={`flex flex-col ${isAvatar3D ? "gap-3" : "gap-0"} w-full sticky top-0 min-[768px]:top-6 z-20 self-start ${
+                  className={`flex flex-col ${mode === "roleplay-mode" ? "gap-3" : "gap-0"} w-full sticky top-0 min-[768px]:top-6 z-20 self-start ${
                     mode === "listening-mode" &&
                     !shouldShowListeningSidebar &&
                     !isDesktop
