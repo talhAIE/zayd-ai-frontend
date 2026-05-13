@@ -300,12 +300,12 @@ const Chat: React.FC = () => {
   }
 
   return (
-    <div className="flex max-h-screen">
+    <div className="flex max-h-[100dvh]">
       <main className="flex-1 transition-all duration-300">
         <div
           className={`mx-auto md:px-6 min-h-0 ${
             isAvatar3D
-              ? "h-[calc(100vh-6rem)] xl:h-[calc(100vh-9.5rem)]"
+              ? "h-[calc(100dvh-6rem)] xl:h-[calc(100dvh-9.5rem)]"
               : ""
           }`}
         >
@@ -313,7 +313,7 @@ const Chat: React.FC = () => {
             <div className="flex flex-col gap-3 min-h-0 w-full mx-auto h-full overflow-hidden">
               <div className="flex-none shrink-0 sticky top-0 z-30">
                 {isAvatar3D ? (
-                  <div className="w-full rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white">
+                  <div className="w-full max-h-[40dvh] rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white">
                     {(mode === "reading-mode" ||
                       mode === "roleplay-mode" ||
                       (mode === "listening-mode" &&
@@ -568,7 +568,7 @@ const Chat: React.FC = () => {
                     </div>
                   )}
                   {shouldShowListeningSidebar && (
-                    <div className="flex flex-col gap-4 mt-4">
+                    <div className="flex flex-col gap-4">
                       <AvatarModeLayout
                         key={`listening-avatar-${listeningAvatarSeed}`}
                         compact={isSmallScreen}
