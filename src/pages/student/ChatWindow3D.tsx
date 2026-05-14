@@ -336,10 +336,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       const base = sessionTimerBaseRef.current;
       if (!base) return;
       const elapsedSeconds = Math.floor((Date.now() - base.receivedAt) / 1000);
-      const nextRemaining = Math.max(
-        0,
-        base.remainingSeconds - elapsedSeconds,
-      );
+      const nextRemaining = Math.max(0, base.remainingSeconds - elapsedSeconds);
       if (sessionTimerLastEmittedRef.current !== nextRemaining) {
         sessionTimerLastEmittedRef.current = nextRemaining;
         _setSessionLimitReached(nextRemaining === 0);
@@ -393,8 +390,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const [shouldShowExpandButton, setShouldShowExpandButton] = useState(false);
   const contentRef = useRef<HTMLParagraphElement>(null);
   const [isTranscriptExpanded, setIsTranscriptExpanded] = useState(false);
-  const [shouldShowTranscriptExpandButton, setShouldShowTranscriptExpandButton] =
-    useState(false);
+  const [
+    shouldShowTranscriptExpandButton,
+    setShouldShowTranscriptExpandButton,
+  ] = useState(false);
   const transcriptRef = useRef<HTMLParagraphElement>(null);
 
   const [unlockedBadgeInfo, setUnlockedBadgeInfo] = useState<{
@@ -625,7 +624,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
     const element = transcriptRef.current;
     const originalClass = element.className;
-    element.className = originalClass.replace("line-clamp-5", "line-clamp-none");
+    element.className = originalClass.replace(
+      "line-clamp-5",
+      "line-clamp-none",
+    );
     const fullHeight = element.scrollHeight;
     element.className = originalClass;
 
@@ -849,15 +851,15 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         setMessages(
           data.narrationText
             ? [
-              {
-                id: "narration-audio",
-                messageType: "text",
-                type: "received",
-                text: data.narrationText,
-                audioUrl: data.narrationAudioUrl,
-                audioPlayed: false,
-              },
-            ]
+                {
+                  id: "narration-audio",
+                  messageType: "text",
+                  type: "received",
+                  text: data.narrationText,
+                  audioUrl: data.narrationAudioUrl,
+                  audioPlayed: false,
+                },
+              ]
             : [],
         );
         if (data.mcqs || data.questions) {
@@ -1205,8 +1207,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       }
     });
 
-
-
     socket.on(ChatEvents.ERROR, (payload) => {
       logger.receiving(ChatEvents.ERROR, payload);
       setIsWaitingForResponse(false);
@@ -1333,8 +1333,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     }, 20);
     return () => clearTimeout(t);
   }, [mode, listeningStage, showListeningHints, showListeningCompletionCard]);
-
-
 
   const scrollToBottom = () =>
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -1964,7 +1962,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       isAvatar3DContext &&
       skipListeningCompletionStepRef.current
     ) {
-      const currentMcqs = pendingMcqPayload?.mcqs || pendingMcqPayload?.questions || [];
+      const currentMcqs =
+        pendingMcqPayload?.mcqs || pendingMcqPayload?.questions || [];
       if (currentMcqs.length > 0) {
         setListeningStage("quiz");
         setMcqList(currentMcqs);
@@ -2001,7 +2000,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         setIsListeningLoading(true);
         logger.emitting("next_listening_stage", { chatId });
         requestNextListeningStage();
-        toast.info(listeningStage === "question_text" ? "Loading quiz..." : "Loading next part...");
+        toast.info(
+          listeningStage === "question_text"
+            ? "Loading quiz..."
+            : "Loading next part...",
+        );
 
         // Set timeout to unlock if response takes too long (8 seconds)
         if (listeningLoadingTimeoutRef.current) {
@@ -2129,10 +2132,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const pendingMcqs =
     pendingMcqPayload?.mcqs || pendingMcqPayload?.questions || [];
   const listeningHints =
-    [
-      ...(pendingMcqs || []),
-      ...(mcqList || []),
-    ]
+    [...(pendingMcqs || []), ...(mcqList || [])]
       .flatMap((mcq: any) =>
         typeof mcq?.hint === "string" ? parseListeningHintLines(mcq.hint) : [],
       )
@@ -2268,11 +2268,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           className={`flex flex-col w-full max-w-none lg:max-w-[1000px] mx-auto bg-gray-100 rounded-xl overflow-hidden shadow-2xl ${
             mode === "listening-mode"
               ? isAvatar3DContext
-                ? "h-full max-h-full lg:h-[calc(100svh-9.5rem)] lg:max-h-[calc(100svh-9.5rem)]"
-                : "min-h-[70vh] max-h-[80vh]"
+                ? "h-full max-h-full lg:h-[calc(100dvh-9.5rem)] lg:max-h-[calc(100dvh-9.5rem)]"
+                : "min-h-[70svh] max-h-[80svh]"
               : readingHeroActive
-                ? "min-h-[calc(100vh-340px)] max-h-[calc(100vh-340px)] md:min-h-[calc(100vh-340px)] md:max-h-[calc(100vh-340px)]"
-                : "h-full max-h-full lg:min-h-[74vh] lg:max-h-[74vh]"
+                ? "min-h-[calc(100dvh-340px)] max-h-[calc(100dvh-340px)] md:min-h-[calc(100dvh-340px)] md:max-h-[calc(100dvh-340px)]"
+                : `h-full max-h-full ${!isAvatar3DContext ? "lg:min-h-[74vh] lg:max-h-[74vh]" : ""}`
           }`}
         >
           {mode === "listening-mode" && (
@@ -2735,7 +2735,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                                   variant="ghost"
                                   size="icon"
                                   onClick={() =>
-                                    toggleAudio(msg.id, msg.audioUrl || msg.audioURL)
+                                    toggleAudio(
+                                      msg.id,
+                                      msg.audioUrl || msg.audioURL,
+                                    )
                                   }
                                 >
                                   {playingAudioId === msg.id ? (
