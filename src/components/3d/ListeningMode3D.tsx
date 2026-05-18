@@ -144,6 +144,7 @@ export interface ListeningMode3DProps {
   onVideoUrlChange?: (videoUrl?: string) => void;
   onSessionTimeRemaining?: (remaining: number | null) => void;
   onChatCompleted?: () => void;
+  hideVideo?: boolean;
 }
 
 const formatTime = (sec: number) =>
@@ -159,6 +160,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
   onVideoUrlChange,
   onSessionTimeRemaining,
   onChatCompleted,
+  hideVideo = false,
 }) => {
   // --- State ---
   const [chatId, setChatId] = useState<string | null>(null);
@@ -731,6 +733,8 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       !showListeningCompletionCard
     ) {
       setShowListeningHints(true);
+      setHasPlayedIntroAudio(false);
+      setIsContextCompleted(false);
       if (!nextMcqs?.length) {
         wantsHintsRef.current = true;
         if (!prefetchedQuizRef.current) {
@@ -1006,6 +1010,8 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
           setPendingMcqPayload({ chatId: newChatId, ...data });
         }
       } else if (backendStage === "question_text") {
+        setHasPlayedIntroAudio(false);
+        setIsContextCompleted(false);
         if (listeningStageRef.current === "initial") {
           if (wantsQuizRef.current || skipListeningCompletionStepRef.current) {
             if (!prefetchedQuizRef.current) {
@@ -1542,7 +1548,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
         className={`flex flex-col w-full max-w-none lg:max-w-[1000px] mx-auto bg-gray-100 rounded-xl overflow-hidden shadow-2xl h-full max-h-full lg:max-h-[calc(100svh-9.5rem)]`}
       >
         {/* Desktop Header (Only visible on lg+) */}
-        {listeningStage !== "quiz" && (
+        {listeningStage !== "quiz" && !hideVideo && (
           <header className="hidden lg:grid grid-cols-[auto,1fr,auto] items-center gap-3 px-4 lg:px-6 py-4 border-b bg-white">
             <div className="flex items-center gap-2 justify-self-start">
               <Button
@@ -1593,7 +1599,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
           }`}
         >
           {/* Desktop Avatar + Audio Player (Hidden on Mobile & Quiz) */}
-          {listeningStage !== "quiz" && (
+          {listeningStage !== "quiz" && !hideVideo && (
             <div className="hidden lg:block rounded-2xl bg-white border border-slate-200 shadow-sm p-4 lg:p-6 mb-4">
               <div className="relative rounded-2xl bg-[#F8FAFC] border border-slate-200 overflow-hidden p-4 lg:p-0">
                 {isAvatar3D && (
@@ -1844,8 +1850,6 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
           </div>
         )}
       </div>
-
-
 
       {/* Reset Confirm Dialog */}
       <Dialog open={isResetConfirmOpen} onOpenChange={setIsResetConfirmOpen}>
