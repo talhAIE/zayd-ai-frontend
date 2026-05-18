@@ -313,40 +313,65 @@ const Chat: React.FC = () => {
             <div className="flex flex-col gap-3 min-h-0 w-full mx-auto h-full overflow-hidden">
               <div className="flex-none shrink-0 sticky top-0 z-30">
                 {isAvatar3D ? (
-                  <div className="w-full max-h-[40dvh] rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white">
-                    {(mode === "reading-mode" ||
-                      mode === "roleplay-mode" ||
-                      (mode === "listening-mode" &&
-                        listeningStage !== "quiz")) && (
-                      <AvatarHeaderBar
-                        title={modeTitle}
-                        onBack={() => navigate(-1)}
-                        timerLabel={
-                          sessionTimeRemaining !== null
-                            ? formatTime(sessionTimeRemaining)
-                            : "..."
+                  <div className="flex flex-col gap-2">
+                    <div className="w-full max-h-[40dvh] rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white">
+                      {(mode === "reading-mode" ||
+                        mode === "roleplay-mode" ||
+                        (mode === "listening-mode" &&
+                          listeningStage !== "quiz")) && (
+                        <AvatarHeaderBar
+                          title={modeTitle}
+                          onBack={() => navigate(-1)}
+                          timerLabel={
+                            sessionTimeRemaining !== null
+                              ? formatTime(sessionTimeRemaining)
+                              : "..."
+                          }
+                        />
+                      )}
+                      <AvatarModeLayout
+                        compact={isSmallScreen}
+                        syncPlaying={
+                          mode === "listening-mode"
+                            ? listeningAudioState.isPlaying
+                            : isAvatarSyncPlaying
+                        }
+                        videoSrc={avatarVideoSrc}
+                        loop={isReading3D ? false : undefined}
+                        onEnded={
+                          isReading3D ? handleNarrationComplete : undefined
+                        }
+                        heightClassName={
+                          mode === "roleplay-mode" || mode === "reading-mode"
+                            ? "h-auto"
+                            : undefined
+                        }
+                        videoClassName={
+                          mode === "roleplay-mode" || mode === "reading-mode"
+                            ? "w-full h-auto object-contain"
+                            : undefined
                         }
                       />
+                    </div>
+                    {mode === "listening-mode" && listeningStage !== "quiz" && (
+                      <div className="px-1">
+                        <AudioPlayer3D
+                          audioSrc={listeningAudioUrl || ""}
+                          isPlaying={listeningAudioState.isPlaying}
+                          isLoading={listeningAudioState.isLoading}
+                          progress={listeningAudioState.progress}
+                          duration={listeningAudioState.duration}
+                          showTotal={true}
+                          onTogglePlay={() => {
+                            if (listeningAudioState.isPlaying) {
+                              listeningAudioControlRef.current?.pause?.();
+                            } else {
+                              listeningAudioControlRef.current?.play?.();
+                            }
+                          }}
+                        />
+                      </div>
                     )}
-                    <AvatarModeLayout
-                      compact={isSmallScreen}
-                      syncPlaying={isAvatarSyncPlaying}
-                      videoSrc={avatarVideoSrc}
-                      loop={isReading3D ? false : undefined}
-                      onEnded={
-                        isReading3D ? handleNarrationComplete : undefined
-                      }
-                      heightClassName={
-                        mode === "roleplay-mode" || mode === "reading-mode"
-                          ? "h-auto"
-                          : undefined
-                      }
-                      videoClassName={
-                        mode === "roleplay-mode" || mode === "reading-mode"
-                          ? "w-full h-auto object-contain"
-                          : undefined
-                      }
-                    />
                   </div>
                 ) : (
                   <AvatarModeLayout
@@ -367,6 +392,7 @@ const Chat: React.FC = () => {
                     onAudioController={handleListeningAudioController}
                     onVideoUrlChange={handleListeningVideoUrl}
                     onSessionTimeRemaining={setSessionTimeRemaining}
+                    hideVideo={true}
                   />
                 ) : (
                   <ChatWindow
