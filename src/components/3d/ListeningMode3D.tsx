@@ -733,6 +733,8 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
       !showListeningCompletionCard
     ) {
       setShowListeningHints(true);
+      setHasPlayedIntroAudio(false);
+      setIsContextCompleted(false);
       if (!nextMcqs?.length) {
         wantsHintsRef.current = true;
         if (!prefetchedQuizRef.current) {
@@ -1008,6 +1010,8 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
           setPendingMcqPayload({ chatId: newChatId, ...data });
         }
       } else if (backendStage === "question_text") {
+        setHasPlayedIntroAudio(false);
+        setIsContextCompleted(false);
         if (listeningStageRef.current === "initial") {
           if (wantsQuizRef.current || skipListeningCompletionStepRef.current) {
             if (!prefetchedQuizRef.current) {
