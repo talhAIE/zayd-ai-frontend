@@ -265,6 +265,7 @@ interface ChatWindowProps {
   ) => void;
   onListeningAudioState?: (state: {
     isPlaying: boolean;
+    isLoading: boolean;
     progress: number;
     duration: number;
   }) => void;
@@ -305,6 +306,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   onListeningAudioController,
   listeningAvatarSeed = 0,
 }) => {
+
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [isRecording, setIsRecording] = useState(false);
@@ -334,10 +336,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       const base = sessionTimerBaseRef.current;
       if (!base) return;
       const elapsedSeconds = Math.floor((Date.now() - base.receivedAt) / 1000);
-      const nextRemaining = Math.max(
-        0,
-        base.remainingSeconds - elapsedSeconds,
-      );
+      const nextRemaining = Math.max(0, base.remainingSeconds - elapsedSeconds);
       if (sessionTimerLastEmittedRef.current !== nextRemaining) {
         sessionTimerLastEmittedRef.current = nextRemaining;
         _setSessionLimitReached(nextRemaining === 0);
@@ -365,6 +364,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
   // --- MODIFIED: Simplified audio state management
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
+  const [loadingAudioId, setLoadingAudioId] = useState<string | null>(null);
   const [isCurrentlyPlaying, setIsCurrentlyPlaying] = useState(false);
   const soundRef = useRef<Howl | null>(null);
   const [isAudioUnlocked, setIsAudioUnlocked] = useState(false);
@@ -390,8 +390,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const [shouldShowExpandButton, setShouldShowExpandButton] = useState(false);
   const contentRef = useRef<HTMLParagraphElement>(null);
   const [isTranscriptExpanded, setIsTranscriptExpanded] = useState(false);
-  const [shouldShowTranscriptExpandButton, setShouldShowTranscriptExpandButton] =
-    useState(false);
+  const [
+    shouldShowTranscriptExpandButton,
+    setShouldShowTranscriptExpandButton,
+  ] = useState(false);
   const transcriptRef = useRef<HTMLParagraphElement>(null);
 
   const [unlockedBadgeInfo, setUnlockedBadgeInfo] = useState<{
@@ -622,7 +624,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
     const element = transcriptRef.current;
     const originalClass = element.className;
-    element.className = originalClass.replace("line-clamp-5", "line-clamp-none");
+    element.className = originalClass.replace(
+      "line-clamp-5",
+      "line-clamp-none",
+    );
     const fullHeight = element.scrollHeight;
     element.className = originalClass;
 
@@ -676,6 +681,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     if (mode !== "listening-mode" || !isAvatar3DContext) return;
     onListeningAudioStateRef.current?.({
       isPlaying: playingAudioId === "kb-audio" && isCurrentlyPlaying,
+      isLoading: loadingAudioId === "kb-audio",
       progress: playingAudioId === "kb-audio" ? audioProgress : 0,
       duration: playingAudioId === "kb-audio" ? audioDuration : 0,
     });
@@ -845,15 +851,15 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         setMessages(
           data.narrationText
             ? [
-              {
-                id: "narration-audio",
-                messageType: "text",
-                type: "received",
-                text: data.narrationText,
-                audioUrl: data.narrationAudioUrl,
-                audioPlayed: false,
-              },
-            ]
+                {
+                  id: "narration-audio",
+                  messageType: "text",
+                  type: "received",
+                  text: data.narrationText,
+                  audioUrl: data.narrationAudioUrl,
+                  audioPlayed: false,
+                },
+              ]
             : [],
         );
         if (data.mcqs || data.questions) {
@@ -1201,8 +1207,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       }
     });
 
-
-
     socket.on(ChatEvents.ERROR, (payload) => {
       logger.receiving(ChatEvents.ERROR, payload);
       setIsWaitingForResponse(false);
@@ -1329,8 +1333,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     }, 20);
     return () => clearTimeout(t);
   }, [mode, listeningStage, showListeningHints, showListeningCompletionCard]);
-
-
 
   const scrollToBottom = () =>
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -1755,9 +1757,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     }
 
     if (soundRef.current) {
+      soundRef.current.off();
       soundRef.current.stop();
     }
 
+    setPlayingAudioId(id);
+    setIsCurrentlyPlaying(false);
+    setLoadingAudioId(id);
     clearAudioProgress();
     onEndCalledRef.current = false;
 
@@ -1767,6 +1773,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       onplay: () => {
         setPlayingAudioId(id);
         setIsCurrentlyPlaying(true);
+        setLoadingAudioId(null);
         onAudioPlaybackChange?.(true);
         if (id === "kb-audio" && mode === "listening-mode") {
           setHasStartedContextAudio(true);
@@ -1811,6 +1818,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       onstop: () => {
         setPlayingAudioId(null);
         setIsCurrentlyPlaying(false);
+        setLoadingAudioId(null);
         clearAudioProgress();
         onAudioPlaybackChange?.(false);
         if (id === "kb-audio") {
@@ -1824,6 +1832,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       onend: () => {
         setPlayingAudioId(null);
         setIsCurrentlyPlaying(false);
+        setLoadingAudioId(null);
         clearAudioProgress();
         onAudioPlaybackChange?.(false);
         if (id === "kb-audio") {
@@ -1842,6 +1851,15 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         toast.error("Could not play audio.");
         setPlayingAudioId(null);
         setIsCurrentlyPlaying(false);
+        setLoadingAudioId(null);
+        clearAudioProgress();
+      },
+      onloaderror: (soundId: number, error: any) => {
+        logger.error("Howler load error:", { soundId, error });
+        toast.error("Could not load audio.");
+        setPlayingAudioId(null);
+        setIsCurrentlyPlaying(false);
+        setLoadingAudioId(null);
         clearAudioProgress();
       },
     });
@@ -1944,7 +1962,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       isAvatar3DContext &&
       skipListeningCompletionStepRef.current
     ) {
-      const currentMcqs = pendingMcqPayload?.mcqs || pendingMcqPayload?.questions || [];
+      const currentMcqs =
+        pendingMcqPayload?.mcqs || pendingMcqPayload?.questions || [];
       if (currentMcqs.length > 0) {
         setListeningStage("quiz");
         setMcqList(currentMcqs);
@@ -1981,7 +2000,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         setIsListeningLoading(true);
         logger.emitting("next_listening_stage", { chatId });
         requestNextListeningStage();
-        toast.info(listeningStage === "question_text" ? "Loading quiz..." : "Loading next part...");
+        toast.info(
+          listeningStage === "question_text"
+            ? "Loading quiz..."
+            : "Loading next part...",
+        );
 
         // Set timeout to unlock if response takes too long (8 seconds)
         if (listeningLoadingTimeoutRef.current) {
@@ -2109,10 +2132,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const pendingMcqs =
     pendingMcqPayload?.mcqs || pendingMcqPayload?.questions || [];
   const listeningHints =
-    [
-      ...(pendingMcqs || []),
-      ...(mcqList || []),
-    ]
+    [...(pendingMcqs || []), ...(mcqList || [])]
       .flatMap((mcq: any) =>
         typeof mcq?.hint === "string" ? parseListeningHintLines(mcq.hint) : [],
       )
@@ -2221,16 +2241,18 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                       setSelectedAnswer(index);
                       resetInactivityTimer();
                     }}
-                    className={`w-full justify-start p-4 h-auto transition-colors rounded-2xl ${selectedAnswer === index
-                      ? "bg-[#3EA4F9] text-white hover:bg-[#2F93F0] border-transparent"
-                      : "bg-white border-[#E1E7F0] text-[#2B3A67]"
-                      }`}
+                    className={`w-full justify-start p-4 h-auto transition-colors rounded-2xl ${
+                      selectedAnswer === index
+                        ? "bg-[#3EA4F9] text-white hover:bg-[#2F93F0] border-transparent"
+                        : "bg-white border-[#E1E7F0] text-[#2B3A67]"
+                    }`}
                   >
                     <div
-                      className={`w-5 h-5 mr-4 rounded-full border flex-shrink-0 ${selectedAnswer === index
-                        ? "bg-white border-white"
-                        : "border-[#C9D6E6]"
-                        }`}
+                      className={`w-5 h-5 mr-4 rounded-full border flex-shrink-0 ${
+                        selectedAnswer === index
+                          ? "bg-white border-white"
+                          : "border-[#C9D6E6]"
+                      }`}
                     />
                     <span>{option}</span>
                   </Button>
@@ -2243,14 +2265,15 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
       {listeningStage !== "quiz" && (
         <div
-          className={`flex flex-col max-w-[800px] mx-auto bg-gray-100 rounded-xl overflow-hidden shadow-2xl ${mode === "listening-mode"
-            ? isAvatar3DContext
-              ? "h-[calc(100svh-9.5rem)] max-h-[calc(100svh-9.5rem)]"
-              : "min-h-[70vh] max-h-[80vh]"
-            : readingHeroActive
-              ? "min-h-[calc(100vh-340px)] max-h-[calc(100vh-340px)] md:min-h-[calc(100vh-340px)] md:max-h-[calc(100vh-340px)]"
-              : "max-h-[76vh] min-h-[76vh] md:min-h-[74vh] md:max-h-[74vh]"
-            }`}
+          className={`flex flex-col w-full max-w-none lg:max-w-[1000px] mx-auto bg-gray-100 rounded-xl overflow-hidden shadow-2xl ${
+            mode === "listening-mode"
+              ? isAvatar3DContext
+                ? "h-full max-h-full lg:h-[calc(100dvh-9.5rem)] lg:max-h-[calc(100dvh-9.5rem)]"
+                : "min-h-[70svh] max-h-[80svh]"
+              : readingHeroActive
+                ? "min-h-[calc(100dvh-340px)] max-h-[calc(100dvh-340px)] md:min-h-[calc(100dvh-340px)] md:max-h-[calc(100dvh-340px)]"
+                : `h-full max-h-full ${!isAvatar3DContext ? "lg:min-h-[74vh] lg:max-h-[74vh]" : ""}`
+          }`}
         >
           {mode === "listening-mode" && (
             <header className="grid grid-cols-[auto,1fr,auto] items-center gap-3 px-4 md:px-6 py-4 border-b bg-white">
@@ -2259,7 +2282,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   variant="ghost"
                   size="icon"
                   onClick={() => navigate(-1)}
-                  className="md:hidden"
+                  className="lg:hidden"
                 >
                   <Menu className="h-5 w-5" />
                 </Button>
@@ -2267,16 +2290,16 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   variant="ghost"
                   size="icon"
                   onClick={() => navigate(-1)}
-                  className="hidden md:inline-flex"
+                  className="hidden lg:inline-flex"
                 >
                   <ChevronLeft className="h-5 w-5" />
                 </Button>
               </div>
-              <h2 className="min-w-0 truncate text-center text-base md:text-lg font-semibold">
+              <h2 className="min-w-0 truncate text-center text-base lg:text-lg font-semibold">
                 Listening Mode
               </h2>
               <div className="flex items-center gap-2 justify-self-end">
-                <div className="hidden md:flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border-2 border-[#3EA4F9] bg-white text-gray-500">
+                <div className="hidden lg:flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border-2 border-[#3EA4F9] bg-white text-gray-500">
                   <Clock className="h-5 w-5 text-[#3EA4F9]" />
                   <span>
                     {sessionTimeRemaining !== null
@@ -2284,7 +2307,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                       : "..."}
                   </span>
                 </div>
-                <Button variant="ghost" size="icon" className="md:hidden">
+                <Button variant="ghost" size="icon" className="lg:hidden">
                   <Bell className="h-5 w-5" />
                 </Button>
               </div>
@@ -2364,12 +2387,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           )}
           {mode === "listening-mode" ? (
             <div
-              className={`relative flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-4 transition-all duration-500 ease-out ${isListeningStepTransitioning
-                ? "opacity-0 translate-x-6"
-                : "opacity-100 translate-x-0"
-                }`}
+              className={`relative flex-1 overflow-y-auto p-4 lg:p-6 flex flex-col gap-4 transition-all duration-500 ease-out ${
+                isListeningStepTransitioning
+                  ? "opacity-0 translate-x-6"
+                  : "opacity-100 translate-x-0"
+              }`}
             >
-              <div className="md:hidden flex justify-start">
+              <div className="lg:hidden flex justify-start">
                 <div className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border-2 border-[#3EA4F9] bg-white text-gray-500">
                   <Clock className="h-5 w-5 text-[#3EA4F9]" />
                   <span>
@@ -2380,12 +2404,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 </div>
               </div>
 
-              <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 md:p-6">
-                <div className="relative rounded-2xl bg-[#F8FAFC] border border-slate-200 overflow-hidden p-4 md:p-6">
+              <div className="sticky top-0 z-10 rounded-2xl bg-white border border-slate-200 shadow-sm p-4 lg:p-6">
+                <div className="relative rounded-2xl bg-[#F8FAFC] border border-slate-200 overflow-hidden p-4 lg:p-6">
                   {isAvatar3D && (
                     <AvatarModeLayout
                       key={`listening-avatar-${listeningAvatarSeed}`}
-                      syncPlaying={playingAudioId === "kb-audio" && isCurrentlyPlaying}
+                      syncPlaying={
+                        playingAudioId === "kb-audio" && isCurrentlyPlaying
+                      }
                       videoSrc={avatarVideoSrc}
                       heightClassName="h-auto"
                       videoClassName="w-full h-auto object-contain"
@@ -2413,7 +2439,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               </div>
 
               {shouldShowListeningIntro && (
-                <div className="rounded-2xl bg-white border border-[#B9E1FF] p-4 md:p-5 shadow-sm">
+                <div className="rounded-2xl bg-white border border-[#B9E1FF] p-4 lg:p-5 shadow-sm">
                   <div className="inline-flex items-center gap-2 rounded-full bg-[#E6F3FF] px-3 py-1 text-sm font-semibold text-[#2B6CB0] mb-3">
                     <Info className="h-4 w-4" />
                     Listening Intro
@@ -2426,7 +2452,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               )}
 
               {shouldShowListeningHint && (
-                <div className="rounded-2xl bg-[#CFE9FF] border border-[#8CC7FF] p-4 md:p-5 shadow-sm text-left">
+                <div className="rounded-2xl bg-[#CFE9FF] border border-[#8CC7FF] p-4 lg:p-5 shadow-sm text-left">
                   <div className="flex items-center gap-2 text-[#2B6CB0] font-semibold mb-2">
                     <Info className="h-4 w-4" />
                     Hints
@@ -2447,17 +2473,18 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
               {listeningStage === "question_text" &&
                 !showListeningCompletionCard && (
-                  <div className="rounded-2xl bg-white border border-[#B9E1FF] p-4 md:p-5 shadow-sm">
+                  <div className="rounded-2xl bg-white border border-[#B9E1FF] p-4 lg:p-5 shadow-sm">
                     <div className="inline-flex items-center gap-2 rounded-full bg-[#E6F3FF] px-3 py-1 text-sm font-semibold text-[#2B6CB0] mb-3">
                       <BookOpen className="h-4 w-4" />
                       Character Transcript
                     </div>
                     <p
                       ref={transcriptRef}
-                      className={`text-sm text-[#2F4B66] whitespace-pre-wrap transition-all duration-300 ${!isTranscriptExpanded
-                        ? "line-clamp-5"
-                        : "line-clamp-none"
-                        }`}
+                      className={`text-sm text-[#2F4B66] whitespace-pre-wrap transition-all duration-300 ${
+                        !isTranscriptExpanded
+                          ? "line-clamp-5"
+                          : "line-clamp-none"
+                      }`}
                     >
                       {listeningData?.questionText ||
                         "Transcript will appear here as you progress."}
@@ -2478,9 +2505,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 )}
 
               {showListeningCompletionCard && (
-                <div className="absolute inset-0 z-20 flex items-center justify-center px-3 md:px-6">
+                <div className="absolute inset-0 z-20 flex items-center justify-center px-3 lg:px-6">
                   <div className="absolute inset-0 bg-white/70 backdrop-blur-sm" />
-                  <div className="relative w-full max-w-[720px] mx-auto text-center px-4 md:px-8 py-6 bg-white border border-slate-200 rounded-2xl shadow-xl">
+                  <div className="relative w-full max-w-[720px] mx-auto text-center px-4 lg:px-8 py-6 bg-white border border-slate-200 rounded-2xl shadow-xl">
                     <img
                       src={birdWithHeadphones}
                       alt="Listening helper"
@@ -2538,11 +2565,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   onToggleAudio={
                     contentPayload.audioUrl
                       ? () =>
-                        toggleAudio(
-                          "content-payload-audio",
-                          contentPayload.audioUrl,
-                          () => onContentAudioComplete?.(true),
-                        )
+                          toggleAudio(
+                            "content-payload-audio",
+                            contentPayload.audioUrl,
+                            () => onContentAudioComplete?.(true),
+                          )
                       : undefined
                   }
                 />
@@ -2551,8 +2578,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 <div className="p-4 rounded-lg shadow-sm bg-white border border-gray-200">
                   <p
                     ref={contentRef}
-                    className={`text-gray-800 text-base leading-relaxed whitespace-pre-wrap transition-all duration-300 ${!isContentExpanded ? "line-clamp-3" : "line-clamp-none"
-                      }`}
+                    className={`text-gray-800 text-base leading-relaxed whitespace-pre-wrap transition-all duration-300 ${
+                      !isContentExpanded ? "line-clamp-3" : "line-clamp-none"
+                    }`}
                   >
                     {contentPayload.content
                       .split(/(\*\*.*?\*\*)/g)
@@ -2580,7 +2608,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                         }
                       >
                         {playingAudioId === "content-payload-audio" &&
-                          isCurrentlyPlaying ? (
+                        isCurrentlyPlaying ? (
                           <Pause className="h-5 w-5" />
                         ) : (
                           <Play className="h-5 w-5" />
@@ -2608,10 +2636,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   {messages.map((msg) => (
                     <div
                       key={msg.id}
-                      className={`flex flex-col gap-1 ${msg.type === "sent"
-                        ? "self-end items-end"
-                        : "self-start items-start"
-                        }`}
+                      className={`flex flex-col gap-1 ${
+                        msg.type === "sent"
+                          ? "self-end items-end"
+                          : "self-start items-start"
+                      }`}
                     >
                       {msg.loading ? (
                         <div className="flex items-center gap-2 bg-white p-3 rounded-xl shadow-sm">
@@ -2629,82 +2658,120 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                           size="icon"
                           onClick={() => toggleAudio(msg.id, msg.audioURL)}
                         >
-                          {playingAudioId === msg.id && isCurrentlyPlaying ? (
-                            <Pause className="h-5 w-5" />
+                          {playingAudioId === msg.id ? (
+                            isCurrentlyPlaying ? (
+                              <Pause className="h-5 w-5" />
+                            ) : loadingAudioId === msg.id ? (
+                              <LoaderPinwheel className="h-5 w-5 animate-spin text-primary" />
+                            ) : (
+                              <Play className="h-5 w-5" />
+                            )
                           ) : (
                             <Play className="h-5 w-5" />
                           )}
                         </Button>
-                      ) : (
-                        <div
-                          className={`p-3 rounded-xl max-w-md shadow-sm break-words ${msg.type === "sent"
-                            ? "bg-[#3EA4F9] text-white rounded-tr-none"
-                            : "bg-white text-gray-800 rounded-tl-none"
-                            }`}
-                        >
+                      ) : msg.type === "sent" ? (
+                        <div className="p-3 rounded-xl max-w-md shadow-sm break-words bg-[#3EA4F9] text-white rounded-tr-none">
                           {msg.text && (
                             <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                              {msg.text.split(/(\*\*.*?\*\*)/g).map((part, i) =>
-                                part.startsWith("**") && part.endsWith("**") ? (
-                                  <span
-                                    key={i}
-                                    className="font-bold text-blue-600"
-                                  >
-                                    {part.slice(2, -2)}
-                                  </span>
-                                ) : (
-                                  part
-                                ),
-                              )}
+                              {msg.text
+                                .split(/(\*\*.*?\*\*)/g)
+                                .map((part, i) =>
+                                  part.startsWith("**") &&
+                                  part.endsWith("**") ? (
+                                    <span
+                                      key={i}
+                                      className="font-bold text-white opacity-90"
+                                    >
+                                      {part.slice(2, -2)}
+                                    </span>
+                                  ) : (
+                                    part
+                                  ),
+                                )}
                             </p>
                           )}
+                          {msg.hasAssessment && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                handleShowAssessment(msg.assessments);
+                                resetInactivityTimer();
+                              }}
+                              className="flex items-center gap-1 bg-white text-primary text-xs p-1 h-auto rounded-md shadow-sm border mt-2"
+                            >
+                              <BarChart2 className="h-4 w-4" />
+                              View Assessment
+                            </Button>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-2">
+                          <div className="p-3 rounded-xl max-w-md shadow-sm break-words bg-white text-gray-800 rounded-tl-none">
+                            {msg.text && (
+                              <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                                {msg.text
+                                  .split(/(\*\*.*?\*\*)/g)
+                                  .map((part, i) =>
+                                    part.startsWith("**") &&
+                                    part.endsWith("**") ? (
+                                      <span
+                                        key={i}
+                                        className="font-bold text-blue-600"
+                                      >
+                                        {part.slice(2, -2)}
+                                      </span>
+                                    ) : (
+                                      part
+                                    ),
+                                  )}
+                              </p>
+                            )}
 
-                          <div className="flex gap-2 items-center mt-2 flex-wrap">
-                            {msg.type === "received" && msg.audioUrl && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => toggleAudio(msg.id, msg.audioUrl)}
-                              >
-                                {playingAudioId === msg.id &&
-                                  isCurrentlyPlaying ? (
-                                  <Pause className="h-5 w-5" />
-                                ) : (
-                                  <Play className="h-5 w-5" />
-                                )}
-                              </Button>
-                            )}
-                            {msg.type === "received" && msg.hasFeedback && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  onShowFeedback({
-                                    type: "feedback",
-                                    content: msg.feedback,
-                                  });
-                                  resetInactivityTimer();
-                                }}
-                                className="flex items-center gap-1 text-primary text-xs p-1 h-auto"
-                              >
-                                <MessageCircle className="h-4 w-4" />
-                                View Feedback
-                              </Button>
-                            )}
-                            {msg.type === "sent" && msg.hasAssessment && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  handleShowAssessment(msg.assessments);
-                                  resetInactivityTimer();
-                                }}
-                                className="flex items-center gap-1 bg-white text-primary text-xs p-1 h-auto rounded-md shadow-sm border"
-                              >
-                                <BarChart2 className="h-4 w-4" />
-                                View Assessment
-                              </Button>
-                            )}
+                            <div className="flex gap-2 items-center mt-2 flex-wrap">
+                              {(msg.audioUrl || msg.audioURL) && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() =>
+                                    toggleAudio(
+                                      msg.id,
+                                      msg.audioUrl || msg.audioURL,
+                                    )
+                                  }
+                                >
+                                  {playingAudioId === msg.id ? (
+                                    isCurrentlyPlaying ? (
+                                      <Pause className="h-5 w-5" />
+                                    ) : loadingAudioId === msg.id ? (
+                                      <LoaderPinwheel className="h-5 w-5 animate-spin text-primary" />
+                                    ) : (
+                                      <Play className="h-5 w-5" />
+                                    )
+                                  ) : (
+                                    <Play className="h-5 w-5" />
+                                  )}
+                                </Button>
+                              )}
+                              {msg.hasFeedback && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    onShowFeedback({
+                                      type: "feedback",
+                                      content: msg.feedback,
+                                    });
+                                    resetInactivityTimer();
+                                  }}
+                                  className="flex items-center gap-1 text-primary text-xs p-1 h-auto"
+                                >
+                                  <MessageCircle className="h-4 w-4" />
+                                  View Feedback
+                                </Button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       )}
@@ -2988,12 +3055,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                           Severity
                         </p>
                         <p
-                          className={`text-sm font-semibold ${contentFilterWarningData.severity === "High"
-                            ? "text-red-600"
-                            : contentFilterWarningData.severity === "Medium"
-                              ? "text-orange-600"
-                              : "text-yellow-600"
-                            }`}
+                          className={`text-sm font-semibold ${
+                            contentFilterWarningData.severity === "High"
+                              ? "text-red-600"
+                              : contentFilterWarningData.severity === "Medium"
+                                ? "text-orange-600"
+                                : "text-yellow-600"
+                          }`}
                         >
                           {contentFilterWarningData.severity}
                         </p>
@@ -3132,7 +3200,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             disabled={
               (mode === "listening-mode" &&
                 ((listeningStage === "initial" && !hasPlayedIntroAudio) ||
-                  (listeningStage === "question_text" && !isContextCompleted))) ||
+                  (listeningStage === "question_text" &&
+                    !isContextCompleted))) ||
               (mode === "listening-mode" &&
                 listeningStage === "quiz" &&
                 selectedAnswer === null)

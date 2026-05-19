@@ -48,8 +48,8 @@ const AvatarStage: React.FC<AvatarStageProps> = ({
       <div className="w-full max-w-full mx-auto">
         <div
           className={`w-full rounded-2xl overflow-hidden ${
-            heightClassName ?? (compact ? 'h-[360px]' : 'h-[440px]')
-          }`}
+            heightClassName || (compact ? 'h-[360px]' : 'h-[560px]')
+          } ${!heightClassName && !compact ? 'min-h-[560px]' : ''}`}
         >
           <video
             ref={videoRef}
@@ -57,6 +57,7 @@ const AvatarStage: React.FC<AvatarStageProps> = ({
             playsInline
             muted
             preload="auto"
+            disablePictureInPicture
             onEnded={onEnded}
             className={`relative block -scale-x-100 ${videoSizingClass}`}
             style={{ objectPosition: 'center' }}

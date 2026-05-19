@@ -1,11 +1,12 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Pause, Play } from 'lucide-react';
+import { Pause, Play, LoaderPinwheel } from 'lucide-react';
 
 interface AudioPlayerProps {
   audioSrc: string;
   isPlaying: boolean;
+  isLoading?: boolean;
   progress: number;
   duration: number;
   onTogglePlay: () => void;
@@ -23,6 +24,7 @@ const formatTime = (sec: number, placeholder = '00:00') => {
 
 const AudioPlayer: React.FC<AudioPlayerProps> = ({
   isPlaying,
+  isLoading = false,
   progress,
   duration,
   onTogglePlay,
@@ -77,7 +79,9 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         className="rounded-full bg-white/10 text-white hover:bg-white/20 shadow-md h-8 w-8 flex-shrink-0"
         onClick={onTogglePlay}
       >
-        {isPlaying ? (
+        {isLoading ? (
+          <LoaderPinwheel className="h-4 w-4 animate-spin" />
+        ) : isPlaying ? (
           <Pause className="h-4 w-4" />
         ) : (
           <Play className="h-4 w-4" />
