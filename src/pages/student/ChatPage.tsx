@@ -353,7 +353,7 @@ const Chat: React.FC = () => {
                         }
                       />
                     </div>
-                    {mode === "listening-mode" && listeningStage !== "quiz" && (
+                    {mode === "listening-mode" && (
                       <div className="px-1">
                         <AudioPlayer3D
                           audioSrc={listeningAudioUrl || ""}
