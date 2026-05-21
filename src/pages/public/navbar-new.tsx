@@ -344,15 +344,6 @@ export default function Navbar() {
                 {isAr ? "تسجيل الدخول" : "Sign In"}
               </Button>
             </Link>
-            <Link to="/register">
-              <Button
-                className="rounded-full text-white hover:opacity-90 transition-opacity w-full"
-                style={{ background: "linear-gradient(90deg, #76ABF8 0%, #058BF4 48.56%, #63B3F6 80%)" }}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                {isAr ? "التسجيل" : "Signup"}
-              </Button>
-            </Link>
           </div>
         </div>
       </div>

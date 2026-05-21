@@ -1767,9 +1767,22 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     clearAudioProgress();
     onEndCalledRef.current = false;
 
+    const isBlob: boolean = audioUrl.startsWith("blob:");
+    let format: string | undefined;
+    if (isBlob) {
+      const mimeType: string | undefined = getSupportedMimeType();
+      if (mimeType) {
+        format = mimeType.split("/")[1]?.split(";")[0];
+      }
+      if (!format) {
+        format = "webm";
+      }
+    }
+
     const sound = new Howl({
       src: [audioUrl],
       html5: true,
+      ...(format ? { format: [format] } : {}),
       onplay: () => {
         setPlayingAudioId(id);
         setIsCurrentlyPlaying(true);
