@@ -1592,9 +1592,9 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
 
         {/* Main Listening Content */}
         <div
-          className={`relative flex-1 overflow-y-auto p-4 lg:p-6 flex flex-col gap-4 transition-all duration-500 ease-out ${
+          className={`relative flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-6 flex flex-col gap-4 transition-all duration-500 ease-out ${
             isListeningStepTransitioning
-              ? "opacity-0 translate-x-6"
+              ? "opacity-0 lg:translate-x-6"
               : "opacity-100 translate-x-0"
           }`}
         >
@@ -1705,26 +1705,26 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
           {/* MCQ Quiz */}
           {listeningStage === "quiz" && mcqList.length > 0 && (
             <div className="w-full flex flex-col items-center gap-4">
-              <div className="p-6 md:p-8 border rounded-3xl bg-white shadow-lg w-full max-w-[820px] mt-4 mb-2 text-left">
-                <div className="flex items-start justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-[#E6F3FF] flex items-center justify-center">
+              <div className="p-6 md:p-8 border rounded-3xl bg-white shadow-lg w-full max-w-full md:max-w-[820px] overflow-hidden mt-4 mb-2 text-left">
+                <div className="flex items-start justify-between mb-6 gap-2">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="h-10 w-10 rounded-full bg-[#E6F3FF] flex items-center justify-center flex-shrink-0">
                       <Check className="h-5 w-5 text-[#3EA4F9]" />
                     </div>
-                    <div>
-                      <p className="text-xs font-semibold text-[#6B8BB8] uppercase tracking-wide">
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-[#6B8BB8] uppercase tracking-wide truncate">
                         Step 4: Quiz
                       </p>
-                      <p className="text-lg font-semibold text-[#2B3A67]">
+                      <p className="text-lg font-semibold text-[#2B3A67] truncate">
                         Test Your Knowledge
                       </p>
                     </div>
                   </div>
-                  <span className="text-xs font-semibold text-[#6B8BB8] bg-[#F1F6FF] px-3 py-1 rounded-full">
+                  <span className="text-xs font-semibold text-[#6B8BB8] bg-[#F1F6FF] px-3 py-1 rounded-full flex-shrink-0">
                     {currentMcqIndex + 1}/{mcqList.length}
                   </span>
                 </div>
-                <p className="text-lg font-semibold mb-4 text-[#2B3A67]">
+                <p className="text-lg font-semibold mb-4 text-[#2B3A67] break-words">
                   {mcqList[currentMcqIndex].question}
                 </p>
                 <div className="flex flex-col gap-2">
@@ -1739,7 +1739,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
                           setSelectedAnswer(index);
                           resetActivityTimer();
                         }}
-                        className={`w-full justify-start p-4 h-auto transition-colors rounded-2xl ${
+                        className={`w-full justify-start p-4 h-auto transition-colors rounded-2xl whitespace-normal text-left ${
                           selectedAnswer === index
                             ? "bg-[#3EA4F9] text-white hover:bg-[#2F93F0] border-transparent"
                             : "bg-white border-[#E1E7F0] text-[#2B3A67]"
@@ -1752,7 +1752,7 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
                               : "border-[#C9D6E6]"
                           }`}
                         />
-                        <span>{option}</span>
+                        <span className="flex-1 min-w-0 break-words text-left">{option}</span>
                       </Button>
                     ),
                   )}

@@ -201,7 +201,7 @@ export function StudentLayout({ children }: StudentLayoutProps) {
       </nav>
 
       {/* Main content */}
-      <div className="xl:pl-64 flex flex-col flex-1">
+      <div className="xl:pl-64 flex flex-col flex-1 w-full max-w-full overflow-x-hidden">
         {/* Top header */}
         <header className="sticky top-0 z-40 flex xl:hidden items-center justify-between h-16 px-4 bg-background xl:px-8">
           <Button
@@ -298,8 +298,8 @@ export function StudentLayout({ children }: StudentLayoutProps) {
         </header>
 
         {/* Main Content */}
-        <main className="flex-1">
-          <div className={`p-4 xl:p-8 ${location.pathname.includes('/student/learning-mode/') ? 'pt-2' : ''}`}>{children}</div>
+        <main className="flex-1 w-full max-w-full overflow-x-hidden">
+          <div className={`p-4 xl:p-8 w-full max-w-full overflow-x-hidden ${location.pathname.includes('/student/learning-mode/') ? 'pt-2' : ''}`}>{children}</div>
         </main>
       </div>
 
