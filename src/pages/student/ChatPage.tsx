@@ -300,10 +300,10 @@ const Chat: React.FC = () => {
   }
 
   return (
-    <div className="flex max-h-[100dvh]">
-      <main className="flex-1 transition-all duration-300">
+    <div className="flex max-h-[100dvh] w-full max-w-full overflow-hidden">
+      <main className="flex-1 transition-all duration-300 w-full max-w-full overflow-hidden">
         <div
-          className={`mx-auto md:px-6 min-h-0 ${
+          className={`mx-auto md:px-6 min-h-0 w-full max-w-full overflow-hidden ${
             isAvatar3D
               ? "h-[calc(100dvh-6rem)] xl:h-[calc(100dvh-9.5rem)]"
               : ""
@@ -381,7 +381,7 @@ const Chat: React.FC = () => {
                   />
                 )}
               </div>
-              <div className="flex-1 min-h-0 flex flex-col h-full">
+              <div className="flex-1 min-h-0 flex flex-col h-full w-full max-w-full overflow-hidden">
                 {mode === "listening-mode" ? (
                   <ListeningMode3D
                     isAvatar3D={isAvatar3D}
