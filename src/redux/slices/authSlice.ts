@@ -62,28 +62,30 @@ const fetchAvailableTopicModes = async (userId: string, accessToken: string) => 
     'Content-Type': 'application/json',
   };
 
-  const results = await Promise.all(
-    TOPIC_MODES_TO_CHECK.map(async (topicMode) => {
-      try {
-        const response = await axios.post(
-          `${baseUrl}/api/v1/topic/search`,
-          { userId, topicMode },
-          { headers }
-        );
-        const payload = response?.data?.data;
-        if (!payload) return null;
-        if (payload.isChapterBased) {
-          return (payload.chapters?.length || 0) > 0 ? topicMode : null;
-        }
-        return (payload.topics?.length || 0) > 0 ? topicMode : null;
-      } catch {
-        // Fail open to avoid hiding modes on transient errors
-        return topicMode;
-      }
-    })
-  );
+  try {
+    const response = await axios.get(
+      `${baseUrl}/api/v1/topic/available-modes?userId=${userId}`,
+      { headers }
+    );
+    
+    const modesData = response?.data?.data?.modes;
+    if (!modesData) return [];
 
-  return results.filter(Boolean) as string[];
+    const availableModes: string[] = [];
+    modesData.forEach((m: any) => {
+      if (m.isAvailable) availableModes.push(m.topicMode);
+      if (m.children) {
+        m.children.forEach((child: any) => {
+          if (child.isAvailable) availableModes.push(child.topicMode);
+        });
+      }
+    });
+
+    return availableModes;
+  } catch (error) {
+    // Fail open to avoid hiding modes on transient errors
+    return TOPIC_MODES_TO_CHECK;
+  }
 };
 
 export const login = createAsyncThunk(

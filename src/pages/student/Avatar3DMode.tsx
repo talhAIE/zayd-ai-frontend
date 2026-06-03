@@ -55,22 +55,44 @@ const Avatar3DMode: React.FC = () => {
       "3D Listening": "3d-listening-mode",
     };
 
-    const hasContentForMode = async (topicMode: string) => {
-      try {
-        const response = await TopicService.getTopics(userId, topicMode);
-        const payload = response?.data?.data;
-        if (!payload) return true;
-        if (payload.isChapterBased) {
-          return (payload.chapters?.length || 0) > 0;
-        }
-        return (payload.topics?.length || 0) > 0;
-      } catch {
-        return true;
-      }
-    };
-
     const fetchAvailability = async () => {
       if (!userId) return;
+
+      try {
+        const response = await TopicService.getAvailableModes(userId);
+        const modesData = response?.data?.data?.modes;
+
+        if (modesData) {
+          const modeMap: Record<string, boolean> = {};
+          modesData.forEach((m: any) => {
+            modeMap[m.topicMode] = m.isAvailable;
+            if (m.children) {
+              m.children.forEach((child: any) => {
+                modeMap[child.topicMode] = child.isAvailable;
+              });
+            }
+          });
+
+          const newAvailability: Record<string, boolean> = {};
+          modes.forEach((mode) => {
+            const topicMode = topicModeByTitle[mode.title];
+            if (!topicMode) {
+              newAvailability[mode.title] = true;
+            } else {
+              newAvailability[mode.title] = modeMap[topicMode] ?? false;
+            }
+          });
+
+          if (!cancelled) {
+            setModeAvailability(newAvailability);
+          }
+          return;
+        }
+      } catch (error) {
+        console.error("Failed to fetch available modes", error);
+      }
+
+      // Fallback to cache if API fails or returns no data
       if (cachedTopicModes) {
         const cachedSet = new Set(cachedTopicModes);
         const results = modes.map((mode) => {
@@ -89,26 +111,6 @@ const Avatar3DMode: React.FC = () => {
             }, {} as Record<string, boolean>)
           );
         }
-        return;
-      }
-      const results = await Promise.all(
-        modes.map(async (mode) => {
-          const topicMode = topicModeByTitle[mode.title];
-          if (!topicMode) {
-            return [mode.title, true] as const;
-          }
-          const available = await hasContentForMode(topicMode);
-          return [mode.title, available] as const;
-        })
-      );
-
-      if (!cancelled) {
-        setModeAvailability(
-          results.reduce((acc, [title, available]) => {
-            acc[title] = available;
-            return acc;
-          }, {} as Record<string, boolean>)
-        );
       }
     };
 
