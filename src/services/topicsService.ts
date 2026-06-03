@@ -12,7 +12,28 @@ export interface TopicsResponse {
   };
 }
 
+export interface AvailableMode {
+  mode: string;
+  topicMode: string;
+  displayName: string;
+  isAvailable: boolean;
+  isChapterBased: boolean;
+  totalItems: number;
+  children?: AvailableMode[];
+}
+
+export interface AvailableModesResponse {
+  statusMessage: string;
+  data: {
+    modes: AvailableMode[];
+  };
+}
+
 export const TopicService = {
+  getAvailableModes: (userId: string) => {
+    return apiClient.get<AvailableModesResponse>(`/topic/available-modes?userId=${userId}`);
+  },
+
   getTopics: (userId: string, topicMode: string) => {
     return apiClient.post<TopicsResponse>('/topic/search', {
       userId,
