@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Trophy, Star, Calendar, Clock, BookOpen, Lock } from "lucide-react";
 import apiClient from "@/config/ApiConfig";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -21,6 +22,10 @@ import certTemplateUrl from "/src/assets/Certificate_Template.pdf?url";
 import markerFontUrl from "/src/assets/fonts/lumiosbrush-regular.otf?url";
 import rewardBadgeBgUrl from "/src/assets/svgs/rewards.svg?url";
 import * as pdfjs from "pdfjs-dist";
+import InteractiveTour, { TourStep } from "@/components/ui/InteractiveTour";
+
+import achievementsImg1 from "@/assets/user-guide/achievements/1.png";
+import achievementsImg2 from "@/assets/user-guide/achievements/2.png";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.js",
@@ -84,6 +89,23 @@ interface AchievementCardProps {
 
 // --- Main Rewards Component ---
 
+const TOUR_STEPS: TourStep[] = [
+  {
+    targetId: "tour-certifications-tab",
+    title: "🏅 Zayd AI appreciates your learning efforts…",
+    description: "…by awarding you certificates! Collect them all as you grow.",
+    position: "bottom",
+    image: achievementsImg1,
+  },
+  {
+    targetId: "tour-rewards-tab",
+    title: "🎯 Complete the challenge…",
+    description: "…and unlock new rewards every day!\nDon't forget to claim your rewards.",
+    position: "bottom",
+    image: achievementsImg2,
+  },
+];
+
 const Rewards = (): JSX.Element => {
   const [achievements, setAchievements] = useState<AchievementCategory[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -98,6 +120,18 @@ const Rewards = (): JSX.Element => {
   const [selectedCertificate, setSelectedCertificate] =
     useState<Certification | null>(null);
   const [generatingPDF, setGeneratingPDF] = useState<boolean>(false);
+
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [tourActive, setTourActive] = useState(searchParams.get("tour") === "true");
+
+  useEffect(() => {
+    if (tourActive) {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("tour");
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [tourActive, searchParams, setSearchParams]);
 
   useEffect(() => {
     fetchAchievements();
@@ -670,12 +704,14 @@ const Rewards = (): JSX.Element => {
           >
             <TabsList className="w-full mb-8 px-2 py-8 gap-2 rounded-3xl">
               <TabsTrigger
+                id="tour-rewards-tab"
                 className="w-full data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#3EA4F9] data-[state=active]:to-[#0267B5] data-[state=active]:text-white py-3 rounded-xl"
                 value="rewards"
               >
                 Rewards
               </TabsTrigger>
               <TabsTrigger
+                id="tour-certifications-tab"
                 className="w-full data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#3EA4F9] data-[state=active]:to-[#0267B5] data-[state=active]:text-white py-3 rounded-xl"
                 value="certifications"
               >
@@ -813,6 +849,16 @@ const Rewards = (): JSX.Element => {
           </Tabs>
         </div>
       </div>
+
+      <InteractiveTour
+        active={tourActive}
+        steps={TOUR_STEPS}
+        onComplete={() => {
+          setTourActive(false);
+          navigate("/student/leaderboard?tour=true");
+        }}
+        onSkip={() => setTourActive(false)}
+      />
     </>
   );
 };

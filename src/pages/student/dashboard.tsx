@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -17,15 +17,91 @@ import PerformanceGraph from "@/components/ui/PerformanceGraph";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { fetchDashboardData } from "@/redux/slices/dashboardSlice";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Clock, BookOpen, MessageSquare, TrendingUp } from "lucide-react";
+import InteractiveTour, { TourStep } from "@/components/ui/InteractiveTour";
+
+import dashboardImg1 from "@/assets/user-guide/dashboard/1.png";
+import dashboardImg2 from "@/assets/user-guide/dashboard/2.png";
+import dashboardImg3 from "@/assets/user-guide/dashboard/3.png";
+import dashboardImg4 from "@/assets/user-guide/dashboard/4.png";
+import dashboardImg5 from "@/assets/user-guide/dashboard/5.png";
+
+const TOUR_STEPS: TourStep[] = [
+  {
+    targetId: "tour-dashboard-main",
+    title: "Welcome to your personal dashboard!",
+    description:
+      "This is your central hub for tracking your learning journey and progress.",
+    position: "bottom",
+    image: dashboardImg1,
+  },
+  {
+    targetId: "tour-profile",
+    title: "👤 Your Profile",
+    description: "This is your profile! Your class, school live here.",
+    position: "bottom",
+  },
+  {
+    targetId: "tour-streak",
+    title: "🔥 Streak",
+    description: "Keep learning daily to build your streak. Don't break the chain!",
+    position: "bottom",
+    image: dashboardImg2,
+  },
+  {
+    targetId: "tour-daily-usage",
+    title: "⏱️ Daily Usage",
+    description: "Track how much time you've spent learning today.",
+    position: "bottom",
+    image: dashboardImg3,
+  },
+  {
+    targetId: "tour-longest-streak",
+    title: "🏆 Longest Streak",
+    description: "Here's the level of your progress. Aim higher every day!",
+    position: "bottom",
+    image: dashboardImg4,
+  },
+  {
+    targetId: "tour-calendar",
+    title: "📅 Calendar",
+    description: "See your activity history at a glance. Blue dots = learning days",
+    position: "top",
+    image: dashboardImg5,
+  },
+  {
+    targetId: "tour-completed-topics",
+    title: "📚 Completed Topics",
+    description: "Your progress across learning modules. Explore more topics to fill this up!",
+    position: "top",
+  },
+  {
+    targetId: "tour-performance",
+    title: "📊 My Performance",
+    description: "Monitor your Accuracy, Pronunciation, and Fluency over time.",
+    position: "top",
+  },
+];
 
 export default function LanguageLearningDashboard() {
   const myUser = localStorage.getItem("AiTutorUser");
   let parsedUser = JSON.parse(myUser || "{}");
   const currentUserId = parsedUser?.id;
 
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { data, isLoading, error } = useAppSelector((state) => state.dashboard);
   const [timeFilter, setTimeFilter] = useState<"weekly" | "monthly">("weekly");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [tourActive, setTourActive] = useState(searchParams.get("tour") === "true");
+
+  useEffect(() => {
+    if (tourActive) {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("tour");
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [tourActive, searchParams, setSearchParams]);
 
   useEffect(() => {
     // Only fetch if we have a valid user ID
@@ -84,7 +160,7 @@ export default function LanguageLearningDashboard() {
   }
 
   return (
-    <div className="flex flex-col border border-[var(--border-light)] rounded-3xl p-4">
+    <div id="tour-dashboard-main" className="flex flex-col border border-[var(--border-light)] rounded-3xl p-4">
       <div className="grid grid-cols-1 lg:grid-cols-3 md:gap-6 mb-6 w-full mx-auto items-start">
         {isLoading ? (
           // Profile Skeleton aligned with DashboardProfile layout
@@ -126,7 +202,9 @@ export default function LanguageLearningDashboard() {
             </CardContent>
           </Card>
         ) : (
-          <DashboardProfile user={user} />
+          <div id="tour-profile">
+            <DashboardProfile user={user} />
+          </div>
         )}
 
         {/* Three Cards: Streak, Daily Usage, and Longest Streak */}
@@ -194,6 +272,7 @@ export default function LanguageLearningDashboard() {
             style={{ gridTemplateRows: "auto auto" }}
           >
             <Card
+              id="tour-streak"
               className="text-white shadow-sm rounded-2xl overflow-hidden border-0 self-start"
               style={{
                 background: "linear-gradient(to bottom, #6EBDFB, #5C9DFF)",
@@ -236,6 +315,7 @@ export default function LanguageLearningDashboard() {
             </Card>
 
             <Card
+              id="tour-daily-usage"
               className="text-white shadow-sm rounded-2xl overflow-hidden border-0 self-start"
               style={{
                 background: "linear-gradient(to bottom, #6EBDFB, #5C9DFF)",
@@ -279,7 +359,7 @@ export default function LanguageLearningDashboard() {
               </CardContent>
             </Card>
 
-            <Card className="shadow-sm col-span-2 rounded-2xl overflow-hidden border-0 relative bg-[#89CBFC2B]">
+            <Card id="tour-longest-streak" className="shadow-sm col-span-2 rounded-2xl overflow-hidden border-0 relative bg-[#89CBFC2B]">
               <style>{`
                 @media (min-width: 545px) and (max-width: 1023px) {
                   .streak-badge-container {
@@ -428,7 +508,7 @@ export default function LanguageLearningDashboard() {
             </div>
           </div>
         ) : (
-          <div className="mt-8 sm:mt-0 col-span-1 border rounded-lg shadow">
+          <div id="tour-calendar" className="mt-8 sm:mt-0 col-span-1 border rounded-lg shadow">
             <Calendar mode="single" usageRecords={usageRecords} />
           </div>
         )}
@@ -436,7 +516,7 @@ export default function LanguageLearningDashboard() {
 
       <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Completed Topics Section */}
-        <Card className="shadow-md border-slate-200">
+        <Card id="tour-completed-topics" className="shadow-md border-slate-200">
           <style>{`
             @media (max-width: 457px) and (min-width: 412px) {
               .modes-link {
@@ -582,13 +662,25 @@ export default function LanguageLearningDashboard() {
         </Card>
 
         {/* My Performance Section */}
-        <PerformanceGraph
-          assessmentGraphData={assessmentGraphData}
-          timeFilter={timeFilter}
-          onTimeFilterChange={setTimeFilter}
-          isLoading={isLoading}
-        />
+        <div id="tour-performance">
+          <PerformanceGraph
+            assessmentGraphData={assessmentGraphData}
+            timeFilter={timeFilter}
+            onTimeFilterChange={setTimeFilter}
+            isLoading={isLoading}
+          />
+        </div>
       </div>
+
+      <InteractiveTour
+        active={tourActive}
+        steps={TOUR_STEPS}
+        onComplete={() => {
+          setTourActive(false);
+          navigate("/student/achievements?tour=true");
+        }}
+        onSkip={() => setTourActive(false)}
+      />
     </div>
   );
 }

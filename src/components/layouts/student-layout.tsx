@@ -7,6 +7,7 @@ import dashboardIcon from "@/assets/sidebar/dashboard.svg";
 import achievementsIcon from "@/assets/sidebar/achievements.svg";
 import leaderboardIcon from "@/assets/sidebar/leaderboard.svg";
 import learningModeIcon from "@/assets/sidebar/learningMode.svg";
+import supporticon from "@/assets/sidebar/support.svg";
 import Logo from "@/assets/sidebar/Logo.png";
 
 import { Menu, X, ChevronLeft } from "lucide-react";
@@ -102,7 +103,7 @@ export function StudentLayout({ children }: StudentLayoutProps) {
       icon: leaderboardIcon,
       label: "Leaderboard",
     },
-    // { path: '/student/support', icon: BookOpen, label: 'Support' },
+    { path: "/student/support", icon: supporticon, label: "Support" },
   ];
 
   return (
@@ -147,6 +148,7 @@ export function StudentLayout({ children }: StudentLayoutProps) {
               {sidebarItems.map((item) => (
                 <Link
                   key={item.path}
+                  id={`mobile-sidebar-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
                   to={item.path}
                   className={`flex items-center gap-3 py-3 px-4 rounded-lg font-medium transition-colors ${
                     isActive(item.path)
@@ -182,6 +184,7 @@ export function StudentLayout({ children }: StudentLayoutProps) {
             {sidebarItems.map((item) => (
               <div key={item.path} className="flex items-center w-full">
                 <Link
+                  id={`sidebar-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
                   to={item.path}
                   className={`flex items-center justify-start gap-3 py-2 px-4 rounded-md font-medium transition-colors flex-1 ${
                     isActive(item.path)

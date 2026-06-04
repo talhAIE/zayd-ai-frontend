@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Crown, Clock } from "lucide-react";
 import {
   fetchLeaderboard,
@@ -9,6 +10,75 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import InteractiveTour, { TourStep } from "@/components/ui/InteractiveTour";
+
+import leaderboardImg1 from "@/assets/user-guide/leaderboard/1.png";
+import leaderboardImg2 from "@/assets/user-guide/leaderboard/2.png";
+import leaderboardImg3 from "@/assets/user-guide/leaderboard/3.png";
+import leaderboardImg4 from "@/assets/user-guide/leaderboard/4.png";
+import leaderboardImg5 from "@/assets/user-guide/leaderboard/5.png";
+import leaderboardImg6 from "@/assets/user-guide/leaderboard/6.png";
+import leaderboardImg7 from "@/assets/user-guide/leaderboard/7.png";
+import leaderboardImg8 from "@/assets/user-guide/leaderboard/8.png";
+
+const TOUR_STEPS: TourStep[] = [
+  {
+    targetId: "tour-leaderboard-main",
+    title: "🏆 Compete with your fellows…",
+    description: "…to claim the highest position in the leaderboard! Study more, earn points, and climb the ranks.",
+    position: "bottom",
+    image: leaderboardImg1,
+  },
+  {
+    targetId: "tour-top-3",
+    title: "🥇🥈🥉 Top 3",
+    description: "The top 3 learners of the week! Can you make it here?",
+    position: "bottom",
+    image: leaderboardImg2,
+  },
+  {
+    targetId: "tour-rank-col",
+    title: "Your position",
+    description: "Your position among all students in your school.",
+    position: "bottom",
+    image: leaderboardImg3,
+  },
+  {
+    targetId: "tour-student-col",
+    title: "Fellow learners",
+    description: "Your fellow learners — everyone starts somewhere!",
+    position: "bottom",
+    image: leaderboardImg4,
+  },
+  {
+    targetId: "tour-school-col",
+    title: "School",
+    description: "See which school your competitors belong to.",
+    position: "bottom",
+    image: leaderboardImg5,
+  },
+  {
+    targetId: "tour-level-col",
+    title: "CEFR Level",
+    description: "Your CEFR level. Higher level = harder challenges.",
+    position: "bottom",
+    image: leaderboardImg6,
+  },
+  {
+    targetId: "tour-time-col",
+    title: "⏱️ Learning Time",
+    description: "Total learning time this week. Every minute counts!",
+    position: "bottom",
+    image: leaderboardImg7,
+  },
+  {
+    targetId: "tour-topics-col",
+    title: "📚 Completed Topics",
+    description: "Number of topics finished. More topics = more points!",
+    position: "bottom",
+    image: leaderboardImg8,
+  },
+];
 
 interface LeaderboardProps {
   userId?: string;
@@ -21,6 +91,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
   let parsedUser = JSON.parse(user || "{}");
   const currentUserId = parsedUser?.id;
 
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { leaderboard, currentUser, isLoading, error } = useAppSelector(
     (state) => state.leaderboard
@@ -28,6 +99,17 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
 
   const [showFixedUserBar, setShowFixedUserBar] = useState(false);
   const [filteredUsers, setFilteredUsers] = useState<LeaderboardUser[]>([]);
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [tourActive, setTourActive] = useState(searchParams.get("tour") === "true");
+
+  useEffect(() => {
+    if (tourActive) {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("tour");
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [tourActive, searchParams, setSearchParams]);
 
   const currentUserInTableRef = useRef<HTMLTableRowElement>(null);
   const currentUserNotInTableRef = useRef<HTMLTableRowElement>(null);
@@ -215,9 +297,9 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
     <div className="mx-auto pb-20">
       {/* <h1 className="relative text-3xl font-bold mb-8 text-center text-gray-700">Leaderboard</h1> */}
 
-      <div className="bg-white p-4 md:p-6 rounded-xl shadow-xl">
+      <div id="tour-leaderboard-main" className="bg-white p-4 md:p-6 rounded-xl shadow-xl">
         {orderedPodiumUsers.length > 0 && (
-          <div className="flex flex-wrap justify-center items-end mb-10 gap-2 md:gap-4">
+          <div id="tour-top-3" className="flex flex-wrap justify-center items-end mb-10 gap-2 md:gap-4">
             {orderedPodiumUsers.map((user, _index) => {
               let crownSize = "w-10 h-10";
               let avatarSize = "w-24 h-24";
@@ -422,12 +504,12 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
               <table className="w-full">
                 <thead>
                   <tr className="text-left text-xs text-gray-500 uppercase border-b border-gray-200">
-                    <th className="py-3 px-3">Rank</th>
-                    <th className="py-3 px-3">Student</th>
-                    <th className="py-3 px-3">School</th>
-                    <th className="py-3 px-3">Level</th>
-                    <th className="py-3 px-3">Time</th>
-                    <th className="py-3 px-3">Completed Topics</th>
+                    <th id="tour-rank-col" className="py-3 px-3">Rank</th>
+                    <th id="tour-student-col" className="py-3 px-3">Student</th>
+                    <th id="tour-school-col" className="py-3 px-3">School</th>
+                    <th id="tour-level-col" className="py-3 px-3">Level</th>
+                    <th id="tour-time-col" className="py-3 px-3">Time</th>
+                    <th id="tour-topics-col" className="py-3 px-3">Completed Topics</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -800,6 +882,15 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
           </div>
         </div>
       )}
+      <InteractiveTour
+        active={tourActive}
+        steps={TOUR_STEPS}
+        onComplete={() => {
+          setTourActive(false);
+          navigate("/student/learning-modes?tour=true");
+        }}
+        onSkip={() => setTourActive(false)}
+      />
     </div>
   );
 };
