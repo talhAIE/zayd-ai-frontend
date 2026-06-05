@@ -187,139 +187,105 @@ export default function InteractiveTour({
       {/* Tooltip Card */}
       <div
         ref={tooltipRef}
-        style={tooltipStyle}
-        className="w-[340px] bg-white rounded-[20px] pointer-events-auto z-[102] flex flex-col items-center mb-[24px]"
+        style={{
+          ...tooltipStyle,
+          boxShadow: "0px 2px 12px rgba(92, 157, 255, 0.12), 0px 12px 48px rgba(28, 32, 58, 0.2)",
+        }}
+        className="w-[340px] bg-white rounded-[20px] pointer-events-auto z-[102] flex flex-col overflow-hidden pb-6"
       >
+        {/* Top Section (Gradient) */}
         <div
+          className="w-full relative flex flex-col p-3 shrink-0 min-h-[156px] h-auto"
           style={{
-            boxShadow:
-              "0px 2px 12px rgba(92, 157, 255, 0.12), 0px 12px 48px rgba(28, 32, 58, 0.2)",
+            background: "linear-gradient(135deg, #EDF2FF 70.71%, #D6EAFF 38.89%, #EEF4FF 0%)",
           }}
-          className="w-full flex flex-col rounded-[20px] overflow-hidden pb-[24px]"
         >
-          {/* Top Section */}
-          <div
-            className="w-full h-[156px] relative flex flex-col items-center justify-between p-3"
-            style={{
-              background:
-                "linear-gradient(135deg, #EDF2FF 70.71%, #D6EAFF 38.89%, #EEF4FF 0%)",
-            }}
-          >
-            {/* Top Bar with Step Pill */}
-            <div className="w-[316px] flex justify-end">
-              <div className="flex items-center justify-center px-4 py-1.5 gap-2.5 bg-white/90 shadow-[0_1px_6px_rgba(92,157,255,0.15)] rounded-full">
-                <span className="font-bold text-[11px] leading-[16px] text-[#5C9DFF]">
-                  {currentStepIdx + 1} / {steps.length}
-                </span>
-              </div>
+          {/* Top Bar with Step Pill */}
+          <div className="w-full flex justify-end px-1 shrink-0">
+            <div className="flex items-center justify-center px-4 py-1.5 gap-2.5 bg-white/90 shadow-[0_1px_6px_rgba(92,157,255,0.15)] rounded-full">
+              <span className="font-bold text-[11px] leading-[16px] text-[#5C9DFF]">
+                {currentStepIdx + 1} / {steps.length}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex-1 flex justify-between items-center w-full px-2 relative py-2">
+            {/* Text content */}
+            <div className="flex flex-col items-start gap-1 w-[190px] z-10">
+              <h4 className="font-bold text-[15px] leading-[20px] text-[#333333]">
+                {currentStep.title}
+              </h4>
+              <p className="font-normal text-[13px] leading-[18px] text-[#6E7496] whitespace-pre-wrap">
+                {currentStep.description}
+              </p>
             </div>
 
             {/* Mascot Image */}
-            <div className="absolute bottom-0 w-[144px] h-[144px] pointer-events-none filter drop-shadow-[0_4px_20px_rgba(92,157,255,0.22)]">
-              {/* Fallback to generic bird or use TeachBird from assets if imported */}
-              {/* Because this component might not import TeachBird directly, I'll use a placeholder or import it.
-                  I'll use an img tag pointing to the bird asset. */}
+            <div className="absolute right-0 w-[110px] h-[110px] pointer-events-none filter drop-shadow-[0_4px_20px_rgba(92,157,255,0.22)] flex items-center justify-center">
               <img
                 src={currentStep.image || "/src/assets/svgs/dashboardTeach.svg"}
                 alt="Mascot"
                 className="w-full h-full object-contain"
                 onError={(e) => {
-                  // Fallback if path doesn't match
                   (e.target as HTMLImageElement).src =
                     "https://api.iconify.design/twemoji:bird.svg";
                 }}
               />
             </div>
           </div>
-
-          {/* Bottom Section */}
-          <div className="flex flex-col items-center gap-4 pt-4 px-6 w-full">
-            {/* Text content */}
-            <div className="flex flex-col items-start gap-[6px] w-full min-h-[72px]">
-              <h4 className="font-extrabold text-[18px] leading-[22px] tracking-[-0.2px] text-[#333333]">
-                {currentStep.title}
-              </h4>
-              <p className="font-normal text-[14px] leading-[22px] text-[#434343] line-clamp-2">
-                {currentStep.description}
-              </p>
-            </div>
-
-            {/* Progress bar and dots container */}
-            <div className="flex flex-col w-full gap-4 pt-2">
-              {/* Progress Bar */}
-              <div className="w-full h-1 bg-[#6E7496]/10 rounded-full relative overflow-hidden">
-                <div
-                  className="absolute top-0 left-0 h-full rounded-full transition-all duration-300"
-                  style={{
-                    width: `${((currentStepIdx + 1) / steps.length) * 100}%`,
-                    background:
-                      "linear-gradient(90deg, #5C9DFF 100%, #6EBDFB 0%)",
-                  }}
-                />
-              </div>
-
-              {/* Dots */}
-              <div className="flex justify-center items-center gap-[6px]">
-                {steps.map((_, i) => (
-                  <div
-                    key={i}
-                    className={`h-[6px] rounded-full transition-all duration-300 ${
-                      i === currentStepIdx ? "w-[18px]" : "w-[6px] opacity-20"
-                    }`}
-                    style={{
-                      background:
-                        i === currentStepIdx
-                          ? "linear-gradient(90deg, #5C9DFF 100%, #6EBDFB 0%)"
-                          : "#6E7496",
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
         </div>
-      </div>
 
-      {/* Bottom Navigation Bar */}
-      <div
-        className="fixed bottom-0 left-0 w-full h-[79px] flex items-center justify-between px-8 z-[103] pointer-events-auto"
-        style={{
-          background: "rgba(255, 255, 255, 0.95)",
-          boxShadow: "0px -4px 24px rgba(28, 32, 58, 0.08)",
-          backdropFilter: "blur(6px)",
-        }}
-      >
-        <button
-          onClick={onSkip}
-          className="font-medium text-[14px] text-[#6E7496] hover:text-[#434343] transition-colors"
-        >
-          Skip Tour
-        </button>
-
-        <div className="flex gap-4">
-          {currentStepIdx > 0 && (
+        {/* Bottom Section (Controls) */}
+        <div className="flex flex-col items-center w-full gap-5 pt-5 px-6">
+          <div className="flex items-center justify-between w-full">
+            {/* Back Button */}
             <button
               onClick={handleBack}
-              className="flex items-center justify-center gap-1 px-6 py-2.5 font-bold text-[14px] text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 active:scale-95 transition-all"
+              disabled={currentStepIdx === 0}
+              className={`flex items-center justify-center w-10 h-10 bg-white border-2 border-[#E5E7EB] rounded-[10px] transition-all ${
+                currentStepIdx === 0
+                  ? "opacity-0 pointer-events-none"
+                  : "hover:bg-gray-50 active:scale-95"
+              }`}
             >
-              <ChevronLeft className="w-4 h-4" />
-              Back
+              <ChevronLeft className="w-5 h-5 text-[#6E7496]" />
             </button>
-          )}
+
+            {/* Dots */}
+            <div className="flex justify-center items-center gap-[6px]">
+              {steps.map((_, i) => (
+                <div
+                  key={i}
+                  className={`h-[5px] rounded-full transition-all duration-300 ${
+                    i === currentStepIdx ? "w-[28px]" : "w-[8px]"
+                  }`}
+                  style={{
+                    background:
+                      i === currentStepIdx
+                        ? "linear-gradient(0deg, #5C9DFF, #5C9DFF)"
+                        : "rgba(110, 116, 150, 0.18)",
+                  }}
+                />
+              ))}
+            </div>
+
+            {/* Next/Finish Button */}
+            <button
+              onClick={handleNext}
+              className="flex items-center justify-center w-10 h-10 rounded-[10px] shadow-[0_4px_12px_rgba(98,80,233,0.18)] active:scale-95 transition-all"
+              style={{
+                background: "linear-gradient(180deg, #6EBDFB 0%, #5C9DFF 100%)",
+              }}
+            >
+              <ChevronRight className="w-5 h-5 text-white" />
+            </button>
+          </div>
 
           <button
-            onClick={handleNext}
-            className="flex items-center justify-center gap-2 px-8 py-2.5 font-bold text-[14px] text-white rounded-xl active:scale-95 transition-all shadow-[0_4px_12px_rgba(92,157,255,0.3)]"
-            style={{
-              background: "linear-gradient(180deg, #6EBDFB 0%, #5C9DFF 100%)",
-            }}
+            onClick={onSkip}
+            className="font-medium text-[13px] leading-[20px] tracking-[0.13px] text-[#6E7496] hover:text-[#434343] transition-colors"
           >
-            <span>
-              {currentStepIdx === steps.length - 1 ? "Finish" : "Next"}
-            </span>
-            {currentStepIdx < steps.length - 1 && (
-              <ChevronRight className="w-4 h-4" />
-            )}
+            Skip tour
           </button>
         </div>
       </div>
