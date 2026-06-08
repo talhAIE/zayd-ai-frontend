@@ -97,6 +97,14 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
     (state) => state.leaderboard
   );
 
+  const [isMobile, setIsMobile] = useState(typeof window !== "undefined" ? window.innerWidth < 768 : false);
+  
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const [showFixedUserBar, setShowFixedUserBar] = useState(false);
   const [filteredUsers, setFilteredUsers] = useState<LeaderboardUser[]>([]);
 
@@ -401,7 +409,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
           <div className="w-full overflow-hidden">
             {/* Mobile Card Layout */}
             <div className="block md:hidden space-y-3">
-              {tableUsers.map((user) => (
+              {tableUsers.map((user, index) => (
                 <div
                   key={user.username}
                   ref={
@@ -413,14 +421,14 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
                       : "bg-white border-gray-200"
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center space-x-3">
-                      <div
-                        className={`w-12 h-12 rounded-full overflow-hidden flex-shrink-0 ${
-                          isUserCurrent(user.username)
-                            ? "ring-2 ring-blue-400 ring-offset-1"
-                            : ""
-                        }`}
+                    <div className="flex items-center justify-between mb-3">
+                      <div id={index === 0 && isMobile ? "tour-student-col" : undefined} className="flex items-center space-x-3">
+                        <div
+                          className={`w-12 h-12 rounded-full overflow-hidden flex-shrink-0 ${
+                            isUserCurrent(user.username)
+                              ? "ring-2 ring-blue-400 ring-offset-1"
+                              : ""
+                          }`}
                       >
                         <Avatar className="w-full h-full">
                           <AvatarFallback className="text-sm font-semibold">
@@ -443,12 +451,13 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
                             </span>
                           )}
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div id={index === 0 && isMobile ? "tour-school-col" : undefined} className="text-sm text-gray-500">
                           {user.schoolName || "No school"}
                         </div>
                       </div>
                     </div>
                     <div
+                      id={index === 0 && isMobile ? "tour-rank-col" : undefined}
                       className={`text-2xl font-bold ${
                         isUserCurrent(user.username)
                           ? "text-blue-600"
@@ -460,7 +469,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
                   </div>
 
                   <div className="grid grid-cols-3 gap-3 text-center">
-                    <div>
+                    <div id={index === 0 && isMobile ? "tour-level-col" : undefined}>
                       <div className="text-xs text-gray-500 mb-1">Level</div>
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-medium ${getLevelBadgeColor(
@@ -470,7 +479,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
                         {user.aiCefrLevel || "N/A"}
                       </span>
                     </div>
-                    <div>
+                    <div id={index === 0 && isMobile ? "tour-time-col" : undefined}>
                       <div className="text-xs text-gray-500 mb-1">Time</div>
                       <div
                         className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
@@ -482,7 +491,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
                         {formatTime(user.totalSeconds)}
                       </div>
                     </div>
-                    <div>
+                    <div id={index === 0 && isMobile ? "tour-topics-col" : undefined}>
                       <div className="text-xs text-gray-500 mb-1">Topics</div>
                       <div
                         className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
@@ -504,12 +513,12 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
               <table className="w-full">
                 <thead>
                   <tr className="text-left text-xs text-gray-500 uppercase border-b border-gray-200">
-                    <th id="tour-rank-col" className="py-3 px-3">Rank</th>
-                    <th id="tour-student-col" className="py-3 px-3">Student</th>
-                    <th id="tour-school-col" className="py-3 px-3">School</th>
-                    <th id="tour-level-col" className="py-3 px-3">Level</th>
-                    <th id="tour-time-col" className="py-3 px-3">Time</th>
-                    <th id="tour-topics-col" className="py-3 px-3">Completed Topics</th>
+                    <th id={!isMobile ? "tour-rank-col" : undefined} className="py-3 px-3">Rank</th>
+                    <th id={!isMobile ? "tour-student-col" : undefined} className="py-3 px-3">Student</th>
+                    <th id={!isMobile ? "tour-school-col" : undefined} className="py-3 px-3">School</th>
+                    <th id={!isMobile ? "tour-level-col" : undefined} className="py-3 px-3">Level</th>
+                    <th id={!isMobile ? "tour-time-col" : undefined} className="py-3 px-3">Time</th>
+                    <th id={!isMobile ? "tour-topics-col" : undefined} className="py-3 px-3">Completed Topics</th>
                   </tr>
                 </thead>
                 <tbody>

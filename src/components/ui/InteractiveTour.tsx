@@ -110,27 +110,42 @@ export default function InteractiveTour({
     let top = 0;
     let left = 0;
 
-    let position = currentStep.position || "right";
+    const isMobile = window.innerWidth < 768;
+
+    let position = currentStep.position || (isMobile ? "bottom" : "right");
     
-    // User requested never above or beneath, always left or right
-    if (position === "top" || position === "bottom") {
-      position = "right";
+    // Force orientation based on device size
+    if (isMobile) {
+      if (position === "left" || position === "right") {
+        position = "bottom";
+      }
+    } else {
+      if (position === "top" || position === "bottom") {
+        position = "right";
+      }
     }
 
-    // Auto-flip to left if right overflows
-    if (position === "right" && spotlight.right + gap + tooltipWidth > window.innerWidth) {
-      position = "left";
-    }
-    // Auto-flip to right if left overflows
-    if (position === "left" && spotlight.left - gap - tooltipWidth < 0) {
-      position = "right";
+    // Auto-flip logic
+    if (!isMobile) {
+      if (position === "right" && spotlight.right + gap + tooltipWidth > window.innerWidth) {
+        position = "left";
+      }
+      if (position === "left" && spotlight.left - gap - tooltipWidth < 0) {
+        position = "right";
+      }
+    } else {
+      if (position === "bottom" && spotlight.bottom + gap + tooltipHeight > window.innerHeight) {
+        position = "top";
+      }
+      if (position === "top" && spotlight.top - gap - tooltipHeight < 0) {
+        position = "bottom";
+      }
     }
 
     switch (position) {
       case "left":
         top = spotlight.centerY - tooltipHeight / 2;
         left = spotlight.left - tooltipWidth - gap;
-        // Safety checks to prevent horizontal and vertical overflow
         left = Math.max(16, left);
         top = Math.max(16, Math.min(window.innerHeight - tooltipHeight - 16, top));
         break;
@@ -138,9 +153,22 @@ export default function InteractiveTour({
       case "right":
         top = spotlight.centerY - tooltipHeight / 2;
         left = spotlight.right + gap;
-        // Safety checks to prevent horizontal and vertical overflow
         left = Math.min(window.innerWidth - tooltipWidth - 16, left);
         top = Math.max(16, Math.min(window.innerHeight - tooltipHeight - 16, top));
+        break;
+
+      case "top":
+        top = spotlight.top - tooltipHeight - gap;
+        left = spotlight.centerX - tooltipWidth / 2;
+        left = Math.max(16, Math.min(window.innerWidth - tooltipWidth - 16, left));
+        top = Math.max(16, top);
+        break;
+
+      case "bottom":
+        top = spotlight.bottom + gap;
+        left = spotlight.centerX - tooltipWidth / 2;
+        left = Math.max(16, Math.min(window.innerWidth - tooltipWidth - 16, left));
+        top = Math.min(window.innerHeight - tooltipHeight - 16, top);
         break;
     }
 
@@ -174,6 +202,15 @@ export default function InteractiveTour({
 
   const padding = 12;
 
+  // Safe bounds calculation for the spotlight to prevent it from going off-screen
+  const safeTop = rect ? Math.max(8, rect.top - padding) : 0;
+  const safeLeft = rect ? Math.max(8, rect.left - padding) : 0;
+  const safeRight = rect ? Math.min(typeof window !== "undefined" ? window.innerWidth - 8 : 9999, rect.right + padding) : 0;
+  const safeBottom = rect ? Math.min(typeof window !== "undefined" ? window.innerHeight - 8 : 9999, rect.bottom + padding) : 0;
+
+  const safeWidth = Math.max(0, safeRight - safeLeft);
+  const safeHeight = Math.max(0, safeBottom - safeTop);
+
   return (
     <div className="fixed inset-0 z-[100] pointer-events-none font-['Outfit'] select-none">
       {/* Darkened Screen Backdrop (Click Blocker) */}
@@ -184,10 +221,10 @@ export default function InteractiveTour({
         <div
           className="fixed border-2 border-[#047EE9] shadow-[0_0_0_9999px_rgba(0,0,0,0.65)] rounded-2xl pointer-events-none transition-all duration-300 ease-out z-[101]"
           style={{
-            top: rect.top - padding,
-            left: rect.left - padding,
-            width: rect.width + padding * 2,
-            height: rect.height + padding * 2,
+            top: safeTop,
+            left: safeLeft,
+            width: safeWidth,
+            height: safeHeight,
           }}
         >
         </div>

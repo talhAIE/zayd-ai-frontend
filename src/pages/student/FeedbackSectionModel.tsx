@@ -107,7 +107,7 @@ const FeedbackSectionModal: React.FC<FeedbackSectionModalProps> = ({ isOpen, onC
 
   return (
     <Dialog open={isOpen} onOpenChange={() => onClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent id="tour-feedback-panel" className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className=" gap-2">
             {isAssessment ? (
