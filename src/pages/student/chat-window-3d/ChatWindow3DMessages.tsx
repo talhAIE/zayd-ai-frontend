@@ -276,6 +276,7 @@ export default function ChatWindow3DMessages({
                         )}
                         {msg.hasFeedback && (
                           <Button
+                            id="tour-chat-feedback"
                             variant="ghost"
                             size="sm"
                             onClick={() => {
@@ -315,7 +316,7 @@ export default function ChatWindow3DMessages({
       </div>
 
       {!chatLocked && (
-        <form onSubmit={handleSubmit} className="border-t p-4 bg-gray-50">
+        <form id="tour-chat-input" onSubmit={handleSubmit} className="border-t p-4 bg-gray-50">
           <div className="flex items-center bg-white rounded-full px-4 py-1 shadow-sm">
             <Input
               type="text"
@@ -329,7 +330,7 @@ export default function ChatWindow3DMessages({
               disabled={
                 isRecording ||
                 chatCompleted ||
-                isSessionExpired ||
+                // isSessionExpired ||
                 !isSocketConnected ||
                 isWaitingForResponse
               }
@@ -365,7 +366,7 @@ export default function ChatWindow3DMessages({
                 disabled={
                   !isSocketConnected ||
                   chatCompleted ||
-                  isSessionExpired ||
+                  // isSessionExpired ||
                   isWaitingForResponse
                 }
               >
@@ -381,7 +382,7 @@ export default function ChatWindow3DMessages({
                 disabled={
                   !isSocketConnected ||
                   chatCompleted ||
-                  isSessionExpired ||
+                  // isSessionExpired ||
                   isWaitingForResponse
                 }
               >

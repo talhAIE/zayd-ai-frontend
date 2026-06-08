@@ -11,6 +11,7 @@ import AvatarHeaderBar from "@/components/3d/AvatarHeaderBar";
 import ListeningMode3D, {
   ListeningAudioState,
 } from "@/components/3d/ListeningMode3D";
+import InteractiveTour, { TourStep } from "@/components/ui/InteractiveTour";
 
 interface Assessment {
   accuracyScore: number;
@@ -35,6 +36,8 @@ const Chat: React.FC = () => {
   const [isFeedbackOpen, setIsFeedbackOpen] = useState<boolean>(true);
   const [isFeedbackMobile, setIsFeedbackMobile] = useState<boolean>(false);
   const [currentFeedback, setCurrentFeedback] = useState<Feedback | null>(null);
+  const [hasSentMessage, setHasSentMessage] = useState(false);
+  const [hasReceivedFeedback, setHasReceivedFeedback] = useState(false);
   const [topicImage, setTopicImage] = useState<string | null>(null);
   const [isAvatarSyncPlaying, setIsAvatarSyncPlaying] = useState(false);
   const [narrationVideoUrl, setNarrationVideoUrl] = useState<string | null>(
@@ -67,7 +70,41 @@ const Chat: React.FC = () => {
   const [listeningAvatarSeed, setListeningAvatarSeed] = useState(0);
   const lastListeningProgressRef = React.useRef(0);
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [tourActive, setTourActive] = useState(
+    searchParams.get("tour") === "true",
+  );
+
+  useEffect(() => {
+    if (tourActive) {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("tour");
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [tourActive, searchParams, setSearchParams]);
+
+  const chatPageTourSteps: TourStep[] = React.useMemo(
+    () => [
+      {
+        title: "🗨️ Start an Interactive Conversation",
+        description:
+          "Start an interactive conversation with AI about your topic of choice! Ask questions, share opinions, or just chat naturally — the AI will respond and help you practice English.",
+        buttonText: "Let's Talk",
+        targetId: "tour-chat-input",
+        isNextDisabled: !hasSentMessage,
+      },
+      {
+        title: "💬 Conversation Feedback",
+        description:
+          "Click View Feedback to see how your conversation skills are improving. The AI checks your grammar, fluency, and vocabulary usage.",
+        buttonText: "Check Feedback",
+        targetId: hasReceivedFeedback ? "tour-feedback-panel" : "tour-chat-feedback",
+        isNextDisabled: !hasReceivedFeedback,
+      },
+    ],
+    [hasSentMessage, hasReceivedFeedback],
+  );
+
   const mode = searchParams.get("mode") || "chat-mode";
   const variant = searchParams.get("variant") || "default";
   const isAvatar3D = variant === "3d";
@@ -110,6 +147,7 @@ const Chat: React.FC = () => {
     setCurrentFeedback(feedback);
     setIsFeedbackOpen(true);
     setIsFeedbackMobile(true);
+    setHasReceivedFeedback(true);
   }, []); // Empty dependency array is fine because state setters are stable.
 
   const handleTopicImage = useCallback((imageUrl: string) => {
@@ -269,6 +307,7 @@ const Chat: React.FC = () => {
                 <ChatWindowNormal
                   onShowFeedback={handleShowFeedback}
                   onTopicImage={handleTopicImage}
+                  onUserAction={() => setHasSentMessage(true)}
                 />
               </div>
               <div className="flex flex-col w-full md:w-1/3">
@@ -295,6 +334,13 @@ const Chat: React.FC = () => {
             </div>
           </div>
         </main>
+        <InteractiveTour
+          active={tourActive}
+          steps={chatPageTourSteps}
+          onComplete={() => setTourActive(false)}
+          onSkip={() => setTourActive(false)}
+          variant="modal"
+        />
       </div>
     );
   }
@@ -304,9 +350,7 @@ const Chat: React.FC = () => {
       <main className="flex-1 transition-all duration-300 w-full max-w-full overflow-hidden">
         <div
           className={`mx-auto md:px-6 min-h-0 w-full max-w-full overflow-hidden ${
-            isAvatar3D
-              ? "h-[calc(100dvh-6rem)] xl:h-[calc(100dvh-9.5rem)]"
-              : ""
+            isAvatar3D ? "h-[calc(100dvh-6rem)] xl:h-[calc(100dvh-9.5rem)]" : ""
           }`}
         >
           {isTabletOrBelow && isAvatar3D ? (
@@ -408,6 +452,7 @@ const Chat: React.FC = () => {
                     onContentAudioComplete={handleContentAudioComplete}
                     onSessionTimeRemaining={setSessionTimeRemaining}
                     listeningAvatarSeed={listeningAvatarSeed}
+                    onUserAction={() => setHasSentMessage(true)}
                   />
                 )}
               </div>
@@ -539,6 +584,7 @@ const Chat: React.FC = () => {
                       onContentAudioComplete={handleContentAudioComplete}
                       onSessionTimeRemaining={setSessionTimeRemaining}
                       listeningAvatarSeed={listeningAvatarSeed}
+                      onUserAction={() => setHasSentMessage(true)}
                     />
                   )}
                 </div>
@@ -647,6 +693,13 @@ const Chat: React.FC = () => {
           )}
         </div>
       </main>
+      <InteractiveTour
+        active={tourActive}
+        steps={chatPageTourSteps}
+        onComplete={() => setTourActive(false)}
+        onSkip={() => setTourActive(false)}
+        variant="modal"
+      />
     </div>
   );
 };

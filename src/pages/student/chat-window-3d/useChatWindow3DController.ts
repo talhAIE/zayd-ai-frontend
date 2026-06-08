@@ -39,6 +39,7 @@ export function useChatWindow3DController({
   onListeningAudioState,
   onListeningAudioController,
   listeningAvatarSeed = 0,
+  onUserAction,
 }: ChatWindowProps) {
 
   const [message, setMessage] = useState("");
@@ -690,11 +691,12 @@ export function useChatWindow3DController({
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
     logger.info("Form submitted.");
+    onUserAction?.();
 
-    if (isSessionExpired) {
-      logger.error("Cannot send message: session expired.");
-      return;
-    }
+    // if (isSessionExpired) {
+    //   logger.error("Cannot send message: session expired.");
+    //   return;
+    // }
 
     if (!message.trim() || !isSocketConnected || isWaitingForResponse) {
       logger.error("Cannot send message.", {

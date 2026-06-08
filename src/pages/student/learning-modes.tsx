@@ -347,9 +347,15 @@ const LearningModes: React.FC = () => {
         description: stepData?.description || "",
         position: "bottom" as const,
         image: stepData?.image,
+        onNextAction:
+          mode.title === "Chat Mode"
+            ? () => {
+                navigate(`${mode.route}?tour=true`);
+              }
+            : undefined,
       };
     });
-  }, [activeModes]);
+  }, [activeModes, navigate]);
 
   return (
     <>

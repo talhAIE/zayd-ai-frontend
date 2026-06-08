@@ -226,6 +226,7 @@ export interface ChatWindowProps {
     restart: () => void;
   }) => void;
   listeningAvatarSeed?: number;
+  onUserAction?: () => void;
 }
 
 export function findLastIndex<T>(

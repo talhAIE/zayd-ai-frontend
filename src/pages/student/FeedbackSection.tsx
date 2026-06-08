@@ -115,7 +115,7 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ isOpen, onClose: _onC
 
   return (
     // <div className={`${isOpen ? 'block' : 'hidden'} bg-white rounded-lg shadow-lg p-4 h-full`}>
-    <div className={`${isOpen ? 'block' : 'hidden'} bg-white rounded-lg shadow-lg p-4 max-h-[320px] overflow-y-auto border`}>
+    <div id="tour-feedback-panel" className={`${isOpen ? 'block' : 'hidden'} bg-white rounded-lg shadow-lg p-4 max-h-[320px] overflow-y-auto border`}>
       <div>
         {/* <div className="flex justify-end mb-4">
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
