@@ -22,7 +22,7 @@ const AvatarModeLayout: React.FC<AvatarModeLayoutProps> = ({
 }) => {
 
   return (
-    <div className="w-full">
+    <div className={`w-full ${heightClassName && (heightClassName.includes('flex-1') || heightClassName.includes('h-full')) ? 'h-full flex flex-col' : ''}`}>
       <AvatarStage
         compact={compact}
         syncPlaying={syncPlaying}

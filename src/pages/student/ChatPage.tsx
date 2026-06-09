@@ -275,9 +275,9 @@ const Chat: React.FC = () => {
   const isAvatarIntroComplete = !isReading3D || isContentAudioComplete;
   const shouldLockChat = isReading3D && !isContentAudioComplete;
   const shouldShowReadingHero =
-    isHeroMode3D && isDesktop && !isNarrationComplete;
+    isHeroMode3D && isDesktop;
   const shouldShowSideAvatar =
-    isAvatar3D && (!isHeroMode3D || !isDesktop || isAvatarIntroComplete);
+    isAvatar3D && (!isHeroMode3D || !isDesktop || (!isHeroMode3D && isAvatarIntroComplete));
   const shouldShowListeningSidebar =
     isAvatar3D &&
     mode === "listening-mode" &&
@@ -530,13 +530,9 @@ const Chat: React.FC = () => {
                     )}
                   {isHeroMode3D && isDesktop && (
                     <div
-                      className={`flex-none sticky top-0 z-20 transition-all duration-700 ease-in-out overflow-hidden ${
-                        shouldShowReadingHero
-                          ? "opacity-100 translate-y-0 scale-100 max-h-[1000px] mb-4"
-                          : "opacity-0 -translate-y-2 scale-95 max-h-0 mb-0 pointer-events-none"
-                      }`}
+                      className={`flex-1 sticky top-0 z-20 transition-all duration-700 ease-in-out overflow-hidden mb-0`}
                     >
-                      <div className="w-full max-w-[800px] mx-auto rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white">
+                      <div className="w-full h-full mx-auto rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white flex flex-col">
                         {isAvatar3D && (
                           <AvatarHeaderBar
                             title={modeTitle}
@@ -550,11 +546,11 @@ const Chat: React.FC = () => {
                         )}
                         <AvatarModeLayout
                           syncPlaying={isAvatarSyncPlaying}
-                          videoSrc={readingHeroVideoSrc}
-                          loop={false}
+                          videoSrc={isNarrationComplete ? loopVideoUrl : readingHeroVideoSrc}
+                          loop={isNarrationComplete}
                           onEnded={handleNarrationComplete}
-                          heightClassName="h-auto"
-                          videoClassName="max-h-[300px] h-auto w-full object-contain mx-auto"
+                          heightClassName="flex-1 min-h-0"
+                          videoClassName="h-full w-full object-cover mx-auto"
                         />
                       </div>
                     </div>
@@ -571,25 +567,29 @@ const Chat: React.FC = () => {
                       onSessionTimeRemaining={setSessionTimeRemaining}
                     />
                   ) : (
-                    <ChatWindow
-                      onShowFeedback={handleShowFeedback}
-                      onTopicImage={handleTopicImage}
-                      onContentPayload={handleContentPayload}
-                      onAudioPlaybackChange={handleAudioPlaybackChange}
-                      onNarrationComplete={handleNarrationComplete}
-                      readingHeroActive={shouldShowReadingHero}
-                      isAvatar3D={isAvatar3D}
-                      avatarVideoSrc={avatarVideoSrc}
-                      chatLocked={shouldLockChat}
-                      onContentAudioComplete={handleContentAudioComplete}
-                      onSessionTimeRemaining={setSessionTimeRemaining}
-                      listeningAvatarSeed={listeningAvatarSeed}
-                      onUserAction={() => setHasSentMessage(true)}
-                    />
+                    !(isReading3D && isDesktop) && (
+                      <ChatWindow
+                        onShowFeedback={handleShowFeedback}
+                        onTopicImage={handleTopicImage}
+                        onContentPayload={handleContentPayload}
+                        onAudioPlaybackChange={handleAudioPlaybackChange}
+                        onNarrationComplete={handleNarrationComplete}
+                        readingHeroActive={shouldShowReadingHero}
+                        isAvatar3D={isAvatar3D}
+                        avatarVideoSrc={avatarVideoSrc}
+                        chatLocked={shouldLockChat}
+                        onContentAudioComplete={handleContentAudioComplete}
+                        onSessionTimeRemaining={setSessionTimeRemaining}
+                        listeningAvatarSeed={listeningAvatarSeed}
+                        onUserAction={() => setHasSentMessage(true)}
+                      />
+                    )
                   )}
                 </div>
                 <div
-                  className={`flex flex-col ${mode === "roleplay-mode" ? "gap-3" : "gap-0"} w-full sticky top-0 z-20 self-start ${
+                  className={`flex flex-col ${mode === "roleplay-mode" ? "gap-3" : "gap-0"} w-full z-20 ${
+                    isReading3D && isDesktop ? "h-full" : "sticky top-0 self-start"
+                  } ${
                     mode === "listening-mode" &&
                     !shouldShowListeningSidebar &&
                     !isDesktop
@@ -682,6 +682,27 @@ const Chat: React.FC = () => {
                         feedback={currentFeedback}
                       />
                     )}
+                  
+                  {isReading3D && isDesktop && (
+                    <div className="flex-1 min-h-0 mt-4 h-full flex flex-col">
+                      <ChatWindow
+                        onShowFeedback={handleShowFeedback}
+                        onTopicImage={handleTopicImage}
+                        onContentPayload={handleContentPayload}
+                        onAudioPlaybackChange={handleAudioPlaybackChange}
+                        onNarrationComplete={handleNarrationComplete}
+                        readingHeroActive={shouldShowReadingHero}
+                        isAvatar3D={isAvatar3D}
+                        avatarVideoSrc={avatarVideoSrc}
+                        chatLocked={shouldLockChat}
+                        onContentAudioComplete={handleContentAudioComplete}
+                        onSessionTimeRemaining={setSessionTimeRemaining}
+                        listeningAvatarSeed={listeningAvatarSeed}
+                        onUserAction={() => setHasSentMessage(true)}
+                      />
+                    </div>
+                  )}
+
                   <div className="hidden md:block">
                     {mode === "photo-mode" && (
                       <PhotoDisplay imageUrl={topicImage} />

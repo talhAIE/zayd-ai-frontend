@@ -38,16 +38,18 @@ const AvatarStage: React.FC<AvatarStageProps> = ({
   const videoSizingClass =
     videoClassName ?? 'w-full h-full object-cover';
 
+  const isFullHeight = heightClassName && (heightClassName.includes('flex-1') || heightClassName.includes('h-full'));
+
   return (
-    <div className="w-full">
+    <div className={`w-full ${isFullHeight ? 'h-full flex flex-col' : ''}`}>
       {timerLabel && (
         <div className="mb-2 inline-flex rounded-full border border-sky-200 bg-white/90 px-3 py-1 text-xs font-semibold text-sky-700">
           {timerLabel}
         </div>
       )}
-      <div className="w-full max-w-full mx-auto">
+      <div className={`w-full max-w-full mx-auto ${isFullHeight ? 'flex-1 min-h-0 flex flex-col' : ''}`}>
         <div
-          className={`w-full rounded-2xl overflow-hidden ${
+          className={`w-full rounded-2xl overflow-hidden ${isFullHeight ? 'flex-1 min-h-0' : ''} ${
             heightClassName || (compact ? 'h-[360px]' : 'h-[560px]')
           } ${!heightClassName && !compact ? 'min-h-[560px]' : ''}`}
         >

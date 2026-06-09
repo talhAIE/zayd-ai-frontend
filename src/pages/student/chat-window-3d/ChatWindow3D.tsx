@@ -167,7 +167,7 @@ const ChatWindow: React.FC<ChatWindowProps> = (props) => {
                 ? "h-full max-h-full lg:h-[calc(100dvh-9.5rem)] lg:max-h-[calc(100dvh-9.5rem)]"
                 : "min-h-[70svh] max-h-[80svh]"
               : readingHeroActive
-                ? "min-h-[calc(100dvh-340px)] max-h-[calc(100dvh-340px)] md:min-h-[calc(100dvh-340px)] md:max-h-[calc(100dvh-340px)]"
+                ? "min-h-[calc(100dvh-340px)] max-h-[calc(100dvh-340px)] md:h-full md:max-h-full md:min-h-0"
                 : `h-full max-h-full ${!isAvatar3DContext ? "lg:min-h-[74vh] lg:max-h-[74vh]" : ""}`
           }`}
         >
