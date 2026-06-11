@@ -65,7 +65,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     return Array.from({ length: barCount }, (_, i) => (
       <div
         key={i}
-        className={`w-[3px] rounded-full ${i < coloredBars ? 'bg-[#6AAEFF]' : 'bg-white/20'
+        className={`w-[3px] rounded-full ${i < coloredBars ? 'bg-[#60a6fe]' : 'bg-[#6cbafc]/30'
           }`}
         style={{ height: `${heights[i % heights.length]}px` }}
       />
@@ -73,10 +73,10 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   }, [barCount, progress, duration]);
 
   return (
-    <div className="flex items-center gap-3 w-full rounded-full bg-[#2B2B2B] px-3 py-2 shadow-lg">
+    <div className="flex items-center gap-3 w-full rounded-full bg-[#ffffff] px-3 py-2 shadow-lg border border-[#6cbafc]/20">
       <Button
         size="icon"
-        className="rounded-full bg-white/10 text-white hover:bg-white/20 shadow-md h-8 w-8 flex-shrink-0"
+        className="rounded-full bg-[#60a6fe] text-[#ffffff] hover:bg-[#6cbafc] shadow-md h-8 w-8 flex-shrink-0"
         onClick={onTogglePlay}
       >
         {isLoading ? (
@@ -94,7 +94,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       >
         {bars}
       </div>
-      <span className="text-xs font-mono text-white/80 min-w-[92px] text-right pr-1 whitespace-nowrap">
+      <span className="text-xs font-mono text-[#60a6fe] min-w-[92px] text-right pr-1 whitespace-nowrap">
         {showTotal
           ? `${formatTime(progress)} / ${formatTime(duration, '--:--')}`
           : formatTime(progress)}
