@@ -59,7 +59,7 @@ const FeedbackSectionModal: React.FC<FeedbackSectionModalProps> = ({ isOpen, onC
     const needsTips = metrics.filter(m => m.score < 80);
 
     return (
-      <div className="space-y-2 md:hidden">
+      <div className="space-y-2">
         <h4 className="text-sm font-medium text-gray-700">Your Speech Assessment</h4>
 
         <div className="border rounded p-3 mb-2 bg-gray-50">
@@ -107,30 +107,38 @@ const FeedbackSectionModal: React.FC<FeedbackSectionModalProps> = ({ isOpen, onC
 
   return (
     <Dialog open={isOpen} onOpenChange={() => onClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent id="tour-feedback-panel" className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className=" gap-2">
             {isAssessment ? (
-              <BarChart size={24} className="bg-gradient-to-r from-violet-500 to-blue-400 bg-clip-text text-transparent" />
+              <BarChart
+                size={24}
+                className="bg-gradient-to-r from-violet-500 to-blue-400 bg-clip-text text-transparent"
+              />
             ) : (
-              <span role="img" aria-label="feedback">💬</span>
+              <span role="img" aria-label="feedback">
+                💬
+              </span>
             )}
-            <span className="font-bold">
-              {isAssessment ? 'Speech Assessment' : 'Chat Feedback'}
+            <span className="ml-2 font-bold text-lg">
+              {isAssessment ? "Speech Assessment" : "Chat Feedback"}
             </span>
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="p-2">
           {feedback ? (
-            isAssessment
-              ? renderAssessment(parsedAssessment as Assessment)
-              : <p className="bg-gradient-to-r from-violet-500 to-blue-400 bg-clip-text text-transparent">
-                  {feedback.content as string}
-                </p>    
+            isAssessment ? (
+              renderAssessment(parsedAssessment as Assessment)
+            ) : (
+              <p className="bg-gradient-to-r from-violet-500 to-blue-400 bg-clip-text text-transparent">
+                {feedback.content as string}
+              </p>
+            )
           ) : (
             <p className="text-gray-600">
-              Click the "View Feedback" or "View Assessment" button on any message to see details here.
+              Click the "View Feedback" or "View Assessment" button on any
+              message to see details here.
             </p>
           )}
         </div>

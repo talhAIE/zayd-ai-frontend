@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import FeedbackSection from "./FeedbackSection";
+
 import FeedbackSectionModal from "./FeedbackSectionModel";
 import PhotoDisplay from "./PhotoDisplay";
 import ChatWindow from "./ChatWindow3D";
@@ -11,6 +11,8 @@ import AvatarHeaderBar from "@/components/3d/AvatarHeaderBar";
 import ListeningMode3D, {
   ListeningAudioState,
 } from "@/components/3d/ListeningMode3D";
+import InteractiveTour, { TourStep } from "@/components/ui/InteractiveTour";
+import { MessageSquare } from "lucide-react";
 
 interface Assessment {
   accuracyScore: number;
@@ -32,9 +34,10 @@ const formatTime = (sec: number) =>
   )}`;
 
 const Chat: React.FC = () => {
-  const [isFeedbackOpen, setIsFeedbackOpen] = useState<boolean>(true);
-  const [isFeedbackMobile, setIsFeedbackMobile] = useState<boolean>(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState<boolean>(false);
   const [currentFeedback, setCurrentFeedback] = useState<Feedback | null>(null);
+  const [hasSentMessage, setHasSentMessage] = useState(false);
+  const [hasReceivedFeedback, setHasReceivedFeedback] = useState(false);
   const [topicImage, setTopicImage] = useState<string | null>(null);
   const [isAvatarSyncPlaying, setIsAvatarSyncPlaying] = useState(false);
   const [narrationVideoUrl, setNarrationVideoUrl] = useState<string | null>(
@@ -67,12 +70,46 @@ const Chat: React.FC = () => {
   const [listeningAvatarSeed, setListeningAvatarSeed] = useState(0);
   const lastListeningProgressRef = React.useRef(0);
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [tourActive, setTourActive] = useState(
+    searchParams.get("tour") === "true",
+  );
+
+  useEffect(() => {
+    if (tourActive) {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("tour");
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [tourActive, searchParams, setSearchParams]);
+
+  const chatPageTourSteps: TourStep[] = React.useMemo(
+    () => [
+      {
+        title: "🗨️ Start an Interactive Conversation",
+        description:
+          "Start an interactive conversation with AI about your topic of choice! Ask questions, share opinions, or just chat naturally — the AI will respond and help you practice English.",
+        buttonText: "Let's Talk",
+        targetId: "tour-chat-input",
+        isNextDisabled: !hasSentMessage,
+      },
+      {
+        title: "💬 Conversation Feedback",
+        description:
+          "Click View Feedback to see how your conversation skills are improving. The AI checks your grammar, fluency, and vocabulary usage.",
+        buttonText: "Check Feedback",
+        targetId: hasReceivedFeedback ? "tour-feedback-panel" : "tour-chat-feedback",
+        isNextDisabled: !hasReceivedFeedback,
+      },
+    ],
+    [hasSentMessage, hasReceivedFeedback],
+  );
+
   const mode = searchParams.get("mode") || "chat-mode";
   const variant = searchParams.get("variant") || "default";
   const isAvatar3D = variant === "3d";
   const isReading3D = isAvatar3D && mode === "reading-mode";
-  const isHeroMode3D = isReading3D;
+  const isHeroMode3D = isAvatar3D;
   const loopVideoUrl = "/avatar/placeholder.mp4";
 
   const [isSmallScreen, setIsSmallScreen] = useState(false);
@@ -109,7 +146,8 @@ const Chat: React.FC = () => {
   const handleShowFeedback = useCallback((feedback: Feedback) => {
     setCurrentFeedback(feedback);
     setIsFeedbackOpen(true);
-    setIsFeedbackMobile(true);
+    setIsFeedbackOpen(true);
+    setHasReceivedFeedback(true);
   }, []); // Empty dependency array is fine because state setters are stable.
 
   const handleTopicImage = useCallback((imageUrl: string) => {
@@ -237,13 +275,13 @@ const Chat: React.FC = () => {
   const isAvatarIntroComplete = !isReading3D || isContentAudioComplete;
   const shouldLockChat = isReading3D && !isContentAudioComplete;
   const shouldShowReadingHero =
-    isHeroMode3D && isDesktop && !isNarrationComplete;
+    isHeroMode3D && isDesktop;
   const shouldShowSideAvatar =
-    isAvatar3D && (!isHeroMode3D || !isDesktop || isAvatarIntroComplete);
+    isAvatar3D && (!isHeroMode3D || !isDesktop || (!isHeroMode3D && isAvatarIntroComplete));
   const shouldShowListeningSidebar =
     isAvatar3D &&
     mode === "listening-mode" &&
-    (listeningStage === "quiz" || !isDesktop);
+    !isDesktop;
   const modeTitle =
     mode === "photo-mode"
       ? "Photo Mode"
@@ -269,20 +307,14 @@ const Chat: React.FC = () => {
                 <ChatWindowNormal
                   onShowFeedback={handleShowFeedback}
                   onTopicImage={handleTopicImage}
+                  onUserAction={() => setHasSentMessage(true)}
                 />
               </div>
               <div className="flex flex-col w-full md:w-1/3">
-                {!isSmallScreen && mode !== "listening-mode" && (
-                  <FeedbackSection
+                {mode !== "listening-mode" && (
+                  <FeedbackSectionModal
                     isOpen={isFeedbackOpen}
                     onClose={() => setIsFeedbackOpen(false)}
-                    feedback={currentFeedback}
-                  />
-                )}
-                {isSmallScreen && mode !== "listening-mode" && (
-                  <FeedbackSectionModal
-                    isOpen={isFeedbackMobile}
-                    onClose={() => setIsFeedbackMobile(false)}
                     feedback={currentFeedback}
                   />
                 )}
@@ -295,6 +327,13 @@ const Chat: React.FC = () => {
             </div>
           </div>
         </main>
+        <InteractiveTour
+          active={tourActive}
+          steps={chatPageTourSteps}
+          onComplete={() => setTourActive(false)}
+          onSkip={() => setTourActive(false)}
+          variant="modal"
+        />
       </div>
     );
   }
@@ -304,9 +343,7 @@ const Chat: React.FC = () => {
       <main className="flex-1 transition-all duration-300 w-full max-w-full overflow-hidden">
         <div
           className={`mx-auto md:px-6 min-h-0 w-full max-w-full overflow-hidden ${
-            isAvatar3D
-              ? "h-[calc(100dvh-6rem)] xl:h-[calc(100dvh-9.5rem)]"
-              : ""
+            isAvatar3D ? "h-[calc(100dvh-6rem)] xl:h-[calc(100dvh-9.5rem)]" : ""
           }`}
         >
           {isTabletOrBelow && isAvatar3D ? (
@@ -408,12 +445,13 @@ const Chat: React.FC = () => {
                     onContentAudioComplete={handleContentAudioComplete}
                     onSessionTimeRemaining={setSessionTimeRemaining}
                     listeningAvatarSeed={listeningAvatarSeed}
+                    onUserAction={() => setHasSentMessage(true)}
                   />
                 )}
               </div>
               <FeedbackSectionModal
-                isOpen={isFeedbackMobile}
-                onClose={() => setIsFeedbackMobile(false)}
+                isOpen={isFeedbackOpen}
+                onClose={() => setIsFeedbackOpen(false)}
                 feedback={currentFeedback}
               />
             </div>
@@ -435,27 +473,13 @@ const Chat: React.FC = () => {
                       : "order-2 min-[768px]:order-1"
                   }`}
                 >
-                  {!isNarrowScreen &&
-                    isAvatar3D &&
-                    mode === "roleplay-mode" && (
-                      <div className="flex-none w-full max-w-[800px] mx-auto rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white mb-0">
-                        <AvatarHeaderBar
-                          title={modeTitle}
-                          onBack={() => navigate(-1)}
-                          timerLabel={
-                            sessionTimeRemaining !== null
-                              ? formatTime(sessionTimeRemaining)
-                              : "..."
-                          }
-                        />
-                      </div>
-                    )}
+
                   {!isNarrowScreen &&
                     isDesktop &&
                     isAvatar3D &&
                     mode === "reading-mode" &&
                     !shouldShowReadingHero && (
-                      <div className="flex-none w-full max-w-[800px] mx-auto rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white mb-0">
+                      <div className="flex-none w-full mx-auto rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white mb-0">
                         <AvatarHeaderBar
                           title={modeTitle}
                           onBack={() => navigate(-1)}
@@ -485,13 +509,10 @@ const Chat: React.FC = () => {
                     )}
                   {isHeroMode3D && isDesktop && (
                     <div
-                      className={`flex-none sticky top-0 z-20 transition-all duration-700 ease-in-out overflow-hidden ${
-                        shouldShowReadingHero
-                          ? "opacity-100 translate-y-0 scale-100 max-h-[1000px] mb-4"
-                          : "opacity-0 -translate-y-2 scale-95 max-h-0 mb-0 pointer-events-none"
-                      }`}
+                      className={`flex-1 sticky top-0 z-20 transition-all duration-700 ease-in-out overflow-hidden mb-0`}
                     >
-                      <div className="w-full max-w-[800px] mx-auto rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white">
+                      <div className="relative w-full h-full mx-auto rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white flex flex-col group">
+
                         {isAvatar3D && (
                           <AvatarHeaderBar
                             title={modeTitle}
@@ -504,56 +525,63 @@ const Chat: React.FC = () => {
                           />
                         )}
                         <AvatarModeLayout
-                          syncPlaying={isAvatarSyncPlaying}
-                          videoSrc={readingHeroVideoSrc}
-                          loop={false}
-                          onEnded={handleNarrationComplete}
-                          heightClassName="h-auto"
-                          videoClassName="max-h-[300px] h-auto w-full object-contain mx-auto"
+                          syncPlaying={mode === "listening-mode" ? listeningAudioState.isPlaying : isAvatarSyncPlaying}
+                          videoSrc={mode === "listening-mode" ? avatarVideoSrc : (isNarrationComplete ? loopVideoUrl : readingHeroVideoSrc)}
+                          loop={mode === "listening-mode" ? undefined : isNarrationComplete}
+                          onEnded={mode === "listening-mode" ? undefined : handleNarrationComplete}
+                          heightClassName="flex-1 min-h-0"
+                          videoClassName="h-full w-full object-cover mx-auto"
                         />
                       </div>
                     </div>
                   )}
                   {mode === "listening-mode" ? (
-                    <ListeningMode3D
-                      isAvatar3D={isAvatar3D}
-                      avatarVideoSrc={avatarVideoSrc}
-                      avatarSeed={listeningAvatarSeed}
-                      onStageChange={handleListeningStageChange}
-                      onAudioStateChange={handleListeningAudioStateChange}
-                      onAudioController={handleListeningAudioController}
-                      onVideoUrlChange={handleListeningVideoUrl}
-                      onSessionTimeRemaining={setSessionTimeRemaining}
-                    />
+                    !isDesktop && (
+                      <ListeningMode3D
+                        isAvatar3D={isAvatar3D}
+                        avatarVideoSrc={avatarVideoSrc}
+                        avatarSeed={listeningAvatarSeed}
+                        onStageChange={handleListeningStageChange}
+                        onAudioStateChange={handleListeningAudioStateChange}
+                        onAudioController={handleListeningAudioController}
+                        onVideoUrlChange={handleListeningVideoUrl}
+                        onSessionTimeRemaining={setSessionTimeRemaining}
+                      />
+                    )
                   ) : (
-                    <ChatWindow
-                      onShowFeedback={handleShowFeedback}
-                      onTopicImage={handleTopicImage}
-                      onContentPayload={handleContentPayload}
-                      onAudioPlaybackChange={handleAudioPlaybackChange}
-                      onNarrationComplete={handleNarrationComplete}
-                      readingHeroActive={shouldShowReadingHero}
-                      isAvatar3D={isAvatar3D}
-                      avatarVideoSrc={avatarVideoSrc}
-                      chatLocked={shouldLockChat}
-                      onContentAudioComplete={handleContentAudioComplete}
-                      onSessionTimeRemaining={setSessionTimeRemaining}
-                      listeningAvatarSeed={listeningAvatarSeed}
-                    />
+                    !(isHeroMode3D && isDesktop) && (
+                      <ChatWindow
+                        onShowFeedback={handleShowFeedback}
+                        onTopicImage={handleTopicImage}
+                        onContentPayload={handleContentPayload}
+                        onAudioPlaybackChange={handleAudioPlaybackChange}
+                        onNarrationComplete={handleNarrationComplete}
+                        readingHeroActive={shouldShowReadingHero}
+                        isAvatar3D={isAvatar3D}
+                        avatarVideoSrc={avatarVideoSrc}
+                        chatLocked={shouldLockChat}
+                        onContentAudioComplete={handleContentAudioComplete}
+                        onSessionTimeRemaining={setSessionTimeRemaining}
+                        listeningAvatarSeed={listeningAvatarSeed}
+                        onUserAction={() => setHasSentMessage(true)}
+                      />
+                    )
                   )}
                 </div>
                 <div
-                  className={`flex flex-col ${mode === "roleplay-mode" ? "gap-3" : "gap-0"} w-full sticky top-0 z-20 self-start ${
+                  className={`flex flex-col ${mode === "roleplay-mode" ? "gap-3" : "gap-0"} w-full z-20 ${
+                    isHeroMode3D && isDesktop ? "h-full" : "sticky top-0 self-start"
+                  } ${
                     mode === "listening-mode" &&
                     !shouldShowListeningSidebar &&
                     !isDesktop
                       ? "hidden"
                       : ""
                   } ${
-                    shouldShowListeningSidebar
-                      ? "min-[768px]:w-[28%]"
-                      : "min-[768px]:w-1/3"
-                  } ${isAvatar3D && isDesktop ? "min-h-0" : ""} ${
+                    isAvatar3D && isDesktop
+                      ? "min-[768px]:w-1/2"
+                      : (shouldShowListeningSidebar ? "min-[768px]:w-[28%]" : "min-[768px]:w-1/3")
+                  } ${isAvatar3D && isDesktop ? "min-h-0 transition-all duration-300 ease-in-out" : ""} ${
                     mode === "roleplay-mode" || mode === "reading-mode"
                       ? "order-1 min-[768px]:order-2"
                       : "order-1 min-[768px]:order-2"
@@ -620,22 +648,80 @@ const Chat: React.FC = () => {
                       />
                     </div>
                   )}
-                  {!isSmallScreen &&
-                    !(isAvatar3D && mode === "listening-mode") && (
-                      <FeedbackSection
-                        isOpen={isFeedbackOpen}
-                        onClose={() => setIsFeedbackOpen(false)}
-                        feedback={currentFeedback}
-                      />
-                    )}
-                  {isSmallScreen &&
-                    !(isAvatar3D && mode === "listening-mode") && (
-                      <FeedbackSectionModal
-                        isOpen={isFeedbackMobile}
-                        onClose={() => setIsFeedbackMobile(false)}
-                        feedback={currentFeedback}
-                      />
-                    )}
+                  {!(isAvatar3D && mode === "listening-mode") && (
+                    <FeedbackSectionModal
+                      isOpen={isFeedbackOpen}
+                      onClose={() => setIsFeedbackOpen(false)}
+                      feedback={currentFeedback}
+                    />
+                  )}
+                  
+                  {isHeroMode3D && isDesktop && (
+                    <div className="flex-1 min-h-0 h-full flex flex-col bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+                      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
+                        <div>
+                          <h2 className="text-lg font-semibold text-gray-800">Conversation</h2>
+                          <p className="text-sm text-gray-500">Practice your English skills</p>
+                        </div>
+                        <div className="p-2 bg-blue-50 rounded-lg">
+                          <MessageSquare className="w-5 h-5 text-blue-500" />
+                        </div>
+                      </div>
+                      <div className="flex-1 min-h-0 flex flex-col p-4 bg-gray-50">
+                        {mode === "listening-mode" ? (
+                          <div className="flex flex-col h-full gap-4">
+                            <AudioPlayer3D
+                              audioSrc={listeningAudioUrl || ""}
+                              isPlaying={listeningAudioState.isPlaying}
+                              isLoading={listeningAudioState.isLoading}
+                              progress={listeningAudioState.progress}
+                              duration={listeningAudioState.duration}
+                              showTotal={true}
+                              onTogglePlay={() => {
+                                if (listeningAudioState.isPlaying) {
+                                  listeningAudioControlRef.current?.pause?.();
+                                } else {
+                                  listeningAudioControlRef.current?.play?.();
+                                }
+                              }}
+                            />
+                            <div className="flex-1 min-h-0">
+                              <ListeningMode3D
+                                isAvatar3D={isAvatar3D}
+                                avatarVideoSrc={avatarVideoSrc}
+                                avatarSeed={listeningAvatarSeed}
+                                onStageChange={handleListeningStageChange}
+                                onAudioStateChange={handleListeningAudioStateChange}
+                                onAudioController={handleListeningAudioController}
+                                onVideoUrlChange={handleListeningVideoUrl}
+                                onSessionTimeRemaining={setSessionTimeRemaining}
+                                hideVideo={true}
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex-1 min-h-0 flex flex-col bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                            <ChatWindow
+                              onShowFeedback={handleShowFeedback}
+                              onTopicImage={handleTopicImage}
+                              onContentPayload={handleContentPayload}
+                              onAudioPlaybackChange={handleAudioPlaybackChange}
+                              onNarrationComplete={handleNarrationComplete}
+                              readingHeroActive={shouldShowReadingHero}
+                              isAvatar3D={isAvatar3D}
+                              avatarVideoSrc={avatarVideoSrc}
+                              chatLocked={shouldLockChat}
+                              onContentAudioComplete={handleContentAudioComplete}
+                              onSessionTimeRemaining={setSessionTimeRemaining}
+                              listeningAvatarSeed={listeningAvatarSeed}
+                              onUserAction={() => setHasSentMessage(true)}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="hidden md:block">
                     {mode === "photo-mode" && (
                       <PhotoDisplay imageUrl={topicImage} />
@@ -647,6 +733,13 @@ const Chat: React.FC = () => {
           )}
         </div>
       </main>
+      <InteractiveTour
+        active={tourActive}
+        steps={chatPageTourSteps}
+        onComplete={() => setTourActive(false)}
+        onSkip={() => setTourActive(false)}
+        variant="modal"
+      />
     </div>
   );
 };
