@@ -330,7 +330,7 @@ export default function ChatWindow3DMessages({
               disabled={
                 isRecording ||
                 chatCompleted ||
-                // isSessionExpired ||
+                isSessionExpired ||
                 !isSocketConnected ||
                 isWaitingForResponse
               }
@@ -366,7 +366,7 @@ export default function ChatWindow3DMessages({
                 disabled={
                   !isSocketConnected ||
                   chatCompleted ||
-                  // isSessionExpired ||
+                  isSessionExpired ||
                   isWaitingForResponse
                 }
               >
@@ -382,7 +382,7 @@ export default function ChatWindow3DMessages({
                 disabled={
                   !isSocketConnected ||
                   chatCompleted ||
-                  // isSessionExpired ||
+                  isSessionExpired ||
                   isWaitingForResponse
                 }
               >
