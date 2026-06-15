@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Crown, Clock } from "lucide-react";
 import {
   fetchLeaderboard,
@@ -9,6 +10,75 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import InteractiveTour, { TourStep } from "@/components/ui/InteractiveTour";
+
+import leaderboardImg1 from "@/assets/user-guide/leaderboard/1.png";
+import leaderboardImg2 from "@/assets/user-guide/leaderboard/2.png";
+import leaderboardImg3 from "@/assets/user-guide/leaderboard/3.png";
+import leaderboardImg4 from "@/assets/user-guide/leaderboard/4.png";
+import leaderboardImg5 from "@/assets/user-guide/leaderboard/5.png";
+import leaderboardImg6 from "@/assets/user-guide/leaderboard/6.png";
+import leaderboardImg7 from "@/assets/user-guide/leaderboard/7.png";
+import leaderboardImg8 from "@/assets/user-guide/leaderboard/8.png";
+
+const TOUR_STEPS: TourStep[] = [
+  {
+    targetId: "tour-leaderboard-main",
+    title: "🏆 Compete with your fellows...",
+    description: "...to claim the highest position in the leaderboard!\nStudy more, earn points, and climb the ranks.",
+    position: "bottom",
+    image: leaderboardImg1,
+  },
+  {
+    targetId: "tour-top-3",
+    title: "🏆 The Podium — Top 3 Learners",
+    description: "The spotlight zone! The top 3 learners of the week stand here.\nGold = Rank 1, Silver = Rank 2, Bronze = Rank 3.\nEarn points to climb up here and see your own avatar!",
+    position: "bottom",
+    image: leaderboardImg2,
+  },
+  {
+    targetId: "tour-rank-col",
+    title: "🔢 Your Position",
+    description: "This shows your position among all students in your school.\nLower number = higher rank! Rank 1 is the best.\nYour rank updates in real-time as you earn points.",
+    position: "bottom",
+    image: leaderboardImg3,
+  },
+  {
+    targetId: "tour-student-col",
+    title: "👤 Your Fellow Learners",
+    description: "This column shows all the students competing on the leaderboard.\nEveryone starts somewhere — even the top-ranked students once began at the bottom!",
+    position: "bottom",
+    image: leaderboardImg4,
+  },
+  {
+    targetId: "tour-school-col",
+    title: "🏫 School Competition",
+    description: "See which school your competitors belong to!\nThe leaderboard brings students together, so you can see how you stack up against others.",
+    position: "bottom",
+    image: leaderboardImg5,
+  },
+  {
+    targetId: "tour-level-col",
+    title: "🎯 English Proficiency Level",
+    description: "Your English proficiency level — like B1, B2, A2, etc.\nHigher level = harder challenges and advanced content.\nComplete more topics to level up!",
+    position: "bottom",
+    image: leaderboardImg6,
+  },
+  {
+    targetId: "tour-time-col",
+    title: "⏱️ Learning Time",
+    description: "Total time each student has spent learning this week.\nEvery minute counts! The more time you practice, the higher you climb.\nEven 10 mins a day makes a difference!",
+    position: "bottom",
+    image: leaderboardImg7,
+  },
+  {
+    targetId: "tour-topics-col",
+    title: "📚 Topics Completed",
+    description: "This shows how many topics each student has finished.\nMore topics = more points = higher rank!\nComplete at least one topic daily to stay competitive.",
+    position: "bottom",
+    image: leaderboardImg8,
+  },
+];
 
 interface LeaderboardProps {
   userId?: string;
@@ -21,13 +91,33 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
   let parsedUser = JSON.parse(user || "{}");
   const currentUserId = parsedUser?.id;
 
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { leaderboard, currentUser, isLoading, error } = useAppSelector(
     (state) => state.leaderboard
   );
 
+  const [isMobile, setIsMobile] = useState(typeof window !== "undefined" ? window.innerWidth < 768 : false);
+  
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const [showFixedUserBar, setShowFixedUserBar] = useState(false);
   const [filteredUsers, setFilteredUsers] = useState<LeaderboardUser[]>([]);
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [tourActive, setTourActive] = useState(searchParams.get("tour") === "true");
+
+  useEffect(() => {
+    if (tourActive) {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("tour");
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [tourActive, searchParams, setSearchParams]);
 
   const currentUserInTableRef = useRef<HTMLTableRowElement>(null);
   const currentUserNotInTableRef = useRef<HTMLTableRowElement>(null);
@@ -215,9 +305,9 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
     <div className="mx-auto pb-20">
       {/* <h1 className="relative text-3xl font-bold mb-8 text-center text-gray-700">Leaderboard</h1> */}
 
-      <div className="bg-white p-4 md:p-6 rounded-xl shadow-xl">
+      <div id="tour-leaderboard-main" className="bg-white p-4 md:p-6 rounded-xl shadow-xl">
         {orderedPodiumUsers.length > 0 && (
-          <div className="flex flex-wrap justify-center items-end mb-10 gap-2 md:gap-4">
+          <div id="tour-top-3" className="flex flex-wrap justify-center items-end mb-10 gap-2 md:gap-4">
             {orderedPodiumUsers.map((user, _index) => {
               let crownSize = "w-10 h-10";
               let avatarSize = "w-24 h-24";
@@ -319,7 +409,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
           <div className="w-full overflow-hidden">
             {/* Mobile Card Layout */}
             <div className="block md:hidden space-y-3">
-              {tableUsers.map((user) => (
+              {tableUsers.map((user, index) => (
                 <div
                   key={user.username}
                   ref={
@@ -331,14 +421,14 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
                       : "bg-white border-gray-200"
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center space-x-3">
-                      <div
-                        className={`w-12 h-12 rounded-full overflow-hidden flex-shrink-0 ${
-                          isUserCurrent(user.username)
-                            ? "ring-2 ring-blue-400 ring-offset-1"
-                            : ""
-                        }`}
+                    <div className="flex items-center justify-between mb-3">
+                      <div id={index === 0 && isMobile ? "tour-student-col" : undefined} className="flex items-center space-x-3">
+                        <div
+                          className={`w-12 h-12 rounded-full overflow-hidden flex-shrink-0 ${
+                            isUserCurrent(user.username)
+                              ? "ring-2 ring-blue-400 ring-offset-1"
+                              : ""
+                          }`}
                       >
                         <Avatar className="w-full h-full">
                           <AvatarFallback className="text-sm font-semibold">
@@ -361,12 +451,13 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
                             </span>
                           )}
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div id={index === 0 && isMobile ? "tour-school-col" : undefined} className="text-sm text-gray-500">
                           {user.schoolName || "No school"}
                         </div>
                       </div>
                     </div>
                     <div
+                      id={index === 0 && isMobile ? "tour-rank-col" : undefined}
                       className={`text-2xl font-bold ${
                         isUserCurrent(user.username)
                           ? "text-blue-600"
@@ -378,7 +469,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
                   </div>
 
                   <div className="grid grid-cols-3 gap-3 text-center">
-                    <div>
+                    <div id={index === 0 && isMobile ? "tour-level-col" : undefined}>
                       <div className="text-xs text-gray-500 mb-1">Level</div>
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-medium ${getLevelBadgeColor(
@@ -388,7 +479,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
                         {user.aiCefrLevel || "N/A"}
                       </span>
                     </div>
-                    <div>
+                    <div id={index === 0 && isMobile ? "tour-time-col" : undefined}>
                       <div className="text-xs text-gray-500 mb-1">Time</div>
                       <div
                         className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
@@ -400,7 +491,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
                         {formatTime(user.totalSeconds)}
                       </div>
                     </div>
-                    <div>
+                    <div id={index === 0 && isMobile ? "tour-topics-col" : undefined}>
                       <div className="text-xs text-gray-500 mb-1">Topics</div>
                       <div
                         className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
@@ -422,12 +513,12 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
               <table className="w-full">
                 <thead>
                   <tr className="text-left text-xs text-gray-500 uppercase border-b border-gray-200">
-                    <th className="py-3 px-3">Rank</th>
-                    <th className="py-3 px-3">Student</th>
-                    <th className="py-3 px-3">School</th>
-                    <th className="py-3 px-3">Level</th>
-                    <th className="py-3 px-3">Time</th>
-                    <th className="py-3 px-3">Completed Topics</th>
+                    <th id={!isMobile ? "tour-rank-col" : undefined} className="py-3 px-3">Rank</th>
+                    <th id={!isMobile ? "tour-student-col" : undefined} className="py-3 px-3">Student</th>
+                    <th id={!isMobile ? "tour-school-col" : undefined} className="py-3 px-3">School</th>
+                    <th id={!isMobile ? "tour-level-col" : undefined} className="py-3 px-3">Level</th>
+                    <th id={!isMobile ? "tour-time-col" : undefined} className="py-3 px-3">Time</th>
+                    <th id={!isMobile ? "tour-topics-col" : undefined} className="py-3 px-3">Completed Topics</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -800,6 +891,15 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
           </div>
         </div>
       )}
+      <InteractiveTour
+        active={tourActive}
+        steps={TOUR_STEPS}
+        onComplete={() => {
+          setTourActive(false);
+          navigate("/student/learning-modes?tour=true");
+        }}
+        onSkip={() => setTourActive(false)}
+      />
     </div>
   );
 };

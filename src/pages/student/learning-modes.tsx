@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import chatModeAvatar from "@/assets/svgs/chat-mode.png";
 import photoModeAvatar from "@/assets/svgs/photo-mode.png";
@@ -9,7 +9,69 @@ import listeningModeAvatar from "@/assets/svgs/listening-mode.png";
 import ReadingModeAvatar from "@/assets/svgs/reading-mode.png";
 import curriculumModeAvatar from "@/assets/svgs/curriculum-mode.webp";
 import TopicService from "@/services/topicsService";
+import InteractiveTour, { TourStep } from "@/components/ui/InteractiveTour";
+
+import mode3dImg from "@/assets/user-guide/learning-mode/3d.png";
+import chatImg from "@/assets/user-guide/learning-mode/chat.png";
+import curriculumImg from "@/assets/user-guide/learning-mode/curriculum.png";
+import debateImg from "@/assets/user-guide/learning-mode/debate.png";
+import listeningImg from "@/assets/user-guide/learning-mode/listening.png";
+import photoImg from "@/assets/user-guide/learning-mode/photo.png";
+import readingImg from "@/assets/user-guide/learning-mode/reading.png";
+import roleplayImg from "@/assets/user-guide/learning-mode/roleplay.png";
+
 // import QuestionnaireModal from "@/components/ui/QuestionaireModal";
+
+const ALL_TOUR_STEPS: Record<string, Omit<TourStep, "targetId">> = {
+  "Reading Mode": {
+    title: "Reading Mode",
+    description: "This is reading mode! You do all the heavy lifting here.",
+    position: "bottom",
+    image: readingImg,
+  },
+  "Role Play Mode": {
+    title: "Roleplay Mode",
+    description: "Jump into exciting adventures and play fun roles with the AI.",
+    position: "bottom",
+    image: roleplayImg,
+  },
+  "Listening Mode": {
+    title: "Listening Mode",
+    description: "Listen to stories and practice saying words with the AI.",
+    position: "bottom",
+    image: listeningImg,
+  },
+  "3D Avatar Mode": {
+    title: "3D Avatar Mode",
+    description: "3D avatar learning with Reading, Role Play, and Listening.",
+    position: "bottom",
+    image: mode3dImg,
+  },
+  "Curriculum Mode": {
+    title: "Curriculum Mode",
+    description: "Structured learning with chapters and topics.",
+    position: "bottom",
+    image: curriculumImg,
+  },
+  "Chat Mode": {
+    title: "Chat Mode",
+    description: "Enhance your language skills by chatting with our AI.",
+    position: "bottom",
+    image: chatImg,
+  },
+  "Photo Mode": {
+    title: "Photo Mode",
+    description: "Let's break down images and get instant feedback from AI.",
+    position: "bottom",
+    image: photoImg,
+  },
+  "Debate Mode": {
+    title: "Debate Mode",
+    description: "Practice debating skills and critical thinking with the AI.",
+    position: "bottom",
+    image: debateImg,
+  },
+};
 
 const modes = [
   {
@@ -66,6 +128,16 @@ const modes = [
 
 const LearningModes: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [tourActive, setTourActive] = React.useState(searchParams.get("tour") === "true");
+
+  React.useEffect(() => {
+    if (tourActive) {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("tour");
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [tourActive, searchParams, setSearchParams]);
 
   const user = localStorage.getItem("AiTutorUser");
   const parsedUser = JSON.parse(user || "{}");
@@ -262,6 +334,29 @@ const LearningModes: React.FC = () => {
     navigate(route);
   };
 
+  const activeModes = React.useMemo(() => {
+    return filteredModes.filter((mode) => modeAvailability[mode.title] !== false);
+  }, [filteredModes, modeAvailability]);
+
+  const tourSteps: TourStep[] = React.useMemo(() => {
+    return activeModes.map((mode) => {
+      const stepData = ALL_TOUR_STEPS[mode.title];
+      return {
+        targetId: `tour-${mode.title.toLowerCase().replace(/\s+/g, "-")}`,
+        title: stepData?.title || mode.title,
+        description: stepData?.description || "",
+        position: "bottom" as const,
+        image: stepData?.image,
+        onNextAction:
+          mode.title === "Chat Mode"
+            ? () => {
+                navigate(`${mode.route}?tour=true`);
+              }
+            : undefined,
+      };
+    });
+  }, [activeModes, navigate]);
+
   return (
     <>
       <style>{`
@@ -277,11 +372,10 @@ const LearningModes: React.FC = () => {
       `}</style>
       <div className="mt-6 lg:mt-4 mx-2">
         <div className="flex flex-col gap-6 mx-auto">
-          {filteredModes
-            .filter((mode) => modeAvailability[mode.title] !== false)
-            .map((mode, index) => (
+          {activeModes.map((mode, index) => (
             <div
               key={index}
+              id={`tour-${mode.title.toLowerCase().replace(/\s+/g, "-")}`}
               className="flex flex-col sm:flex-row items-center sm:items-center gap-4 sm:gap-6 rounded-3xl p-4 sm:p-3 bg-gradient-to-br from-[#058cf432] to-[#8a83f02c] hover:shadow-lg transition-all duration-300"
             >
               {/* Icon Container */}
@@ -319,6 +413,13 @@ const LearningModes: React.FC = () => {
         onClose={() => setIsQuestionnaireOpen(false)}
       /> */}
       </div>
+
+      <InteractiveTour
+        active={tourActive}
+        steps={tourSteps}
+        onComplete={() => setTourActive(false)}
+        onSkip={() => setTourActive(false)}
+      />
     </>
   );
 };

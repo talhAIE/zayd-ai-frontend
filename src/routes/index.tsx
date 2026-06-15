@@ -34,6 +34,7 @@ import ListeningModeTopics from "@/pages/student/topics/ListeningModeTopics";
 import CurriculumModeTopics from "@/pages/student/topics/CurriculumModeTopics";
 import ChapterTopics from "@/pages/student/topics/ChapterTopics";
 import Avatar3DMode from "@/pages/student/Avatar3DMode";
+import Support from "@/pages/student/support";
 
 const AppRoutes = () => {
   // const { user } = useAppSelector((state) => state.auth);
@@ -150,6 +151,16 @@ const AppRoutes = () => {
           <StudentRoute>
             <StudentLayout>
               <Leaderboard />
+            </StudentLayout>
+          </StudentRoute>
+        }
+      />
+      <Route
+        path="/student/support"
+        element={
+          <StudentRoute>
+            <StudentLayout>
+              <Support />
             </StudentLayout>
           </StudentRoute>
         }

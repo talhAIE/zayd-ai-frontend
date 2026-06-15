@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState, useMemo } from "react";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { fetchTopics } from "@/redux/slices/topicsSlice";
@@ -8,10 +8,21 @@ import { Lock } from "lucide-react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-
+import InteractiveTour, { TourStep } from "@/components/ui/InteractiveTour";
 const ChatModeTopics = () => {
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [isTourMode] = useState(searchParams.get("tour") === "true");
+  const [tourActive, setTourActive] = useState(searchParams.get("tour") === "true");
+
+  useEffect(() => {
+    if (tourActive) {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("tour");
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [tourActive, searchParams, setSearchParams]);
 
   const { topics, isLoading, error } = useAppSelector(
     (state: any) => state.topics
@@ -81,6 +92,29 @@ const ChatModeTopics = () => {
     return 0; // both unlocked
   });
 
+  const tourSteps: TourStep[] = useMemo(() => [
+    {
+      title: "💬 Chat with AI!",
+      description: "This is a dedicated chat panel to help you understand your lessons in a greater depth!",
+      buttonText: "Start Chatting",
+      targetId: "tour-chat-container",
+    },
+    {
+      title: "💬 Choose Your Topic",
+      description: "Pick any topic to start a freestyle conversation with AI! Tap Start on any topic to begin.",
+      buttonText: "Start Chatting",
+      targetId: "tour-topic-grid",
+      onNextAction: () => {
+        const firstTopic = sortedTopics.find(t => !isTopicLocked(t));
+        if (firstTopic) {
+          navigate(`/student/learning-mode/${firstTopic.id}/${encodeURIComponent(firstTopic.topicName)}?mode=chat-mode&tour=true`);
+        } else {
+          setTourActive(false);
+        }
+      }
+    },
+  ], [sortedTopics, navigate]);
+
   const renderTopicCard = (topic: any) => {
     const locked = isTopicLocked(topic);
     const unlockCountdown =
@@ -116,7 +150,7 @@ const ChatModeTopics = () => {
           <Link
             to={`/student/learning-mode/${topic?.id}/${encodeURIComponent(
               topic.topicName
-            )}?mode=chat-mode`}
+            )}?mode=chat-mode${isTourMode ? '&tour=true' : ''}`}
             className={`absolute bottom-3 right-3 ${
               locked ? "pointer-events-none" : ""
             }`}
@@ -163,7 +197,7 @@ const ChatModeTopics = () => {
           }
         `}
       </style>
-      <div className="mx-auto px-4 py-6">
+      <div id="tour-chat-container" className="mx-auto px-4 py-6">
         {/* <div className="flex justify-between items-center mb-6">
         <div className="flex items-center">
           <Button 
@@ -205,7 +239,7 @@ const ChatModeTopics = () => {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div id="tour-topic-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {sortedTopics.length > 0 ? (
               sortedTopics.map((topic: any) => renderTopicCard(topic))
             ) : (
@@ -216,6 +250,14 @@ const ChatModeTopics = () => {
           </div>
         )}
       </div>
+
+      <InteractiveTour
+        active={tourActive}
+        steps={tourSteps}
+        onComplete={() => setTourActive(false)}
+        onSkip={() => setTourActive(false)}
+        variant="modal"
+      />
     </>
   );
 };

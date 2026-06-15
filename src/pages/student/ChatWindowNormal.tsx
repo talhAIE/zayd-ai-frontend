@@ -234,6 +234,7 @@ interface Message {
 interface ChatWindowProps {
   onShowFeedback: (feedback: { type: string; content: any }) => void;
   onTopicImage: (imageUrl: string) => void;
+  onUserAction?: () => void;
 }
 
 function findLastIndex<T>(
@@ -249,6 +250,7 @@ function findLastIndex<T>(
 const ChatWindow: React.FC<ChatWindowProps> = ({
   onShowFeedback,
   onTopicImage,
+  onUserAction,
 }) => {
   const HintBubble = ({
     title,
@@ -1184,6 +1186,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         socketRef.current?.emit(ChatEvents.AUDIO, payload);
         resetActivityTimer();
         resetInactivityTimer();
+        if (onUserAction) onUserAction();
       };
 
       recorder.onerror = (event) => {
@@ -1399,10 +1402,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     e?.preventDefault();
     logger.info("Form submitted.");
 
-    if (isSessionExpired) {
-      logger.error("Cannot send message: session expired.");
-      return;
-    }
+    // if (isSessionExpired) {
+    //   logger.error("Cannot send message: session expired.");
+    //   return;
+    // }
 
     if (!message.trim() || !isSocketConnected || isWaitingForResponse) {
       logger.error("Cannot send message.", {
@@ -1428,6 +1431,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     setMessage("");
     resetActivityTimer();
     resetInactivityTimer();
+    if (onUserAction) onUserAction();
   };
 
   // --- MODIFIED: Autoplay logic using Howler ---
@@ -2211,6 +2215,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                           )}
                           {msg.hasFeedback && (
                             <Button
+                              id="tour-chat-feedback"
                               variant="ghost"
                               size="sm"
                               onClick={() => {
@@ -2237,7 +2242,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           </div>
 
           {mode !== "listening-mode" && (
-            <form onSubmit={handleSubmit} className="border-t p-4 bg-gray-50">
+            <form id="tour-chat-input" onSubmit={handleSubmit} className="border-t p-4 bg-gray-50">
               <div className="flex items-center bg-white rounded-full px-4 py-1 shadow-sm">
                 <Input
                   type="text"
@@ -2251,7 +2256,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   disabled={
                     isRecording ||
                     chatCompleted ||
-                    isSessionExpired ||
+                    // isSessionExpired ||
                     !isSocketConnected ||
                     isWaitingForResponse
                   }
@@ -2287,7 +2292,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                     disabled={
                       !isSocketConnected ||
                       chatCompleted ||
-                      isSessionExpired ||
+                      // isSessionExpired ||
                       isWaitingForResponse
                     }
                   >
@@ -2303,7 +2308,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                     disabled={
                       !isSocketConnected ||
                       chatCompleted ||
-                      isSessionExpired ||
+                      // isSessionExpired ||
                       isWaitingForResponse
                     }
                   >
