@@ -17,7 +17,6 @@ import PerformanceGraph from "@/components/ui/PerformanceGraph";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { fetchDashboardData } from "@/redux/slices/dashboardSlice";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Clock, BookOpen, MessageSquare, TrendingUp } from "lucide-react";
 import InteractiveTour, { TourStep } from "@/components/ui/InteractiveTour";
 
 import dashboardImg1 from "@/assets/user-guide/dashboard/1.png";
