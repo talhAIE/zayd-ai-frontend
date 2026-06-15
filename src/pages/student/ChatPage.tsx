@@ -569,7 +569,7 @@ const Chat: React.FC = () => {
                   )}
                 </div>
                 <div
-                  className={`flex flex-col ${mode === "roleplay-mode" ? "gap-3" : "gap-0"} w-full z-20 ${
+                  className={`flex flex-col w-full z-20 ${
                     isHeroMode3D && isDesktop ? "h-full" : "sticky top-0 self-start"
                   } ${
                     mode === "listening-mode" &&

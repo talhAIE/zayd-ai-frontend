@@ -1752,7 +1752,9 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
                               : "border-[#C9D6E6]"
                           }`}
                         />
-                        <span className="flex-1 min-w-0 break-words text-left">{option}</span>
+                        <span className="flex-1 min-w-0 break-words text-left">
+                          {option}
+                        </span>
                       </Button>
                     ),
                   )}
@@ -1763,8 +1765,8 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
 
           {/* Completion Card */}
           {showListeningCompletionCard && (
-            <div className="absolute inset-0 z-20 flex items-center justify-center px-3 md:px-6">
-              <div className="absolute inset-0 bg-white/70 backdrop-blur-sm" />
+            <div className="my-auto relative inset-0 z-20 flex items-center justify-center px-3 md:px-6">
+              <div className="relative inset-0 bg-white/70 backdrop-blur-sm" />
               <div className="relative w-full max-w-[720px] mx-auto text-center px-4 md:px-8 py-6 bg-white border border-slate-200 rounded-2xl shadow-xl">
                 <img
                   src={birdWithHeadphones}
