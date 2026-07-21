@@ -1,17 +1,57 @@
-import { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { fetchTopics } from "@/redux/slices/topicsSlice";
-import { Lock } from "lucide-react";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Lock, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PhotoModePracticeContainer } from "@/components/student/photo-mode/PhotoModePracticeContainer";
+
+export interface DemoTopicItem {
+  id: string;
+  topicName: string;
+  subtitle: string;
+  progressPercentage: number;
+  isCompleted: boolean;
+  attachmentUrl: string;
+  unlocksAt?: string | null;
+}
+
+const DEMO_PHOTO_TOPICS: DemoTopicItem[] = [
+  {
+    id: "demo-topic-market",
+    topicName: "At the Market",
+    subtitle: "10 images · 10 sentences",
+    progressPercentage: 40,
+    isCompleted: false,
+    attachmentUrl: "https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=800&q=80",
+    unlocksAt: null,
+  },
+  {
+    id: "demo-topic-dinner",
+    topicName: "Family Dinner",
+    subtitle: "10 images · 10 sentences",
+    progressPercentage: 0,
+    isCompleted: false,
+    attachmentUrl: "https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=800&q=80",
+    unlocksAt: null,
+  },
+  {
+    id: "demo-topic-morning",
+    topicName: "Morning Routine",
+    subtitle: "10 images · 10 sentences",
+    progressPercentage: 100,
+    isCompleted: true,
+    attachmentUrl: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80",
+    unlocksAt: null,
+  },
+];
 
 const PhotoModeTopics = () => {
   const dispatch = useAppDispatch();
+  const [selectedTopic, setSelectedTopic] = useState<DemoTopicItem | null>(null);
 
-  const { topics, isLoading, error } = useAppSelector((state) => state.topics);
+  const { isLoading, error } = useAppSelector((state) => state.topics);
   const { user } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
@@ -51,7 +91,10 @@ const PhotoModeTopics = () => {
     return `Unlocks in ${diffDays} days`;
   };
 
-  const sortedTopics = [...topics].sort((a, b) => {
+  // Always display the 3 mock topics matching photo-mode-topic-selection design specs
+  const displayTopics: DemoTopicItem[] = DEMO_PHOTO_TOPICS;
+
+  const sortedTopics = [...displayTopics].sort((a, b) => {
     if (user?.schoolCategory !== "government") {
       return 0;
     }
@@ -63,153 +106,129 @@ const PhotoModeTopics = () => {
     const bDate = b.unlocksAt ? new Date(b.unlocksAt).getTime() : 0;
 
     if (aLocked && bLocked) {
-      return aDate - bDate; // both locked, sort by date
+      return aDate - bDate;
     }
     if (aLocked) {
-      return 1; // a is locked, b is not, so b comes first
+      return 1;
     }
     if (bLocked) {
-      return -1; // b is locked, a is not, so a comes first
+      return -1;
     }
-    return 0; // both unlocked
+    return 0;
   });
 
-  const renderTopicCard = (topic: any) => {
+  const renderTopicCard = (topic: DemoTopicItem) => {
     const locked = isTopicLocked(topic);
     const unlockCountdown =
       locked && topic.unlocksAt ? getUnlockCountdown(topic.unlocksAt) : null;
 
-    const statusLabel = locked
-      ? "Locked"
-      : topic.isCompleted
-      ? "Completed"
-      : "Incomplete";
-
-    const statusClasses = topic.isCompleted ? "text-[#2DCD6B]" : "text-white";
-
     return (
-      <Card
+      <div
         key={topic.id}
-        className="flex flex-col rounded-[1.75rem] border border-gray-100 bg-white shadow-sm"
+        className="flex flex-col justify-between p-4 gap-4 bg-white border border-[#E5E7EB] rounded-[20px] shadow-[0px_4px_12px_rgba(0,0,0,0.04)] transition-all duration-200 hover:shadow-md cursor-pointer"
+        onClick={() => !locked && setSelectedTopic(topic)}
       >
-        <div className="relative mx-4 mt-4 rounded-[1.5rem] overflow-hidden aspect-[1.2/1]">
+        {/* Topic Image Cover */}
+        <div className="relative w-full h-[130px] rounded-[12px] overflow-hidden">
           <img
             src={topic.attachmentUrl}
             alt={topic.topicName}
-            className={`h-full w-full object-cover transition duration-300 ${
+            className={`w-full h-full object-cover transition-transform duration-300 ${
               locked ? "filter grayscale" : ""
             }`}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-black/5 to-transparent" />
-          <span
-            className={`absolute top-3 left-3 rounded-xl px-3 py-3 text-xs font-semibold backdrop-blur-[19.2px] bg-[#00000057] ${statusClasses}`}
-          >
-            {statusLabel}
-          </span>
-          <Link
-            to={`/student/learning-mode/${topic?.id}/${encodeURIComponent(
-              topic.topicName
-            )}?mode=photo-mode`}
-            className={`absolute bottom-3 right-3 ${
-              locked ? "pointer-events-none" : ""
-            }`}
-          >
-            <Button
-              size="sm"
-              disabled={locked}
-              className="gradient-hover-animate rounded-xl px-8 py-[1.2rem] text-sm font-semibold text-white shadow-lg shadow-blue-500/30 hover:brightness-110 disabled:opacity-60 disabled:shadow-none"
-            >
-              Start
-            </Button>
-          </Link>
           {locked && (
-            <div className="absolute inset-0 bg-black/55 backdrop-blur-[1px] flex flex-col items-center justify-center text-white p-4">
-              <Lock className="w-8 h-8 mb-2" />
-              <span className="text-center font-semibold">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] flex flex-col items-center justify-center text-white p-2">
+              <Lock className="w-6 h-6 mb-1 text-white/90" />
+              <span className="text-center text-xs font-semibold text-white/90">
                 {unlockCountdown}
               </span>
             </div>
           )}
         </div>
 
-        <CardContent className="flex-grow px-5 py-4">
-          <h3 className="font-semibold text-base text-gray-900 leading-snug">
+        {/* Topic Info */}
+        <div className="flex flex-col gap-1">
+          <h3 className="font-outfit font-bold text-[20px] leading-[25px] text-[#0F1450] line-clamp-1">
             {topic.topicName}
           </h3>
-        </CardContent>
-      </Card>
+          <p className="font-outfit font-normal text-[14px] leading-[18px] text-[#6E748F]">
+            {topic.subtitle}
+          </p>
+        </div>
+
+        {/* Progress Row */}
+        <div className="flex flex-col gap-1.5 w-full">
+          <div className="flex justify-between items-center text-[12px] leading-[15px] font-outfit">
+            <span className="font-semibold text-[#6E748F]">Topic Progress</span>
+            <span className="font-bold text-[#06CCB5]">
+              {topic.progressPercentage}%
+            </span>
+          </div>
+          <div className="w-full h-[6px] bg-[#E5E7EB] rounded-[3px] overflow-hidden">
+            <div
+              className="h-full bg-[#06CCB5] rounded-[3px] transition-all duration-300"
+              style={{ width: `${topic.progressPercentage}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Start Practice Button */}
+        <Button
+          disabled={locked}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!locked) setSelectedTopic(topic);
+          }}
+          className="w-full h-[39px] bg-[#06CCB5] hover:bg-[#05b8a3] text-white rounded-[12px] font-outfit font-bold text-[15px] leading-[19px] flex items-center justify-center gap-2 shadow-none disabled:opacity-60"
+        >
+          <span>Start Practice</span>
+          <ArrowRight className="w-4 h-4 text-white stroke-[2.5]" />
+        </Button>
+      </div>
     );
   };
 
-  return (
-    <>
-      <style>
-        {`
-          .gradient-hover-animate {
-            background: linear-gradient(to right, #3EA4F9 0%, #0267B5 50%, #3EA4F9 100%);
-            background-size: 200% 100%;
-            background-position: 0% 50%;
-            transition: background-position 0.6s ease;
-          }
-          .gradient-hover-animate:hover {
-            background-position: 100% 50%;
-          }
-        `}
-      </style>
-      <div className="mx-auto px-4 py-6">
-        {/* <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => navigate(-1)}
-            className="mr-2"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-          <h1 className="text-2xl font-bold">Chat Modes</h1>
-        </div>
-        
-        <Button 
-          variant="outline" 
-          size="icon"
-          onClick={handleLogout}
-          className="rounded-full"
-        >
-          <LogOut className="h-5 w-5" />
-        </Button>
-      </div> */}
+  // If a topic is selected, render the Step 1 Narration practice screen matching photo-mode-step1-narration.css
+  if (selectedTopic) {
+    return (
+      <PhotoModePracticeContainer
+        topic={selectedTopic}
+        onBack={() => setSelectedTopic(null)}
+      />
+    );
+  }
 
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map((item) => (
-              <Card key={item} className="overflow-hidden">
-                <div className="aspect-video w-full">
-                  <Skeleton className="h-full w-full" />
-                </div>
-                <CardContent className="p-4">
-                  <Skeleton className="h-4 w-3/4 mb-2" />
-                  <Skeleton className="h-4 w-1/2" />
-                </CardContent>
-                <CardFooter className="flex justify-between p-4 pt-0">
-                  <Skeleton className="h-10 w-20" />
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {sortedTopics.length > 0 ? (
-              sortedTopics.map((topic: any) => renderTopicCard(topic))
-            ) : (
-              <div className="col-span-full text-center py-10">
-                <p className="text-muted-foreground">No topics available</p>
-              </div>
-            )}
-          </div>
-        )}
+  return (
+    <div className="mx-auto max-w-7xl px-6 py-8 flex flex-col gap-8">
+      {/* Header Group */}
+      <div className="flex flex-col gap-2">
+        <h1 className="font-outfit font-bold text-[28px] leading-[35px] text-[#0F1450]">
+          Select a Topic
+        </h1>
+        <p className="font-outfit font-normal text-[15px] leading-[19px] text-[#6E748F]">
+          3 new topics added weekly
+        </p>
       </div>
-    </>
+
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+          {[1, 2, 3].map((item) => (
+            <div key={item} className="flex flex-col p-4 gap-4 bg-white border border-[#E5E7EB] rounded-[20px]">
+              <Skeleton className="h-[130px] w-full rounded-[12px]" />
+              <Skeleton className="h-6 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+              <Skeleton className="h-2 w-full rounded-[3px]" />
+              <Skeleton className="h-[39px] w-full rounded-[12px]" />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+          {sortedTopics.map((topic) => renderTopicCard(topic))}
+        </div>
+      )}
+    </div>
   );
 };
 
