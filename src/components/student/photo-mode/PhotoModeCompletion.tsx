@@ -1,5 +1,5 @@
 import React from "react";
-import { Flame, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DemoTopicItem } from "@/pages/student/topics/PhotoModeTopics";
 
@@ -53,13 +53,6 @@ export const PhotoModeCompletion: React.FC<PhotoModeCompletionProps> = ({
             </span>
           </div>
 
-          {/* XP Earned Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#FEF1E8] border border-[#FDE68A] rounded-full">
-            <Flame className="w-4 h-4 text-[#F97316] fill-[#F97316]" />
-            <span className="font-outfit font-bold text-[14px] leading-[18px] text-[#F97316]">
-              +50 XP Earned
-            </span>
-          </div>
         </div>
 
         {/* Statistics Grid */}

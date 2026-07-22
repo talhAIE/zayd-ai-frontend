@@ -17,41 +17,11 @@ export interface DemoTopicItem {
   unlocksAt?: string | null;
 }
 
-const DEMO_PHOTO_TOPICS: DemoTopicItem[] = [
-  {
-    id: "demo-topic-market",
-    topicName: "At the Market",
-    subtitle: "10 images · 10 sentences",
-    progressPercentage: 40,
-    isCompleted: false,
-    attachmentUrl: "https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=800&q=80",
-    unlocksAt: null,
-  },
-  {
-    id: "demo-topic-dinner",
-    topicName: "Family Dinner",
-    subtitle: "10 images · 10 sentences",
-    progressPercentage: 0,
-    isCompleted: false,
-    attachmentUrl: "https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=800&q=80",
-    unlocksAt: null,
-  },
-  {
-    id: "demo-topic-morning",
-    topicName: "Morning Routine",
-    subtitle: "10 images · 10 sentences",
-    progressPercentage: 100,
-    isCompleted: true,
-    attachmentUrl: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80",
-    unlocksAt: null,
-  },
-];
-
 const PhotoModeTopics = () => {
   const dispatch = useAppDispatch();
   const [selectedTopic, setSelectedTopic] = useState<DemoTopicItem | null>(null);
 
-  const { isLoading, error } = useAppSelector((state) => state.topics);
+  const { topics, isLoading, error } = useAppSelector((state) => state.topics);
   const { user } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
@@ -66,7 +36,7 @@ const PhotoModeTopics = () => {
     }
   }, [error]);
 
-  const isTopicLocked = (topic: any) => {
+  const isTopicLocked = (topic: DemoTopicItem) => {
     if (user?.schoolCategory !== "government") {
       return false;
     }
@@ -91,8 +61,15 @@ const PhotoModeTopics = () => {
     return `Unlocks in ${diffDays} days`;
   };
 
-  // Always display the 3 mock topics matching photo-mode-topic-selection design specs
-  const displayTopics: DemoTopicItem[] = DEMO_PHOTO_TOPICS;
+  const displayTopics: DemoTopicItem[] = topics.map((topic) => ({
+    id: topic.id,
+    topicName: topic.topicName,
+    subtitle: "10 images - 10 sentences",
+    progressPercentage: topic.isCompleted ? 100 : 0,
+    isCompleted: Boolean(topic.isCompleted),
+    attachmentUrl: topic.attachmentUrl || "",
+    unlocksAt: topic.unlocksAt,
+  }));
 
   const sortedTopics = [...displayTopics].sort((a, b) => {
     if (user?.schoolCategory !== "government") {
@@ -129,14 +106,20 @@ const PhotoModeTopics = () => {
         onClick={() => !locked && setSelectedTopic(topic)}
       >
         {/* Topic Image Cover */}
-        <div className="relative w-full h-[130px] rounded-[12px] overflow-hidden">
-          <img
-            src={topic.attachmentUrl}
-            alt={topic.topicName}
-            className={`w-full h-full object-cover transition-transform duration-300 ${
-              locked ? "filter grayscale" : ""
-            }`}
-          />
+        <div className="relative w-full h-[130px] rounded-[12px] overflow-hidden bg-[#F0F4FA]">
+          {topic.attachmentUrl ? (
+            <img
+              src={topic.attachmentUrl}
+              alt={topic.topicName}
+              className={`w-full h-full object-cover transition-transform duration-300 ${
+                locked ? "filter grayscale" : ""
+              }`}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-[#6E748F] text-sm font-semibold">
+              Photo Mode
+            </div>
+          )}
           {locked && (
             <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] flex flex-col items-center justify-center text-white p-2">
               <Lock className="w-6 h-6 mb-1 text-white/90" />
@@ -223,9 +206,13 @@ const PhotoModeTopics = () => {
             </div>
           ))}
         </div>
-      ) : (
+      ) : sortedTopics.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
           {sortedTopics.map((topic) => renderTopicCard(topic))}
+        </div>
+      ) : (
+        <div className="bg-white border border-[#E5E7EB] rounded-[16px] p-8 text-center text-[#6E748F] font-outfit">
+          No Photo Mode topics available for this account.
         </div>
       )}
     </div>
