@@ -109,6 +109,7 @@ export const PhotoModePracticeContainer: React.FC<PhotoModePracticeContainerProp
   const submitAfterStopRef = useRef(false);
   const holdNextItemRef = useRef(false);
   const pendingNextItemRef = useRef<DemoPhotoItemEvent | null>(null);
+  const skipRequestTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const steps = [1, 2, 3, 4];
 
   const sentence = currentItem?.sentence || "";
@@ -205,7 +206,16 @@ export const PhotoModePracticeContainer: React.FC<PhotoModePracticeContainerProp
     });
   };
 
+  const clearSkipRequestTimeout = () => {
+    if (skipRequestTimeoutRef.current) {
+      clearTimeout(skipRequestTimeoutRef.current);
+      skipRequestTimeoutRef.current = null;
+    }
+  };
+
   const applyItemPayload = (payload: DemoPhotoItemEvent) => {
+    clearSkipRequestTimeout();
+    setIsSubmitting(false);
     setChatId(payload.chatId);
     setCurrentItemIndex(payload.currentItemIndex ?? 0);
     setTotalItems(payload.totalItems ?? 10);
@@ -255,6 +265,7 @@ export const PhotoModePracticeContainer: React.FC<PhotoModePracticeContainerProp
     });
 
     socket.on("demo_photo_result", (payload: DemoPhotoResultEvent) => {
+      clearSkipRequestTimeout();
       setIsSubmitting(false);
       setLastResult(payload);
       if (payload.passedItemIndexes) setPassedItemIndexes(payload.passedItemIndexes);
@@ -281,22 +292,26 @@ export const PhotoModePracticeContainer: React.FC<PhotoModePracticeContainerProp
     });
 
     socket.on("demo_photo_try_again", (payload: DemoPhotoResultEvent) => {
+      clearSkipRequestTimeout();
       setIsSubmitting(false);
       setLastResult(payload);
       setFeedbackState("ERROR");
     });
 
     socket.on("demo_photo_completed", () => {
+      clearSkipRequestTimeout();
       setIsSubmitting(false);
       setIsTopicCompleted(true);
     });
 
     socket.on("error", (payload: { message?: string }) => {
+      clearSkipRequestTimeout();
       setIsSubmitting(false);
       toast.error(payload?.message || "Photo Mode error.");
     });
 
     return () => {
+      clearSkipRequestTimeout();
       stopAudio();
       socket.disconnect();
     };
@@ -409,6 +424,8 @@ export const PhotoModePracticeContainer: React.FC<PhotoModePracticeContainerProp
   };
 
   const handleTryAgain = () => {
+    clearSkipRequestTimeout();
+    setIsSubmitting(false);
     setFeedbackState("NONE");
     setCurrentStep(4);
     setRecordingTime(0);
@@ -424,8 +441,14 @@ export const PhotoModePracticeContainer: React.FC<PhotoModePracticeContainerProp
       return;
     }
 
+    clearSkipRequestTimeout();
     stopAudio();
     setIsSubmitting(true);
+    skipRequestTimeoutRef.current = setTimeout(() => {
+      skipRequestTimeoutRef.current = null;
+      setIsSubmitting(false);
+      toast.error("Skipping this sentence took too long. Please try again.");
+    }, 10_000);
     socket.emit("demo_photo_skip", {
       chatId,
       itemIndex: currentItem.orderIndex - 1,
