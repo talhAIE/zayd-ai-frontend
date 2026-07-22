@@ -416,6 +416,21 @@ export const PhotoModePracticeContainer: React.FC<PhotoModePracticeContainerProp
     setRecordedMimeType("");
   };
 
+  const handleSkipSentence = () => {
+    if (!chatId || !currentItem || isSubmitting) return;
+    const socket = socketRef.current;
+    if (!socket?.connected) {
+      toast.error("Could not connect to Photo Mode.");
+      return;
+    }
+
+    stopAudio();
+    setIsSubmitting(true);
+    socket.emit("demo_photo_skip", {
+      chatId,
+      itemIndex: currentItem.orderIndex - 1,
+    });
+  };
   const handleNextSentence = () => {
     const pending = pendingNextItemRef.current;
     pendingNextItemRef.current = null;
@@ -754,11 +769,9 @@ export const PhotoModePracticeContainer: React.FC<PhotoModePracticeContainerProp
             </span>
           ) : feedbackState === "ERROR" ? (
             <button
-              onClick={() => {
-                setFeedbackState("NONE");
-                setCurrentStep(4);
-              }}
-              className="h-[42px] px-5 bg-white border border-[#6E748F] rounded-[12px] font-outfit font-semibold text-[14px] leading-[18px] text-[#6E748F] hover:bg-gray-50 transition-colors"
+              onClick={handleSkipSentence}
+              disabled={isSubmitting}
+              className="h-[42px] px-5 bg-white border border-[#6E748F] rounded-[12px] font-outfit font-semibold text-[14px] leading-[18px] text-[#6E748F] hover:bg-gray-50 disabled:opacity-60 transition-colors"
             >
               Skip Sentence
             </button>
