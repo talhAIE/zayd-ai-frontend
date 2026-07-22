@@ -50,7 +50,6 @@ interface ChatWindow3DMessagesProps {
   isRecording: boolean;
   recordTime: number;
   chatCompleted: boolean;
-  isSessionExpired: boolean;
   isSocketConnected: boolean;
   isWaitingForResponse: boolean;
   handleSubmit: (event?: React.FormEvent) => void;
@@ -95,7 +94,6 @@ export default function ChatWindow3DMessages({
   isRecording,
   recordTime,
   chatCompleted,
-  isSessionExpired,
   isSocketConnected,
   isWaitingForResponse,
   handleSubmit,
