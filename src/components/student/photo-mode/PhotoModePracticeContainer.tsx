@@ -57,7 +57,7 @@ type DemoPhotoResultEvent = {
 const SOCKET_URL = import.meta.env.VITE_API_BASE_URL;
 
 const getSupportedMimeType = () => {
-  const types = ["audio/mp4", "audio/webm;codecs=opus", "audio/webm", "audio/ogg"];
+  const types = ["audio/webm;codecs=opus", "audio/webm", "audio/ogg", "audio/mp4"];
   return types.find((type) => MediaRecorder.isTypeSupported(type));
 };
 
@@ -351,7 +351,13 @@ export const PhotoModePracticeContainer: React.FC<PhotoModePracticeContainerProp
     }
     try {
       stopAudio();
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          autoGainControl: true,
+          echoCancellation: true,
+          noiseSuppression: true,
+        },
+      });
       const recorder = new MediaRecorder(stream, { mimeType });
       mediaRecorderRef.current = recorder;
       audioChunksRef.current = [];
@@ -377,7 +383,7 @@ export const PhotoModePracticeContainer: React.FC<PhotoModePracticeContainerProp
           await submitRecording(audioBlob, mimeType);
         }
       };
-      recorder.start();
+      recorder.start(250);
       setIsRecording(true);
       recordTimerRef.current = setInterval(() => setRecordingTime((prev) => prev + 1), 1000);
     } catch {
@@ -387,6 +393,7 @@ export const PhotoModePracticeContainer: React.FC<PhotoModePracticeContainerProp
 
   const stopRecording = () => {
     if (mediaRecorderRef.current?.state === "recording") {
+      mediaRecorderRef.current.requestData();
       mediaRecorderRef.current.stop();
     }
   };
