@@ -676,25 +676,43 @@ export const PhotoModePracticeContainer: React.FC<PhotoModePracticeContainerProp
                     (It's your turn to read)
                   </span>
                 </div>
-                <div className="flex items-center justify-between bg-white border border-[#E5E7EB] rounded-[12px] p-3 shadow-sm">
+                <div className="flex flex-col gap-3 bg-white border border-[#E5E7EB] rounded-[12px] p-4 shadow-sm">
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => playAudio(currentItem?.arabicTurnAudioUrl, true)}
-                      aria-label={isGuidePlaying ? "Pause guide audio" : "Play guide audio"}
-                      className="flex items-center justify-center w-9 h-9 rounded-full bg-[#06CCB5] text-white hover:brightness-105 transition-all shrink-0"
+                      aria-label={isGuidePlaying ? "Pause audio" : "Play audio"}
+                      className="flex items-center justify-center w-8 h-8 rounded-full bg-[#06CCB5] text-white hover:brightness-105 transition-all shrink-0"
                     >
                       {isGuidePlaying ? <Pause className="w-4 h-4 fill-white" /> : <Play className="w-4 h-4 fill-white ml-0.5" />}
                     </button>
-                    <div className="flex flex-col text-left">
-                      <span className="font-outfit font-semibold text-[14px] leading-[18px] text-[#0F1450]">Listen to guide audio</span>
-                      <span className="font-outfit font-normal text-[12px] leading-[15px] text-[#6E748F]">Native speaker pronunciation guide</span>
+                    <div className="flex-1 flex items-center gap-[3px] h-8">
+                      {[16, 24, 12, 18, 30, 26, 14, 20, 10, 22, 28, 16, 12, 18, 8, 24, 14, 18, 26].map((height, i) => (
+                        <span
+                          key={i}
+                          className={`w-[3px] rounded-[1.5px] transition-all duration-300 ${i < 10 && isGuidePlaying ? "bg-[#06CCB5] animate-pulse" : i < 10 ? "bg-[#06CCB5]" : "bg-[#6E748F]/40"}`}
+                          style={{ height: `${height}px` }}
+                        />
+                      ))}
                     </div>
                   </div>
-                  <Mic className="w-6 h-6 text-[#06CCB5]" />
+                  <div className="flex justify-between items-center text-[12px] font-semibold text-[#06CCB5] font-outfit">
+                    <span>{formatAudioTime(audioCurrentTime)}</span>
+                    <span className="text-[#6E748F]">{formatAudioTime(audioDuration)}</span>
+                  </div>
                 </div>
               </div>
             ) : (
               <div className="lg:col-span-6 flex flex-col justify-center gap-5 bg-[#F0F4FA] rounded-[16px] p-6 border border-[#E0E7F5]">
+                {currentStep === 2 && (
+                  <div className="flex flex-col items-center text-center gap-2">
+                    <span className="font-outfit font-bold text-[14px] leading-[18px] tracking-[0.08em] text-[#6E748F]">
+                      LISTEN TO THE ENGLISH TRANSLATION
+                    </span>
+                    <h2 className="font-outfit font-bold text-[28px] leading-[36px] text-[#0F1450]">
+                      &quot;{sentence}&quot;
+                    </h2>
+                  </div>
+                )}
                 <div className="flex flex-col gap-3 bg-white border border-[#E5E7EB] rounded-[12px] p-4 shadow-sm">
                   <div className="flex items-center gap-3">
                     <button
