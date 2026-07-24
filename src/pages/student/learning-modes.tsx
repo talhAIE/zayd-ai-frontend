@@ -10,6 +10,7 @@ import ReadingModeAvatar from "@/assets/svgs/reading-mode.png";
 import curriculumModeAvatar from "@/assets/svgs/curriculum-mode.webp";
 import TopicService from "@/services/topicsService";
 import InteractiveTour, { TourStep } from "@/components/ui/InteractiveTour";
+import { canUseDemo3DAndPhotoMode } from "@/utils/demoAccountAccess";
 
 import mode3dImg from "@/assets/user-guide/learning-mode/3d.png";
 import chatImg from "@/assets/user-guide/learning-mode/chat.png";
@@ -31,7 +32,8 @@ const ALL_TOUR_STEPS: Record<string, Omit<TourStep, "targetId">> = {
   },
   "Role Play Mode": {
     title: "Roleplay Mode",
-    description: "Jump into exciting adventures and play fun roles with the AI.",
+    description:
+      "Jump into exciting adventures and play fun roles with the AI.",
     position: "bottom",
     image: roleplayImg,
   },
@@ -129,7 +131,9 @@ const modes = [
 const LearningModes: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [tourActive, setTourActive] = React.useState(searchParams.get("tour") === "true");
+  const [tourActive, setTourActive] = React.useState(
+    searchParams.get("tour") === "true",
+  );
 
   React.useEffect(() => {
     if (tourActive) {
@@ -142,7 +146,7 @@ const LearningModes: React.FC = () => {
   const user = localStorage.getItem("AiTutorUser");
   const parsedUser = JSON.parse(user || "{}");
   const schoolCategory = parsedUser?.schoolCategory;
-  const schoolName = parsedUser?.schoolName;
+  const username = parsedUser?.username;
   const userId = parsedUser?.id;
   const cachedTopicModes = React.useMemo(() => {
     try {
@@ -161,7 +165,7 @@ const LearningModes: React.FC = () => {
           mode.title === "Reading Mode" ||
           mode.title === "Role Play Mode" ||
           mode.title === "Listening Mode" ||
-          mode.title === "Debate Mode"
+          mode.title === "Debate Mode",
       );
     }
 
@@ -170,7 +174,7 @@ const LearningModes: React.FC = () => {
         (mode) =>
           mode.title === "Reading Mode" ||
           mode.title === "Role Play Mode" ||
-          mode.title === "Listening Mode"
+          mode.title === "Listening Mode",
       );
     }
 
@@ -179,7 +183,7 @@ const LearningModes: React.FC = () => {
         (mode) =>
           mode.title === "Reading Mode" ||
           mode.title === "Role Play Mode" ||
-          mode.title === "Listening Mode"
+          mode.title === "Listening Mode",
       );
     }
 
@@ -188,7 +192,7 @@ const LearningModes: React.FC = () => {
         (mode) =>
           mode.title === "Chat Mode" ||
           mode.title === "Photo Mode" ||
-          mode.title === "Curriculum Mode"
+          mode.title === "Curriculum Mode",
       );
     }
 
@@ -198,7 +202,7 @@ const LearningModes: React.FC = () => {
           mode.title === "Reading Mode" ||
           mode.title === "Role Play Mode" ||
           mode.title === "Listening Mode" ||
-          mode.title === "Curriculum Mode"
+          mode.title === "Curriculum Mode",
       );
     }
 
@@ -208,7 +212,7 @@ const LearningModes: React.FC = () => {
           mode.title === "Reading Mode" ||
           mode.title === "Role Play Mode" ||
           mode.title === "Listening Mode" ||
-          mode.title === "3D Avatar Mode"
+          mode.title === "3D Avatar Mode",
       );
     }
 
@@ -221,19 +225,27 @@ const LearningModes: React.FC = () => {
           mode.title === "Reading Mode" ||
           mode.title === "Role Play Mode" ||
           mode.title === "Listening Mode" ||
-          mode.title === "3D Avatar Mode"
+          mode.title === "3D Avatar Mode",
       );
     }
 
-    const is3dAllowed =
-      schoolCategory?.toLowerCase?.() === "3d-demo-test" ||
-      schoolName?.toLowerCase?.() === "3d-demo-test";
+    const is3dAllowed = canUseDemo3DAndPhotoMode(username);
+    const threeDAvatarMode = modes.find(
+      (mode) => mode.title === "3D Avatar Mode",
+    );
+    if (
+      is3dAllowed &&
+      threeDAvatarMode &&
+      !nextModes.includes(threeDAvatarMode)
+    ) {
+      nextModes = [...nextModes, threeDAvatarMode];
+    }
     if (!is3dAllowed) {
       nextModes = nextModes.filter((mode) => mode.title !== "3D Avatar Mode");
     }
 
     return nextModes;
-  }, [schoolCategory, schoolName]);
+  }, [schoolCategory, username]);
 
   const [modeAvailability, setModeAvailability] = React.useState<
     Record<string, boolean>
@@ -298,7 +310,7 @@ const LearningModes: React.FC = () => {
       if (cachedTopicModes) {
         const cachedSet = new Set(cachedTopicModes);
         const fallbackAvailability: Record<string, boolean> = {};
-        
+
         filteredModes.forEach((mode) => {
           if (mode.title === "3D Avatar Mode") {
             fallbackAvailability[mode.title] =
@@ -314,7 +326,7 @@ const LearningModes: React.FC = () => {
             }
           }
         });
-        
+
         if (!cancelled) {
           setModeAvailability(fallbackAvailability);
         }
@@ -335,7 +347,9 @@ const LearningModes: React.FC = () => {
   };
 
   const activeModes = React.useMemo(() => {
-    return filteredModes.filter((mode) => modeAvailability[mode.title] !== false);
+    return filteredModes.filter(
+      (mode) => modeAvailability[mode.title] !== false,
+    );
   }, [filteredModes, modeAvailability]);
 
   const tourSteps: TourStep[] = React.useMemo(() => {
