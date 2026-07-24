@@ -49,6 +49,12 @@ export function StudentLayout({ children }: StudentLayoutProps) {
   let formattedTitle;
   if (location.pathname.startsWith("/teacher/student-profile/")) {
     formattedTitle = "Student Profile";
+  } else if (location.pathname.includes("/lessons/")) {
+    formattedTitle = "Lessons";
+  } else if (location.pathname.includes("/units/") || location.pathname.match(/\/courses\/[^/]+$/)) {
+    formattedTitle = "Units";
+  } else if (location.pathname.endsWith("/courses")) {
+    formattedTitle = "Courses";
   } else if (location.pathname.includes("/chapter/")) {
     const segments = location.pathname.split("/");
     const chapterIndex = segments.indexOf("chapter");
@@ -90,9 +96,9 @@ export function StudentLayout({ children }: StudentLayoutProps) {
   const sidebarItems = [
     { path: "/student/dashboard", icon: dashboardIcon, label: "Dashboard" },
     {
-      path: "/student/learning-modes",
+      path: "/student/courses",
       icon: learningModeIcon,
-      label: "Learning Modes",
+      label: "Courses",
     },
     {
       path: "/student/achievements",
@@ -312,7 +318,7 @@ export function StudentLayout({ children }: StudentLayoutProps) {
 
         {/* Main Content */}
         <main className="flex-1 w-full max-w-full overflow-x-hidden">
-          <div className={`p-4 xl:p-8 w-full max-w-full overflow-x-hidden ${location.pathname.includes('/student/learning-mode/') ? 'pt-2' : ''}`}>{children}</div>
+          <div className="p-4 w-full max-w-full overflow-x-hidden">{children}</div>
         </main>
       </div>
 

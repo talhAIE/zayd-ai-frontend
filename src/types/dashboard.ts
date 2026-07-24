@@ -37,6 +37,20 @@ export interface AssessmentGraphData {
   totalAssessmentScore: number;
 }
 
+export interface CourseUnitProgress {
+  id: string;
+  title: string;
+  progressPct: number;
+}
+
+export interface CourseProgress {
+  id: string;
+  title: string;
+  subject: string;
+  progressPct: number;
+  units: CourseUnitProgress[];
+}
+
 export interface DashboardData {
   userInfo: UserInfo;
   dailyUsage: number;
@@ -49,6 +63,7 @@ export interface DashboardData {
   };
   assessmentAverages?: AssessmentAverages;
   assessmentGraphData?: AssessmentGraphData[];
+  courseProgress?: CourseProgress[];
 }
 
 export interface DashboardState {

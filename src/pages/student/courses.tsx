@@ -1,159 +1,112 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '@/redux/hooks';
-import { fetchCourses } from '@/redux/slices/coursesSlice';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Search } from 'lucide-react';
+import { useDispatch, useSelector } from 'react-redux';
+import { getCourses } from '@/redux/slices/learningSlice';
+import { AppDispatch, RootState } from '@/redux/store';
 
 export default function StudentCourses() {
-  const dispatch = useAppDispatch();
-  const { courses, loading } = useAppSelector((state) => state.courses);
+  const dispatch = useDispatch<AppDispatch>();
+  const { courses, loading, error } = useSelector((state: RootState) => state.learning);
+  const { user } = useSelector((state: RootState) => state.auth);
+
+  const inProgressCount = courses.filter(c => c.progressStatus === 'in_progress').length;
 
   useEffect(() => {
-    dispatch(fetchCourses());
+    dispatch(getCourses());
   }, [dispatch]);
-
-  // Separate enrolled and available courses
-  const enrolledCourses = courses.filter((course) => course.enrolled);
-  const availableCourses = courses.filter((course) => !course.enrolled);
-
   return (
-    <div>
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-[var(--font-dark)]">My Courses</h1>
-          <p className="text-[var(--font-light2)]">
-            View your enrolled courses and discover new ones.
+    <div className="w-full max-w-[1087px] mx-auto bg-white rounded-[24px] p-[24px] md:p-[32px] flex flex-col gap-6 font-['Outfit',sans-serif]">
+      {/* Top Bar */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-[28px] font-bold text-[#282828] leading-[35px] tracking-[-0.5px]">
+            Hi {user?.name || 'Student'} 👋
+          </h1>
+          <p className="text-[15px] text-[#949494] leading-[19px]">
+            Select a course to resume your learning. {inProgressCount} course{inProgressCount !== 1 && 's'} in progress.
           </p>
-        </div>
-        <div className="relative w-full md:w-64">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[var(--font-light2)]" />
-          <Input className="pl-9" placeholder="Search courses..." />
         </div>
       </div>
 
-      {/* Enrolled Courses */}
-      <section className="mb-12">
-        <h2 className="text-xl font-bold text-[var(--font-dark)] mb-4">
-          Enrolled Courses
+      {/* Enrolled Curriculum */}
+      <div className="flex flex-col gap-6 mt-4">
+        <h2 className="text-[20px] font-bold text-[#282828] flex items-center gap-2">
+          <span className="text-2xl">📋</span> Enrolled Curriculum
         </h2>
-        {loading ? (
-          <div className="flex justify-center p-12">
-            <div className="animate-pulse text-[var(--font-light2)]">Loading courses...</div>
-          </div>
-        ) : enrolledCourses.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {enrolledCourses.map((course) => (
-              <Card key={course.id} className="overflow-hidden">
-                <div className="aspect-video relative">
-                  <img
-                    src={course.thumbnail}
-                    alt={course.title}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute top-2 right-2">
-                    <Badge variant="secondary">{course.progress}% Complete</Badge>
-                  </div>
-                </div>
-                <CardContent className="p-4">
-                  <h3 className="font-semibold text-lg text-[var(--font-dark)] mb-1">
-                    {course.title}
-                  </h3>
-                  <p className="text-sm text-[var(--font-light2)] mb-3">
-                    Instructor: {course.instructor}
-                  </p>
-                  <Progress value={course.progress} className="h-2 mb-4" />
-                  <div className="flex justify-between">
-                    <Link to={`/student/learning-mode?course=${course.id}`}>
-                      <Button variant="outline">Continue Learning</Button>
-                    </Link>
-                    <Button variant="ghost" size="icon">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-                        />
-                      </svg>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <Card className="bg-muted">
-            <CardContent className="p-8 text-center">
-              <p className="text-[var(--font-light2)] mb-4">
-                You haven't enrolled in any courses yet.
-              </p>
-              <p className="mb-4">
-                Explore our available courses below to start your learning journey.
-              </p>
-            </CardContent>
-          </Card>
-        )}
-      </section>
 
-      {/* Available Courses */}
-      <section>
-        <h2 className="text-xl font-bold text-[var(--font-dark)] mb-4">
-          Available Courses
-        </h2>
-        {loading ? (
-          <div className="flex justify-center p-12">
-            <div className="animate-pulse text-[var(--font-light2)]">Loading courses...</div>
-          </div>
-        ) : availableCourses.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {availableCourses.map((course) => (
-              <Card key={course.id} className="overflow-hidden">
-                <div className="aspect-video">
-                  <img
-                    src={course.thumbnail}
-                    alt={course.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <CardContent className="p-4">
-                  <h3 className="font-semibold text-lg text-[var(--font-dark)] mb-1">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {loading && <p className="text-gray-500">Loading courses...</p>}
+          {error && <p className="text-red-500">{error}</p>}
+          {!loading && !error && courses.length === 0 && (
+            <p className="text-gray-500">No courses available.</p>
+          )}
+          {!loading && courses.map((course) => (
+            <div 
+              key={course.id} 
+              className="flex flex-col bg-white border border-[#F1F5F9] rounded-[24px] overflow-hidden shadow-[0px_4px_24px_rgba(0,0,0,0.02)]"
+            >
+              <img 
+                src={'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80'} 
+                alt={course.title} 
+                className="w-full h-[168px] object-cover"
+              />
+              
+              <div className="p-5 flex flex-col gap-4 flex-grow">
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#4F8DFB]" />
+                    <span className="text-[11px] font-bold text-[#4F8DFB] tracking-[0.5px] uppercase">
+                      {course.grade || course.code}
+                    </span>
+                  </div>
+                  <h3 className="text-[18px] font-bold text-[#282828] leading-[23px] mt-1">
                     {course.title}
                   </h3>
-                  <p className="text-sm text-[var(--font-light2)] mb-4">
-                    Instructor: {course.instructor}
-                  </p>
-                  <p className="text-sm text-[var(--font-light2)] mb-4 line-clamp-2">
+                  <p className="text-[14px] text-[#949494] leading-[18px] line-clamp-2 mt-1">
                     {course.description}
                   </p>
-                  <Button className="w-full bg-[var(--primarybg)] hover:bg-[var(--primarybg)]/90">
-                    Enroll Now
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <Card className="bg-muted">
-            <CardContent className="p-8 text-center">
-              <p className="text-[var(--font-light2)]">
-                No additional courses available at the moment.
-              </p>
-            </CardContent>
-          </Card>
-        )}
-      </section>
+                </div>
+
+                <div className="flex flex-col gap-2 mt-auto pt-2">
+                  <div className="flex justify-between items-center text-[12px] font-semibold">
+                    <span className="text-[#282828]">Completion</span>
+                    <span className="text-[#4F8DFB]">{course.progressPct}%</span>
+                  </div>
+                  <div className="w-full h-[6px] bg-[#F1F5F9] rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-[#4F8DFB] rounded-full" 
+                      style={{ width: `${course.progressPct}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-2">
+                  {(course.progressStatus === 'in_progress' || course.progressStatus === 'not_started') && (
+                    <Link to={`/student/courses/${course.id}`}>
+                      <button className="w-full h-[46px] bg-[#232E43] hover:bg-[#1a2333] text-white rounded-[8px] font-semibold text-[14px] transition-all duration-200">
+                        {course.progressStatus === 'not_started' ? 'Start Course' : 'Continue Course'}
+                      </button>
+                    </Link>
+                  )}
+                  {course.progressStatus === 'completed' && (
+                    <button className="w-full h-[46px] bg-[#5B9CF7] hover:bg-[#4a8ce8] text-white rounded-[8px] font-semibold text-[14px] flex items-center justify-center gap-2 transition-all duration-200">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 15L15 17L14.2 13.5L17 11.2L13.4 10.9L12 7.5L10.6 10.9L7 11.2L9.8 13.5L9 17L12 15Z" fill="currentColor"/>
+                      </svg>
+                      Claim Certificate
+                    </button>
+                  )}
+                  {(course.progressStatus === 'locked' || course.isLocked) && (
+                    <button disabled className="w-full h-[46px] bg-[#F3F4F6] text-[#9CA3AF] rounded-[8px] font-semibold text-[14px] cursor-not-allowed">
+                      Continue Course
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

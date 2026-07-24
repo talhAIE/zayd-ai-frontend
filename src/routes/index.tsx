@@ -12,7 +12,9 @@ import ContactUs from "@/pages/public/contact-us";
 import ChineseContactUs from "@/pages/public/chinese/ChineseContactUs";
 
 // Student Pages
-import LearningModes from "@/pages/student/learning-modes";
+import StudentCourses from "@/pages/student/courses";
+import CourseUnits from "@/pages/student/course-units";
+import Lesson from "@/pages/student/lesson";
 import StudentDashboard from "@/pages/student/dashboard";
 
 // Teacher Pages
@@ -22,18 +24,9 @@ import StudentProfile from "@/pages/teacher/student-profile";
 // Auth Pages
 // import { AuthLayout } from "@/components/layouts/auth-layout";
 import LoginPage from "@/pages/auth/login";
-import ChatModeTopics from "@/pages/student/topics/ChatModeTopics";
-import PhotoModeTopics from "@/pages/student/topics/PhotoModeTopics";
-import DebateModeTopics from "@/pages/student/topics/DebateModeTopics";
 import Leaderboard from "@/pages/student/Leaderboard";
-import Chat from "@/pages/student/ChatPage";
+
 import Rewards from "@/pages/student/Rewards";
-import ReadingModeTopics from "@/pages/student/topics/ReadingModeTopics";
-import RolePlayModeTopics from "@/pages/student/topics/RolePlayModeTopics";
-import ListeningModeTopics from "@/pages/student/topics/ListeningModeTopics";
-import CurriculumModeTopics from "@/pages/student/topics/CurriculumModeTopics";
-import ChapterTopics from "@/pages/student/topics/ChapterTopics";
-import Avatar3DMode from "@/pages/student/Avatar3DMode";
 import Support from "@/pages/student/support";
 
 const AppRoutes = () => {
@@ -116,31 +109,31 @@ const AppRoutes = () => {
       />
 
       <Route
-        path="/student/learning-modes"
+        path="/student/courses"
         element={
           <StudentRoute>
             <StudentLayout>
-              <LearningModes />
+              <StudentCourses />
             </StudentLayout>
           </StudentRoute>
         }
       />
       <Route
-        path="/student/learning-modes/3d-avatar-mode"
+        path="/student/courses/:courseId"
         element={
           <StudentRoute>
             <StudentLayout>
-              <Avatar3DMode />
+              <CourseUnits />
             </StudentLayout>
           </StudentRoute>
         }
       />
       <Route
-        path="/student/learning-modes"
+        path="/student/courses/:courseId/units/:unitId/lessons/:lessonId"
         element={
           <StudentRoute>
             <StudentLayout>
-              <LearningModes />
+              <Lesson />
             </StudentLayout>
           </StudentRoute>
         }
@@ -161,126 +154,6 @@ const AppRoutes = () => {
           <StudentRoute>
             <StudentLayout>
               <Support />
-            </StudentLayout>
-          </StudentRoute>
-        }
-      />
-      <Route
-        path="/student/learning-modes/chat-mode"
-        element={
-          <StudentRoute>
-            <StudentLayout>
-              <ChatModeTopics />
-            </StudentLayout>
-          </StudentRoute>
-        }
-      />
-      <Route
-        path="/student/learning-modes/photo-mode"
-        element={
-          <StudentRoute>
-            <StudentLayout>
-              <PhotoModeTopics />
-            </StudentLayout>
-          </StudentRoute>
-        }
-      />
-      <Route
-        path="/student/learning-modes/reading-mode"
-        element={
-          <StudentRoute>
-            <StudentLayout>
-              <ReadingModeTopics />
-            </StudentLayout>
-          </StudentRoute>
-        }
-      />
-      <Route
-        path="/student/learning-modes/3d-avatar-mode/reading-mode"
-        element={
-          <StudentRoute>
-            <StudentLayout>
-              <ReadingModeTopics />
-            </StudentLayout>
-          </StudentRoute>
-        }
-      />
-      <Route
-        path="/student/learning-modes/roleplay-mode"
-        element={
-          <StudentRoute>
-            <StudentLayout>
-              <RolePlayModeTopics />
-            </StudentLayout>
-          </StudentRoute>
-        }
-      />
-      <Route
-        path="/student/learning-modes/3d-avatar-mode/roleplay-mode"
-        element={
-          <StudentRoute>
-            <StudentLayout>
-              <RolePlayModeTopics />
-            </StudentLayout>
-          </StudentRoute>
-        }
-      />
-      <Route
-        path="/student/learning-modes/listening-mode"
-        element={
-          <StudentRoute>
-            <StudentLayout>
-              <ListeningModeTopics />
-            </StudentLayout>
-          </StudentRoute>
-        }
-      />
-      <Route
-        path="/student/learning-modes/3d-avatar-mode/listening-mode"
-        element={
-          <StudentRoute>
-            <StudentLayout>
-              <ListeningModeTopics />
-            </StudentLayout>
-          </StudentRoute>
-        }
-      />
-      <Route
-        path="/student/learning-modes/debate-mode"
-        element={
-          <StudentRoute>
-            <StudentLayout>
-              <DebateModeTopics />
-            </StudentLayout>
-          </StudentRoute>
-        }
-      />
-      <Route
-        path="/student/learning-modes/curriculum-mode"
-        element={
-          <StudentRoute>
-            <StudentLayout>
-              <CurriculumModeTopics />
-            </StudentLayout>
-          </StudentRoute>
-        }
-      />
-      <Route
-        path="/student/learning-modes/curriculum-mode/chapter/:chapterId"
-        element={
-          <StudentRoute>
-            <StudentLayout>
-              <ChapterTopics />
-            </StudentLayout>
-          </StudentRoute>
-        }
-      />
-      <Route
-        path="/student/learning-mode/:topicId/:topicName"
-        element={
-          <StudentRoute>
-            <StudentLayout>
-              <Chat />
             </StudentLayout>
           </StudentRoute>
         }

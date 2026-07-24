@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -7,7 +7,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ArrowUpRight, ChevronRight } from "lucide-react";
+import { ArrowUpRight, ChevronDown } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import DashboardBadge from "@/assets/svgs/dashboard_badge.svg";
 import TeachBird from "@/assets/svgs/dashboardTeach.svg";
@@ -17,8 +24,9 @@ import PerformanceGraph from "@/components/ui/PerformanceGraph";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { fetchDashboardData } from "@/redux/slices/dashboardSlice";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Clock, BookOpen, MessageSquare, TrendingUp } from "lucide-react";
 import InteractiveTour, { TourStep } from "@/components/ui/InteractiveTour";
+
+
 
 import dashboardImg1 from "@/assets/user-guide/dashboard/1.png";
 import dashboardImg2 from "@/assets/user-guide/dashboard/2.png";
@@ -92,6 +100,7 @@ export default function LanguageLearningDashboard() {
   const dispatch = useAppDispatch();
   const { data, isLoading, error } = useAppSelector((state) => state.dashboard);
   const [timeFilter, setTimeFilter] = useState<"weekly" | "monthly">("weekly");
+  const [selectedSubject, setSelectedSubject] = useState<string>("English");
   const [searchParams, setSearchParams] = useSearchParams();
   const [tourActive, setTourActive] = useState(searchParams.get("tour") === "true");
 
@@ -113,6 +122,14 @@ export default function LanguageLearningDashboard() {
   const user = data?.userInfo;
   const usageRecords = data?.usageRecords;
   const assessmentGraphData = data?.assessmentGraphData || [];
+  const courseProgress = data?.courseProgress || [];
+  const subjects = Array.from(new Set(courseProgress.map(c => c.subject || 'General')));
+
+  useEffect(() => {
+    if (subjects.length > 0 && !subjects.includes(selectedSubject)) {
+      setSelectedSubject(subjects[0]);
+    }
+  }, [subjects, selectedSubject]);
 
   // Show error state if there's an error
   if (error) {
@@ -516,146 +533,94 @@ export default function LanguageLearningDashboard() {
 
       <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Completed Topics Section */}
-        <Card id="tour-completed-topics" className="shadow-md border-slate-200">
-          <style>{`
-            @media (max-width: 457px) and (min-width: 412px) {
-              .modes-link {
-                width: 8rem !important;
-              }
-            }
-
-            @media (max-width: 412px) and (min-width: 375px) {
-              .modes-link {
-                width: 9rem !important;
-              }
-            }
-            
-            @media (max-width: 375px) {
-              .modes-link {
-                width: 12rem !important;
-              }
-            }
-          `}</style>
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <div>
+        <Card id="tour-completed-topics" className="shadow-md border-[#F4F4F4] bg-white rounded-[16.11px]">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex flex-col gap-1">
                 {isLoading ? (
                   <div className="space-y-2">
                     <Skeleton className="h-6 w-48" />
-                    <Skeleton className="h-4 w-64" />
+                    <Skeleton className="h-3 w-64" />
                   </div>
                 ) : (
                   <>
-                    <CardTitle className="text-xl md:text-2xl font-bold text-slate-800">
-                      Completed Topics
+                    <CardTitle className="font-['Outfit'] font-bold text-[20px] leading-[25px] text-[#0C0F16]">
+                      Completed Units
                     </CardTitle>
-                    <CardDescription className="text-slate-600">
-                      Your progress across learning modules
+                    <CardDescription className="font-['Outfit'] font-normal text-[10px] leading-[13px] text-[#6E7496]">
+                      Your Progress accross learning modules
                     </CardDescription>
                   </>
                 )}
               </div>
 
               {isLoading ? (
-                <Skeleton className="h-8 w-24 rounded-full" />
+                <Skeleton className="h-9 w-28 rounded-full" />
               ) : (
-                <Link
-                  to="/student/learning-modes"
-                  className="flex items-center gap-1 px-4 py-2 rounded-full bg-[#F8F8F8] text-blue-600 hover:text-blue-700 font-medium text-sm modes-link"
-                >
-                  {data?.completedTopics
-                    ? Object.keys(data.completedTopics).length
-                    : 0}{" "}
-                  modes <ChevronRight className="w-4 h-4" />
-                </Link>
+                <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                  <SelectTrigger className="flex items-center justify-between gap-1.5 px-4 py-2 h-auto rounded-[72px] bg-[#F8F8F8] border-0 hover:bg-[#F0F0F0] focus:ring-0 focus:outline-none font-['Outfit'] font-bold text-[12px] leading-[15px] text-[#065FF0] w-auto shadow-none cursor-pointer [&>svg.opacity-50]:hidden">
+                    <SelectValue placeholder="Select Subject" />
+                    <ChevronDown className="w-4 h-4 text-[#065FF0] shrink-0" />
+                  </SelectTrigger>
+                  <SelectContent className="font-['Outfit'] rounded-xl">
+                    {subjects.length > 0 ? subjects.map((subject) => (
+                      <SelectItem key={subject} value={subject} className="font-medium text-sm cursor-pointer">
+                        {subject}
+                      </SelectItem>
+                    )) : (
+                      <SelectItem value="English" className="font-medium text-sm cursor-pointer" disabled>
+                        No subjects found
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
               )}
             </div>
           </CardHeader>
 
-          <CardContent className="pt-6">
+          <CardContent className="pt-2 pb-6">
             {isLoading ? (
-              <div className="space-y-4">
+              <div className="flex flex-col gap-4">
                 {Array.from({ length: 3 }).map((_, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-4 bg-white rounded-lg border border-slate-300 shadow-sm"
+                    className="flex flex-col justify-center p-[16.11px] px-[24.17px] gap-[8.06px] rounded-[16.11px] border border-[#F4F4F4] bg-[linear-gradient(96.71deg,rgba(137,203,252,0.17)_0.12%,rgba(255,255,255,0.17)_100.84%)]"
                   >
-                    <div className="flex items-center gap-3">
-                      <Skeleton className="w-12 h-12 rounded-full" />
-                      <div>
-                        <Skeleton className="h-4 w-32 mb-2" />
-                        <Skeleton className="h-3 w-40" />
-                      </div>
-                    </div>
-                    <Skeleton className="h-8 w-12" />
-                  </div>
-                ))}
-              </div>
-            ) : data?.completedTopics &&
-              Object.keys(data.completedTopics).length > 0 ? (
-              <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">
-                {Object.entries(data.completedTopics).map(([topic, count]) => (
-                  <div
-                    key={topic}
-                    className="flex items-center justify-between p-4 rounded-lg border border-[#F4F4F4] bg-gradient-to-r from-[#89cafc27] to-[#FFFFFF]"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full flex items-center justify-center bg-blue-100 relative">
-                        <svg
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M10 9L7 12L10 15"
-                            stroke="#065FF0"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                          <path
-                            d="M14 15L17 12L14 9"
-                            stroke="#065FF0"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                          <path
-                            d="M2.99218 16.3419C3.13922 16.7129 3.17195 17.1193 3.08618 17.5089L2.02118 20.7989C1.98686 20.9658 1.99574 21.1386 2.04696 21.3011C2.09817 21.4635 2.19004 21.6102 2.31385 21.7272C2.43765 21.8442 2.58929 21.9276 2.75438 21.9696C2.91947 22.0115 3.09254 22.0106 3.25718 21.9669L6.67018 20.9689C7.0379 20.896 7.41871 20.9279 7.76918 21.0609C9.90457 22.0582 12.3235 22.2691 14.5993 21.6567C16.8751 21.0442 18.8614 19.6476 20.2079 17.7133C21.5543 15.779 22.1743 13.4313 21.9585 11.0845C21.7427 8.73763 20.7049 6.54241 19.0282 4.88613C17.3516 3.22986 15.1439 2.21898 12.7946 2.03183C10.4452 1.84469 8.10531 2.49332 6.18762 3.86328C4.26993 5.23323 2.89771 7.23648 2.31307 9.51958C1.72843 11.8027 1.96895 14.2189 2.99218 16.3419Z"
-                            stroke="#065FF0"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                        </svg>
-                      </div>
-                      <div>
-                        <h3 className="font-medium text-slate-800">
-                          {topic
-                            .split("-")
-                            .map(
-                              (word) =>
-                                word.charAt(0).toUpperCase() + word.slice(1)
-                            )
-                            .join(" ")}
-                        </h3>
-                        <p className="text-sm text-slate-500">
-                          {count} completed {count === 1 ? "item" : "items"}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-blue-600 font-bold text-lg">
-                      {count}
-                    </div>
+                    <Skeleton className="h-5 w-40 mb-1" />
+                    <Skeleton className="h-[8px] w-full rounded-[4px]" />
+                    <Skeleton className="h-3 w-8" />
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center text-slate-500 text-sm py-8">
-                No completed topics yet. Keep learning and your progress will
-                show up here!
+              <div className="flex flex-col gap-4 max-h-[380px] overflow-y-auto pr-1">
+                {courseProgress
+                  .filter(course => (course.subject || 'General') === selectedSubject)
+                  .flatMap(course => course.units)
+                  .map((unit) => (
+                  <div
+                    key={unit.id}
+                    className="flex flex-col justify-center p-[16.11px] px-[24.17px] gap-[8.06px] rounded-[16.11px] border border-[#F4F4F4] bg-[linear-gradient(96.71deg,rgba(137,203,252,0.17)_0.12%,rgba(255,255,255,0.17)_100.84%)]"
+                  >
+                    <h3 className="font-['Outfit'] font-bold text-[16px] leading-[20px] text-[#434343]">
+                      {unit.title}
+                    </h3>
+                    <div className="flex flex-col items-start gap-[6px] w-full">
+                      <div className="w-full h-[8px] bg-[#E5E7EB] rounded-[4px] overflow-hidden">
+                        <div
+                          className="h-[8px] bg-[#5C9DFF] rounded-[4px] transition-all duration-500"
+                          style={{ width: `${unit.progressPct || 0}%` }}
+                        />
+                      </div>
+                      <span className="font-['Outfit'] font-bold text-[12px] leading-[15px] text-[#6E7496]">
+                        {Math.round(unit.progressPct || 0)}%
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                {subjects.length > 0 && courseProgress.filter(c => (c.subject || 'General') === selectedSubject).flatMap(c => c.units).length === 0 && (
+                  <p className="text-gray-500 text-sm text-center py-4">No units found for this subject.</p>
+                )}
               </div>
             )}
           </CardContent>

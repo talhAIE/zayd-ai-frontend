@@ -6,6 +6,7 @@ import leaderBoardReducer from './slices/leaderboardSlice';
 import dashboardReducer from './slices/dashboardSlice';
 import teacherReducer from './slices/teacherSlice';
 import studentProfileReducer from './slices/studentProfileSlice';
+import learningReducer from './slices/learningSlice';
 
 export const store = configureStore({
   reducer: {
@@ -15,7 +16,8 @@ export const store = configureStore({
     leaderboard: leaderBoardReducer,
     dashboard: dashboardReducer,
     teacher: teacherReducer,
-    studentProfile: studentProfileReducer
+    studentProfile: studentProfileReducer,
+    learning: learningReducer
   },
   devTools: true,
 });

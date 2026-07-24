@@ -16,7 +16,7 @@ export const fetchDashboardData = createAsyncThunk(
   'dashboard/fetchDashboardData',
   async ({ userId, timeFilter = 'weekly' }: { userId: string; timeFilter?: 'weekly' | 'monthly' }, { rejectWithValue }) => {
     try {
-      const response = await apiClient.get(`/dashboard/${userId}`, {
+      const response = await apiClient.get('/dashboard/me', {
         params: {
           timeFilter
         }

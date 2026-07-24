@@ -896,7 +896,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
         steps={TOUR_STEPS}
         onComplete={() => {
           setTourActive(false);
-          navigate("/student/learning-modes?tour=true");
+          navigate("/student/courses?tour=true");
         }}
         onSkip={() => setTourActive(false)}
       />

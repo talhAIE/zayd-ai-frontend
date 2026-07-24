@@ -82,7 +82,7 @@ export default function LoginPage() {
 
   const navigateUser = (user: any) => {
     if (!user.role || user.role === "student") {
-      navigate("/student/learning-modes");
+      navigate("/student/courses");
     } else if (user.role === "teacher") {
       navigate("/teacher/dashboard");
     } else {
