@@ -515,7 +515,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   }, [isAudioUnlocked]);
 
   useEffect(() => {
-    unlockAudio();
+    return unlockAudio();
   }, [unlockAudio]);
   // --- END MODIFICATION
 
@@ -1052,9 +1052,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     }
   }, [listeningStage, mode]);
 
-  const scrollToBottom = () =>
+  const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  useEffect(scrollToBottom, [messages]);
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const sendPlaceholder = () => {
     logger.info("Adding AI thinking placeholder to UI.");

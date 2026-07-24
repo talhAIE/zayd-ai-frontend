@@ -331,7 +331,6 @@ const ChatWindow: React.FC<ChatWindowProps> = (props) => {
               isRecording={isRecording}
               recordTime={recordTime}
               chatCompleted={chatCompleted}
-              isSessionExpired={isSessionExpired}
               isSocketConnected={isSocketConnected}
               isWaitingForResponse={isWaitingForResponse}
               handleSubmit={handleSubmit}
