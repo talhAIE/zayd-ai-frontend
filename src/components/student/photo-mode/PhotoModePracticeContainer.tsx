@@ -663,8 +663,10 @@ export const PhotoModePracticeContainer: React.FC<PhotoModePracticeContainerProp
               </div>
             </div>
           </div>
-        ) : currentStep === 4 ? (          <div className="flex flex-col items-center gap-6 w-full">
-            <div className="w-full flex flex-col items-center justify-center gap-6 bg-white border border-[#E5E7EB] rounded-[20px] p-8 shadow-sm">
+        ) : currentStep === 4 ? (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center w-full">
+            {renderPhoto()}
+            <div className="lg:col-span-6 w-full flex flex-col items-center justify-center gap-6 bg-white border border-[#E5E7EB] rounded-[20px] p-8 shadow-sm min-h-[321px]">
               <div className="relative flex items-center justify-center">
                 <div className={`flex items-center justify-center w-[112px] h-[112px] rounded-full transition-all duration-500 ${isRecording ? "bg-blue-100 animate-ping" : "bg-[#5C9DFF]/10"}`} />
                 <button
