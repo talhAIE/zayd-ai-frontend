@@ -98,7 +98,7 @@ export const PhotoModePracticeContainer: React.FC<PhotoModePracticeContainerProp
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [recordedAudioBlob, setRecordedAudioBlob] = useState<Blob | null>(null);
   const [recordedMimeType, setRecordedMimeType] = useState("");
-
+  const [loadedImageKey, setLoadedImageKey] = useState<string | null>(null);
   const socketRef = useRef<Socket | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const activeAudioUrlRef = useRef<string | null>(null);
@@ -116,6 +116,8 @@ export const PhotoModePracticeContainer: React.FC<PhotoModePracticeContainerProp
   const arabicSentence = currentItem?.arabicText || currentItem?.arabicSentence || sentence;
   const imageUrl = currentItem?.imageUrl || topic.attachmentUrl;
   const photoNumber = currentItem?.orderIndex || currentItemIndex + 1;
+  const imageKey = `${currentItem?.orderIndex ?? "topic"}:${imageUrl ?? ""}`;
+  const isImageLoading = Boolean(imageUrl && loadedImageKey !== imageKey);
   const setAudioPlaybackState = (guideAudio: boolean, isActive: boolean) => {
     setIsPlaying(!guideAudio && isActive);
     setIsGuidePlaying(guideAudio && isActive);
@@ -543,9 +545,26 @@ export const PhotoModePracticeContainer: React.FC<PhotoModePracticeContainerProp
 
   const renderPhoto = () => (
     <div className="lg:col-span-6 flex flex-col gap-3">
-      <div className="w-full aspect-[2528/1696] rounded-[16px] overflow-hidden bg-gray-100 shadow-sm">
+      <div className="relative w-full aspect-[2528/1696] rounded-[16px] overflow-hidden bg-gray-100 shadow-sm">
         {imageUrl ? (
-          <img src={imageUrl} alt={topic.topicName} className="w-full h-full object-cover" />
+          <>
+            {isImageLoading && (
+              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-gray-100 text-[#6E748F]">
+                <Loader2 className="h-6 w-6 animate-spin" />
+                <span className="font-outfit text-sm">Loading next photo...</span>
+              </div>
+            )}
+            <img
+              key={imageKey}
+              src={imageUrl}
+              alt={`${topic.topicName} - photo ${photoNumber}`}
+              onLoad={() => setLoadedImageKey(imageKey)}
+              onError={() => setLoadedImageKey(imageKey)}
+              className={`h-full w-full object-cover transition-opacity duration-200 ${
+                isImageLoading ? "opacity-0" : "opacity-100"
+              }`}
+            />
+          </>
         ) : (
           <div className="w-full h-full flex items-center justify-center text-[#6E748F]">Photo loading...</div>
         )}
