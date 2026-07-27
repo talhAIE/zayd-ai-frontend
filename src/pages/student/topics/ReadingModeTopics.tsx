@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ChevronLeft, Mic, Send, Square, Trash2, Check, RotateCcw } from 'lucide-react';
+import { ChevronLeft, Mic, Send, Square, Trash2, Check, MessageCircle } from 'lucide-react';
 import { useModeSession } from '@/hooks/useModeSession';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import ReadingPassageCard from '@/components/ui/ReadingPassageCard';
+import TopicCompletionModal from '@/components/ui/TopicCompletionModal';
+import FeedbackModal from '@/components/ui/FeedbackModal';
 
 export default function ReadingModeTopics() {
   const navigate = useNavigate();
@@ -13,6 +15,8 @@ export default function ReadingModeTopics() {
   const [inputValue, setInputValue] = useState('');
   const [currentMcqIndex, setCurrentMcqIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number | string>>({});
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [activeFeedback, setActiveFeedback] = useState<string | null>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -41,17 +45,35 @@ export default function ReadingModeTopics() {
     }
   });
 
+  useEffect(() => {
+    if (isCompleted) {
+      setShowCompletionModal(true);
+    }
+  }, [isCompleted]);
+
+  const [cooldown, setCooldown] = useState(false);
+
   const handleSend = () => {
-    if (!inputValue.trim()) return;
+    if (!inputValue.trim() || cooldown || isTyping) return;
     sendMessage(inputValue);
     setInputValue('');
+    triggerCooldown();
   };
 
   const handleStopRecording = async () => {
+    if (cooldown || isTyping) return;
     const res = await stopRecording();
     if (res) {
       sendAudio(res.audioBase64, res.format);
+      triggerCooldown();
     }
+  };
+
+  const triggerCooldown = () => {
+    setCooldown(true);
+    setTimeout(() => {
+      setCooldown(false);
+    }, 2000);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -66,14 +88,51 @@ export default function ReadingModeTopics() {
     }
   }, [chatHistory, isTyping]);
 
+  const getProgressPercentage = () => {
+    if (isCompleted) return 100;
+
+    const passageText = contentPayload?.passage || contentPayload?.content || '';
+    const totalSentences = passageText
+      ? passageText.split(/(?<=[.!?])\s+/).filter((s: string) => s.trim().length > 0).length
+      : 8;
+
+    const userMessages = chatHistory.filter(m => m.role === 'user').length;
+
+    if (mcqList && mcqList.length > 0) {
+      const quizProgress = Math.floor(((currentMcqIndex + 1) / mcqList.length) * 20);
+      return Math.min(99, 80 + quizProgress);
+    }
+
+    if (userMessages === 0) return 0;
+
+    const passageProgress = Math.floor((userMessages / Math.max(1, totalSentences)) * 80);
+    return Math.min(79, passageProgress);
+  };
+
   return (
-    <div className="w-full max-w-[1207px] mx-auto bg-white rounded-[24px] flex flex-col font-['Outfit',sans-serif] overflow-hidden h-[794px] max-h-[calc(100vh-40px)] border border-gray-100 shadow-sm">
+    <div className="w-full max-w-[1207px] mx-auto bg-white rounded-none md:rounded-[24px] flex flex-col font-['Outfit',sans-serif] overflow-hidden h-[100dvh] md:h-[794px] max-h-[calc(100vh-40px)] border border-gray-100 shadow-sm relative">
       
+      <TopicCompletionModal 
+        isOpen={showCompletionModal}
+        onRetake={() => {
+          setShowCompletionModal(false);
+          setCurrentMcqIndex(0);
+          setSelectedAnswers({});
+          restartSession();
+        }}
+      />
+
+      <FeedbackModal 
+        isOpen={!!activeFeedback}
+        feedbackText={activeFeedback || ''}
+        onClose={() => setActiveFeedback(null)}
+      />
+
       {/* Header Progress Group */}
       <div className="flex flex-col gap-2.5 pb-3">
         
         {/* Top Bar */}
-        <div className="flex flex-row justify-between items-center px-6 py-4 bg-white border-b border-[#E5E7EB]">
+        <div className="flex flex-row justify-between items-center px-4 md:px-6 py-4 bg-white border-b border-[#E5E7EB]">
           
           <div className="flex-1 flex justify-start">
             <button 
@@ -91,19 +150,6 @@ export default function ReadingModeTopics() {
           </div>
           
           <div className="flex-1 flex justify-end items-center gap-3">
-            {isCompleted && (
-              <button
-                onClick={() => {
-                  setCurrentMcqIndex(0);
-                  setSelectedAnswers({});
-                  restartSession();
-                }}
-                className="flex items-center gap-1.5 px-3.5 py-2 bg-white border border-[#5C9DFF] text-[#5C9DFF] hover:bg-[#EFF6FF] rounded-full font-['Outfit'] font-semibold text-[12px] transition-colors shadow-sm"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Retake Practice</span>
-              </button>
-            )}
             {sessionStatus.remainingSeconds !== null && (
               <div className="flex flex-row items-center px-4 py-2 gap-2 bg-[#FEF1E8] rounded-full h-[42px]">
                 <span className="font-semibold text-[13px] leading-[16px] text-[#F97316]">
@@ -115,24 +161,24 @@ export default function ReadingModeTopics() {
         </div>
 
         {/* Progress Bar Container (Figma Spec) */}
-        <div className="flex flex-col px-8 gap-2.5 pt-3 flex-shrink-0">
+        <div className="flex flex-col px-4 md:px-8 gap-2.5 pt-3 flex-shrink-0">
           <div className="w-full h-3 bg-[#E5E7EB] rounded-[6px] relative overflow-hidden">
             <div 
               className="h-full bg-[#06CCB5] rounded-[6px] transition-all duration-500 ease-out"
-              style={{ width: isCompleted ? '100%' : (mcqList && mcqList.length > 0 ? '80%' : '60%') }}
+              style={{ width: `${getProgressPercentage()}%` }}
             />
           </div>
           <span className="font-['Outfit'] font-semibold text-[11px] leading-[14px] text-[#06CCB5]">
-            {isCompleted ? '100%' : (mcqList && mcqList.length > 0 ? '80%' : '60%')} Complete
+            {getProgressPercentage()}% Complete
           </span>
         </div>
       </div>
 
       {/* Main Split Content */}
-      <div className="flex flex-row px-8 gap-4 flex-1 min-h-0 pb-6">
+      <div className="flex flex-col md:flex-row px-4 md:px-8 gap-4 flex-1 min-h-0 pb-6">
         
         {/* Mode Sidebar */}
-        <div className="flex flex-col py-4 w-[220px] bg-white border border-[#E5E7EB] rounded-[10px] flex-shrink-0">
+        <div className="flex flex-col py-4 w-full md:w-[220px] bg-white border border-[#E5E7EB] rounded-[10px] flex-shrink-0">
           <div className="px-4 pb-2.5">
             <h3 className="font-semibold text-[10px] leading-[13px] tracking-[1.2px] text-[#6E748F] uppercase">
               Activity Steps
@@ -140,7 +186,7 @@ export default function ReadingModeTopics() {
           </div>
           <div className="w-full h-[1px] bg-[#E5E7EB]/70" />
           
-          {/* Step 1 */}
+          {/* Step 1: Reading Passage */}
           <div className="relative flex flex-row items-center p-[14px_14px_14px_13px] gap-2.5 bg-[#5C9DFF]/10">
             <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[40px] bg-[#5C9DFF] rounded-[2px]" />
             <div className="flex justify-center items-center w-7 h-7 bg-[#5C9DFF] rounded-full text-white font-bold text-[12px]">
@@ -148,10 +194,63 @@ export default function ReadingModeTopics() {
             </div>
             <div className="flex flex-col gap-0.5">
               <span className="font-semibold text-[13px] leading-[16px] text-[#0F1450]">Reading Passage</span>
-              <span className="text-[11px] leading-[14px] text-[#5C9DFF]">In Progress</span>
+              <span className="text-[11px] leading-[14px] text-[#5C9DFF] font-medium">Completed</span>
             </div>
           </div>
           <div className="w-full h-[1px] bg-[#E5E7EB]/70" />
+
+          {/* Step 2: Practice Reading */}
+          <div className={`relative flex flex-row items-center p-[14px_14px_14px_13px] gap-2.5 ${
+            (!mcqList || mcqList.length === 0) && !isCompleted ? 'bg-[#5C9DFF]/10' : ''
+          }`}>
+            {(!mcqList || mcqList.length === 0) && !isCompleted && (
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[40px] bg-[#5C9DFF] rounded-[2px]" />
+            )}
+            <div className={`flex justify-center items-center w-7 h-7 rounded-full font-bold text-[12px] ${
+              mcqList && mcqList.length > 0 || isCompleted
+                ? 'bg-[#2DCD6B] text-white'
+                : 'bg-[#5C9DFF] text-white'
+            }`}>
+              2
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <span className="font-semibold text-[13px] leading-[16px] text-[#0F1450]">Practice Reading</span>
+              <span className={`text-[11px] leading-[14px] font-medium ${
+                mcqList && mcqList.length > 0 || isCompleted ? 'text-[#2DCD6B]' : 'text-[#5C9DFF]'
+              }`}>
+                {mcqList && mcqList.length > 0 || isCompleted ? 'Completed' : 'In Progress'}
+              </span>
+            </div>
+          </div>
+          <div className="w-full h-[1px] bg-[#E5E7EB]/70" />
+
+          {/* Step 3: Knowledge Quiz */}
+          <div className={`relative flex flex-row items-center p-[14px_14px_14px_13px] gap-2.5 ${
+            mcqList && mcqList.length > 0 && !isCompleted ? 'bg-[#5C9DFF]/10' : ''
+          }`}>
+            {mcqList && mcqList.length > 0 && !isCompleted && (
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[40px] bg-[#5C9DFF] rounded-[2px]" />
+            )}
+            <div className={`flex justify-center items-center w-7 h-7 rounded-full font-bold text-[12px] ${
+              isCompleted
+                ? 'bg-[#2DCD6B] text-white'
+                : (mcqList && mcqList.length > 0 ? 'bg-[#5C9DFF] text-white' : 'bg-[#E5E7EB] text-[#6E748F]')
+            }`}>
+              3
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <span className="font-semibold text-[13px] leading-[16px] text-[#0F1450]">Knowledge Quiz</span>
+              <span className={`text-[11px] leading-[14px] font-medium ${
+                isCompleted
+                  ? 'text-[#2DCD6B]'
+                  : (mcqList && mcqList.length > 0 ? 'text-[#5C9DFF]' : 'text-[#6E748F]')
+              }`}>
+                {isCompleted ? 'Completed' : (mcqList && mcqList.length > 0 ? 'In Progress' : 'Pending')}
+              </span>
+            </div>
+          </div>
+          <div className="w-full h-[1px] bg-[#E5E7EB]/70" />
+
         </div>
 
         {/* Workspace Main */}
@@ -189,6 +288,17 @@ export default function ReadingModeTopics() {
                       {msg.content}
                     </p>
                   </div>
+                  {msg.role === 'assistant' && msg.feedback && (
+                    <div className="flex flex-row items-center gap-2 mt-1">
+                      <button 
+                        onClick={() => setActiveFeedback(msg.feedback || null)}
+                        className="flex items-center gap-1.5 text-[#5C9DFF] hover:text-[#4A8BEB] transition-colors font-semibold text-[12px] leading-[15px]"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5 text-[#5C9DFF]" />
+                        <span>View Feedback</span>
+                      </button>
+                    </div>
+                  )}
                   {msg.createdAt && (
                     <span className="text-[10px] leading-[13px] text-[#6E748F]/60">
                       {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -329,7 +439,7 @@ export default function ReadingModeTopics() {
                       title="Cancel Recording"
                     >
                       <Trash2 className="w-4 h-4" />
-                    </button>
+                    </button> 
                     <button 
                       onClick={handleStopRecording}
                       className="flex justify-center items-center w-8 h-8 bg-[#F97316] rounded-full text-white hover:bg-[#EA580C] transition-colors shadow-sm"
@@ -343,23 +453,26 @@ export default function ReadingModeTopics() {
                 <>
                   <input 
                     type="text" 
-                    placeholder="Write your message..." 
+                    placeholder={cooldown ? "Please wait..." : "Write your message..."}
                     value={inputValue}
+                    disabled={cooldown || isTyping}
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    className="flex-1 px-4 py-3 bg-white border border-[#E5E7EB] rounded-[10px] text-[14px] text-[#282828] placeholder-[#6E748F]/60 focus:outline-none focus:border-[#5C9DFF] focus:ring-1 focus:ring-[#5C9DFF] transition-all"
+                    className="flex-1 px-4 py-3 bg-white border border-[#E5E7EB] rounded-[10px] text-[14px] text-[#282828] placeholder-[#6E748F]/60 focus:outline-none focus:border-[#5C9DFF] focus:ring-1 focus:ring-[#5C9DFF] transition-all disabled:bg-gray-50 disabled:cursor-not-allowed"
                   />
                   {inputValue.trim() ? (
                     <button 
                       onClick={handleSend}
-                      className="flex justify-center items-center w-11 h-11 bg-[#5C9DFF] rounded-full text-white hover:bg-[#4A8BEB] transition-colors"
+                      disabled={cooldown || isTyping}
+                      className="flex justify-center items-center w-11 h-11 bg-[#5C9DFF] rounded-full text-white hover:bg-[#4A8BEB] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <Send className="w-5 h-5 ml-0.5" />
+                      <Send className="w-5 h-5" />
                     </button>
                   ) : (
                     <button 
                       onClick={startRecording}
-                      className="flex justify-center items-center w-11 h-11 bg-white border border-[#5C9DFF] rounded-full text-[#5C9DFF] hover:bg-[#EFF6FF] transition-colors"
+                      disabled={cooldown || isTyping}
+                      className="flex justify-center items-center w-11 h-11 bg-white border border-[#5C9DFF] rounded-full text-[#5C9DFF] hover:bg-[#EFF6FF] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Mic className="w-5 h-5" />
                     </button>

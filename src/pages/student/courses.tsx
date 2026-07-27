@@ -15,7 +15,7 @@ export default function StudentCourses() {
     dispatch(getCourses());
   }, [dispatch]);
   return (
-    <div className="w-full max-w-[1087px] mx-auto bg-white rounded-[24px] p-[24px] md:p-[32px] flex flex-col gap-6 font-['Outfit',sans-serif]">
+    <div className="w-full max-w-[1087px] mx-auto bg-white rounded-none md:rounded-[24px] p-4 md:p-[32px] flex flex-col gap-6 font-['Outfit',sans-serif]">
       {/* Top Bar */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex flex-col gap-1">

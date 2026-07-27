@@ -60,18 +60,18 @@ export default function CourseUnits() {
   };
 
   return (
-    <div className="w-full max-w-[999px] mx-auto bg-white rounded-[24px] flex flex-col font-['Outfit',sans-serif] relative shadow-sm border border-gray-100">
+    <div className="w-full max-w-[999px] mx-auto bg-white rounded-none md:rounded-[24px] flex flex-col font-['Outfit',sans-serif] relative shadow-sm border border-gray-100">
       {/* Content Area */}
-      <div className="flex flex-col p-[32px] gap-8">
+      <div className="flex flex-col p-4 md:p-[32px] gap-6 md:gap-8">
         
         {/* Storyline Banner */}
-        <div className="flex flex-row justify-between items-center p-8 bg-white border border-[#E5E7EB] rounded-[16px] shadow-[0px_2px_8px_rgba(0,0,0,0.02)]">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center p-5 md:p-8 bg-white border border-[#E5E7EB] rounded-[16px] shadow-[0px_2px_8px_rgba(0,0,0,0.02)] gap-4 md:gap-0">
           <div className="flex flex-col gap-1">
             <span className="text-[13px] text-[#949494] font-medium tracking-wide uppercase">Current course</span>
             <h2 className="text-[28px] font-bold text-[#282828] tracking-[-0.5px]">Unit Storyline</h2>
           </div>
           
-          <div className="flex items-center gap-4 bg-[#F8FAFC] py-3 px-6 rounded-[12px]">
+          <div className="flex items-center gap-4 bg-[#F8FAFC] py-3 px-4 md:px-6 rounded-[12px] w-full md:w-auto">
             <div className="relative w-[72px] h-[72px] flex items-center justify-center isolate">
               <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 72 72" overflow="visible">
                 <circle cx="36" cy="36" r="32" fill="none" stroke="#E5E7EB" strokeWidth="8" />
@@ -89,14 +89,14 @@ export default function CourseUnits() {
 
         {/* Units Section */}
         <div className="flex flex-col gap-4">
-          <div className="flex flex-row justify-between items-end">
-            <div className="flex flex-col gap-1">
+          <div className="flex flex-col md:flex-row justify-center md:justify-between items-center md:items-end text-center md:text-left gap-4 md:gap-0">
+            <div className="flex flex-col gap-1 items-center md:items-start">
               <h3 className="text-[18px] font-bold text-[#282828]">Pick a lesson to study</h3>
               <p className="text-[14px] text-[#949494]">
                 Complete all modules in sequence to unlock the final assessment. Tap any active card to begin.
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-2">
               <button 
                 onClick={scrollLeft}
                 className="w-8 h-8 rounded-full border border-[#E5E7EB] bg-white flex items-center justify-center text-[#9CA3AF] hover:bg-[#4F8DFB] hover:text-white hover:border-[#4F8DFB] transition-colors"
@@ -112,10 +112,9 @@ export default function CourseUnits() {
             </div>
           </div>
 
-          {/* Cards Row */}
           <div 
             ref={scrollRef}
-            className="flex flex-row gap-4 overflow-x-auto pb-4 pt-2 hide-scrollbar scroll-smooth"
+            className="flex flex-col md:flex-row gap-4 overflow-x-auto pb-4 pt-4 md:pt-2 hide-scrollbar scroll-smooth items-center md:items-stretch"
           >
             {loading && <p className="text-gray-500">Loading units...</p>}
             {error && <p className="text-red-500">{error}</p>}
@@ -124,10 +123,9 @@ export default function CourseUnits() {
             )}
             {!loading && units.map((unit) => (
               <React.Fragment key={unit.id}>
-                {/* Unit Card */}
                 <div 
                   onClick={(e) => handleUnitClick(e, unit.id, unit.status)}
-                  className={`flex-none w-[260px] h-[220px] rounded-[16px] p-5 flex flex-col justify-between relative transition-all duration-200 ${
+                  className={`flex-none w-full max-w-[320px] md:max-w-none md:w-[260px] h-[220px] rounded-[16px] p-5 flex flex-col justify-between relative transition-all duration-200 ${
                     unit.status === 'in_progress' || unit.status === 'not_started' 
                       ? 'bg-white border-[2px] border-[#4F8DFB] shadow-[0px_4px_16px_rgba(79,141,251,0.12)] cursor-pointer hover:-translate-y-1' 
                       : unit.status === 'completed'
@@ -197,7 +195,7 @@ export default function CourseUnits() {
 
                 {/* Arrow Connector (except last item) */}
                 {unit.orderIndex < units.length && (
-                  <div className="flex items-center justify-center px-1">
+                  <div className="hidden md:flex items-center justify-center px-1">
                     <ChevronRight className="w-6 h-6 text-[#D1D5DB]" />
                   </div>
                 )}

@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ChevronLeft, Play, Circle, PlayCircle, Clock, Check, RotateCcw } from 'lucide-react';
+import { ChevronLeft, Play, Circle, PlayCircle, Clock, Check } from 'lucide-react';
 import { useModeSession } from '@/hooks/useModeSession';
+import TopicCompletionModal from '@/components/ui/TopicCompletionModal';
 
 export default function ListeningModeTopics() {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ export default function ListeningModeTopics() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentMcqIndex, setCurrentMcqIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number | string>>({});
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   
   const {
@@ -30,6 +32,12 @@ export default function ListeningModeTopics() {
   });
 
   useEffect(() => {
+    if (isCompleted) {
+      setShowCompletionModal(true);
+    }
+  }, [isCompleted]);
+
+  useEffect(() => {
     if (lessonModeId) {
       startListening();
     }
@@ -47,22 +55,36 @@ export default function ListeningModeTopics() {
 
   const getProgressPercentage = () => {
     if (isCompleted) return 100;
-    if (listeningPayload?.stage === 'quiz') return 85;
-    if (listeningPayload?.stage === 'question') return 65;
-    return 30;
+    if (listeningPayload?.stage === 'quiz' && mcqList && mcqList.length > 0) {
+      const quizProgress = Math.floor(((currentMcqIndex + 1) / mcqList.length) * 25);
+      return Math.min(99, 75 + quizProgress);
+    }
+    if (listeningPayload?.stage === 'question') return 50;
+    if (listeningPayload?.stage === 'initial') return 25;
+    return 0;
   };
 
   const activeAudioUrl = listeningPayload?.stage === 'question' ? listeningPayload?.questionAudioUrl : listeningPayload?.narrationAudioUrl;
   const activeText = listeningPayload?.stage === 'question' ? listeningPayload?.questionText : listeningPayload?.narrationText;
 
   return (
-    <div className="w-full max-w-[1207px] mx-auto bg-white rounded-[24px] flex flex-col font-['Outfit',sans-serif] overflow-hidden h-[794px] max-h-[calc(100vh-40px)] border border-gray-100 shadow-sm">
+    <div className="w-full max-w-[1207px] mx-auto bg-white rounded-none md:rounded-[24px] flex flex-col font-['Outfit',sans-serif] overflow-hidden h-[100dvh] md:h-[794px] max-h-[calc(100vh-40px)] border border-gray-100 shadow-sm relative">
       
+      <TopicCompletionModal 
+        isOpen={showCompletionModal}
+        onRetake={() => {
+          setShowCompletionModal(false);
+          setCurrentMcqIndex(0);
+          setSelectedAnswers({});
+          restartSession();
+        }}
+      />
+
       {/* Header Progress Group */}
       <div className="flex flex-col gap-2.5 pb-3">
         
         {/* Top Bar */}
-        <div className="flex flex-row justify-between items-center px-6 py-4 bg-white border-b border-[#E5E7EB]">
+        <div className="flex flex-row justify-between items-center px-4 md:px-6 py-4 bg-white border-b border-[#E5E7EB]">
           
           <div className="flex-1 flex justify-start">
             <button 
@@ -80,19 +102,6 @@ export default function ListeningModeTopics() {
           </div>
           
           <div className="flex-1 flex justify-end items-center gap-3">
-            {isCompleted && (
-              <button
-                onClick={() => {
-                  setCurrentMcqIndex(0);
-                  setSelectedAnswers({});
-                  restartSession();
-                }}
-                className="flex items-center gap-1.5 px-3.5 py-2 bg-white border border-[#5C9DFF] text-[#5C9DFF] hover:bg-[#EFF6FF] rounded-full font-['Outfit'] font-semibold text-[12px] transition-colors shadow-sm"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Retake Practice</span>
-              </button>
-            )}
             {sessionStatus.remainingSeconds !== null && (
               <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#F97316]/30 rounded-full">
                 <Clock className="w-3.5 h-3.5 text-[#F97316]" />
@@ -105,7 +114,7 @@ export default function ListeningModeTopics() {
         </div>
 
         {/* Progress Bar Container (Figma Spec) */}
-        <div className="flex flex-col px-8 gap-2.5 pt-3 flex-shrink-0">
+        <div className="flex flex-col px-4 md:px-8 gap-2.5 pt-3 flex-shrink-0">
           <div className="w-full h-3 bg-[#E5E7EB] rounded-[6px] relative overflow-hidden">
             <div 
               className="h-full bg-[#06CCB5] rounded-[6px] transition-all duration-500 ease-out"
@@ -119,10 +128,10 @@ export default function ListeningModeTopics() {
       </div>
 
       {/* Main Split Content */}
-      <div className="flex flex-row px-8 gap-4 flex-1 min-h-0 pb-6">
+      <div className="flex flex-col md:flex-row px-4 md:px-8 gap-4 flex-1 min-h-0 pb-6">
         
         {/* Mode Sidebar */}
-        <div className="flex flex-col py-4 w-[220px] bg-white border border-[#E5E7EB] rounded-[10px] flex-shrink-0">
+        <div className="flex flex-col py-4 w-full md:w-[220px] bg-white border border-[#E5E7EB] rounded-[10px] flex-shrink-0">
           <div className="px-4 pb-2.5">
             <h3 className="font-semibold text-[10px] leading-[13px] tracking-[1.2px] text-[#6E748F] uppercase">
               Activity Steps
@@ -130,20 +139,75 @@ export default function ListeningModeTopics() {
           </div>
           <div className="w-full h-[1px] bg-[#E5E7EB]/70" />
           
-          {/* Step 1 */}
-          <div className="relative flex flex-row items-center p-[14px_14px_14px_13px] gap-2.5 bg-[#5C9DFF]/10">
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[40px] bg-[#5C9DFF] rounded-[2px]" />
-            <div className="flex justify-center items-center w-7 h-7 bg-[#5C9DFF] rounded-full text-white font-bold text-[12px]">
+          {/* Step 1: Audio Narration */}
+          <div className={`relative flex flex-row items-center p-[14px_14px_14px_13px] gap-2.5 ${
+            listeningPayload?.stage === 'initial' && !isCompleted ? 'bg-[#5C9DFF]/10' : ''
+          }`}>
+            {listeningPayload?.stage === 'initial' && !isCompleted && (
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[40px] bg-[#5C9DFF] rounded-[2px]" />
+            )}
+            <div className={`flex justify-center items-center w-7 h-7 rounded-full font-bold text-[12px] ${
+              listeningPayload?.stage !== 'initial' || isCompleted ? 'bg-[#2DCD6B] text-white' : 'bg-[#5C9DFF] text-white'
+            }`}>
               1
             </div>
             <div className="flex flex-col gap-0.5">
-              <span className="font-semibold text-[13px] leading-[16px] text-[#0F1450]">
-                {listeningPayload?.stage === 'quiz' ? 'Quiz Time' : 'Listen Carefully'}
+              <span className="font-semibold text-[13px] leading-[16px] text-[#0F1450]">Audio Narration</span>
+              <span className={`text-[11px] leading-[14px] font-medium ${
+                listeningPayload?.stage !== 'initial' || isCompleted ? 'text-[#2DCD6B]' : 'text-[#5C9DFF]'
+              }`}>
+                {listeningPayload?.stage !== 'initial' || isCompleted ? 'Completed' : 'In Progress'}
               </span>
-              <span className="text-[11px] leading-[14px] text-[#5C9DFF]">In Progress</span>
             </div>
           </div>
           <div className="w-full h-[1px] bg-[#E5E7EB]/70" />
+
+          {/* Step 2: Comprehension Question */}
+          <div className={`relative flex flex-row items-center p-[14px_14px_14px_13px] gap-2.5 ${
+            listeningPayload?.stage === 'question' && !isCompleted ? 'bg-[#5C9DFF]/10' : ''
+          }`}>
+            {listeningPayload?.stage === 'question' && !isCompleted && (
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[40px] bg-[#5C9DFF] rounded-[2px]" />
+            )}
+            <div className={`flex justify-center items-center w-7 h-7 rounded-full font-bold text-[12px] ${
+              listeningPayload?.stage === 'quiz' || isCompleted ? 'bg-[#2DCD6B] text-white' : (listeningPayload?.stage === 'question' ? 'bg-[#5C9DFF] text-white' : 'bg-[#E5E7EB] text-[#6E748F]')
+            }`}>
+              2
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <span className="font-semibold text-[13px] leading-[16px] text-[#0F1450]">Comprehension Question</span>
+              <span className={`text-[11px] leading-[14px] font-medium ${
+                listeningPayload?.stage === 'quiz' || isCompleted ? 'text-[#2DCD6B]' : (listeningPayload?.stage === 'question' ? 'text-[#5C9DFF]' : 'text-[#6E748F]')
+              }`}>
+                {listeningPayload?.stage === 'quiz' || isCompleted ? 'Completed' : (listeningPayload?.stage === 'question' ? 'In Progress' : 'Pending')}
+              </span>
+            </div>
+          </div>
+          <div className="w-full h-[1px] bg-[#E5E7EB]/70" />
+
+          {/* Step 3: Listening Quiz */}
+          <div className={`relative flex flex-row items-center p-[14px_14px_14px_13px] gap-2.5 ${
+            listeningPayload?.stage === 'quiz' && !isCompleted ? 'bg-[#5C9DFF]/10' : ''
+          }`}>
+            {listeningPayload?.stage === 'quiz' && !isCompleted && (
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[40px] bg-[#5C9DFF] rounded-[2px]" />
+            )}
+            <div className={`flex justify-center items-center w-7 h-7 rounded-full font-bold text-[12px] ${
+              isCompleted ? 'bg-[#2DCD6B] text-white' : (listeningPayload?.stage === 'quiz' ? 'bg-[#5C9DFF] text-white' : 'bg-[#E5E7EB] text-[#6E748F]')
+            }`}>
+              3
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <span className="font-semibold text-[13px] leading-[16px] text-[#0F1450]">Listening Quiz</span>
+              <span className={`text-[11px] leading-[14px] font-medium ${
+                isCompleted ? 'text-[#2DCD6B]' : (listeningPayload?.stage === 'quiz' ? 'text-[#5C9DFF]' : 'text-[#6E748F]')
+              }`}>
+                {isCompleted ? 'Completed' : (listeningPayload?.stage === 'quiz' ? 'In Progress' : 'Pending')}
+              </span>
+            </div>
+          </div>
+          <div className="w-full h-[1px] bg-[#E5E7EB]/70" />
+
         </div>
 
         {/* Workspace Main */}

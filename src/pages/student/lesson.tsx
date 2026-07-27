@@ -55,12 +55,12 @@ export default function Lesson() {
   };
 
   return (
-    <div className="w-full max-w-[1087px] mx-auto bg-[#FAFAFA] md:bg-white rounded-[24px] flex flex-col font-['Outfit',sans-serif] relative border-0 md:border md:border-gray-100 shadow-sm overflow-hidden">
+    <div className="w-full max-w-[1087px] mx-auto bg-[#FAFAFA] md:bg-white rounded-none md:rounded-[24px] flex flex-col font-['Outfit',sans-serif] relative border-0 md:border md:border-gray-100 shadow-sm overflow-hidden">
 
-      <div className="flex flex-col p-[24px] md:p-[32px] gap-8 bg-[#F9FAFB] md:bg-white h-full flex-grow">
+      <div className="flex flex-col p-4 md:p-[32px] gap-6 md:gap-8 bg-[#F9FAFB] md:bg-white h-full flex-grow">
         
         {/* Storyline Banner */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center p-6 md:p-8 bg-white border border-[#E5E7EB] rounded-[16px] shadow-[0px_2px_8px_rgba(0,0,0,0.02)] gap-6 md:gap-0">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center p-5 md:p-8 bg-white border border-[#E5E7EB] rounded-[16px] shadow-[0px_2px_8px_rgba(0,0,0,0.02)] gap-4 md:gap-0">
           <div className="flex flex-col gap-1">
             <span className="text-[13px] text-[#949494] font-semibold tracking-wider uppercase">
               {currentUnit?.title || 'Course Unit'}
