@@ -165,7 +165,7 @@ const PhotoModeTopics = () => {
           }}
           className="w-full h-[39px] bg-[#06CCB5] hover:bg-[#05b8a3] text-white rounded-[12px] font-outfit font-bold text-[15px] leading-[19px] flex items-center justify-center gap-2 shadow-none disabled:opacity-60"
         >
-          <span>Start Practice</span>
+          <span>{topic.isCompleted ? "Practice Again" : "Start Practice"}</span>
           <ArrowRight className="w-4 h-4 text-white stroke-[2.5]" />
         </Button>
       </div>
@@ -177,6 +177,7 @@ const PhotoModeTopics = () => {
     return (
       <PhotoModePracticeContainer
         topic={selectedTopic}
+        restartOnStart={selectedTopic.isCompleted}
         onBack={() => setSelectedTopic(null)}
       />
     );

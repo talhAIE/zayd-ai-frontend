@@ -10,6 +10,7 @@ import { PhotoModeCompletion } from "./PhotoModeCompletion";
 interface PhotoModePracticeContainerProps {
   topic: DemoTopicItem;
   onBack?: () => void;
+  restartOnStart?: boolean;
 }
 
 export type FeedbackState = "NONE" | "SUCCESS" | "ERROR";
@@ -78,7 +79,11 @@ const blobToBase64 = (blob: Blob): Promise<string> =>
     reader.readAsDataURL(blob);
   });
 
-export const PhotoModePracticeContainer: React.FC<PhotoModePracticeContainerProps> = ({ topic, onBack }) => {
+export const PhotoModePracticeContainer: React.FC<PhotoModePracticeContainerProps> = ({
+  topic,
+  onBack,
+  restartOnStart = false,
+}) => {
   const { user, accessToken } = useAppSelector((state) => state.auth);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isGuidePlaying, setIsGuidePlaying] = useState(false);
@@ -241,7 +246,10 @@ export const PhotoModePracticeContainer: React.FC<PhotoModePracticeContainerProp
     socketRef.current = socket;
 
     socket.on("connect", () => {
-      socket.emit("demo_photo_start", { userId: user.id, topicId: topic.id });
+      const initialPhotoModeEvent = restartOnStart
+        ? "demo_photo_reset"
+        : "demo_photo_start";
+      socket.emit(initialPhotoModeEvent, { userId: user.id, topicId: topic.id });
     });
 
     socket.on("connect_error", () => {
@@ -317,7 +325,7 @@ export const PhotoModePracticeContainer: React.FC<PhotoModePracticeContainerProp
       stopAudio();
       socket.disconnect();
     };
-  }, [accessToken, topic.id, user?.id]);
+  }, [accessToken, restartOnStart, topic.id, user?.id]);
 
   useEffect(() => {
     return () => {
