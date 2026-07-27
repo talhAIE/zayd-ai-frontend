@@ -16,6 +16,11 @@ import StudentCourses from "@/pages/student/courses";
 import CourseUnits from "@/pages/student/course-units";
 import Lesson from "@/pages/student/lesson";
 import StudentDashboard from "@/pages/student/dashboard";
+import DebateModeTopics from "@/pages/student/topics/DebateModeTopics";
+import ReadingModeTopics from "@/pages/student/topics/ReadingModeTopics";
+import RolePlayModeTopics from "@/pages/student/topics/RolePlayModeTopics";
+import ListeningModeTopics from "@/pages/student/topics/ListeningModeTopics";
+import Chat from "@/pages/student/ChatPage";
 
 // Teacher Pages
 import TeacherDashboard from "@/pages/teacher/dashboard";
@@ -48,7 +53,7 @@ const AppRoutes = () => {
   return (
     <Routes>
       {/* Public Routes */}
-      <Route path="/" element={<Main />} />
+      <Route path="/" element={<Navigate to="/student/dashboard" replace />} />
       <Route path="/chinese" element={<MainChinese />} />
       <Route path="/contact-us" element={<ContactUs />} />
       <Route path="/chinese/contact-us" element={<ChineseContactUs />} />
@@ -138,6 +143,59 @@ const AppRoutes = () => {
           </StudentRoute>
         }
       />
+
+      {/* Learning Mode Topic Routes */}
+      <Route
+        path="/student/courses/reading-mode"
+        element={
+          <StudentRoute>
+            <StudentLayout>
+              <ReadingModeTopics />
+            </StudentLayout>
+          </StudentRoute>
+        }
+      />
+      <Route
+        path="/student/courses/roleplay-mode"
+        element={
+          <StudentRoute>
+            <StudentLayout>
+              <RolePlayModeTopics />
+            </StudentLayout>
+          </StudentRoute>
+        }
+      />
+      <Route
+        path="/student/courses/listening-mode"
+        element={
+          <StudentRoute>
+            <StudentLayout>
+              <ListeningModeTopics />
+            </StudentLayout>
+          </StudentRoute>
+        }
+      />
+      <Route
+        path="/student/courses/debate-mode"
+        element={
+          <StudentRoute>
+            <StudentLayout>
+              <DebateModeTopics />
+            </StudentLayout>
+          </StudentRoute>
+        }
+      />
+      <Route
+        path="/student/courses/chat/:topicId/:topicName"
+        element={
+          <StudentRoute>
+            <StudentLayout>
+              <Chat />
+            </StudentLayout>
+          </StudentRoute>
+        }
+      />
+
       <Route
         path="/student/leaderboard"
         element={

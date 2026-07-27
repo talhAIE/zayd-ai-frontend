@@ -34,9 +34,24 @@ export default function Lesson() {
 
   const handleModeClick = (mode: any) => {
     if (mode.isLocked || mode.status === 'locked') return;
-    // In the future this might open a socket connection and show the mode UI.
-    // For now, we can just navigate or trigger a modal.
-    console.log("Opening mode session:", mode.id);
+    
+    switch (mode.modeKey) {
+      case 'reading-mode':
+        navigate(`/student/courses/reading-mode?lessonId=${lessonId}&modeId=${mode.id}`);
+        break;
+      case 'roleplay-mode':
+        navigate(`/student/courses/roleplay-mode?lessonId=${lessonId}&modeId=${mode.id}`);
+        break;
+      case 'listening-mode':
+        navigate(`/student/courses/listening-mode?lessonId=${lessonId}&modeId=${mode.id}`);
+        break;
+      case 'debate-mode':
+        navigate(`/student/courses/debate-mode?lessonId=${lessonId}&modeId=${mode.id}`);
+        break;
+      default:
+        navigate(`/student/courses/reading-mode?lessonId=${lessonId}&modeId=${mode.id}`);
+        break;
+    }
   };
 
   return (

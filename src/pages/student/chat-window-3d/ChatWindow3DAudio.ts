@@ -151,7 +151,8 @@ export function useChatWindow3DAudio({
   }, [isAudioUnlocked]);
 
   useEffect(() => {
-    unlockAudio();
+    const cleanup = unlockAudio();
+    if (cleanup) return cleanup;
   }, [unlockAudio]);
 
   const startRecording = useCallback(async () => {

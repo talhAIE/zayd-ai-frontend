@@ -85,3 +85,18 @@ export const fetchSection1LessonModes = async (lessonId: string): Promise<Sectio
 export const startSection1Lesson = async (lessonId: string): Promise<void> => {
   await apiClient.post(`/learning/lessons/${lessonId}/start`, {});
 };
+
+export const startSection1LessonMode = async (
+  lessonModeId: string,
+  resumeModeSessionId?: string
+): Promise<{ modeSessionId?: string }> => {
+  const response = await apiClient.post(`/learning/lesson-modes/${lessonModeId}/start`, { resumeModeSessionId });
+  return response.data?.data || {};
+};
+
+export const completeSection1LessonMode = async (
+  lessonModeId: string,
+  payload?: { modeSessionId?: string; score?: number; timeSpentSec?: number }
+): Promise<void> => {
+  await apiClient.post(`/learning/lesson-modes/${lessonModeId}/complete`, payload || {});
+};

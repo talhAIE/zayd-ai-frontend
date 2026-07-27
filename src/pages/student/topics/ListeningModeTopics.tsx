@@ -1,367 +1,326 @@
-import { useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { toast } from "sonner";
-import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { fetchTopics } from "@/redux/slices/topicsSlice";
-import { Calendar, Lock } from "lucide-react";
-// import { logout } from '@/redux/slices/authSlice';
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { ChevronLeft, Play, Circle, PlayCircle, Clock, Check, RotateCcw } from 'lucide-react';
+import { useModeSession } from '@/hooks/useModeSession';
 
-const ChatModeTopics = () => {
-  // const navigate = useNavigate();
-  const dispatch = useAppDispatch();
-  const location = useLocation();
-  const is3DPath = location.pathname.includes("/3d-avatar-mode/");
-
-  const { topics, isLoading, error } = useAppSelector(
-    (state: any) => state.topics
-  );
-  const { user } = useAppSelector((state: any) => state.auth);
-
-  useEffect(() => {
-    if (user?.id) {
-      console.log("Fetching chat mode topics for user:", user.id);
-      dispatch(
-        fetchTopics({
-          userId: user.id,
-          topicMode: is3DPath ? "3d-listening-mode" : "listening-mode",
-        }),
-      );
+export default function ListeningModeTopics() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const lessonModeId = searchParams.get('modeId') || '';
+  
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentMcqIndex, setCurrentMcqIndex] = useState(0);
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number | string>>({});
+  const audioRef = useRef<HTMLAudioElement>(null);
+  
+  const {
+    listeningPayload,
+    mcqList,
+    isCompleted,
+    sessionStatus,
+    startListening,
+    nextListeningStage,
+    submitMcqs,
+    restartSession
+  } = useModeSession({ 
+    lessonModeId,
+    onCompleted: () => {
+      // noop
     }
-  }, [dispatch, user, location.pathname]);
-
-  useEffect(() => {
-    if (error) {
-      toast.error(error);
-    }
-  }, [error]);
-
-  const isTopicLocked = (topic: any) => {
-    if (user?.schoolCategory !== "government") {
-      return false;
-    }
-    if (!topic.unlocksAt) {
-      return false;
-    }
-    return new Date(topic.unlocksAt) > new Date();
-  };
-
-  const getUnlockCountdown = (unlocksAt: string) => {
-    const unlockDate = new Date(unlocksAt);
-    const now = new Date();
-    const diffTime = unlockDate.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays <= 0) {
-      return "Unlocks today";
-    }
-    if (diffDays === 1) {
-      return "Unlocks tomorrow";
-    }
-    return `Unlocks in ${diffDays} days`;
-  };
-
-  const sortedTopics = [...topics].sort((a, b) => {
-    if (user?.schoolCategory !== "government") {
-      return 0;
-    }
-
-    const aLocked = isTopicLocked(a);
-    const bLocked = isTopicLocked(b);
-
-    const aDate = a.unlocksAt ? new Date(a.unlocksAt).getTime() : 0;
-    const bDate = b.unlocksAt ? new Date(b.unlocksAt).getTime() : 0;
-
-    if (aLocked && bLocked) {
-      return aDate - bDate; // both locked, sort by date
-    }
-    if (aLocked) {
-      return 1; // a is locked, b is not, so b comes first
-    }
-    if (bLocked) {
-      return -1; // b is locked, a is not, so a comes first
-    }
-    return 0; // both unlocked
   });
 
-  // Group topics by weeks for trial users
-  const groupTopicsByWeeks = (topics: any[]) => {
-    if (user?.schoolCategory !== "trial") {
-      return { default: topics };
+  useEffect(() => {
+    if (lessonModeId) {
+      startListening();
     }
+  }, [lessonModeId]);
 
-    const topicsWithDates = topics.filter((topic) => topic.unlocksAt);
-
-    if (topicsWithDates.length === 0) {
-      return { default: topics };
+  const toggleAudio = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
     }
-
-    // Find the earliest date
-    const earliestDate = new Date(
-      Math.min(
-        ...topicsWithDates.map((topic) => new Date(topic.unlocksAt).getTime())
-      )
-    );
-
-    const weekGroups: { [key: string]: any[] } = {};
-
-    topics.forEach((topic) => {
-      if (!topic.unlocksAt) {
-        // Topics without dates go to default group
-        if (!weekGroups.default) weekGroups.default = [];
-        weekGroups.default.push(topic);
-        return;
-      }
-
-      const topicDate = new Date(topic.unlocksAt);
-      const daysDiff = Math.floor(
-        (topicDate.getTime() - earliestDate.getTime()) / (1000 * 60 * 60 * 24)
-      );
-      const weekNumber = Math.floor(daysDiff / 7) + 1;
-      const weekKey = `week${weekNumber}`;
-
-      if (!weekGroups[weekKey]) {
-        weekGroups[weekKey] = [];
-      }
-      weekGroups[weekKey].push(topic);
-    });
-
-    return weekGroups;
   };
 
-  const weekGroups = groupTopicsByWeeks(sortedTopics);
-
-  const renderTopicCard = (topic: any) => {
-    const locked = isTopicLocked(topic);
-    const unlockCountdown =
-      locked && topic.unlocksAt ? getUnlockCountdown(topic.unlocksAt) : null;
-
-    const statusLabel = locked
-      ? "Locked"
-      : topic.isCompleted
-      ? "Completed"
-      : "Incomplete";
-
-    const statusClasses = topic.isCompleted ? "text-[#2DCD6B]" : "text-white";
-
-    return (
-      <Card
-        key={topic.id}
-        className="flex flex-col rounded-[1.75rem] border border-gray-100 bg-white shadow-sm"
-      >
-        <div className="relative mx-4 mt-4 rounded-[1.5rem] overflow-hidden aspect-[1.2/1]">
-          <img
-            src={topic.attachmentUrl}
-            alt={topic.topicName}
-            className={`h-full w-full object-cover transition duration-300 ${
-              locked ? "filter grayscale" : ""
-            }`}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-black/5 to-transparent" />
-          <span
-            className={`absolute top-3 left-3 rounded-xl px-3 py-3 text-xs font-semibold backdrop-blur-[19.2px] bg-[#00000057] ${statusClasses}`}
-          >
-            {statusLabel}
-          </span>
-          <Link
-            to={`/student/learning-mode/${topic?.id}/${encodeURIComponent(
-              topic.topicName
-            )}?mode=listening-mode${is3DPath ? "&variant=3d" : ""}`}
-            className={`absolute bottom-3 right-3 ${
-              locked ? "pointer-events-none" : ""
-            }`}
-          >
-            <Button
-              size="sm"
-              disabled={locked}
-              className="gradient-hover-animate rounded-xl px-8 py-[1.2rem] text-sm font-semibold text-white shadow-lg shadow-blue-500/30 hover:brightness-110 disabled:opacity-60 disabled:shadow-none"
-            >
-              Start
-            </Button>
-          </Link>
-          {locked && (
-            <div className="absolute inset-0 bg-black/55 backdrop-blur-[1px] flex flex-col items-center justify-center text-white p-4">
-              <Lock className="w-8 h-8 mb-2" />
-              <span className="text-center font-semibold">
-                {unlockCountdown}
-              </span>
-            </div>
-          )}
-        </div>
-
-        <CardContent className="flex-grow px-5 py-4">
-          <h3 className="font-semibold text-base text-gray-900 leading-snug">
-            {topic.topicName}
-          </h3>
-        </CardContent>
-      </Card>
-    );
+  const getProgressPercentage = () => {
+    if (isCompleted) return 100;
+    if (listeningPayload?.stage === 'quiz') return 85;
+    if (listeningPayload?.stage === 'question') return 65;
+    return 30;
   };
 
-  const renderComingSoonCard = () => {
-    return (
-      <Card key="coming-soon-week2" className="overflow-hidden flex flex-col">
-        <div className="aspect-video w-full relative overflow-hidden">
-          <img
-            src={topics[0]?.attachmentUrl || "/api/placeholder/400/200"}
-            alt="Week 2 Coming Soon"
-            className="absolute inset-0 w-full h-full object-cover filter grayscale"
-          />
-          <div className="absolute inset-0 bg-black bg-opacity-60 flex flex-col items-center justify-center text-white p-4">
-            <Lock className="w-8 h-8 mb-2" />
-            <span className="text-center font-semibold text-lg">
-              Coming Soon
-            </span>
-          </div>
-        </div>
-
-        <CardContent className="flex-grow p-4">
-          <h3 className="font-medium text-base">Week 2 Topics</h3>
-        </CardContent>
-
-        <CardFooter className="flex items-center justify-between">
-          <span className="inline-flex items-center rounded-md bg-gray-100 px-3 py-2 text-xs font-medium text-gray-500">
-            Locked
-          </span>
-          <Button size="sm" disabled>
-            Start
-          </Button>
-        </CardFooter>
-      </Card>
-    );
-  };
+  const activeAudioUrl = listeningPayload?.stage === 'question' ? listeningPayload?.questionAudioUrl : listeningPayload?.narrationAudioUrl;
+  const activeText = listeningPayload?.stage === 'question' ? listeningPayload?.questionText : listeningPayload?.narrationText;
 
   return (
-    <>
-      <style>
-        {`
-          .gradient-hover-animate {
-            background: linear-gradient(to right, #3EA4F9 0%, #0267B5 50%, #3EA4F9 100%);
-            background-size: 200% 100%;
-            background-position: 0% 50%;
-            transition: background-position 0.6s ease;
-          }
-          .gradient-hover-animate:hover {
-            background-position: 100% 50%;
-          }
-        `}
-      </style>
-      <div className="mx-auto px-4 py-6">
-        {/* <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => navigate(-1)}
-            className="mr-2"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-          <h1 className="text-2xl font-bold">Chat Modes</h1>
-        </div>
+    <div className="w-full max-w-[1207px] mx-auto bg-white rounded-[24px] flex flex-col font-['Outfit',sans-serif] overflow-hidden h-[794px] max-h-[calc(100vh-40px)] border border-gray-100 shadow-sm">
+      
+      {/* Header Progress Group */}
+      <div className="flex flex-col gap-2.5 pb-3">
         
-        <Button 
-          variant="outline" 
-          size="icon"
-          onClick={handleLogout}
-          className="rounded-full"
-        >
-          <LogOut className="h-5 w-5" />
-        </Button>
-      </div> */}
-
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map((item) => (
-              <Card key={item} className="overflow-hidden">
-                <div className="aspect-video w-full">
-                  <Skeleton className="h-full w-full" />
-                </div>
-                <CardContent className="p-4">
-                  <Skeleton className="h-4 w-3/4 mb-2" />
-                  <Skeleton className="h-4 w-1/2" />
-                </CardContent>
-                <CardFooter className="flex justify-between p-4 pt-0">
-                  <Skeleton className="h-10 w-20" />
-                </CardFooter>
-              </Card>
-            ))}
+        {/* Top Bar */}
+        <div className="flex flex-row justify-between items-center px-6 py-4 bg-white border-b border-[#E5E7EB]">
+          
+          <div className="flex-1 flex justify-start">
+            <button 
+              onClick={() => navigate(-1)}
+              className="flex justify-center items-center w-10 h-10 bg-white border border-[#E5E7EB] shadow-[0px_1px_4px_rgba(0,0,0,0.06)] rounded-full hover:bg-gray-50 transition-colors"
+            >
+              <ChevronLeft className="w-5 h-5 text-[#282828]" />
+            </button>
           </div>
-        ) : (
-          <div>
-            {user?.schoolCategory === "trial" ? (
-              // Week-based layout for trial users
-              Object.entries(weekGroups)
-                .sort(([a], [b]) => {
-                  // Sort by week number, default group goes last
-                  if (a === "default") return 1;
-                  if (b === "default") return -1;
-                  const weekA = parseInt(a.replace("week", ""));
-                  const weekB = parseInt(b.replace("week", ""));
-                  return weekA - weekB;
-                })
-                .map(([weekKey, weekTopics]) => {
-                  const weekNumber = weekKey.replace("week", "");
-                  const isDefaultGroup = weekKey === "default";
-
-                  return (
-                    <div key={weekKey} className="mb-8">
-                      {!isDefaultGroup && (
-                        <h2 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-3">
-                          <Calendar className="w-5 h-5" />
-                          Week {weekNumber}
-                        </h2>
-                      )}
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {weekTopics.length > 0 ? (
-                          weekTopics.map((topic: any) => renderTopicCard(topic))
-                        ) : (
-                          <div className="col-span-full text-center py-10">
-                            <p className="text-muted-foreground">
-                              No topics available
-                            </p>
-                          </div>
-                        )}
-                        {/* Add Coming Soon card for Week 2 */}
-                        {weekKey === "week2" && renderComingSoonCard()}
-                      </div>
-                    </div>
-                  );
-                })
-                // Ensure Week 2 appears even if no topics exist for it
-                .concat(
-                  !Object.keys(weekGroups).includes("week2") ? (
-                    <div key="week2" className="mb-8">
-                      <h2 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-3">
-                        <Calendar className="w-5 h-5" />
-                        Week 2
-                      </h2>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {renderComingSoonCard()}
-                      </div>
-                    </div>
-                  ) : (
-                    []
-                  )
-                )
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {sortedTopics.length > 0 ? (
-                  sortedTopics.map((topic: any) => renderTopicCard(topic))
-                ) : (
-                  <div className="col-span-full text-center py-10">
-                    <p className="text-muted-foreground">No topics available</p>
-                  </div>
-                )}
+          
+          <div className="flex-1 flex justify-center items-center gap-4">
+            <h1 className="text-[20px] font-bold leading-[20px] tracking-[-0.3px] text-[#282828]">
+              Listening Mode
+            </h1>
+          </div>
+          
+          <div className="flex-1 flex justify-end items-center gap-3">
+            {isCompleted && (
+              <button
+                onClick={() => {
+                  setCurrentMcqIndex(0);
+                  setSelectedAnswers({});
+                  restartSession();
+                }}
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-white border border-[#5C9DFF] text-[#5C9DFF] hover:bg-[#EFF6FF] rounded-full font-['Outfit'] font-semibold text-[12px] transition-colors shadow-sm"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Retake Practice</span>
+              </button>
+            )}
+            {sessionStatus.remainingSeconds !== null && (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#F97316]/30 rounded-full">
+                <Clock className="w-3.5 h-3.5 text-[#F97316]" />
+                <span className="font-semibold text-[13px] leading-[16px] text-[#F97316]">
+                  {Math.floor(sessionStatus.remainingSeconds / 60)}:{(sessionStatus.remainingSeconds % 60).toString().padStart(2, '0')}
+                </span>
               </div>
             )}
           </div>
-        )}
-      </div>
-    </>
-  );
-};
+        </div>
 
-export default ChatModeTopics;
+        {/* Progress Bar Container (Figma Spec) */}
+        <div className="flex flex-col px-8 gap-2.5 pt-3 flex-shrink-0">
+          <div className="w-full h-3 bg-[#E5E7EB] rounded-[6px] relative overflow-hidden">
+            <div 
+              className="h-full bg-[#06CCB5] rounded-[6px] transition-all duration-500 ease-out"
+              style={{ width: `${getProgressPercentage()}%` }}
+            />
+          </div>
+          <span className="font-['Outfit'] font-semibold text-[11px] leading-[14px] text-[#06CCB5]">
+            {getProgressPercentage()}% Complete
+          </span>
+        </div>
+      </div>
+
+      {/* Main Split Content */}
+      <div className="flex flex-row px-8 gap-4 flex-1 min-h-0 pb-6">
+        
+        {/* Mode Sidebar */}
+        <div className="flex flex-col py-4 w-[220px] bg-white border border-[#E5E7EB] rounded-[10px] flex-shrink-0">
+          <div className="px-4 pb-2.5">
+            <h3 className="font-semibold text-[10px] leading-[13px] tracking-[1.2px] text-[#6E748F] uppercase">
+              Activity Steps
+            </h3>
+          </div>
+          <div className="w-full h-[1px] bg-[#E5E7EB]/70" />
+          
+          {/* Step 1 */}
+          <div className="relative flex flex-row items-center p-[14px_14px_14px_13px] gap-2.5 bg-[#5C9DFF]/10">
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[40px] bg-[#5C9DFF] rounded-[2px]" />
+            <div className="flex justify-center items-center w-7 h-7 bg-[#5C9DFF] rounded-full text-white font-bold text-[12px]">
+              1
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <span className="font-semibold text-[13px] leading-[16px] text-[#0F1450]">
+                {listeningPayload?.stage === 'quiz' ? 'Quiz Time' : 'Listen Carefully'}
+              </span>
+              <span className="text-[11px] leading-[14px] text-[#5C9DFF]">In Progress</span>
+            </div>
+          </div>
+          <div className="w-full h-[1px] bg-[#E5E7EB]/70" />
+        </div>
+
+        {/* Workspace Main */}
+        <div className="flex flex-col flex-1 gap-4 min-h-0 overflow-y-auto">
+          
+          {/* Audio Player Card */}
+          {activeAudioUrl && (
+            <div className="flex flex-col p-4 px-5 gap-3.5 bg-white border-2 border-[#5C9DFF] rounded-xl">
+              <audio 
+                ref={audioRef} 
+                src={activeAudioUrl} 
+                onEnded={() => setIsPlaying(false)}
+                onPause={() => setIsPlaying(false)}
+                onPlay={() => setIsPlaying(true)}
+              />
+              <div className="flex flex-row justify-between items-center w-full">
+                <span className="font-bold text-[14px] leading-[18px] text-[#5C9DFF]">Audio Track</span>
+              </div>
+              
+              <div className="flex flex-row items-center gap-3">
+                <button 
+                  onClick={toggleAudio}
+                  className="flex justify-center items-center w-9 h-9 bg-[#5C9DFF] rounded-full text-white hover:bg-[#4A8BEB] transition-colors"
+                >
+                  {isPlaying ? <Circle className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
+                </button>
+                
+                <div className="flex-1 flex flex-row items-center gap-1 overflow-hidden h-8">
+                  {/* Mock Waveform for visual flair */}
+                  {[8, 16, 24, 12, 20, 28, 16, 10, 22, 32, 18, 14, 26, 8, 20, 32, 24, 12, 18, 28, 10, 22, 16, 8, 30, 20, 14, 24, 10, 18].map((height, i) => (
+                    <div key={i} className={`w-[3px] rounded-sm transition-all duration-300 ${isPlaying ? 'bg-[#3B82F6] animate-pulse' : 'bg-[#BFDBFE]'}`} style={{ height: `${height}px` }} />
+                  ))}
+                  {[8, 16, 24, 12, 20, 28, 16, 10, 22, 32, 18, 14, 26, 8, 20, 32, 24, 12, 18, 28, 10, 22, 16, 8, 30, 20, 14, 24, 10, 18].map((height, i) => (
+                    <div key={i + 30} className={`w-[3px] rounded-sm transition-all duration-300 ${isPlaying ? 'bg-[#3B82F6] animate-pulse' : 'bg-[#BFDBFE]'}`} style={{ height: `${height}px` }} />
+                  ))}
+                </div>
+              </div>
+              
+              <div className="flex flex-row justify-between items-center w-full">
+                <div className="flex items-center gap-1">
+                  <PlayCircle className="w-2.5 h-2.5 text-[#5C9DFF]" />
+                  <span className="font-normal text-[11px] leading-[14px] text-[#5C9DFF]">Play to listen</span>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Transcript Area (if available and not quiz stage) */}
+          {activeText && listeningPayload?.stage !== 'quiz' && (
+            <div className="flex flex-col p-5 px-6 gap-2 flex-1 bg-[#F8F9FA] rounded-2xl">
+              <div className="flex items-center gap-1.5 mb-1">
+                <div className="w-2 h-2 bg-[#5C9DFF] rounded-full" />
+                <span className="font-semibold text-[12px] leading-[15px] text-[#6E748F]">Narrator</span>
+              </div>
+              
+              <div className="p-3.5 px-4 bg-white border-[1.5px] border-[#DBEAFE] shadow-[0px_2px_8px_rgba(0,0,0,0.06)] rounded-tr-xl rounded-br-xl rounded-bl-xl rounded-tl-sm w-full">
+                <p className="font-normal text-[14px] leading-[22px] text-[#0F1450]">
+                  {activeText}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* MCQs Area (Figma Spec) */}
+          {listeningPayload?.stage === 'quiz' && mcqList && mcqList.length > 0 && (
+            <div className="w-full bg-white border border-[#E5E7EB] shadow-[0px_4px_12px_rgba(0,0,0,0.04)] rounded-[12px] p-6 flex flex-col gap-6 flex-shrink-0 font-['Outfit',sans-serif]">
+              
+              {/* Quiz Header Row */}
+              <div className="flex flex-row justify-between items-center w-full">
+                <div className="flex flex-row items-center gap-4">
+                  {/* Status Icon */}
+                  <div className="w-9 h-9 bg-[#DBEAFE] rounded-full flex items-center justify-center flex-shrink-0">
+                    <Check className="w-5 h-5 text-[#3B82F6] stroke-[2.5]" />
+                  </div>
+                  {/* Text Stack */}
+                  <div className="flex flex-col gap-0.5">
+                    <span className="font-['Outfit'] font-semibold text-[11px] leading-[14px] tracking-[1.2px] text-[#6E748F] uppercase">
+                      STEP 4: QUIZ
+                    </span>
+                    <h3 className="font-['Outfit'] font-bold text-[18px] leading-[23px] text-[#0F1450]">
+                      Test Your Knowledge
+                    </h3>
+                  </div>
+                </div>
+
+                {/* Progress Pill */}
+                <div className="px-2.5 py-1 bg-[#F3F4F6] rounded-[20px] font-['Outfit'] font-semibold text-[11px] leading-[14px] text-[#6E748F]">
+                  {currentMcqIndex + 1}/{mcqList.length}
+                </div>
+              </div>
+
+              {/* Current Question */}
+              {(() => {
+                const mcq = mcqList[currentMcqIndex] || mcqList[0];
+                const currentAnswer = selectedAnswers[currentMcqIndex];
+
+                return (
+                  <div className="flex flex-col gap-4 w-full">
+                    {/* Question Text */}
+                    <h4 className="font-['Outfit'] font-bold text-[16px] leading-[24px] text-[#0F1450]">
+                      {mcq.question}
+                    </h4>
+
+                    {/* Options List */}
+                    <div className="flex flex-col gap-2 w-full">
+                      {mcq.options.map((opt, oIdx) => {
+                        const optVal = typeof opt === 'string' ? oIdx : opt.id;
+                        const isSelected = currentAnswer === optVal;
+                        const optLabel = typeof opt === 'string' ? opt : opt.text;
+
+                        return (
+                          <div
+                            key={oIdx}
+                            onClick={() => setSelectedAnswers(prev => ({ ...prev, [currentMcqIndex]: optVal }))}
+                            className={`w-full p-[14px_16px] rounded-[10px] flex flex-row items-center gap-3 cursor-pointer transition-all ${
+                              isSelected
+                                ? 'bg-[#3B82F6] border border-[#3B82F6] text-white shadow-sm'
+                                : 'bg-white border border-[#E5E7EB] text-[#0F1450] hover:border-[#3B82F6]/40'
+                            }`}
+                          >
+                            <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
+                              isSelected ? 'bg-white' : 'border-[1.5px] border-[#9CA3AF]'
+                            }`}>
+                              {isSelected && <Check className="w-2.5 h-2.5 text-[#3B82F6] stroke-[3]" />}
+                            </div>
+                            <span className={`text-[14px] leading-[18px] flex-1 ${isSelected ? 'font-bold text-white' : 'font-normal text-[#0F1450]'}`}>
+                              {optLabel}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Action Button */}
+                    <div className="flex justify-end pt-2">
+                      {currentMcqIndex < mcqList.length - 1 ? (
+                        <button
+                          onClick={() => setCurrentMcqIndex(prev => prev + 1)}
+                          disabled={currentAnswer === undefined}
+                          className="px-6 py-2.5 bg-[#3B82F6] text-white rounded-full font-['Outfit'] font-semibold text-[14px] hover:bg-[#2563EB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          Next Question
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            const answers = mcqList.map((_, idx) => selectedAnswers[idx] ?? -1);
+                            submitMcqs(answers);
+                          }}
+                          disabled={Object.keys(selectedAnswers).length < mcqList.length}
+                          className="px-6 py-2.5 bg-[#3B82F6] text-white rounded-full font-['Outfit'] font-semibold text-[14px] hover:bg-[#2563EB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          Submit Answers
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+
+            </div>
+          )}
+          
+          {/* Next Button for transitioning stages (except quiz) */}
+          {listeningPayload?.stage !== 'quiz' && (
+            <div className="flex justify-center items-center pt-2 mt-auto">
+              <button 
+                onClick={() => nextListeningStage()}
+                className="flex justify-center items-center w-full max-w-[200px] h-[52px] bg-[#BFDBFE] hover:bg-[#93C5FD] transition-colors rounded-full font-bold text-[16px] leading-[20px] text-[#1E40AF]"
+              >
+                Next
+              </button>
+            </div>
+          )}
+
+        </div>
+      </div>
+    </div>
+  );
+}

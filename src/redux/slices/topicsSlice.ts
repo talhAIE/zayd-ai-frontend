@@ -39,6 +39,9 @@ export const fetchTopics = createAsyncThunk(
       
       return response.data.data.topics as Topic[];
     } catch (error: any) {
+      if (error.response?.status === 404) {
+        return [];
+      }
       if (error.response && error.response.data) {
         return rejectWithValue(error.response.data.message || 'Failed to fetch topics');
       }
@@ -54,6 +57,9 @@ export const fetchAvailableModes = createAsyncThunk(
       const response = await apiClient.get(`/topic/available-modes?userId=${userId}`);
       return response.data.data.modes as AvailableMode[];
     } catch (error: any) {
+      if (error.response?.status === 404) {
+        return [];
+      }
       if (error.response && error.response.data) {
         return rejectWithValue(error.response.data.message || 'Failed to fetch available modes');
       }

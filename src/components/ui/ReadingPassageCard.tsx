@@ -1,5 +1,4 @@
 import React, { useRef, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 import { Play, Pause, ChevronDown, BookOpen } from 'lucide-react';
 
 interface ReadingPassageCardProps {
@@ -22,21 +21,16 @@ const ReadingPassageCard: React.FC<ReadingPassageCardProps> = ({
   // Check if content needs expansion button
   useEffect(() => {
     if (contentRef.current) {
-      // Reset expansion state when content changes
       setIsExpanded(false);
 
-      // Temporarily remove line-clamp to measure full height
       const element = contentRef.current;
       const originalClass = element.className;
       element.className = originalClass.replace('line-clamp-3', 'line-clamp-none');
 
       const fullHeight = element.scrollHeight;
-
-      // Restore original class
       element.className = originalClass;
 
-      // Calculate height of 3 lines (approximate)
-      const lineHeight = parseFloat(getComputedStyle(element).lineHeight) || 24;
+      const lineHeight = parseFloat(getComputedStyle(element).lineHeight) || 22;
       const maxHeight = lineHeight * 3;
 
       setShouldShowExpandButton(fullHeight > maxHeight);
@@ -48,19 +42,36 @@ const ReadingPassageCard: React.FC<ReadingPassageCardProps> = ({
   };
 
   return (
-    <div className="bg-[#F0F8FF] rounded-2xl p-6 shadow-sm border-2 border-[#3EA4F9]">
-      {/* Reading Passage Tag */}
-      <div className="flex items-center gap-2 mb-4">
-        <div className="inline-flex items-center gap-2 bg-[#3EA4F9] rounded-full px-4 py-2">
-          <BookOpen className="w-4 h-4 text-[#F0F8FF]" />
-          <span className="text-sm font-semibold text-[#F0F8FF] font-['Outfit']">Reading Passage</span>
+    <div className="w-full bg-white border border-[#E5E7EB] rounded-[12px] p-[16px_20px] flex flex-col gap-3 font-['Outfit',sans-serif]">
+      {/* Header Row: Badge & Audio */}
+      <div className="flex flex-row justify-between items-center w-full">
+        {/* Reading Passage Badge */}
+        <div className="inline-flex flex-row items-center px-3 py-1.5 gap-[6px] bg-[#EFF6FF] border border-[#5C9DFF] rounded-[20px]">
+          <BookOpen className="w-3.5 h-3.5 text-[#5C9DFF]" />
+          <span className="font-['Outfit'] font-semibold text-[12px] leading-[15px] text-[#5C9DFF]">
+            Reading Passage
+          </span>
         </div>
+
+        {audioUrl && onToggleAudio && (
+          <button
+            onClick={onToggleAudio}
+            className="flex items-center gap-1.5 text-[#5C9DFF] hover:text-[#4A8BEB] transition-colors p-1"
+          >
+            {isPlaying ? (
+              <Pause className="w-4 h-4" />
+            ) : (
+              <Play className="w-4 h-4" />
+            )}
+            <span className="text-[12px] font-semibold">Listen</span>
+          </button>
+        )}
       </div>
 
       {/* Content */}
       <p
         ref={contentRef}
-        className={`text-gray-700 text-base leading-relaxed whitespace-pre-wrap transition-all duration-300 font-['Serif'] ${
+        className={`font-['Outfit'] font-normal text-[14px] leading-[22px] text-[#282828] whitespace-pre-wrap transition-all duration-200 ${
           !isExpanded ? 'line-clamp-3' : 'line-clamp-none'
         }`}
       >
@@ -68,7 +79,7 @@ const ReadingPassageCard: React.FC<ReadingPassageCardProps> = ({
           .split(/(\*\*.*?\*\*)/g)
           .map((part, i) =>
             part.startsWith('**') && part.endsWith('**') ? (
-              <span key={i} className="font-bold text-[#3EA4F9] font-['Serif']">
+              <span key={i} className="font-semibold text-[#5C9DFF]">
                 {part.slice(2, -2)}
               </span>
             ) : (
@@ -77,43 +88,22 @@ const ReadingPassageCard: React.FC<ReadingPassageCardProps> = ({
           )}
       </p>
 
-      {/* Footer with Audio and See More */}
-      <div className="flex items-center justify-between mt-4">
-        <div className="flex items-center gap-4">
-          {audioUrl && onToggleAudio && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onToggleAudio}
-              className="text-[#3EA4F9] hover:text-[#3EA4F9] hover:bg-[#E6F3FF] p-2 h-auto font-['Serif']"
-            >
-              {isPlaying ? (
-                <Pause className="w-5 h-5" />
-              ) : (
-                <Play className="w-5 h-5" />
-              )}
-            </Button>
-          )}
-        </div>
-
-        {shouldShowExpandButton && (
-          <Button
-            variant="ghost"
-            size="sm"
+      {/* See More Row */}
+      {shouldShowExpandButton && (
+        <div className="flex flex-row items-center pt-1">
+          <button
             onClick={handleToggleExpand}
-            className="text-[#3EA4F9] hover:text-[#3EA4F9] hover:bg-[#E6F3FF] p-2 h-auto flex items-center gap-1 font-['Serif']"
+            className="font-['Outfit'] font-semibold text-[13px] leading-[16px] text-[#5C9DFF] underline hover:text-[#4A8BEB] transition-colors cursor-pointer flex items-center gap-1"
           >
-            <span className="text-sm font-medium">
-              {isExpanded ? 'See Less' : 'See More'}
-            </span>
+            <span>{isExpanded ? 'See Less' : 'See More'}</span>
             <ChevronDown 
-              className={`w-4 h-4 transition-transform duration-200 ${
+              className={`w-3.5 h-3.5 transition-transform duration-200 ${
                 isExpanded ? 'rotate-180' : ''
               }`} 
             />
-          </Button>
-        )}
-      </div>
+          </button>
+        </div>
+      )}
     </div>
   );
 };

@@ -5,6 +5,7 @@ import {
   fetchSection1Lessons,
   fetchSection1LessonModes,
   startSection1Lesson,
+  startSection1LessonMode,
   Section1Course,
   Section1Unit,
   Section1Lesson,
@@ -86,6 +87,21 @@ export const startLesson = createAsyncThunk(
       return lessonId;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to start lesson');
+    }
+  }
+);
+
+export const startLessonMode = createAsyncThunk(
+  'learning/startLessonMode',
+  async (
+    { lessonModeId, resumeModeSessionId }: { lessonModeId: string; resumeModeSessionId?: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      const data = await startSection1LessonMode(lessonModeId, resumeModeSessionId);
+      return { lessonModeId, ...data };
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to start lesson mode');
     }
   }
 );

@@ -366,7 +366,8 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
   }, []);
 
   useEffect(() => {
-    return unlockAudio();
+    const cleanup = unlockAudio();
+    if (cleanup) return cleanup;
   }, [unlockAudio]);
 
   // --- Helpers ---
