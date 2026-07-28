@@ -15,6 +15,7 @@ export default function ListeningModeTopics() {
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number | string>>({});
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [hasListenedToAudio, setHasListenedToAudio] = useState(false);
+  const [isJustCompleted, setIsJustCompleted] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   
   const {
@@ -30,15 +31,16 @@ export default function ListeningModeTopics() {
   } = useModeSession({ 
     lessonModeId,
     onCompleted: () => {
-      // noop
+      setIsJustCompleted(true);
+      setShowCompletionModal(true);
     }
   });
 
   useEffect(() => {
-    if (isCompleted) {
+    if (isCompleted && !isJustCompleted) {
       setShowCompletionModal(true);
     }
-  }, [isCompleted]);
+  }, [isCompleted, isJustCompleted]);
 
   const hasStartedRef = useRef(false);
 
@@ -88,13 +90,20 @@ export default function ListeningModeTopics() {
       
       <TopicCompletionModal 
         isOpen={showCompletionModal}
-        onReview={() => setShowCompletionModal(false)}
+        isJustCompleted={isJustCompleted}
+        onFinish={() => {
+          setShowCompletionModal(false);
+          navigate('/student/courses');
+        }}
         onRetake={() => {
           setShowCompletionModal(false);
           setCurrentMcqIndex(0);
           setSelectedAnswers({});
+          setHasListenedToAudio(false);
+          setIsJustCompleted(false);
           restartSession();
         }}
+        onReview={() => setShowCompletionModal(false)}
       />
 
       {/* Header Progress Group */}

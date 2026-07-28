@@ -17,6 +17,7 @@ export default function ReadingModeTopics() {
   const [currentMcqIndex, setCurrentMcqIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number | string>>({});
   const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [isJustCompleted, setIsJustCompleted] = useState(false);
   const [activeFeedback, setActiveFeedback] = useState<string | null>(null);
   const [isPassageExpanded, setIsPassageExpanded] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -43,15 +44,16 @@ export default function ReadingModeTopics() {
   } = useModeSession({ 
     lessonModeId,
     onCompleted: () => {
-      // noop
+      setIsJustCompleted(true);
+      setShowCompletionModal(true);
     }
   });
 
   useEffect(() => {
-    if (isCompleted) {
+    if (isCompleted && !isJustCompleted) {
       setShowCompletionModal(true);
     }
-  }, [isCompleted]);
+  }, [isCompleted, isJustCompleted]);
 
   const [cooldown, setCooldown] = useState(false);
 
@@ -123,14 +125,20 @@ export default function ReadingModeTopics() {
       
       <TopicCompletionModal 
         isOpen={showCompletionModal}
-        onReview={() => setShowCompletionModal(false)}
+        isJustCompleted={isJustCompleted}
+        onFinish={() => {
+          setShowCompletionModal(false);
+          navigate('/student/courses');
+        }}
         onRetake={() => {
           setShowCompletionModal(false);
           setCurrentMcqIndex(0);
           setSelectedAnswers({});
           setIsPassageExpanded(false);
+          setIsJustCompleted(false);
           restartSession();
         }}
+        onReview={() => setShowCompletionModal(false)}
       />
 
       <FeedbackModal 

@@ -13,6 +13,7 @@ export default function RolePlayModeTopics() {
   
   const [inputValue, setInputValue] = useState('');
   const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [isJustCompleted, setIsJustCompleted] = useState(false);
   const [activeFeedback, setActiveFeedback] = useState<string | null>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -35,15 +36,16 @@ export default function RolePlayModeTopics() {
   } = useModeSession({ 
     lessonModeId,
     onCompleted: () => {
-      // noop
+      setIsJustCompleted(true);
+      setShowCompletionModal(true);
     }
   });
 
   useEffect(() => {
-    if (isCompleted) {
+    if (isCompleted && !isJustCompleted) {
       setShowCompletionModal(true);
     }
-  }, [isCompleted]);
+  }, [isCompleted, isJustCompleted]);
 
   const [cooldown, setCooldown] = useState(false);
 
@@ -94,11 +96,17 @@ export default function RolePlayModeTopics() {
       
       <TopicCompletionModal 
         isOpen={showCompletionModal}
-        onReview={() => setShowCompletionModal(false)}
+        isJustCompleted={isJustCompleted}
+        onFinish={() => {
+          setShowCompletionModal(false);
+          navigate('/student/courses');
+        }}
         onRetake={() => {
           setShowCompletionModal(false);
+          setIsJustCompleted(false);
           restartSession();
         }}
+        onReview={() => setShowCompletionModal(false)}
       />
 
       <FeedbackModal 

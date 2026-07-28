@@ -5,12 +5,16 @@ interface TopicCompletionModalProps {
   isOpen: boolean;
   onRetake: () => void;
   onReview?: () => void;
+  isJustCompleted?: boolean;
+  onFinish?: () => void;
 }
 
 export const TopicCompletionModal: React.FC<TopicCompletionModalProps> = ({
   isOpen,
   onRetake,
-  onReview
+  onReview,
+  isJustCompleted,
+  onFinish
 }) => {
   if (!isOpen) return null;
 
@@ -31,27 +35,40 @@ export const TopicCompletionModal: React.FC<TopicCompletionModalProps> = ({
             Topic Completed!
           </h3>
           <p className="text-[14px] leading-[20px] text-[#6E748F] px-2">
-            You have already finished this topic. Would you like to resume reviewing, or reset your chat history and start over?
+            {isJustCompleted 
+              ? "You have successfully completed this topic. Great job!" 
+              : "You have already finished this topic. Would you like to resume reviewing, or reset your chat history and start over?"}
           </p>
         </div>
 
         {/* Actions */}
         <div className="w-full pt-1 flex flex-col gap-3">
-          {onReview && (
+          {isJustCompleted ? (
             <button
-              onClick={onReview}
-              className="w-full py-3 px-4 bg-white border border-[#E5E7EB] text-[#0F1450] rounded-full font-semibold text-[14px] hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 shadow-sm"
+              onClick={onFinish}
+              className="w-full py-3 px-4 bg-[#5C9DFF] text-white rounded-full font-semibold text-[14px] hover:bg-[#4A8BEB] transition-colors flex items-center justify-center gap-2 shadow-sm"
             >
-              <span>Resume</span>
+              <span>Finish</span>
             </button>
+          ) : (
+            <>
+              {onReview && (
+                <button
+                  onClick={onReview}
+                  className="w-full py-3 px-4 bg-white border border-[#E5E7EB] text-[#0F1450] rounded-full font-semibold text-[14px] hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 shadow-sm"
+                >
+                  <span>Resume</span>
+                </button>
+              )}
+              <button
+                onClick={onRetake}
+                className="w-full py-3 px-4 bg-[#5C9DFF] text-white rounded-full font-semibold text-[14px] hover:bg-[#4A8BEB] transition-colors flex items-center justify-center gap-2 shadow-sm"
+              >
+                <RotateCcw className="w-4 h-4 text-white" />
+                <span>Reset Chat & Retake</span>
+              </button>
+            </>
           )}
-          <button
-            onClick={onRetake}
-            className="w-full py-3 px-4 bg-[#5C9DFF] text-white rounded-full font-semibold text-[14px] hover:bg-[#4A8BEB] transition-colors flex items-center justify-center gap-2 shadow-sm"
-          >
-            <RotateCcw className="w-4 h-4 text-white" />
-            <span>Reset Chat & Retake</span>
-          </button>
         </div>
       </div>
     </div>
