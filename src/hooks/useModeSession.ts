@@ -138,6 +138,9 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
 
     newSocket.on('listening_payload', (payload: any) => {
       setListeningPayload(payload);
+      if (payload.mcqs && Array.isArray(payload.mcqs)) {
+        setMcqList(payload.mcqs);
+      }
     });
 
     newSocket.on('speech_transcribed', (payload: { textMessage: string, assessments: any }) => {
@@ -221,6 +224,7 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
     if (!socket || !lessonModeId) return;
     setChatHistory([]);
     setMcqList([]);
+    setListeningPayload(null);
     setIsCompleted(false);
     socket.emit('restart_mode_session', { lessonModeId });
   }, [socket, lessonModeId]);

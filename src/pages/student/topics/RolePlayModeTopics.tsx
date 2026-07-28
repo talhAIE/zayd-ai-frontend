@@ -94,6 +94,7 @@ export default function RolePlayModeTopics() {
       
       <TopicCompletionModal 
         isOpen={showCompletionModal}
+        onReview={() => setShowCompletionModal(false)}
         onRetake={() => {
           setShowCompletionModal(false);
           restartSession();
@@ -169,14 +170,13 @@ export default function RolePlayModeTopics() {
           <div className="w-full h-[1px] bg-[#E5E7EB]/70" />
           
           {/* Step 1: Roleplay Scenario */}
-          <div className="relative flex flex-row items-center p-[14px_14px_14px_13px] gap-2.5 bg-[#5C9DFF]/10">
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[40px] bg-[#5C9DFF] rounded-[2px]" />
-            <div className="flex justify-center items-center w-7 h-7 bg-[#5C9DFF] rounded-full text-white font-bold text-[12px]">
+          <div className="relative flex flex-row items-center p-[14px_14px_14px_13px] gap-2.5">
+            <div className="flex justify-center items-center w-7 h-7 bg-[#2DCD6B] rounded-full text-white font-bold text-[12px]">
               1
             </div>
             <div className="flex flex-col gap-0.5">
               <span className="font-semibold text-[13px] leading-[16px] text-[#0F1450]">Roleplay Scenario</span>
-              <span className="text-[11px] leading-[14px] text-[#5C9DFF] font-medium">Completed</span>
+              <span className="text-[11px] leading-[14px] text-[#2DCD6B] font-medium">Completed</span>
             </div>
           </div>
           <div className="w-full h-[1px] bg-[#E5E7EB]/70" />

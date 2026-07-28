@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ChevronLeft, Play, Circle, PlayCircle, Clock, Check } from 'lucide-react';
 import { useModeSession } from '@/hooks/useModeSession';
 import TopicCompletionModal from '@/components/ui/TopicCompletionModal';
+import { toast } from 'sonner';
 
 export default function ListeningModeTopics() {
   const navigate = useNavigate();
@@ -13,9 +14,11 @@ export default function ListeningModeTopics() {
   const [currentMcqIndex, setCurrentMcqIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number | string>>({});
   const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [hasListenedToAudio, setHasListenedToAudio] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   
   const {
+    modeSessionId,
     listeningPayload,
     mcqList,
     isCompleted,
@@ -37,11 +40,24 @@ export default function ListeningModeTopics() {
     }
   }, [isCompleted]);
 
+  const hasStartedRef = useRef(false);
+
   useEffect(() => {
-    if (lessonModeId) {
+    if (modeSessionId && !listeningPayload && !hasStartedRef.current) {
+      hasStartedRef.current = true;
       startListening();
     }
-  }, [lessonModeId]);
+  }, [modeSessionId, listeningPayload, startListening]);
+
+  useEffect(() => {
+    setHasListenedToAudio(false);
+  }, [listeningPayload?.stage]);
+
+  useEffect(() => {
+    if (modeSessionId) {
+      hasStartedRef.current = false;
+    }
+  }, [modeSessionId]);
 
   const toggleAudio = () => {
     if (audioRef.current) {
@@ -72,6 +88,7 @@ export default function ListeningModeTopics() {
       
       <TopicCompletionModal 
         isOpen={showCompletionModal}
+        onReview={() => setShowCompletionModal(false)}
         onRetake={() => {
           setShowCompletionModal(false);
           setCurrentMcqIndex(0);
@@ -147,16 +164,16 @@ export default function ListeningModeTopics() {
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[40px] bg-[#5C9DFF] rounded-[2px]" />
             )}
             <div className={`flex justify-center items-center w-7 h-7 rounded-full font-bold text-[12px] ${
-              listeningPayload?.stage !== 'initial' || isCompleted ? 'bg-[#2DCD6B] text-white' : 'bg-[#5C9DFF] text-white'
+              (listeningPayload?.stage && listeningPayload.stage !== 'initial') || isCompleted ? 'bg-[#2DCD6B] text-white' : 'bg-[#5C9DFF] text-white'
             }`}>
               1
             </div>
             <div className="flex flex-col gap-0.5">
               <span className="font-semibold text-[13px] leading-[16px] text-[#0F1450]">Audio Narration</span>
               <span className={`text-[11px] leading-[14px] font-medium ${
-                listeningPayload?.stage !== 'initial' || isCompleted ? 'text-[#2DCD6B]' : 'text-[#5C9DFF]'
+                (listeningPayload?.stage && listeningPayload.stage !== 'initial') || isCompleted ? 'text-[#2DCD6B]' : 'text-[#5C9DFF]'
               }`}>
-                {listeningPayload?.stage !== 'initial' || isCompleted ? 'Completed' : 'In Progress'}
+                {(listeningPayload?.stage && listeningPayload.stage !== 'initial') || isCompleted ? 'Completed' : 'In Progress'}
               </span>
             </div>
           </div>
@@ -219,7 +236,10 @@ export default function ListeningModeTopics() {
               <audio 
                 ref={audioRef} 
                 src={activeAudioUrl} 
-                onEnded={() => setIsPlaying(false)}
+                onEnded={() => {
+                  setIsPlaying(false);
+                  setHasListenedToAudio(true);
+                }}
                 onPause={() => setIsPlaying(false)}
                 onPlay={() => setIsPlaying(true)}
               />
@@ -345,7 +365,14 @@ export default function ListeningModeTopics() {
                     <div className="flex justify-end pt-2">
                       {currentMcqIndex < mcqList.length - 1 ? (
                         <button
-                          onClick={() => setCurrentMcqIndex(prev => prev + 1)}
+                          onClick={() => {
+                            const isCorrect = currentAnswer === mcq.correct || currentAnswer === mcq.correctOptionId;
+                            if (!isCorrect) {
+                              toast.error('Incorrect answer! Please try again.');
+                              return;
+                            }
+                            setCurrentMcqIndex(prev => prev + 1);
+                          }}
                           disabled={currentAnswer === undefined}
                           className="px-6 py-2.5 bg-[#3B82F6] text-white rounded-full font-['Outfit'] font-semibold text-[14px] hover:bg-[#2563EB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
@@ -354,6 +381,11 @@ export default function ListeningModeTopics() {
                       ) : (
                         <button
                           onClick={() => {
+                            const isCorrect = currentAnswer === mcq.correct || currentAnswer === mcq.correctOptionId;
+                            if (!isCorrect) {
+                              toast.error('Incorrect answer! Please try again.');
+                              return;
+                            }
                             const answers = mcqList.map((_, idx) => selectedAnswers[idx] ?? -1);
                             submitMcqs(answers);
                           }}
@@ -376,7 +408,8 @@ export default function ListeningModeTopics() {
             <div className="flex justify-center items-center pt-2 mt-auto">
               <button 
                 onClick={() => nextListeningStage()}
-                className="flex justify-center items-center w-full max-w-[200px] h-[52px] bg-[#BFDBFE] hover:bg-[#93C5FD] transition-colors rounded-full font-bold text-[16px] leading-[20px] text-[#1E40AF]"
+                disabled={!hasListenedToAudio}
+                className="flex justify-center items-center w-full max-w-[200px] h-[52px] bg-[#3B82F6] hover:bg-[#2563EB] disabled:bg-[#E5E7EB] disabled:text-[#9CA3AF] transition-colors rounded-full font-bold text-[16px] leading-[20px] text-white"
               >
                 Next
               </button>
