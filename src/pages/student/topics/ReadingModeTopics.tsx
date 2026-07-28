@@ -6,6 +6,7 @@ import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import ReadingPassageCard from '@/components/ui/ReadingPassageCard';
 import TopicCompletionModal from '@/components/ui/TopicCompletionModal';
 import FeedbackModal from '@/components/ui/FeedbackModal';
+import { toast } from 'sonner';
 
 export default function ReadingModeTopics() {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ export default function ReadingModeTopics() {
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number | string>>({});
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [activeFeedback, setActiveFeedback] = useState<string | null>(null);
+  const [isPassageExpanded, setIsPassageExpanded] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -109,15 +111,24 @@ export default function ReadingModeTopics() {
     return Math.min(79, passageProgress);
   };
 
+  const step1Completed = isPassageExpanded || (chatHistory && chatHistory.length > 0);
+  const step1Active = !step1Completed;
+  const step2Completed = (mcqList && mcqList.length > 0) || isCompleted;
+  const step2Active = step1Completed && !step2Completed;
+  const step3Completed = isCompleted;
+  const step3Active = step2Completed && !step3Completed;
+
   return (
     <div className="w-full max-w-[1207px] mx-auto bg-white rounded-none md:rounded-[24px] flex flex-col font-['Outfit',sans-serif] overflow-hidden h-[100dvh] md:h-[794px] max-h-[calc(100vh-40px)] border border-gray-100 shadow-sm relative">
       
       <TopicCompletionModal 
         isOpen={showCompletionModal}
+        onReview={() => setShowCompletionModal(false)}
         onRetake={() => {
           setShowCompletionModal(false);
           setCurrentMcqIndex(0);
           setSelectedAnswers({});
+          setIsPassageExpanded(false);
           restartSession();
         }}
       />
@@ -187,38 +198,48 @@ export default function ReadingModeTopics() {
           <div className="w-full h-[1px] bg-[#E5E7EB]/70" />
           
           {/* Step 1: Reading Passage */}
-          <div className="relative flex flex-row items-center p-[14px_14px_14px_13px] gap-2.5 bg-[#5C9DFF]/10">
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[40px] bg-[#5C9DFF] rounded-[2px]" />
-            <div className="flex justify-center items-center w-7 h-7 bg-[#5C9DFF] rounded-full text-white font-bold text-[12px]">
+          <div className={`relative flex flex-row items-center p-[14px_14px_14px_13px] gap-2.5 ${
+            step1Active ? 'bg-[#5C9DFF]/10' : ''
+          }`}>
+            {step1Active && (
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[40px] bg-[#5C9DFF] rounded-[2px]" />
+            )}
+            <div className={`flex justify-center items-center w-7 h-7 rounded-full font-bold text-[12px] ${
+              step1Completed ? 'bg-[#2DCD6B] text-white' : 'bg-[#5C9DFF] text-white'
+            }`}>
               1
             </div>
             <div className="flex flex-col gap-0.5">
               <span className="font-semibold text-[13px] leading-[16px] text-[#0F1450]">Reading Passage</span>
-              <span className="text-[11px] leading-[14px] text-[#5C9DFF] font-medium">Completed</span>
+              <span className={`text-[11px] leading-[14px] font-medium ${
+                step1Completed ? 'text-[#2DCD6B]' : 'text-[#5C9DFF]'
+              }`}>
+                {step1Completed ? 'Completed' : 'In Progress'}
+              </span>
             </div>
           </div>
           <div className="w-full h-[1px] bg-[#E5E7EB]/70" />
 
           {/* Step 2: Practice Reading */}
           <div className={`relative flex flex-row items-center p-[14px_14px_14px_13px] gap-2.5 ${
-            (!mcqList || mcqList.length === 0) && !isCompleted ? 'bg-[#5C9DFF]/10' : ''
+            step2Active ? 'bg-[#5C9DFF]/10' : ''
           }`}>
-            {(!mcqList || mcqList.length === 0) && !isCompleted && (
+            {step2Active && (
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[40px] bg-[#5C9DFF] rounded-[2px]" />
             )}
             <div className={`flex justify-center items-center w-7 h-7 rounded-full font-bold text-[12px] ${
-              mcqList && mcqList.length > 0 || isCompleted
+              step2Completed
                 ? 'bg-[#2DCD6B] text-white'
-                : 'bg-[#5C9DFF] text-white'
+                : (step1Completed ? 'bg-[#5C9DFF] text-white' : 'bg-[#E5E7EB] text-[#6E748F]')
             }`}>
               2
             </div>
             <div className="flex flex-col gap-0.5">
               <span className="font-semibold text-[13px] leading-[16px] text-[#0F1450]">Practice Reading</span>
               <span className={`text-[11px] leading-[14px] font-medium ${
-                mcqList && mcqList.length > 0 || isCompleted ? 'text-[#2DCD6B]' : 'text-[#5C9DFF]'
+                step2Completed ? 'text-[#2DCD6B]' : (step1Completed ? 'text-[#5C9DFF]' : 'text-[#6E748F]')
               }`}>
-                {mcqList && mcqList.length > 0 || isCompleted ? 'Completed' : 'In Progress'}
+                {step2Completed ? 'Completed' : (step1Completed ? 'In Progress' : 'Pending')}
               </span>
             </div>
           </div>
@@ -226,26 +247,26 @@ export default function ReadingModeTopics() {
 
           {/* Step 3: Knowledge Quiz */}
           <div className={`relative flex flex-row items-center p-[14px_14px_14px_13px] gap-2.5 ${
-            mcqList && mcqList.length > 0 && !isCompleted ? 'bg-[#5C9DFF]/10' : ''
+            step3Active ? 'bg-[#5C9DFF]/10' : ''
           }`}>
-            {mcqList && mcqList.length > 0 && !isCompleted && (
+            {step3Active && (
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[40px] bg-[#5C9DFF] rounded-[2px]" />
             )}
             <div className={`flex justify-center items-center w-7 h-7 rounded-full font-bold text-[12px] ${
-              isCompleted
+              step3Completed
                 ? 'bg-[#2DCD6B] text-white'
-                : (mcqList && mcqList.length > 0 ? 'bg-[#5C9DFF] text-white' : 'bg-[#E5E7EB] text-[#6E748F]')
+                : (step2Completed ? 'bg-[#5C9DFF] text-white' : 'bg-[#E5E7EB] text-[#6E748F]')
             }`}>
               3
             </div>
             <div className="flex flex-col gap-0.5">
               <span className="font-semibold text-[13px] leading-[16px] text-[#0F1450]">Knowledge Quiz</span>
               <span className={`text-[11px] leading-[14px] font-medium ${
-                isCompleted
+                step3Completed
                   ? 'text-[#2DCD6B]'
-                  : (mcqList && mcqList.length > 0 ? 'text-[#5C9DFF]' : 'text-[#6E748F]')
+                  : (step2Completed ? 'text-[#5C9DFF]' : 'text-[#6E748F]')
               }`}>
-                {isCompleted ? 'Completed' : (mcqList && mcqList.length > 0 ? 'In Progress' : 'Pending')}
+                {step3Completed ? 'Completed' : (step2Completed ? 'In Progress' : 'Pending')}
               </span>
             </div>
           </div>
@@ -262,6 +283,7 @@ export default function ReadingModeTopics() {
               <ReadingPassageCard 
                 content={contentPayload.passage || contentPayload.content || ''}
                 audioUrl={contentPayload.attachmentUrl}
+                onExpand={() => setIsPassageExpanded(true)}
               />
             </div>
           )}
@@ -395,7 +417,25 @@ export default function ReadingModeTopics() {
                     <div className="flex justify-end pt-2">
                       {currentMcqIndex < mcqList.length - 1 ? (
                         <button
-                          onClick={() => setCurrentMcqIndex(prev => prev + 1)}
+                          onClick={() => {
+                            const mcq = mcqList[currentMcqIndex];
+                            const currentAnswer = selectedAnswers[currentMcqIndex];
+                            
+                            let isCorrect = false;
+                            if (typeof mcq.correct === 'number') isCorrect = Number(currentAnswer) === mcq.correct;
+                            else if (typeof mcq.correct === 'string') isCorrect = String(currentAnswer) === mcq.correct;
+                            else if (mcq.correctOptionId) isCorrect = String(currentAnswer) === mcq.correctOptionId;
+                            
+                            // fallback if backend payload didn't send correct answers (shouldn't happen)
+                            if (mcq.correct === undefined && mcq.correctOptionId === undefined) isCorrect = true;
+
+                            if (!isCorrect) {
+                              toast.error('Incorrect answer! Please try again.');
+                              return;
+                            }
+
+                            setCurrentMcqIndex(prev => prev + 1);
+                          }}
                           disabled={currentAnswer === undefined}
                           className="px-6 py-2.5 bg-[#3B82F6] text-white rounded-full font-['Outfit'] font-semibold text-[14px] hover:bg-[#2563EB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
@@ -404,6 +444,21 @@ export default function ReadingModeTopics() {
                       ) : (
                         <button
                           onClick={() => {
+                            const mcq = mcqList[currentMcqIndex];
+                            const currentAnswer = selectedAnswers[currentMcqIndex];
+                            
+                            let isCorrect = false;
+                            if (typeof mcq.correct === 'number') isCorrect = Number(currentAnswer) === mcq.correct;
+                            else if (typeof mcq.correct === 'string') isCorrect = String(currentAnswer) === mcq.correct;
+                            else if (mcq.correctOptionId) isCorrect = String(currentAnswer) === mcq.correctOptionId;
+                            
+                            if (mcq.correct === undefined && mcq.correctOptionId === undefined) isCorrect = true;
+
+                            if (!isCorrect) {
+                              toast.error('Incorrect answer! Please try again.');
+                              return;
+                            }
+
                             const answers = mcqList.map((_, idx) => selectedAnswers[idx] ?? -1);
                             submitMcqs(answers);
                           }}

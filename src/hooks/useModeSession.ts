@@ -19,6 +19,8 @@ export interface Mcq {
   question: string;
   options: string[] | Array<{ id: string; text: string }>;
   hint?: string;
+  correct?: string | number;
+  correctOptionId?: string;
 }
 
 export interface SessionStatus {

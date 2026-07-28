@@ -6,6 +6,7 @@ interface ReadingPassageCardProps {
   audioUrl?: string;
   isPlaying?: boolean;
   onToggleAudio?: () => void;
+  onExpand?: () => void;
 }
 
 const ReadingPassageCard: React.FC<ReadingPassageCardProps> = ({
@@ -13,6 +14,7 @@ const ReadingPassageCard: React.FC<ReadingPassageCardProps> = ({
   audioUrl,
   isPlaying = false,
   onToggleAudio,
+  onExpand,
 }) => {
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [shouldShowExpandButton, setShouldShowExpandButton] = React.useState(false);
@@ -39,6 +41,9 @@ const ReadingPassageCard: React.FC<ReadingPassageCardProps> = ({
 
   const handleToggleExpand = () => {
     setIsExpanded(!isExpanded);
+    if (!isExpanded && onExpand) {
+      onExpand();
+    }
   };
 
   return (
