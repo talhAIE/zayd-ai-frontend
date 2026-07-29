@@ -5,11 +5,14 @@ import { useModeSession } from '@/hooks/useModeSession';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import TopicCompletionModal from '@/components/ui/TopicCompletionModal';
 import FeedbackModal from '@/components/ui/FeedbackModal';
+import { useLearningProgressRefresh } from '@/hooks/useLearningProgressRefresh';
 
 export default function RolePlayModeTopics() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const lessonModeId = searchParams.get('modeId') || '';
+  const lessonId = searchParams.get('lessonId') || '';
+  const refreshLearningProgress = useLearningProgressRefresh();
   
   const [inputValue, setInputValue] = useState('');
   const [showCompletionModal, setShowCompletionModal] = useState(false);
@@ -36,7 +39,8 @@ export default function RolePlayModeTopics() {
     restartSession
   } = useModeSession({ 
     lessonModeId,
-    onCompleted: () => {
+    onCompleted: async () => {
+      await refreshLearningProgress(lessonId);
       setIsJustCompleted(true);
       setShowCompletionModal(true);
     }

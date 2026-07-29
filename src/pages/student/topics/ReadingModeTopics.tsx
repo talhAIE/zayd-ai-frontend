@@ -6,12 +6,15 @@ import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import ReadingPassageCard from '@/components/ui/ReadingPassageCard';
 import TopicCompletionModal from '@/components/ui/TopicCompletionModal';
 import FeedbackModal from '@/components/ui/FeedbackModal';
+import { useLearningProgressRefresh } from '@/hooks/useLearningProgressRefresh';
 import { toast } from 'sonner';
 
 export default function ReadingModeTopics() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const lessonModeId = searchParams.get('modeId') || '';
+  const lessonId = searchParams.get('lessonId') || '';
+  const refreshLearningProgress = useLearningProgressRefresh();
   
   const [inputValue, setInputValue] = useState('');
   const [currentMcqIndex, setCurrentMcqIndex] = useState(0);
@@ -44,7 +47,8 @@ export default function ReadingModeTopics() {
     restartSession
   } = useModeSession({ 
     lessonModeId,
-    onCompleted: () => {
+    onCompleted: async () => {
+      await refreshLearningProgress(lessonId);
       setIsJustCompleted(true);
       setShowCompletionModal(true);
     }

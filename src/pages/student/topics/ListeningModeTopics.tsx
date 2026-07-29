@@ -3,12 +3,15 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ChevronLeft, Play, Circle, PlayCircle, Clock, Check } from 'lucide-react';
 import { useModeSession } from '@/hooks/useModeSession';
 import TopicCompletionModal from '@/components/ui/TopicCompletionModal';
+import { useLearningProgressRefresh } from '@/hooks/useLearningProgressRefresh';
 import { toast } from 'sonner';
 
 export default function ListeningModeTopics() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const lessonModeId = searchParams.get('modeId') || '';
+  const lessonId = searchParams.get('lessonId') || '';
+  const refreshLearningProgress = useLearningProgressRefresh();
   
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentMcqIndex, setCurrentMcqIndex] = useState(0);
@@ -31,7 +34,8 @@ export default function ListeningModeTopics() {
     restartSession
   } = useModeSession({ 
     lessonModeId,
-    onCompleted: () => {
+    onCompleted: async () => {
+      await refreshLearningProgress(lessonId);
       setIsJustCompleted(true);
       setShowCompletionModal(true);
     }

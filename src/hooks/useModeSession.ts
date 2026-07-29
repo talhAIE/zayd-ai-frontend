@@ -48,6 +48,14 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
 
   // Refs for tracking mutable state within socket handlers without needing to re-bind
   const modeSessionIdRef = useRef<string | null>(null);
+  const completionHandledRef = useRef(false);
+  const onCompletedRef = useRef(onCompleted);
+  const onBadgeUnlockedRef = useRef(onBadgeUnlocked);
+
+  useEffect(() => {
+    onCompletedRef.current = onCompleted;
+    onBadgeUnlockedRef.current = onBadgeUnlocked;
+  }, [onBadgeUnlocked, onCompleted]);
 
   useEffect(() => {
     if (!lessonModeId) return;
@@ -78,6 +86,9 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
 
     newSocket.on('mode_session_started', (session) => {
       console.log('[Socket] Mode session started:', session);
+      if (modeSessionIdRef.current !== session.modeSessionId) {
+        completionHandledRef.current = false;
+      }
       setModeSessionId(session.modeSessionId);
       modeSessionIdRef.current = session.modeSessionId;
       if (session.chatHistory) {
@@ -133,8 +144,12 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
     });
 
     newSocket.on('chat_completed', () => {
+      if (completionHandledRef.current) return;
+      completionHandledRef.current = true;
       setIsCompleted(true);
-      if (onCompleted) onCompleted();
+      void Promise.resolve(onCompletedRef.current?.()).catch(() => {
+        toast.error('Your lesson finished, but progress could not be refreshed.');
+      });
     });
 
     newSocket.on('listening_payload', (payload: any) => {
@@ -187,7 +202,7 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
 
     newSocket.on('badge_unlocked', (payload: any) => {
       toast.success(`Badge Unlocked: ${payload.name}!`);
-      if (onBadgeUnlocked) onBadgeUnlocked(payload);
+      if (onBadgeUnlockedRef.current) onBadgeUnlockedRef.current(payload);
     });
 
     return () => {
