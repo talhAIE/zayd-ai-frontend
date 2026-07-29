@@ -95,7 +95,6 @@ export default function ChatWindow3DMessages({
   isRecording,
   recordTime,
   chatCompleted,
-  isSessionExpired,
   isSocketConnected,
   isWaitingForResponse,
   handleSubmit,

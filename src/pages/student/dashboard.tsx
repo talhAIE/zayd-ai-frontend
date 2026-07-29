@@ -93,7 +93,7 @@ const TOUR_STEPS: TourStep[] = [
 
 export default function LanguageLearningDashboard() {
   const myUser = localStorage.getItem("AiTutorUser");
-  let parsedUser = JSON.parse(myUser || "{}");
+  const parsedUser = JSON.parse(myUser || "{}");
   const currentUserId = parsedUser?.id;
 
   const navigate = useNavigate();

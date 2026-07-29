@@ -61,7 +61,7 @@ export default function PerformanceGraph({
       let label = "";
 
       switch (timeFilter) {
-        case "weekly":
+        case "weekly": {
           // Weekly filter: Show actual dates (e.g., "19 Nov")
           const date = new Date(item.date);
           label = date.toLocaleDateString("en-US", {
@@ -69,7 +69,8 @@ export default function PerformanceGraph({
             month: "short",
           });
           break;
-        case "monthly":
+        }
+        case "monthly": {
           // Monthly filter: Show starting date of the week
           const itemDate = new Date(item.date);
           // Get the start of the week (Sunday)
@@ -81,12 +82,14 @@ export default function PerformanceGraph({
             month: "short",
           });
           break;
-        default:
+        }
+        default: {
           const defaultDate = new Date(item.date);
           label = defaultDate.toLocaleDateString("en-US", {
             day: "numeric",
             month: "short",
           });
+        }
       }
 
       return {

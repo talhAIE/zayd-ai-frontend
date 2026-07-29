@@ -348,7 +348,7 @@ export default function ChatWindow3DDialogs({
               </div>
               <div className="bg-yellow-50 border border-yellow-200 rounded p-3 mt-2">
                 <p className="text-xs text-yellow-800">
-                  âš ï¸ Please review our content policy. Continued violations
+                  ⚠️ Please review our content policy. Continued violations
                   may result in account suspension.
                 </p>
               </div>

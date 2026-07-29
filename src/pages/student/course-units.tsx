@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
-import { ChevronLeft, Flame, Star, ChevronRight, BookOpen, PenTool, LayoutGrid, Mic } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ChevronLeft, Star, ChevronRight, BookOpen } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getUnits, getLessons } from '@/redux/slices/learningSlice';
 import { AppDispatch, RootState } from '@/redux/store';

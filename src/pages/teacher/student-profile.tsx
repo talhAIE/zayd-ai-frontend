@@ -12,7 +12,7 @@ import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 export default function StudentProfile() {
   const { studentId } = useParams<{ studentId: string }>();
   const myUser = localStorage.getItem("AiTutorUser");
-  let parsedUser = JSON.parse(myUser || "{}");
+  const parsedUser = JSON.parse(myUser || "{}");
   const teacherId = parsedUser?.id;
 
   const dispatch = useAppDispatch();

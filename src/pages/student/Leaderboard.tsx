@@ -88,7 +88,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
   userId: _initialUserId,
 }) => {
   const user = localStorage.getItem("AiTutorUser");
-  let parsedUser = JSON.parse(user || "{}");
+  const parsedUser = JSON.parse(user || "{}");
   const currentUserId = parsedUser?.id;
 
   const navigate = useNavigate();
@@ -312,7 +312,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
               let crownSize = "w-10 h-10";
               let avatarSize = "w-24 h-24";
               let marginTop = "mt-8";
-              let rankTextBg =
+              const rankTextBg =
                 user?.rank === 1
                   ? "bg-yellow-400"
                   : user?.rank === 2

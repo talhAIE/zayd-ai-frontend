@@ -1835,9 +1835,11 @@ const ListeningMode3D: React.FC<ListeningMode3DProps> = ({
                   return;
                 }
 
-                listeningStage === "quiz"
-                  ? handleSubmitAnswer()
-                  : handleNextStage();
+                if (listeningStage === "quiz") {
+                  handleSubmitAnswer();
+                } else {
+                  handleNextStage();
+                }
               }}
               disabled={
                 (listeningStage === "initial" && !hasPlayedIntroAudio) ||

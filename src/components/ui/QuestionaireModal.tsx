@@ -89,7 +89,7 @@ const QuestionnaireModal: React.FC<QuestionnaireModalProps> = ({
   };
 
   const isQuestionAnswered = (questionId: string) => {
-    return selectedOptions.hasOwnProperty(questionId);
+    return Object.prototype.hasOwnProperty.call(selectedOptions, questionId);
   };
 
   if (!open) return null;

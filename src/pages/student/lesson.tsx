@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Target, BookOpen, Headphones, Users, MessageSquare, PenTool, Bookmark, AlignLeft, ClipboardList, Award, ChevronRight, Play } from 'lucide-react';
+import { Target, BookOpen, Headphones, Users, ChevronRight, Play } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getLessonModes, startLesson } from '@/redux/slices/learningSlice';
@@ -7,7 +7,7 @@ import { AppDispatch, RootState } from '@/redux/store';
 
 
 export default function Lesson() {
-  const { courseId, unitId, lessonId } = useParams<{ courseId: string; unitId: string; lessonId: string }>();
+  const { unitId, lessonId } = useParams<{ courseId: string; unitId: string; lessonId: string }>();
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const { modes, loading, error, lessons, units } = useSelector((state: RootState) => state.learning);

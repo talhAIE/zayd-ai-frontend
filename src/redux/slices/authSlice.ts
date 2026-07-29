@@ -298,7 +298,7 @@ export const getCurrentUser = createAsyncThunk(
 );
 
 // Logout thunk
-export const logout = createAsyncThunk('auth/logout', async (_, { }) => {
+export const logout = createAsyncThunk('auth/logout', async () => {
   try {
     const accessToken = localStorage.getItem('accessToken');
     const refreshToken = localStorage.getItem('refreshToken');
