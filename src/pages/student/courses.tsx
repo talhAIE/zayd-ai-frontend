@@ -1,13 +1,16 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getCourses } from '@/redux/slices/learningSlice';
 import { AppDispatch, RootState } from '@/redux/store';
+import { CertificateModal } from '@/components/ui/CertificateModal';
+import { Award } from 'lucide-react';
 
 export default function StudentCourses() {
   const dispatch = useDispatch<AppDispatch>();
   const { courses, loading, error } = useSelector((state: RootState) => state.learning);
   const { user } = useSelector((state: RootState) => state.auth);
+  const [selectedCertificateCourse, setSelectedCertificateCourse] = useState<any>(null);
 
   const inProgressCount = courses.filter(c => c.progressStatus === 'in_progress').length;
 
@@ -89,10 +92,11 @@ export default function StudentCourses() {
                     </Link>
                   )}
                   {course.progressStatus === 'completed' && (
-                    <button className="w-full h-[46px] bg-[#5B9CF7] hover:bg-[#4a8ce8] text-white rounded-[8px] font-semibold text-[14px] flex items-center justify-center gap-2 transition-all duration-200">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 15L15 17L14.2 13.5L17 11.2L13.4 10.9L12 7.5L10.6 10.9L7 11.2L9.8 13.5L9 17L12 15Z" fill="currentColor"/>
-                      </svg>
+                    <button 
+                      onClick={() => setSelectedCertificateCourse(course)}
+                      className="w-full h-[46px] bg-[#5B9CF7] hover:bg-[#4a8ce8] text-white rounded-[8px] font-semibold text-[14px] flex items-center justify-center gap-2 transition-all duration-200"
+                    >
+                      <Award className="w-5 h-5" />
                       Claim Certificate
                     </button>
                   )}
@@ -107,6 +111,13 @@ export default function StudentCourses() {
           ))}
         </div>
       </div>
+      
+      <CertificateModal 
+        isOpen={!!selectedCertificateCourse}
+        course={selectedCertificateCourse}
+        user={user}
+        onClose={() => setSelectedCertificateCourse(null)}
+      />
     </div>
   );
 }
