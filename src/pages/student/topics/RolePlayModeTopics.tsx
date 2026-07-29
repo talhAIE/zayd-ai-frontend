@@ -29,6 +29,7 @@ export default function RolePlayModeTopics() {
     chatHistory,
     isTyping,
     isCompleted,
+    isAccountBlocked,
     sessionStatus,
     sendMessage,
     sendAudio,
@@ -57,14 +58,14 @@ export default function RolePlayModeTopics() {
   };
 
   const handleSend = () => {
-    if (!inputValue.trim() || cooldown || isTyping) return;
+    if (!inputValue.trim() || cooldown || isTyping || isAccountBlocked) return;
     sendMessage(inputValue);
     setInputValue('');
     triggerCooldown();
   };
 
   const handleStopRecording = async () => {
-    if (cooldown || isTyping) return;
+    if (cooldown || isTyping || isAccountBlocked) return;
     const res = await stopRecording();
     if (res) {
       sendAudio(res.audioBase64, res.format);
@@ -328,7 +329,7 @@ export default function RolePlayModeTopics() {
                   type="text" 
                   placeholder={cooldown ? "Please wait..." : "Write your message..."}
                   value={inputValue}
-                  disabled={cooldown || isTyping}
+                  disabled={cooldown || isTyping || isAccountBlocked}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyDown={handleKeyDown}
                   className="flex-1 px-4 py-3 bg-white border border-[#E5E7EB] rounded-[10px] text-[14px] text-[#282828] placeholder-[#6E748F]/60 focus:outline-none focus:border-[#5C9DFF] focus:ring-1 focus:ring-[#5C9DFF] transition-all disabled:bg-gray-50 disabled:cursor-not-allowed"
@@ -336,7 +337,7 @@ export default function RolePlayModeTopics() {
                 {inputValue.trim() ? (
                   <button 
                     onClick={handleSend}
-                    disabled={cooldown || isTyping}
+                    disabled={cooldown || isTyping || isAccountBlocked}
                     className="flex justify-center items-center w-11 h-11 bg-[#5C9DFF] rounded-full text-white hover:bg-[#4A8BEB] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Send className="w-5 h-5" />
@@ -344,7 +345,7 @@ export default function RolePlayModeTopics() {
                 ) : (
                   <button 
                     onClick={startRecording}
-                    disabled={cooldown || isTyping}
+                    disabled={cooldown || isTyping || isAccountBlocked}
                     className="flex justify-center items-center w-11 h-11 bg-white border border-[#5C9DFF] rounded-full text-[#5C9DFF] hover:bg-[#EFF6FF] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Mic className="w-5 h-5" />

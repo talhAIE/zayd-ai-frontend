@@ -23,6 +23,7 @@ export default function ListeningModeTopics() {
     listeningPayload,
     mcqList,
     isCompleted,
+    isAccountBlocked,
     sessionStatus,
     startListening,
     nextListeningStage,
@@ -382,7 +383,7 @@ export default function ListeningModeTopics() {
                             }
                             setCurrentMcqIndex(prev => prev + 1);
                           }}
-                          disabled={currentAnswer === undefined}
+                          disabled={currentAnswer === undefined || isAccountBlocked}
                           className="px-6 py-2.5 bg-[#3B82F6] text-white rounded-full font-['Outfit'] font-semibold text-[14px] hover:bg-[#2563EB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
                           Next Question
@@ -398,7 +399,7 @@ export default function ListeningModeTopics() {
                             const answers = mcqList.map((_, idx) => selectedAnswers[idx] ?? -1);
                             submitMcqs(answers);
                           }}
-                          disabled={Object.keys(selectedAnswers).length < mcqList.length}
+                          disabled={Object.keys(selectedAnswers).length < mcqList.length || isAccountBlocked}
                           className="px-6 py-2.5 bg-[#3B82F6] text-white rounded-full font-['Outfit'] font-semibold text-[14px] hover:bg-[#2563EB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
                           Submit Answers
@@ -417,7 +418,7 @@ export default function ListeningModeTopics() {
             <div className="flex justify-center items-center pt-2 mt-auto">
               <button 
                 onClick={() => nextListeningStage()}
-                disabled={!hasListenedToAudio}
+                disabled={!hasListenedToAudio || isAccountBlocked}
                 className="flex justify-center items-center w-full max-w-[200px] h-[52px] bg-[#3B82F6] hover:bg-[#2563EB] disabled:bg-[#E5E7EB] disabled:text-[#9CA3AF] transition-colors rounded-full font-bold text-[16px] leading-[20px] text-white"
               >
                 Next

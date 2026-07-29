@@ -44,6 +44,7 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
   const [isTyping, setIsTyping] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [sessionStatus, setSessionStatus] = useState<SessionStatus>({ remainingSeconds: null });
+  const [isAccountBlocked, setIsAccountBlocked] = useState(false);
 
   // Refs for tracking mutable state within socket handlers without needing to re-bind
   const modeSessionIdRef = useRef<string | null>(null);
@@ -164,6 +165,21 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
       setSessionStatus({ remainingSeconds: payload.remainingSeconds, message: payload.message });
     });
 
+    newSocket.on('content_filter_warning', (payload: { message: string }) => {
+      toast.warning(payload.message);
+      setIsTyping(false);
+    });
+
+    newSocket.on('account_blocked', (payload: { message: string }) => {
+      setIsAccountBlocked(true);
+      setIsTyping(false);
+      toast.error(payload.message || 'Your account has been blocked.');
+      newSocket.disconnect();
+      window.setTimeout(() => {
+        window.location.assign('/login');
+      }, 2000);
+    });
+
     newSocket.on('error', (payload: { message: string }) => {
       toast.error(payload.message);
       setIsTyping(false);
@@ -180,7 +196,7 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
   }, [lessonModeId]);
 
   const sendMessage = useCallback((text: string) => {
-    if (!socket || !modeSessionIdRef.current) return;
+    if (!socket || !modeSessionIdRef.current || isAccountBlocked) return;
     setIsTyping(true);
     setChatHistory(prev => [
       ...prev,
@@ -197,37 +213,37 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
       }
     ]);
     socket.emit('text', { modeSessionId: modeSessionIdRef.current, textMessage: text });
-  }, [socket]);
+  }, [socket, isAccountBlocked]);
 
   const sendAudio = useCallback((base64Audio: string, format: string = 'wav') => {
-    if (!socket || !modeSessionIdRef.current) return;
+    if (!socket || !modeSessionIdRef.current || isAccountBlocked) return;
     setIsTyping(true);
     socket.emit('audio', { modeSessionId: modeSessionIdRef.current, audioBuffer: base64Audio, format });
-  }, [socket]);
+  }, [socket, isAccountBlocked]);
 
   const submitMcqs = useCallback((answers: Array<number | string>) => {
-    if (!socket || !modeSessionIdRef.current) return;
+    if (!socket || !modeSessionIdRef.current || isAccountBlocked) return;
     socket.emit('submit_mcqs', { modeSessionId: modeSessionIdRef.current, answers });
-  }, [socket]);
+  }, [socket, isAccountBlocked]);
 
   const startListening = useCallback(() => {
-    if (!socket || !modeSessionIdRef.current) return;
+    if (!socket || !modeSessionIdRef.current || isAccountBlocked) return;
     socket.emit('start_listening', { modeSessionId: modeSessionIdRef.current });
-  }, [socket]);
+  }, [socket, isAccountBlocked]);
 
   const nextListeningStage = useCallback(() => {
-    if (!socket || !modeSessionIdRef.current) return;
+    if (!socket || !modeSessionIdRef.current || isAccountBlocked) return;
     socket.emit('next_listening_stage', { modeSessionId: modeSessionIdRef.current });
-  }, [socket]);
+  }, [socket, isAccountBlocked]);
 
   const restartSession = useCallback(() => {
-    if (!socket || !lessonModeId) return;
+    if (!socket || !lessonModeId || isAccountBlocked) return;
     setChatHistory([]);
     setMcqList([]);
     setListeningPayload(null);
     setIsCompleted(false);
     socket.emit('restart_mode_session', { lessonModeId });
-  }, [socket, lessonModeId]);
+  }, [socket, lessonModeId, isAccountBlocked]);
 
   return {
     modeSessionId,
@@ -238,6 +254,7 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
     isTyping,
     isCompleted,
     sessionStatus,
+    isAccountBlocked,
     sendMessage,
     sendAudio,
     submitMcqs,
