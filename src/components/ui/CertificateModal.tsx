@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { X, Award, Download } from "lucide-react";
+import { X, Download } from "lucide-react";
 import html2canvas from "html2canvas";
 
 interface CertificateModalProps {
@@ -33,13 +33,38 @@ export const CertificateModal: React.FC<CertificateModalProps> = ({
     }
   };
 
+  const getOrdinalSuffix = (d: number) => {
+    if (d > 3 && d < 21) return "th";
+    switch (d % 10) {
+      case 1:
+        return "st";
+      case 2:
+        return "nd";
+      case 3:
+        return "rd";
+      default:
+        return "th";
+    }
+  };
+
+  const dateObj = new Date();
+  const day = dateObj.getDate();
+  const month = dateObj.toLocaleDateString("en-US", { month: "long" });
+  const year = dateObj.getFullYear();
+  const formattedDate = `${day}${getOrdinalSuffix(day)} of ${month}, ${year}`;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto">
+      <style>
+        {`
+          @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap');
+        `}
+      </style>
       <div
-        className="relative w-full max-w-[800px] flex flex-col gap-4 my-auto"
+        className="relative w-full max-w-[950px] flex flex-col gap-4 my-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header Actions - Floating Above Certificate */}
+        {/* Header Actions */}
         <div className="flex justify-end items-center gap-2 w-full">
           <button
             onClick={handleDownload}
@@ -56,88 +81,93 @@ export const CertificateModal: React.FC<CertificateModalProps> = ({
           </button>
         </div>
 
-        {/* Certificate Container with Padding */}
+        {/* Certificate Container */}
         <div
           ref={certificateRef}
-          className="bg-white p-6 sm:p-10 shadow-2xl shrink-0 w-full"
+          className="bg-[#F6F8F9] shrink-0 w-full relative overflow-hidden shadow-2xl rounded-sm"
+          style={{ fontFamily: "'Poppins', sans-serif" }}
         >
-          {/* Certificate Inner Frame */}
-          <div
-            className="relative w-full aspect-[1.414/1] border-[12px] border-double border-[#0F1450] p-10 flex flex-col items-center text-center justify-center gap-6"
-            style={{
-              backgroundImage:
-                "radial-gradient(circle at center, #ffffff 0%, #f8fafc 100%)",
-              boxShadow: "inset 0 0 40px rgba(0,0,0,0.05)",
-            }}
-          >
-            {/* Watermark / Background accents */}
-            <div className="absolute inset-0 opacity-[0.03] pointer-events-none flex items-center justify-center">
-              <Award className="w-96 h-96 text-[#0F1450]" />
-            </div>
+          {/* Inner Border (Teal) */}
+          <div className="absolute inset-4 sm:inset-6 border-[6px] border-[#14B8A6]/30 rounded-lg z-0 pointer-events-none" />
 
-            <div className="w-20 h-20 bg-[#EFF6FF] rounded-full flex items-center justify-center border-4 border-white shadow-lg z-10 mb-2">
-              <Award className="w-10 h-10 text-[#5C9DFF]" />
-            </div>
+          {/* BACKGROUND DECORATIONS (Z-10) */}
 
-            <div className="z-10">
-              <h2 className="text-[#6E748F] font-['Outfit'] font-semibold tracking-widest uppercase text-sm mb-2">
-                Certificate of Completion
+          {/* Top Edge Banner */}
+          <div className="absolute top-0 right-[20%] flex h-4 sm:h-6 z-10">
+            <div className="w-10 sm:w-16 h-full bg-[#4AA9E9]" />
+            <div className="w-10 sm:w-16 h-full bg-[#007BCE]" />
+            <div className="w-10 sm:w-16 h-full bg-[#F7941D]" />
+            <div className="w-10 sm:w-16 h-full bg-[#F4B325]" />
+            <div className="w-10 sm:w-16 h-full bg-[#4AA9E9]" />
+            <div className="w-10 sm:w-16 h-full bg-[#007BCE]" />
+          </div>
+
+          {/* Bottom Right Paint Splatter */}
+          <div className="absolute bottom-0 right-0 flex items-end z-10 opacity-90">
+            <div className="w-6 h-[100px] bg-[#F4B325] rounded-t-full shadow-sm" />
+            <div className="w-10 h-[220px] bg-[#F7941D] rounded-t-full -ml-2 shadow-sm" />
+            <div className="w-8 h-[140px] bg-[#007BCE] rounded-t-full -ml-3 shadow-sm" />
+            <div className="w-12 h-[280px] bg-[#4AA9E9] rounded-t-full -ml-4 shadow-sm" />
+            <div className="w-8 h-[120px] bg-[#F4B325] rounded-t-full -ml-2 shadow-sm" />
+            <div className="w-4 h-[50px] bg-[#F7941D] rounded-t-full -ml-1" />
+          </div>
+
+          {/* Bottom Left Paint Splatter */}
+          <div className="absolute bottom-0 left-0 flex items-end z-10 opacity-90">
+            <div className="w-12 h-[120px] bg-[#4AA9E9] rounded-t-full shadow-sm" />
+            <div className="w-10 h-[80px] bg-[#007BCE] rounded-t-full -ml-3 shadow-sm" />
+            <div className="w-12 h-[160px] bg-[#F7941D] rounded-t-full -ml-4 shadow-sm" />
+            <div className="w-10 h-[100px] bg-[#F4B325] rounded-t-full -ml-3 shadow-sm" />
+            <div className="w-12 h-[70px] bg-[#4AA9E9] rounded-t-full -ml-4 shadow-sm" />
+            <div className="w-10 h-[130px] bg-[#007BCE] rounded-t-full -ml-3 shadow-sm" />
+            <div className="w-8 h-[60px] bg-[#F7941D] rounded-t-full -ml-2 shadow-sm" />
+          </div>
+
+
+
+          {/* MAIN CONTENT FRAME - Z-30 */}
+          <div className="relative w-full aspect-[1.41/1] px-12 sm:px-24 py-16 sm:py-24 flex flex-col items-center text-center z-30">
+            <h4 className="text-[#333333] font-bold text-base sm:text-lg mb-2 mt-4">
+              Zayd AI Learning
+            </h4>
+
+            {/* TEAL TITLE */}
+            <h1 className="text-3xl sm:text-4xl md:text-5xl text-[#14B8A6] mb-6 font-[800] tracking-tight uppercase">
+              Certificate of Completion
+            </h1>
+
+            <p className="text-[#333333] text-base sm:text-lg font-semibold mb-2">
+              This certificate is proudly awarded to
+            </p>
+
+            <div className="flex flex-col items-center mb-6 w-full px-4">
+              {/* BLUE NAME */}
+              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-[800] text-[#2563EB] mb-2 leading-tight break-words max-w-full">
+                {user?.name || user?.username || "Student Name"}
               </h2>
-              <h1 className="text-4xl sm:text-5xl font-serif text-[#0F1450] mb-8 font-bold">
-                Achievement Award
-              </h1>
             </div>
 
-            <div className="z-10 flex flex-col items-center text-center">
-              <p className="text-[#6E748F] text-sm mb-4">
-                This is to proudly certify that
-              </p>
+            <p className="text-[#555555] text-sm sm:text-base md:text-[17px] font-medium max-w-2xl mx-auto mb-6 leading-relaxed px-4">
+              for consistently showing outstanding effort, curiosity, and
+              dedication at Zayd AI Learning. We applaud{" "}
+              {user?.name || user?.username || "them"} for being a shining role
+              model in the virtual classroom and beyond.
+            </p>
 
-              <div className="border-b-2 border-[#5C9DFF]/30 px-12 pb-4 mb-4">
-                <h3 className="text-3xl sm:text-4xl font-['Outfit'] font-bold text-[#5C9DFF] leading-normal mt-2">
-                  {user?.name || user?.username || "Student Name"}
-                </h3>
-              </div>
+            <p className="text-[#333333] text-base sm:text-lg font-bold mb-8 sm:mb-12">
+              Awarded on the {formattedDate}.
+            </p>
 
-              <p className="text-[#6E748F] text-sm max-w-lg mx-auto mb-2">
-                has successfully completed all requirements for the course
-              </p>
-              <h4 className="text-2xl font-['Outfit'] font-bold text-[#282828]">
-                {course.title}
-              </h4>
+            {/* Signature Area */}
+            <div className="flex flex-col items-center mt-auto pb-4">
+              <div className="w-48 sm:w-64 h-[2px] bg-[#94A3B8] mb-2" />
+              <span className="text-lg sm:text-xl font-[800] text-[#14B8A6]">
+                Zayd AI
+              </span>
+              <span className="text-xs sm:text-sm font-bold text-[#333333]">
+                Awesome Instructor
+              </span>
             </div>
-
-            <div className="z-10 mt-12 flex justify-between w-full max-w-lg items-end border-t border-gray-200 pt-6">
-              <div className="flex flex-col items-center">
-                <span className="text-sm font-semibold text-[#0F1450] mb-1">
-                  {new Date().toLocaleDateString("en-US", {
-                    month: "long",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                </span>
-                <span className="text-xs text-[#6E748F] uppercase tracking-wider">
-                  Date
-                </span>
-              </div>
-
-              <div className="flex flex-col items-center">
-                <div className="w-32 h-12 flex items-center justify-center mb-1">
-                  <span className="font-['Outfit'] italic font-bold text-[#0F1450] text-xl opacity-80">
-                    Zayd AI
-                  </span>
-                </div>
-                <span className="text-xs text-[#6E748F] uppercase tracking-wider border-t border-gray-300 pt-1 w-full text-center">
-                  Organization
-                </span>
-              </div>
-            </div>
-
-            {/* Decorative Corner Elements */}
-            <div className="absolute top-4 left-4 w-12 h-12 border-t-4 border-l-4 border-[#0F1450] opacity-20"></div>
-            <div className="absolute top-4 right-4 w-12 h-12 border-t-4 border-r-4 border-[#0F1450] opacity-20"></div>
-            <div className="absolute bottom-4 left-4 w-12 h-12 border-b-4 border-l-4 border-[#0F1450] opacity-20"></div>
-            <div className="absolute bottom-4 right-4 w-12 h-12 border-b-4 border-r-4 border-[#0F1450] opacity-20"></div>
           </div>
         </div>
       </div>
