@@ -6,6 +6,7 @@ import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import ReadingPassageCard from '@/components/ui/ReadingPassageCard';
 import TopicCompletionModal from '@/components/ui/TopicCompletionModal';
 import FeedbackModal from '@/components/ui/FeedbackModal';
+import { ContentPolicyWarningModal } from '@/components/ui/ContentPolicyWarningModal';
 import { useLearningProgressRefresh } from '@/hooks/useLearningProgressRefresh';
 import ReactMarkdown from 'react-markdown';
 import { toast } from 'sonner';
@@ -42,6 +43,9 @@ export default function ReadingModeTopics() {
     isCompleted,
     isAccountBlocked,
     sessionStatus,
+    isContentFilterWarningOpen,
+    setIsContentFilterWarningOpen,
+    contentFilterWarningData,
     sendMessage,
     sendAudio,
     submitMcqs,
@@ -144,6 +148,12 @@ export default function ReadingModeTopics() {
           setIsJustCompleted(false);
           restartSession();
         }}
+      />
+
+      <ContentPolicyWarningModal
+        open={isContentFilterWarningOpen}
+        data={contentFilterWarningData}
+        onAcknowledge={() => setIsContentFilterWarningOpen(false)}
       />
 
       <FeedbackModal 

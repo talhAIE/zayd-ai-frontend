@@ -6,6 +6,7 @@ import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import TopicCompletionModal from '@/components/ui/TopicCompletionModal';
 import ReadingPassageCard from '@/components/ui/ReadingPassageCard';
 import FeedbackModal from '@/components/ui/FeedbackModal';
+import { ContentPolicyWarningModal } from '@/components/ui/ContentPolicyWarningModal';
 import { useLearningProgressRefresh } from '@/hooks/useLearningProgressRefresh';
 import ReactMarkdown from 'react-markdown';
 import { useAudioPlayback } from '@/hooks/useAudioPlayback';
@@ -41,6 +42,9 @@ export default function RolePlayModeTopics() {
     isCompleted,
     isAccountBlocked,
     sessionStatus,
+    isContentFilterWarningOpen,
+    setIsContentFilterWarningOpen,
+    contentFilterWarningData,
     sendMessage,
     sendAudio,
     restartSession
@@ -122,6 +126,12 @@ export default function RolePlayModeTopics() {
           setIsJustCompleted(false);
           restartSession();
         }}
+      />
+
+      <ContentPolicyWarningModal
+        open={isContentFilterWarningOpen}
+        data={contentFilterWarningData}
+        onAcknowledge={() => setIsContentFilterWarningOpen(false)}
       />
 
       <FeedbackModal 

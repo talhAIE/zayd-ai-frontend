@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ChevronLeft, Clock, Check } from 'lucide-react';
 import { useModeSession } from '@/hooks/useModeSession';
 import TopicCompletionModal from '@/components/ui/TopicCompletionModal';
+import { ContentPolicyWarningModal } from '@/components/ui/ContentPolicyWarningModal';
 import { useLearningProgressRefresh } from '@/hooks/useLearningProgressRefresh';
 import { toast } from 'sonner';
 import { useAudioPlayback } from '@/hooks/useAudioPlayback';
@@ -29,6 +30,9 @@ export default function ListeningModeTopics() {
     isCompleted,
     isAccountBlocked,
     sessionStatus,
+    isContentFilterWarningOpen,
+    setIsContentFilterWarningOpen,
+    contentFilterWarningData,
     startListening,
     nextListeningStage,
     submitMcqs,
@@ -101,6 +105,12 @@ export default function ListeningModeTopics() {
           setIsJustCompleted(false);
           restartSession();
         }}
+      />
+
+      <ContentPolicyWarningModal
+        open={isContentFilterWarningOpen}
+        data={contentFilterWarningData}
+        onAcknowledge={() => setIsContentFilterWarningOpen(false)}
       />
 
       {/* Header Progress Group */}

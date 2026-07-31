@@ -6,6 +6,7 @@ import { useModeSession } from '@/hooks/useModeSession';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import TopicCompletionModal from '@/components/ui/TopicCompletionModal';
 import FeedbackModal from '@/components/ui/FeedbackModal';
+import { ContentPolicyWarningModal } from '@/components/ui/ContentPolicyWarningModal';
 
 export default function DebateModeTopics() {
   const navigate = useNavigate();
@@ -30,6 +31,9 @@ export default function DebateModeTopics() {
     isTyping,
     isCompleted,
     sessionStatus,
+    isContentFilterWarningOpen,
+    setIsContentFilterWarningOpen,
+    contentFilterWarningData,
     sendMessage,
     sendAudio,
     restartSession
@@ -106,6 +110,12 @@ export default function DebateModeTopics() {
           setIsJustCompleted(false);
           restartSession();
         }}
+      />
+
+      <ContentPolicyWarningModal
+        open={isContentFilterWarningOpen}
+        data={contentFilterWarningData}
+        onAcknowledge={() => setIsContentFilterWarningOpen(false)}
       />
 
       <FeedbackModal 

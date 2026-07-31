@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { toast } from 'sonner';
+import { ContentFilterWarningData } from '@/components/ui/ContentPolicyWarningModal';
 
 export interface HistoryItem {
   id: string;
@@ -44,6 +45,8 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
   const [isTyping, setIsTyping] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [sessionStatus, setSessionStatus] = useState<SessionStatus>({ remainingSeconds: null });
+  const [isContentFilterWarningOpen, setIsContentFilterWarningOpen] = useState(false);
+  const [contentFilterWarningData, setContentFilterWarningData] = useState<ContentFilterWarningData | null>(null);
   const [isAccountBlocked, setIsAccountBlocked] = useState(false);
 
   // Refs for tracking mutable state within socket handlers without needing to re-bind
@@ -180,8 +183,15 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
       setSessionStatus({ remainingSeconds: payload.remainingSeconds, message: payload.message });
     });
 
-    newSocket.on('content_filter_warning', (payload: { message: string }) => {
-      toast.warning(payload.message);
+    newSocket.on('content_filter_warning', (payload: any) => {
+      setContentFilterWarningData({
+        message: payload.message,
+        violationType: payload.violationType,
+        severity: payload.severity,
+        violationCount: payload.violationCount,
+        remainingWarnings: payload.remainingWarnings,
+      });
+      setIsContentFilterWarningOpen(true);
       setIsTyping(false);
     });
 
@@ -260,6 +270,11 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
     socket.emit('restart_mode_session', { lessonModeId });
   }, [socket, lessonModeId, isAccountBlocked]);
 
+  const resetActivityTimer = useCallback(() => {
+    if (!socket || !modeSessionIdRef.current) return;
+    socket.emit('reset_activity_timer', { modeSessionId: modeSessionIdRef.current });
+  }, [socket]);
+
   return {
     modeSessionId,
     chatHistory,
@@ -267,9 +282,14 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
     mcqList,
     listeningPayload,
     isTyping,
+    setIsTyping,
     isCompleted,
     sessionStatus,
     isAccountBlocked,
+    isContentFilterWarningOpen,
+    setIsContentFilterWarningOpen,
+    contentFilterWarningData,
+    resetActivityTimer,
     sendMessage,
     sendAudio,
     submitMcqs,
