@@ -21,6 +21,7 @@ export default function ListeningModeTopics() {
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number | string>>({});
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [hasListenedToAudio, setHasListenedToAudio] = useState(false);
+  const [hasStartedAudio, setHasStartedAudio] = useState(false);
   const [isJustCompleted, setIsJustCompleted] = useState(false);
   
   const {
@@ -63,7 +64,14 @@ export default function ListeningModeTopics() {
 
   useEffect(() => {
     setHasListenedToAudio(false);
+    setHasStartedAudio(false);
   }, [listeningPayload?.stage]);
+
+  useEffect(() => {
+    if (playingAudioId === 'listening_audio' || loadingAudioId === 'listening_audio') {
+      setHasStartedAudio(true);
+    }
+  }, [playingAudioId, loadingAudioId]);
 
   useEffect(() => {
     if (modeSessionId) {
@@ -80,7 +88,7 @@ export default function ListeningModeTopics() {
       return Math.min(99, 75 + quizProgress);
     }
     if (listeningPayload?.stage === 'question') return 50;
-    if (listeningPayload?.stage === 'initial') return 25;
+    if (listeningPayload?.stage === 'initial') return hasStartedAudio ? 25 : 0;
     return 0;
   };
 
@@ -102,6 +110,7 @@ export default function ListeningModeTopics() {
           setCurrentMcqIndex(0);
           setSelectedAnswers({});
           setHasListenedToAudio(false);
+          setHasStartedAudio(false);
           setIsJustCompleted(false);
           restartSession();
         }}
@@ -180,16 +189,16 @@ export default function ListeningModeTopics() {
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[40px] bg-[#5C9DFF] rounded-[2px]" />
             )}
             <div className={`flex justify-center items-center w-7 h-7 rounded-full font-bold text-[12px] ${
-              (listeningPayload?.stage && listeningPayload.stage !== 'initial') || isCompleted ? 'bg-[#2DCD6B] text-white' : 'bg-[#5C9DFF] text-white'
+              (listeningPayload?.stage && listeningPayload.stage !== 'initial') || isCompleted ? 'bg-[#2DCD6B] text-white' : (hasStartedAudio ? 'bg-[#5C9DFF] text-white' : 'bg-[#E5E7EB] text-[#6E748F]')
             }`}>
               1
             </div>
             <div className="flex flex-col gap-0.5">
               <span className="font-semibold text-[13px] leading-[16px] text-[#0F1450]">Audio Narration</span>
               <span className={`text-[11px] leading-[14px] font-medium ${
-                (listeningPayload?.stage && listeningPayload.stage !== 'initial') || isCompleted ? 'text-[#2DCD6B]' : 'text-[#5C9DFF]'
+                (listeningPayload?.stage && listeningPayload.stage !== 'initial') || isCompleted ? 'text-[#2DCD6B]' : (hasStartedAudio ? 'text-[#5C9DFF]' : 'text-[#6E748F]')
               }`}>
-                {(listeningPayload?.stage && listeningPayload.stage !== 'initial') || isCompleted ? 'Completed' : 'In Progress'}
+                {(listeningPayload?.stage && listeningPayload.stage !== 'initial') || isCompleted ? 'Completed' : (hasStartedAudio ? 'In Progress' : 'Pending')}
               </span>
             </div>
           </div>

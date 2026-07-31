@@ -39,6 +39,7 @@ export default function ReadingModeTopics() {
     chatHistory,
     contentPayload,
     mcqList,
+    readingProgress,
     isTyping,
     isCompleted,
     isAccountBlocked,
@@ -105,22 +106,20 @@ export default function ReadingModeTopics() {
   const getProgressPercentage = () => {
     if (isCompleted) return 100;
 
-    const passageText = contentPayload?.passage || contentPayload?.content || '';
-    const totalSentences = passageText
-      ? passageText.split(/(?<=[.!?])\s+/).filter((s: string) => s.trim().length > 0).length
-      : 8;
+    if (readingProgress) {
+      if (mcqList && mcqList.length > 0) {
+        const quizProgress = Math.floor(((currentMcqIndex + 1) / mcqList.length) * 20);
+        return Math.min(99, 80 + quizProgress);
+      }
+      return readingProgress.percentComplete;
+    }
 
-    const userMessages = chatHistory.filter(m => m.role === 'user').length;
-
+    // Fallback if no readingProgress available yet
     if (mcqList && mcqList.length > 0) {
       const quizProgress = Math.floor(((currentMcqIndex + 1) / mcqList.length) * 20);
       return Math.min(99, 80 + quizProgress);
     }
-
-    if (userMessages === 0) return 0;
-
-    const passageProgress = Math.floor((userMessages / Math.max(1, totalSentences)) * 80);
-    return Math.min(79, passageProgress);
+    return 0;
   };
 
   const step1Completed = isPassageExpanded || (chatHistory && chatHistory.some(m => m.role === 'user'));

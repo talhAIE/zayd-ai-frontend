@@ -90,9 +90,10 @@ export default function DebateModeTopics() {
 
   const getProgressPercentage = () => {
     if (isCompleted) return 100;
-    const userMsgCount = chatHistory.filter(m => m.role === 'user').length;
-    if (userMsgCount === 0) return 0;
-    return Math.min(95, Math.floor((userMsgCount / 5) * 90));
+    const assistantMsgCount = chatHistory.filter(m => m.role === 'assistant').length;
+    const completedTurns = Math.max(0, assistantMsgCount - 1);
+    if (completedTurns === 0) return 0;
+    return Math.min(95, Math.floor((completedTurns / 5) * 90));
   };
 
   return (

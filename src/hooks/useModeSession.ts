@@ -24,6 +24,15 @@ export interface Mcq {
   correctOptionId?: string;
 }
 
+export interface ReadingProgress {
+  phase: 'reading' | 'quiz' | 'completed';
+  currentSentenceIndex: number;
+  totalSentences: number;
+  acceptedSentenceIndexes: number[];
+  rejectedAttemptCount: number;
+  percentComplete: number;
+}
+
 export interface SessionStatus {
   remainingSeconds: number | null;
   message?: string;
@@ -45,6 +54,7 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
   const [isTyping, setIsTyping] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [sessionStatus, setSessionStatus] = useState<SessionStatus>({ remainingSeconds: null });
+  const [readingProgress, setReadingProgress] = useState<ReadingProgress | null>(null);
   const [isContentFilterWarningOpen, setIsContentFilterWarningOpen] = useState(false);
   const [contentFilterWarningData, setContentFilterWarningData] = useState<ContentFilterWarningData | null>(null);
   const [isAccountBlocked, setIsAccountBlocked] = useState(false);
@@ -100,6 +110,9 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
       if (session.contentPayload) {
         setContentPayload(session.contentPayload);
       }
+      if (session.readingProgress) {
+        setReadingProgress(session.readingProgress);
+      }
       setIsCompleted(session.isCompleted || false);
     });
 
@@ -115,8 +128,11 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
       setIsTyping(true);
     });
 
-    newSocket.on('streaming_complete', (payload: { ai_response: string, feedback: string, ai_cefr_level: string, isCompleted: boolean, ttsAudioUrl?: string, hint?: string }) => {
+    newSocket.on('streaming_complete', (payload: { ai_response: string, feedback: string, ai_cefr_level: string, isCompleted: boolean, ttsAudioUrl?: string, hint?: string, readingProgress?: ReadingProgress }) => {
       setIsTyping(false);
+      if (payload.readingProgress) {
+        setReadingProgress(payload.readingProgress);
+      }
       setChatHistory(prev => [
         ...prev,
         {
@@ -131,6 +147,10 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
           createdAt: new Date().toISOString(),
         }
       ]);
+    });
+
+    newSocket.on('reading_progress', (payload: ReadingProgress) => {
+      setReadingProgress(payload);
     });
 
     newSocket.on('mcq_list', (payload: { modeSessionId: string, questions: Mcq[] }) => {
@@ -162,7 +182,7 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
       }
     });
 
-    newSocket.on('speech_transcribed', (payload: { textMessage: string, assessments: any }) => {
+    newSocket.on('speech_transcribed', (payload: { textMessage: string, assessments: any, audioUrl?: string }) => {
       setChatHistory(prev => [
         ...prev,
         {
@@ -173,7 +193,7 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
           hint: null,
           feedback: null,
           assessments: payload.assessments,
-          audioUrl: null,
+          audioUrl: payload.audioUrl || null,
           createdAt: new Date().toISOString(),
         }
       ]);
@@ -266,6 +286,7 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
     setChatHistory([]);
     setMcqList([]);
     setListeningPayload(null);
+    setReadingProgress(null);
     setIsCompleted(false);
     socket.emit('restart_mode_session', { lessonModeId });
   }, [socket, lessonModeId, isAccountBlocked]);
@@ -281,6 +302,7 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
     contentPayload,
     mcqList,
     listeningPayload,
+    readingProgress,
     isTyping,
     setIsTyping,
     isCompleted,
