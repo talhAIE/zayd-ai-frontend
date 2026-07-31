@@ -12,6 +12,7 @@ interface AudioPlayerProps {
     showTotal?: boolean;
     isLoading?: boolean;
     variant?: 'default' | 'gradient';
+    className?: string;
 }
 
 const formatTime = (sec: number) => {
@@ -31,6 +32,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     onTogglePlay,
     showTotal = false,
     variant = 'default',
+    className,
 }) => {
     const waveformRef = React.useRef<HTMLDivElement>(null);
     const [barCount, setBarCount] = React.useState(0);
@@ -84,7 +86,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
 
     return (
         <div
-            className={`flex items-center gap-2 w-full max-w-xs p-2 rounded-full border ${isGradient
+            className={`flex items-center gap-2 w-full ${className || 'max-w-xs'} p-2 rounded-full border ${isGradient
                 ? 'bg-[#EAF5FF] border-[#A7D1F7] shadow-sm'
                 : 'bg-gray-100'
                 }`}

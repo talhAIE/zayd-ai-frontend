@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ChevronLeft, Play, Circle, PlayCircle, Clock, Check } from 'lucide-react';
+import { ChevronLeft, Clock, Check } from 'lucide-react';
 import { useModeSession } from '@/hooks/useModeSession';
 import TopicCompletionModal from '@/components/ui/TopicCompletionModal';
 import { useLearningProgressRefresh } from '@/hooks/useLearningProgressRefresh';
 import { toast } from 'sonner';
+import { useAudioPlayback } from '@/hooks/useAudioPlayback';
+import AudioPlayer from '../AudioPlayer';
 
 export default function ListeningModeTopics() {
   const navigate = useNavigate();
@@ -12,14 +14,13 @@ export default function ListeningModeTopics() {
   const lessonModeId = searchParams.get('modeId') || '';
   const lessonId = searchParams.get('lessonId') || '';
   const refreshLearningProgress = useLearningProgressRefresh();
+  const { playingAudioId, isCurrentlyPlaying, loadingAudioId, audioProgress, audioDuration, toggleAudio } = useAudioPlayback();
   
-  const [isPlaying, setIsPlaying] = useState(false);
   const [currentMcqIndex, setCurrentMcqIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number | string>>({});
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [hasListenedToAudio, setHasListenedToAudio] = useState(false);
   const [isJustCompleted, setIsJustCompleted] = useState(false);
-  const audioRef = useRef<HTMLAudioElement>(null);
   
   const {
     modeSessionId,
@@ -66,15 +67,7 @@ export default function ListeningModeTopics() {
     }
   }, [modeSessionId]);
 
-  const toggleAudio = () => {
-    if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause();
-      } else {
-        audioRef.current.play();
-      }
-    }
-  };
+
 
   const getProgressPercentage = () => {
     if (isCompleted) return 100;
@@ -98,7 +91,7 @@ export default function ListeningModeTopics() {
         isJustCompleted={isJustCompleted}
         onFinish={() => {
           setShowCompletionModal(false);
-          navigate('/student/courses');
+          navigate(-1);
         }}
         onRetake={() => {
           setShowCompletionModal(false);
@@ -246,45 +239,19 @@ export default function ListeningModeTopics() {
           {/* Audio Player Card */}
           {activeAudioUrl && (
             <div className="flex flex-col p-4 px-5 gap-3.5 bg-white border-2 border-[#5C9DFF] rounded-xl">
-              <audio 
-                ref={audioRef} 
-                src={activeAudioUrl} 
-                onEnded={() => {
-                  setIsPlaying(false);
-                  setHasListenedToAudio(true);
-                }}
-                onPause={() => setIsPlaying(false)}
-                onPlay={() => setIsPlaying(true)}
-              />
               <div className="flex flex-row justify-between items-center w-full">
                 <span className="font-bold text-[14px] leading-[18px] text-[#5C9DFF]">Audio Track</span>
               </div>
-              
-              <div className="flex flex-row items-center gap-3">
-                <button 
-                  onClick={toggleAudio}
-                  className="flex justify-center items-center w-9 h-9 bg-[#5C9DFF] rounded-full text-white hover:bg-[#4A8BEB] transition-colors"
-                >
-                  {isPlaying ? <Circle className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
-                </button>
-                
-                <div className="flex-1 flex flex-row items-center gap-1 overflow-hidden h-8">
-                  {/* Mock Waveform for visual flair */}
-                  {[8, 16, 24, 12, 20, 28, 16, 10, 22, 32, 18, 14, 26, 8, 20, 32, 24, 12, 18, 28, 10, 22, 16, 8, 30, 20, 14, 24, 10, 18].map((height, i) => (
-                    <div key={i} className={`w-[3px] rounded-sm transition-all duration-300 ${isPlaying ? 'bg-[#3B82F6] animate-pulse' : 'bg-[#BFDBFE]'}`} style={{ height: `${height}px` }} />
-                  ))}
-                  {[8, 16, 24, 12, 20, 28, 16, 10, 22, 32, 18, 14, 26, 8, 20, 32, 24, 12, 18, 28, 10, 22, 16, 8, 30, 20, 14, 24, 10, 18].map((height, i) => (
-                    <div key={i + 30} className={`w-[3px] rounded-sm transition-all duration-300 ${isPlaying ? 'bg-[#3B82F6] animate-pulse' : 'bg-[#BFDBFE]'}`} style={{ height: `${height}px` }} />
-                  ))}
-                </div>
-              </div>
-              
-              <div className="flex flex-row justify-between items-center w-full">
-                <div className="flex items-center gap-1">
-                  <PlayCircle className="w-2.5 h-2.5 text-[#5C9DFF]" />
-                  <span className="font-normal text-[11px] leading-[14px] text-[#5C9DFF]">Play to listen</span>
-                </div>
-              </div>
+              <AudioPlayer
+                audioSrc={activeAudioUrl}
+                isPlaying={playingAudioId === 'listening_audio' && isCurrentlyPlaying}
+                isLoading={loadingAudioId === 'listening_audio'}
+                progress={playingAudioId === 'listening_audio' ? audioProgress : 0}
+                duration={playingAudioId === 'listening_audio' ? audioDuration : 0}
+                onTogglePlay={() => toggleAudio('listening_audio', activeAudioUrl, () => setHasListenedToAudio(true))}
+                variant="gradient"
+                className="max-w-full"
+              />
             </div>
           )}
           

@@ -4,9 +4,12 @@ import { ChevronLeft, Mic, Clock, MessageCircle, Send, Square, Trash2 } from 'lu
 import { useModeSession } from '@/hooks/useModeSession';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import TopicCompletionModal from '@/components/ui/TopicCompletionModal';
+import ReadingPassageCard from '@/components/ui/ReadingPassageCard';
 import FeedbackModal from '@/components/ui/FeedbackModal';
 import { useLearningProgressRefresh } from '@/hooks/useLearningProgressRefresh';
 import ReactMarkdown from 'react-markdown';
+import { useAudioPlayback } from '@/hooks/useAudioPlayback';
+import AudioPlayer from '../AudioPlayer';
 
 export default function RolePlayModeTopics() {
   const navigate = useNavigate();
@@ -14,8 +17,10 @@ export default function RolePlayModeTopics() {
   const lessonModeId = searchParams.get('modeId') || '';
   const lessonId = searchParams.get('lessonId') || '';
   const refreshLearningProgress = useLearningProgressRefresh();
+  const { playingAudioId, isCurrentlyPlaying, loadingAudioId, audioProgress, audioDuration, toggleAudio } = useAudioPlayback();
   
   const [inputValue, setInputValue] = useState('');
+  const [isScenarioExpanded, setIsScenarioExpanded] = useState(false);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [isJustCompleted, setIsJustCompleted] = useState(false);
   const [activeFeedback, setActiveFeedback] = useState<string | null>(null);
@@ -31,6 +36,7 @@ export default function RolePlayModeTopics() {
 
   const {
     chatHistory,
+    contentPayload,
     isTyping,
     isCompleted,
     isAccountBlocked,
@@ -52,6 +58,9 @@ export default function RolePlayModeTopics() {
       setShowCompletionModal(true);
     }
   }, [isCompleted, isJustCompleted]);
+
+  const step1Completed = isScenarioExpanded || (chatHistory && chatHistory.some(m => m.role === 'user'));
+  const step1Active = !step1Completed;
 
   const [cooldown, setCooldown] = useState(false);
 
@@ -105,10 +114,11 @@ export default function RolePlayModeTopics() {
         isJustCompleted={isJustCompleted}
         onFinish={() => {
           setShowCompletionModal(false);
-          navigate('/student/courses');
+          navigate(-1);
         }}
         onRetake={() => {
           setShowCompletionModal(false);
+          setIsScenarioExpanded(false);
           setIsJustCompleted(false);
           restartSession();
         }}
@@ -183,35 +193,48 @@ export default function RolePlayModeTopics() {
           <div className="w-full h-[1px] bg-[#E5E7EB]/70" />
           
           {/* Step 1: Roleplay Scenario */}
-          <div className="relative flex flex-row items-center p-[14px_14px_14px_13px] gap-2.5">
-            <div className="flex justify-center items-center w-7 h-7 bg-[#2DCD6B] rounded-full text-white font-bold text-[12px]">
+          <div className={`relative flex flex-row items-center p-[14px_14px_14px_13px] gap-2.5 ${
+            step1Active ? 'bg-[#5C9DFF]/10' : ''
+          }`}>
+            {step1Active && (
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[40px] bg-[#5C9DFF] rounded-[2px]" />
+            )}
+            <div className={`flex justify-center items-center w-7 h-7 rounded-full font-bold text-[12px] ${
+              step1Completed ? 'bg-[#2DCD6B] text-white' : 'bg-[#5C9DFF] text-white'
+            }`}>
               1
             </div>
             <div className="flex flex-col gap-0.5">
               <span className="font-semibold text-[13px] leading-[16px] text-[#0F1450]">Roleplay Scenario</span>
-              <span className="text-[11px] leading-[14px] text-[#2DCD6B] font-medium">Completed</span>
+              <span className={`text-[11px] leading-[14px] font-medium ${
+                step1Completed ? 'text-[#2DCD6B]' : 'text-[#5C9DFF]'
+              }`}>
+                {step1Completed ? 'Completed' : 'In Progress'}
+              </span>
             </div>
           </div>
           <div className="w-full h-[1px] bg-[#E5E7EB]/70" />
 
           {/* Step 2: Conversation Practice */}
           <div className={`relative flex flex-row items-center p-[14px_14px_14px_13px] gap-2.5 ${
-            !isCompleted ? 'bg-[#5C9DFF]/10' : ''
+            !step1Active && !isCompleted ? 'bg-[#5C9DFF]/10' : ''
           }`}>
-            {!isCompleted && (
+            {!step1Active && !isCompleted && (
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[40px] bg-[#5C9DFF] rounded-[2px]" />
             )}
             <div className={`flex justify-center items-center w-7 h-7 rounded-full font-bold text-[12px] ${
-              isCompleted ? 'bg-[#2DCD6B] text-white' : 'bg-[#5C9DFF] text-white'
+              isCompleted 
+                ? 'bg-[#2DCD6B] text-white' 
+                : (step1Completed ? 'bg-[#5C9DFF] text-white' : 'bg-[#E5E7EB] text-[#6E748F]')
             }`}>
               2
             </div>
             <div className="flex flex-col gap-0.5">
               <span className="font-semibold text-[13px] leading-[16px] text-[#0F1450]">Conversation Practice</span>
               <span className={`text-[11px] leading-[14px] font-medium ${
-                isCompleted ? 'text-[#2DCD6B]' : 'text-[#5C9DFF]'
+                isCompleted ? 'text-[#2DCD6B]' : (step1Completed ? 'text-[#5C9DFF]' : 'text-[#6E748F]')
               }`}>
-                {isCompleted ? 'Completed' : 'In Progress'}
+                {isCompleted ? 'Completed' : (step1Completed ? 'In Progress' : 'Pending')}
               </span>
             </div>
           </div>
@@ -243,13 +266,38 @@ export default function RolePlayModeTopics() {
         </div>
 
         {/* Workspace Main */}
-        <div className="flex flex-col flex-1 border border-[#E5E7EB] bg-white rounded-xl min-h-0 overflow-hidden">
+        <div className="flex flex-col flex-1 gap-4 min-h-0 overflow-y-auto pr-1">
           
+          {/* Scenario Card */}
+          {contentPayload && (contentPayload.passage || contentPayload.content || contentPayload.scenario) && (
+            <div className="flex-shrink-0 flex flex-col gap-4 pl-2 mt-2">
+              <ReadingPassageCard 
+                title="Roleplay Scenario"
+                content={contentPayload.passage || contentPayload.content || contentPayload.scenario || ''}
+                audioUrl={contentPayload.attachmentUrl}
+                onExpand={() => setIsScenarioExpanded(true)}
+                forceExpanded={step1Active}
+              />
+              {step1Active && (
+                <div className="flex justify-end w-full pb-2">
+                  <button
+                    onClick={() => setIsScenarioExpanded(true)}
+                    className="px-6 py-2.5 bg-[#3B82F6] text-white rounded-full font-['Outfit'] font-semibold text-[14px] hover:bg-[#2563EB] transition-colors shadow-sm"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Chat History Area */}
-          <div 
-            ref={chatContainerRef}
-            className="flex flex-col p-5 px-6 gap-3 flex-1 min-h-0 bg-[#F8F9FA] rounded-2xl overflow-y-auto"
-          >
+          {!step1Active && (
+          <div className="flex flex-col flex-1 border border-[#E5E7EB] bg-white rounded-xl min-h-0 overflow-hidden mb-2 ml-2">
+            <div 
+              ref={chatContainerRef}
+              className="flex flex-col p-5 px-6 gap-3 flex-1 min-h-0 bg-[#F8F9FA] overflow-y-auto"
+            >
             {chatHistory.map((msg, index) => (
               <div 
                 key={msg.id || index} 
@@ -276,6 +324,19 @@ export default function RolePlayModeTopics() {
                       {msg.content}
                     </ReactMarkdown>
                   </div>
+                  {msg.role === 'user' && msg.audioUrl && (
+                    <div className="mt-2 w-64 max-w-full">
+                      <AudioPlayer
+                        audioSrc={msg.audioUrl}
+                        isPlaying={playingAudioId === msg.id && isCurrentlyPlaying}
+                        isLoading={loadingAudioId === msg.id}
+                        progress={playingAudioId === msg.id ? audioProgress : 0}
+                        duration={playingAudioId === msg.id ? audioDuration : 0}
+                        onTogglePlay={() => toggleAudio(msg.id, msg.audioUrl || undefined)}
+                        variant={msg.role === 'user' ? 'default' : 'gradient'}
+                      />
+                    </div>
+                  )}
                   
                   {msg.role === 'assistant' && msg.feedback && (
                     <div className="flex flex-row items-center gap-2 mt-2 pt-2 border-t border-[#E5E7EB]">
@@ -369,6 +430,8 @@ export default function RolePlayModeTopics() {
               </>
             )}
           </div>
+          </div>
+          )}
 
         </div>
       </div>

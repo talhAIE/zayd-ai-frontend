@@ -8,6 +8,7 @@ interface ReadingPassageCardProps {
   onToggleAudio?: () => void;
   onExpand?: () => void;
   forceExpanded?: boolean;
+  title?: string;
 }
 
 const ReadingPassageCard: React.FC<ReadingPassageCardProps> = ({
@@ -17,6 +18,7 @@ const ReadingPassageCard: React.FC<ReadingPassageCardProps> = ({
   onToggleAudio,
   onExpand,
   forceExpanded = false,
+  title = 'Reading Passage',
 }) => {
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [shouldShowExpandButton, setShouldShowExpandButton] = React.useState(false);
@@ -56,7 +58,7 @@ const ReadingPassageCard: React.FC<ReadingPassageCardProps> = ({
         <div className="inline-flex flex-row items-center px-3 py-1.5 gap-[6px] bg-[#EFF6FF] border border-[#5C9DFF] rounded-[20px]">
           <BookOpen className="w-3.5 h-3.5 text-[#5C9DFF]" />
           <span className="font-['Outfit'] font-semibold text-[12px] leading-[15px] text-[#5C9DFF]">
-            Reading Passage
+            {title}
           </span>
         </div>
 

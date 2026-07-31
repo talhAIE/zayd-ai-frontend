@@ -17,7 +17,6 @@ export default function DebateModeTopics() {
   const [isJustCompleted, setIsJustCompleted] = useState(false);
   const [activeFeedback, setActiveFeedback] = useState<string | null>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
-
   const {
     isRecording,
     recordTime,
@@ -100,7 +99,7 @@ export default function DebateModeTopics() {
         isJustCompleted={isJustCompleted}
         onFinish={() => {
           setShowCompletionModal(false);
-          navigate('/student/courses');
+          navigate(-1);
         }}
         onRetake={() => {
           setShowCompletionModal(false);

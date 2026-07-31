@@ -134,7 +134,7 @@ export default function ReadingModeTopics() {
         isJustCompleted={isJustCompleted}
         onFinish={() => {
           setShowCompletionModal(false);
-          navigate('/student/courses');
+          navigate(-1);
         }}
         onRetake={() => {
           setShowCompletionModal(false);
