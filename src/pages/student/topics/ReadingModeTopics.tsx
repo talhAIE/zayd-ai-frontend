@@ -7,6 +7,7 @@ import ReadingPassageCard from '@/components/ui/ReadingPassageCard';
 import TopicCompletionModal from '@/components/ui/TopicCompletionModal';
 import FeedbackModal from '@/components/ui/FeedbackModal';
 import { useLearningProgressRefresh } from '@/hooks/useLearningProgressRefresh';
+import ReactMarkdown from 'react-markdown';
 import { toast } from 'sonner';
 
 export default function ReadingModeTopics() {
@@ -118,7 +119,7 @@ export default function ReadingModeTopics() {
     return Math.min(79, passageProgress);
   };
 
-  const step1Completed = isPassageExpanded || (chatHistory && chatHistory.length > 0);
+  const step1Completed = isPassageExpanded || (chatHistory && chatHistory.some(m => m.role === 'user'));
   const step1Active = !step1Completed;
   const step2Completed = (mcqList && mcqList.length > 0) || isCompleted;
   const step2Active = step1Completed && !step2Completed;
@@ -143,7 +144,6 @@ export default function ReadingModeTopics() {
           setIsJustCompleted(false);
           restartSession();
         }}
-        onReview={() => setShowCompletionModal(false)}
       />
 
       <FeedbackModal 
@@ -292,17 +292,28 @@ export default function ReadingModeTopics() {
           
           {/* Reading Passage Card */}
           {contentPayload && (contentPayload.passage || contentPayload.content) && (
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 flex flex-col gap-4">
               <ReadingPassageCard 
                 content={contentPayload.passage || contentPayload.content || ''}
                 audioUrl={contentPayload.attachmentUrl}
                 onExpand={() => setIsPassageExpanded(true)}
+                forceExpanded={step1Active}
               />
+              {step1Active && (
+                <div className="flex justify-end w-full pb-2">
+                  <button
+                    onClick={() => setIsPassageExpanded(true)}
+                    className="px-6 py-2.5 bg-[#3B82F6] text-white rounded-full font-['Outfit'] font-semibold text-[14px] hover:bg-[#2563EB] transition-colors shadow-sm"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
           {/* Chat History Area (Shown during Chatting stage, hidden during Quiz stage to prevent squishing) */}
-          {(!mcqList || mcqList.length === 0) && (
+          {!step1Active && (!mcqList || mcqList.length === 0) && (
             <div 
               ref={chatContainerRef}
               className="flex flex-col p-5 px-6 gap-3 flex-1 min-h-0 bg-[#F8F9FA] rounded-2xl overflow-y-auto"
@@ -319,9 +330,20 @@ export default function ReadingModeTopics() {
                         : 'bg-[#F1F5F9] rounded-tr-xl rounded-br-xl rounded-bl-sm rounded-tl-xl'
                     }`}
                   >
-                    <p className="text-[13px] leading-[18px] text-[#0F1450] whitespace-pre-wrap">
-                      {msg.content}
-                    </p>
+                    <div className="text-[13px] leading-[18px] text-[#0F1450] whitespace-pre-wrap break-words">
+                      <ReactMarkdown
+                        components={{
+                          p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />,
+                          ul: ({node, ...props}) => <ul className="list-disc pl-4 mb-2 last:mb-0" {...props} />,
+                          ol: ({node, ...props}) => <ol className="list-decimal pl-4 mb-2 last:mb-0" {...props} />,
+                          li: ({node, ...props}) => <li className="mb-1 last:mb-0" {...props} />,
+                          strong: ({node, ...props}) => <strong className="font-bold" {...props} />,
+                          em: ({node, ...props}) => <em className="italic" {...props} />,
+                        }}
+                      >
+                        {msg.content}
+                      </ReactMarkdown>
+                    </div>
                   </div>
                   {msg.role === 'assistant' && msg.feedback && (
                     <div className="flex flex-row items-center gap-2 mt-1">
@@ -490,7 +512,7 @@ export default function ReadingModeTopics() {
           )}
 
           {/* Input Bar (Shown only during Chatting stage) */}
-          {(!mcqList || mcqList.length === 0) && (
+          {!step1Active && (!mcqList || mcqList.length === 0) && (
             <div className="flex flex-row items-center px-5 py-4 gap-3 bg-white border border-[#E5E7EB] rounded-2xl flex-shrink-0">
               {isRecording ? (
                 <div className="flex-1 flex items-center justify-between px-4 py-2 bg-[#FEF1E8] border border-[#F97316]/30 rounded-[10px]">

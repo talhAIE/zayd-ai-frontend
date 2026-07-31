@@ -4,7 +4,6 @@ import { RotateCcw, Award } from 'lucide-react';
 interface TopicCompletionModalProps {
   isOpen: boolean;
   onRetake: () => void;
-  onReview?: () => void;
   isJustCompleted?: boolean;
   onFinish?: () => void;
 }
@@ -12,13 +11,12 @@ interface TopicCompletionModalProps {
 export const TopicCompletionModal: React.FC<TopicCompletionModalProps> = ({
   isOpen,
   onRetake,
-  onReview,
   isJustCompleted,
   onFinish
 }) => {
   if (!isOpen) return null;
 
-  return (
+  return ( 
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
       <div 
         className="w-full max-w-[420px] bg-white rounded-[24px] p-6 sm:p-7 shadow-2xl border border-gray-100 flex flex-col items-center text-center font-['Outfit',sans-serif] gap-5"
@@ -37,7 +35,7 @@ export const TopicCompletionModal: React.FC<TopicCompletionModalProps> = ({
           <p className="text-[14px] leading-[20px] text-[#6E748F] px-2">
             {isJustCompleted 
               ? "You have successfully completed this topic. Great job!" 
-              : "You have already finished this topic. Would you like to resume reviewing, or reset your chat history and start over?"}
+              : "You have already finished this topic. Would you like to reset your chat history and start over?"}
           </p>
         </div>
 
@@ -52,20 +50,13 @@ export const TopicCompletionModal: React.FC<TopicCompletionModalProps> = ({
             </button>
           ) : (
             <>
-              {onReview && (
-                <button
-                  onClick={onReview}
-                  className="w-full py-3 px-4 bg-white border border-[#E5E7EB] text-[#0F1450] rounded-full font-semibold text-[14px] hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 shadow-sm"
-                >
-                  <span>Resume</span>
-                </button>
-              )}
+
               <button
                 onClick={onRetake}
                 className="w-full py-3 px-4 bg-[#5C9DFF] text-white rounded-full font-semibold text-[14px] hover:bg-[#4A8BEB] transition-colors flex items-center justify-center gap-2 shadow-sm"
               >
                 <RotateCcw className="w-4 h-4 text-white" />
-                <span>Reset Chat & Retake</span>
+                <span>Reset Lesson</span>
               </button>
             </>
           )}

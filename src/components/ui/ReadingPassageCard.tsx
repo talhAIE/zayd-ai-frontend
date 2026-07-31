@@ -7,6 +7,7 @@ interface ReadingPassageCardProps {
   isPlaying?: boolean;
   onToggleAudio?: () => void;
   onExpand?: () => void;
+  forceExpanded?: boolean;
 }
 
 const ReadingPassageCard: React.FC<ReadingPassageCardProps> = ({
@@ -15,6 +16,7 @@ const ReadingPassageCard: React.FC<ReadingPassageCardProps> = ({
   isPlaying = false,
   onToggleAudio,
   onExpand,
+  forceExpanded = false,
 }) => {
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [shouldShowExpandButton, setShouldShowExpandButton] = React.useState(false);
@@ -77,7 +79,7 @@ const ReadingPassageCard: React.FC<ReadingPassageCardProps> = ({
       <p
         ref={contentRef}
         className={`font-['Outfit'] font-normal text-[14px] leading-[22px] text-[#282828] whitespace-pre-wrap transition-all duration-200 ${
-          !isExpanded ? 'line-clamp-3' : 'line-clamp-none'
+          (!isExpanded && !forceExpanded) ? 'line-clamp-3' : 'line-clamp-none'
         }`}
       >
         {content
@@ -94,7 +96,7 @@ const ReadingPassageCard: React.FC<ReadingPassageCardProps> = ({
       </p>
 
       {/* See More Row */}
-      {shouldShowExpandButton && (
+      {(shouldShowExpandButton && !forceExpanded) && (
         <div className="flex flex-row items-center pt-1">
           <button
             onClick={handleToggleExpand}

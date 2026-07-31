@@ -108,7 +108,6 @@ export default function ListeningModeTopics() {
           setIsJustCompleted(false);
           restartSession();
         }}
-        onReview={() => setShowCompletionModal(false)}
       />
 
       {/* Header Progress Group */}

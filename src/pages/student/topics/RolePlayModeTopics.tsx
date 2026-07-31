@@ -6,6 +6,7 @@ import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import TopicCompletionModal from '@/components/ui/TopicCompletionModal';
 import FeedbackModal from '@/components/ui/FeedbackModal';
 import { useLearningProgressRefresh } from '@/hooks/useLearningProgressRefresh';
+import ReactMarkdown from 'react-markdown';
 
 export default function RolePlayModeTopics() {
   const navigate = useNavigate();
@@ -111,7 +112,6 @@ export default function RolePlayModeTopics() {
           setIsJustCompleted(false);
           restartSession();
         }}
-        onReview={() => setShowCompletionModal(false)}
       />
 
       <FeedbackModal 
@@ -262,9 +262,20 @@ export default function RolePlayModeTopics() {
                       : 'bg-[#F1F5F9] rounded-tr-xl rounded-br-xl rounded-bl-sm rounded-tl-xl'
                   }`}
                 >
-                  <p className="text-[13px] leading-[18px] text-[#0F1450] whitespace-pre-wrap">
-                    {msg.content}
-                  </p>
+                  <div className="text-[13px] leading-[18px] text-[#0F1450] whitespace-pre-wrap break-words">
+                    <ReactMarkdown
+                      components={{
+                        p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />,
+                        ul: ({node, ...props}) => <ul className="list-disc pl-4 mb-2 last:mb-0" {...props} />,
+                        ol: ({node, ...props}) => <ol className="list-decimal pl-4 mb-2 last:mb-0" {...props} />,
+                        li: ({node, ...props}) => <li className="mb-1 last:mb-0" {...props} />,
+                        strong: ({node, ...props}) => <strong className="font-bold" {...props} />,
+                        em: ({node, ...props}) => <em className="italic" {...props} />,
+                      }}
+                    >
+                      {msg.content}
+                    </ReactMarkdown>
+                  </div>
                   
                   {msg.role === 'assistant' && msg.feedback && (
                     <div className="flex flex-row items-center gap-2 mt-2 pt-2 border-t border-[#E5E7EB]">
