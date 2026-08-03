@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 
 export interface AudioRecordResult {
   audioBase64: string;
+  audioUrl: string;
   format: string;
 }
 
@@ -128,9 +129,10 @@ export function useAudioRecorder() {
         }
 
         const audioBase64 = await blobToBase64(audioBlob);
+        const audioUrl = URL.createObjectURL(audioBlob);
         const format = mimeType.split('/')[1]?.split(';')[0] || 'webm';
 
-        resolve({ audioBase64, format });
+        resolve({ audioBase64, audioUrl, format });
       };
 
       recorder.stop();

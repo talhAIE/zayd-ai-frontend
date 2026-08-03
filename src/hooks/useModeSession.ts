@@ -64,6 +64,7 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
   const completionHandledRef = useRef(false);
   const onCompletedRef = useRef(onCompleted);
   const onBadgeUnlockedRef = useRef(onBadgeUnlocked);
+  const pendingAudioMessageIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     onCompletedRef.current = onCompleted;
@@ -183,20 +184,38 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
     });
 
     newSocket.on('speech_transcribed', (payload: { textMessage: string, assessments: any, audioUrl?: string }) => {
-      setChatHistory(prev => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          sender: 'user',
-          role: 'user',
-          content: payload.textMessage,
-          hint: null,
-          feedback: null,
-          assessments: payload.assessments,
-          audioUrl: payload.audioUrl || null,
-          createdAt: new Date().toISOString(),
+      const pendingAudioMessageId = pendingAudioMessageIdRef.current;
+      pendingAudioMessageIdRef.current = null;
+
+      setChatHistory(prev => {
+        if (pendingAudioMessageId) {
+          return prev.map(message =>
+            message.id === pendingAudioMessageId
+              ? {
+                  ...message,
+                  content: payload.textMessage,
+                  assessments: payload.assessments,
+                  audioUrl: payload.audioUrl || message.audioUrl,
+                }
+              : message,
+          );
         }
-      ]);
+
+        return [
+          ...prev,
+          {
+            id: Date.now().toString(),
+            sender: 'user',
+            role: 'user',
+            content: payload.textMessage,
+            hint: null,
+            feedback: null,
+            assessments: payload.assessments,
+            audioUrl: payload.audioUrl || null,
+            createdAt: new Date().toISOString(),
+          },
+        ];
+      });
     });
 
     newSocket.on('session_status', (payload: { remainingSeconds: number, message?: string }) => {
@@ -260,8 +279,28 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
     socket.emit('text', { modeSessionId: modeSessionIdRef.current, textMessage: text });
   }, [socket, isAccountBlocked]);
 
-  const sendAudio = useCallback((base64Audio: string, format: string = 'wav') => {
+  const sendAudio = useCallback((base64Audio: string, format: string = 'wav', localAudioUrl?: string) => {
     if (!socket || !modeSessionIdRef.current || isAccountBlocked) return;
+
+    if (localAudioUrl) {
+      const id = `audio-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      pendingAudioMessageIdRef.current = id;
+      setChatHistory(prev => [
+        ...prev,
+        {
+          id,
+          sender: 'user',
+          role: 'user',
+          content: '',
+          hint: null,
+          feedback: null,
+          assessments: null,
+          audioUrl: localAudioUrl,
+          createdAt: new Date().toISOString(),
+        },
+      ]);
+    }
+
     setIsTyping(true);
     socket.emit('audio', { modeSessionId: modeSessionIdRef.current, audioBuffer: base64Audio, format });
   }, [socket, isAccountBlocked]);

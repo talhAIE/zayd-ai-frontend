@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ChevronLeft, Mic, Send, Square, Trash2, Check, MessageCircle } from 'lucide-react';
+import { ChevronLeft, Mic, Send, Square, Trash2, Check, MessageCircle, Pause, Play, LoaderCircle } from 'lucide-react';
 import { useModeSession } from '@/hooks/useModeSession';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import ReadingPassageCard from '@/components/ui/ReadingPassageCard';
@@ -8,6 +8,7 @@ import TopicCompletionModal from '@/components/ui/TopicCompletionModal';
 import FeedbackModal from '@/components/ui/FeedbackModal';
 import { ContentPolicyWarningModal } from '@/components/ui/ContentPolicyWarningModal';
 import { useLearningProgressRefresh } from '@/hooks/useLearningProgressRefresh';
+import { useAudioPlayback } from '@/hooks/useAudioPlayback';
 import ReactMarkdown from 'react-markdown';
 import { toast } from 'sonner';
 
@@ -18,6 +19,7 @@ export default function ReadingModeTopics() {
   const lessonId = searchParams.get('lessonId') || '';
   const refreshLearningProgress = useLearningProgressRefresh();
   
+  const { playingAudioId, isCurrentlyPlaying, loadingAudioId, toggleAudio } = useAudioPlayback();
   const [inputValue, setInputValue] = useState('');
   const [currentMcqIndex, setCurrentMcqIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number | string>>({});
@@ -79,7 +81,7 @@ export default function ReadingModeTopics() {
     if (cooldown || isTyping || isAccountBlocked) return;
     const res = await stopRecording();
     if (res) {
-      sendAudio(res.audioBase64, res.format);
+      sendAudio(res.audioBase64, res.format, res.audioUrl);
       triggerCooldown();
     }
   };
@@ -304,7 +306,14 @@ export default function ReadingModeTopics() {
             <div className="flex-shrink-0 flex flex-col gap-4">
               <ReadingPassageCard 
                 content={contentPayload.passage || contentPayload.content || ''}
-                audioUrl={contentPayload.attachmentUrl}
+                audioUrl={contentPayload.contentAudioUrl || contentPayload.narrationAudioUrl || contentPayload.attachmentUrl}
+                isPlaying={playingAudioId === 'reading-passage' && isCurrentlyPlaying}
+                onToggleAudio={() =>
+                  toggleAudio(
+                    'reading-passage',
+                    contentPayload.contentAudioUrl || contentPayload.narrationAudioUrl || contentPayload.attachmentUrl,
+                  )
+                }
                 onExpand={() => setIsPassageExpanded(true)}
                 forceExpanded={step1Active}
               />
@@ -336,7 +345,7 @@ export default function ReadingModeTopics() {
                     className={`px-4 py-3 max-w-[85%] text-left ${
                       msg.role === 'user' 
                         ? 'bg-[#DBEAFE] rounded-tl-xl rounded-bl-xl rounded-br-sm rounded-tr-xl' 
-                        : 'bg-[#F1F5F9] rounded-tr-xl rounded-br-xl rounded-bl-sm rounded-tl-xl'
+                        : 'bg-white border border-[#E5E7EB] shadow-sm rounded-tr-xl rounded-br-xl rounded-bl-xl rounded-tl-sm'
                     }`}
                   >
                     <div className="text-[13px] leading-[18px] text-[#0F1450] whitespace-pre-wrap break-words">
@@ -353,18 +362,55 @@ export default function ReadingModeTopics() {
                         {msg.content}
                       </ReactMarkdown>
                     </div>
-                  </div>
-                  {msg.role === 'assistant' && msg.feedback && (
-                    <div className="flex flex-row items-center gap-2 mt-1">
-                      <button 
-                        onClick={() => setActiveFeedback(msg.feedback || null)}
-                        className="flex items-center gap-1.5 text-[#5C9DFF] hover:text-[#4A8BEB] transition-colors font-semibold text-[12px] leading-[15px]"
+                  {msg.role === 'user' && msg.audioUrl && (
+                    <div className="mt-3 flex items-center justify-end border-t border-[#BFDBFE] pt-2.5">
+                      <button
+                        type="button"
+                        onClick={() => toggleAudio(msg.id, msg.audioUrl || undefined)}
+                        className="flex items-center text-[#0F1450] hover:text-[#2563EB] transition-colors"
+                        aria-label={playingAudioId === msg.id && isCurrentlyPlaying ? 'Pause your recording' : 'Play your recording'}
                       >
-                        <MessageCircle className="w-3.5 h-3.5 text-[#5C9DFF]" />
-                        <span>View Feedback</span>
+                        {loadingAudioId === msg.id ? (
+                          <LoaderCircle className="w-5 h-5 animate-spin" />
+                        ) : playingAudioId === msg.id && isCurrentlyPlaying ? (
+                          <Pause className="w-5 h-5" />
+                        ) : (
+                          <Play className="w-5 h-5" />
+                        )}
                       </button>
                     </div>
                   )}
+                  {msg.role === 'assistant' && (msg.audioUrl || msg.feedback) && (
+                    <div className="mt-3 flex items-center gap-4 border-t border-[#E5E7EB] pt-2.5">
+                      {msg.audioUrl && (
+                        <button
+                          type="button"
+                          onClick={() => toggleAudio(msg.id, msg.audioUrl || undefined)}
+                          className="flex items-center text-[#0F1450] hover:text-[#5C9DFF] transition-colors"
+                          aria-label={playingAudioId === msg.id && isCurrentlyPlaying ? 'Pause AI response' : 'Play AI response'}
+                        >
+                          {loadingAudioId === msg.id ? (
+                            <LoaderCircle className="w-5 h-5 animate-spin" />
+                          ) : playingAudioId === msg.id && isCurrentlyPlaying ? (
+                            <Pause className="w-5 h-5" />
+                          ) : (
+                            <Play className="w-5 h-5" />
+                          )}
+                        </button>
+                      )}
+                      {msg.feedback && (
+                        <button
+                          type="button"
+                          onClick={() => setActiveFeedback(msg.feedback || null)}
+                          className="flex items-center gap-1.5 text-[#5C9DFF] hover:text-[#4A8BEB] transition-colors font-semibold text-[12px] leading-[15px]"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" />
+                          <span>View Feedback</span>
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  </div>
                   {msg.createdAt && (
                     <span className="text-[10px] leading-[13px] text-[#6E748F]/60">
                       {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
