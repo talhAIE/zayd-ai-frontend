@@ -129,7 +129,7 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
       setIsTyping(true);
     });
 
-    newSocket.on('streaming_complete', (payload: { ai_response: string, feedback: string, ai_cefr_level: string, isCompleted: boolean, ttsAudioUrl?: string, hint?: string, readingProgress?: ReadingProgress }) => {
+    newSocket.on('streaming_complete', (payload: { ai_response: string, feedback: string, ai_cefr_level: string, isCompleted: boolean, ttsAudioUrl?: string, hint?: string, readingProgress?: ReadingProgress, roleplayProgressEarned?: boolean }) => {
       setIsTyping(false);
       if (payload.readingProgress) {
         setReadingProgress(payload.readingProgress);
@@ -143,7 +143,10 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
           content: payload.ai_response,
           feedback: payload.feedback,
           hint: payload.hint || null,
-          assessments: null,
+          assessments:
+            payload.roleplayProgressEarned === undefined
+              ? null
+              : { roleplayProgressEarned: payload.roleplayProgressEarned },
           audioUrl: payload.ttsAudioUrl || null,
           createdAt: new Date().toISOString(),
         }

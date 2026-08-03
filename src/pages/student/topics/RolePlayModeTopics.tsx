@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ChevronLeft, Mic, Clock, MessageCircle, Send, Square, Trash2 } from 'lucide-react';
+import { ChevronLeft, Mic, Clock, MessageCircle, Send, Square, Trash2, Pause, Play, LoaderCircle } from 'lucide-react';
 import { useModeSession } from '@/hooks/useModeSession';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import TopicCompletionModal from '@/components/ui/TopicCompletionModal';
@@ -10,7 +10,6 @@ import { ContentPolicyWarningModal } from '@/components/ui/ContentPolicyWarningM
 import { useLearningProgressRefresh } from '@/hooks/useLearningProgressRefresh';
 import ReactMarkdown from 'react-markdown';
 import { useAudioPlayback } from '@/hooks/useAudioPlayback';
-import AudioPlayer from '../AudioPlayer';
 
 export default function RolePlayModeTopics() {
   const navigate = useNavigate();
@@ -18,7 +17,7 @@ export default function RolePlayModeTopics() {
   const lessonModeId = searchParams.get('modeId') || '';
   const lessonId = searchParams.get('lessonId') || '';
   const refreshLearningProgress = useLearningProgressRefresh();
-  const { playingAudioId, isCurrentlyPlaying, loadingAudioId, audioProgress, audioDuration, toggleAudio } = useAudioPlayback();
+  const { playingAudioId, isCurrentlyPlaying, loadingAudioId, toggleAudio } = useAudioPlayback();
   
   const [inputValue, setInputValue] = useState('');
   const [isScenarioExpanded, setIsScenarioExpanded] = useState(false);
@@ -86,7 +85,7 @@ export default function RolePlayModeTopics() {
     if (cooldown || isTyping || isAccountBlocked) return;
     const res = await stopRecording();
     if (res) {
-      sendAudio(res.audioBase64, res.format);
+      sendAudio(res.audioBase64, res.format, res.audioUrl);
       triggerCooldown();
     }
   };
@@ -105,10 +104,12 @@ export default function RolePlayModeTopics() {
 
   const getProgressPercentage = () => {
     if (isCompleted) return 100;
-    const assistantMsgCount = chatHistory.filter(m => m.role === 'assistant').length;
-    const completedTurns = Math.max(0, assistantMsgCount - 1);
-    if (completedTurns === 0) return 0;
-    return Math.min(95, Math.floor((completedTurns / 5) * 90));
+    const earnedTurns = chatHistory.filter(
+      (message) =>
+        message.role === 'assistant' &&
+        message.assessments?.roleplayProgressEarned === true,
+    ).length;
+    return Math.min(95, Math.floor((earnedTurns / 15) * 95));
   };
 
   return (
@@ -285,7 +286,14 @@ export default function RolePlayModeTopics() {
               <ReadingPassageCard 
                 title="Roleplay Scenario"
                 content={contentPayload.passage || contentPayload.content || contentPayload.scenario || ''}
-                audioUrl={contentPayload.attachmentUrl}
+                audioUrl={contentPayload.contentAudioUrl || contentPayload.narrationAudioUrl || contentPayload.attachmentUrl}
+                isPlaying={playingAudioId === 'roleplay-scenario' && isCurrentlyPlaying}
+                onToggleAudio={() =>
+                  toggleAudio(
+                    'roleplay-scenario',
+                    contentPayload.contentAudioUrl || contentPayload.narrationAudioUrl || contentPayload.attachmentUrl,
+                  )
+                }
                 onExpand={() => setIsScenarioExpanded(true)}
                 forceExpanded={step1Active}
               />
@@ -318,7 +326,7 @@ export default function RolePlayModeTopics() {
                   className={`px-4 py-3 max-w-[85%] text-left ${
                     msg.role === 'user' 
                       ? 'bg-[#DBEAFE] rounded-tl-xl rounded-bl-xl rounded-br-sm rounded-tr-xl' 
-                      : 'bg-[#F1F5F9] rounded-tr-xl rounded-br-xl rounded-bl-sm rounded-tl-xl'
+                      : 'bg-white border border-[#E5E7EB] shadow-sm rounded-tr-xl rounded-br-xl rounded-bl-xl rounded-tl-sm'
                   }`}
                 >
                   <div className="text-[13px] leading-[18px] text-[#0F1450] whitespace-pre-wrap break-words">
@@ -336,28 +344,51 @@ export default function RolePlayModeTopics() {
                     </ReactMarkdown>
                   </div>
                   {msg.role === 'user' && msg.audioUrl && (
-                    <div className="mt-2 w-64 max-w-full">
-                      <AudioPlayer
-                        audioSrc={msg.audioUrl}
-                        isPlaying={playingAudioId === msg.id && isCurrentlyPlaying}
-                        isLoading={loadingAudioId === msg.id}
-                        progress={playingAudioId === msg.id ? audioProgress : 0}
-                        duration={playingAudioId === msg.id ? audioDuration : 0}
-                        onTogglePlay={() => toggleAudio(msg.id, msg.audioUrl || undefined)}
-                        variant={msg.role === 'user' ? 'default' : 'gradient'}
-                      />
+                    <div className="mt-3 flex items-center justify-end border-t border-[#BFDBFE] pt-2.5">
+                      <button
+                        type="button"
+                        onClick={() => toggleAudio(msg.id, msg.audioUrl || undefined)}
+                        className="flex items-center text-[#0F1450] hover:text-[#2563EB] transition-colors"
+                        aria-label={playingAudioId === msg.id && isCurrentlyPlaying ? 'Pause your recording' : 'Play your recording'}
+                      >
+                        {loadingAudioId === msg.id ? (
+                          <LoaderCircle className="w-5 h-5 animate-spin" />
+                        ) : playingAudioId === msg.id && isCurrentlyPlaying ? (
+                          <Pause className="w-5 h-5" />
+                        ) : (
+                          <Play className="w-5 h-5" />
+                        )}
+                      </button>
                     </div>
                   )}
-                  
-                  {msg.role === 'assistant' && msg.feedback && (
-                    <div className="flex flex-row items-center gap-2 mt-2 pt-2 border-t border-[#E5E7EB]">
-                      <button 
-                        onClick={() => setActiveFeedback(msg.feedback || null)}
-                        className="flex items-center gap-1.5 text-[#5C9DFF] hover:text-[#4A8BEB] transition-colors font-semibold text-[12px] leading-[15px]"
-                      >
-                        <MessageCircle className="w-3.5 h-3.5 text-[#5C9DFF]" />
-                        <span>View Feedback</span>
-                      </button>
+                  {msg.role === 'assistant' && (msg.audioUrl || msg.feedback) && (
+                    <div className="mt-3 flex items-center gap-4 border-t border-[#E5E7EB] pt-2.5">
+                      {msg.audioUrl && (
+                        <button
+                          type="button"
+                          onClick={() => toggleAudio(msg.id, msg.audioUrl || undefined)}
+                          className="flex items-center text-[#0F1450] hover:text-[#5C9DFF] transition-colors"
+                          aria-label={playingAudioId === msg.id && isCurrentlyPlaying ? 'Pause AI response' : 'Play AI response'}
+                        >
+                          {loadingAudioId === msg.id ? (
+                            <LoaderCircle className="w-5 h-5 animate-spin" />
+                          ) : playingAudioId === msg.id && isCurrentlyPlaying ? (
+                            <Pause className="w-5 h-5" />
+                          ) : (
+                            <Play className="w-5 h-5" />
+                          )}
+                        </button>
+                      )}
+                      {msg.feedback && (
+                        <button
+                          type="button"
+                          onClick={() => setActiveFeedback(msg.feedback || null)}
+                          className="flex items-center gap-1.5 text-[#5C9DFF] hover:text-[#4A8BEB] transition-colors font-semibold text-[12px] leading-[15px]"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" />
+                          <span>View Feedback</span>
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>

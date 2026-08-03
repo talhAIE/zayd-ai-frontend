@@ -60,7 +60,14 @@ export function useAudioRecorder() {
   const startRecording = useCallback(async () => {
     try {
       cleanup();
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
       streamRef.current = stream;
 
       const mimeType = getSupportedMimeType();
