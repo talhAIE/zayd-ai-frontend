@@ -20,6 +20,7 @@ export function useAudioPlayback() {
   const [audioDuration, setAudioDuration] = useState(0);
 
   const soundRef = useRef<Howl | null>(null);
+  const loadedAudioUrlRef = useRef<string | null>(null);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const onEndCalledRef = useRef(false);
 
@@ -36,6 +37,7 @@ export function useAudioPlayback() {
     return () => {
       if (soundRef.current) {
         soundRef.current.unload();
+        loadedAudioUrlRef.current = null;
       }
       if (progressIntervalRef.current) {
         clearInterval(progressIntervalRef.current as unknown as number);
@@ -52,7 +54,11 @@ export function useAudioPlayback() {
     ) => {
       if (!audioUrl) return;
 
-      if (soundRef.current && playingAudioId === id) {
+      if (
+        soundRef.current &&
+        playingAudioId === id &&
+        loadedAudioUrlRef.current === audioUrl
+      ) {
         if (soundRef.current.playing()) {
           soundRef.current.pause();
           setIsCurrentlyPlaying(false);
@@ -69,6 +75,7 @@ export function useAudioPlayback() {
         soundRef.current.off();
         soundRef.current.stop();
         soundRef.current.unload();
+        loadedAudioUrlRef.current = null;
       }
 
       setPlayingAudioId(id);
@@ -150,6 +157,7 @@ export function useAudioPlayback() {
       });
 
       soundRef.current = sound;
+      loadedAudioUrlRef.current = audioUrl;
       sound.play();
     },
     [playingAudioId, clearAudioProgress]

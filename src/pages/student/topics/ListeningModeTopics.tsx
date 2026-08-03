@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ChevronLeft, Clock, Check } from 'lucide-react';
+import { ChevronLeft, Clock, Check, Pause, Play } from 'lucide-react';
 import { useModeSession } from '@/hooks/useModeSession';
 import TopicCompletionModal from '@/components/ui/TopicCompletionModal';
 import { ContentPolicyWarningModal } from '@/components/ui/ContentPolicyWarningModal';
@@ -63,12 +63,16 @@ export default function ListeningModeTopics() {
   }, [modeSessionId, listeningPayload, startListening]);
 
   useEffect(() => {
-    setHasListenedToAudio(false);
-    setHasStartedAudio(false);
+    // The first stage requires the learner to finish the complete topic audio.
+    // Replaying that audio during the comprehension stage remains optional.
+    if (listeningPayload?.stage === 'initial') {
+      setHasListenedToAudio(false);
+      setHasStartedAudio(false);
+    }
   }, [listeningPayload?.stage]);
 
   useEffect(() => {
-    if (playingAudioId === 'listening_audio' || loadingAudioId === 'listening_audio') {
+    if (playingAudioId === 'listening_topic_audio' || loadingAudioId === 'listening_topic_audio') {
       setHasStartedAudio(true);
     }
   }, [playingAudioId, loadingAudioId]);
@@ -88,12 +92,17 @@ export default function ListeningModeTopics() {
       return Math.min(99, 75 + quizProgress);
     }
     if (listeningPayload?.stage === 'question') return 50;
-    if (listeningPayload?.stage === 'initial') return hasStartedAudio ? 25 : 0;
+    if (listeningPayload?.stage === 'initial') return hasListenedToAudio ? 25 : 0;
     return 0;
   };
 
-  const activeAudioUrl = listeningPayload?.stage === 'question' ? listeningPayload?.questionAudioUrl : listeningPayload?.narrationAudioUrl;
-  const activeText = listeningPayload?.stage === 'question' ? listeningPayload?.questionText : listeningPayload?.narrationText;
+  const isQuestionStage = listeningPayload?.stage === 'question';
+  const topicAudioUrl = listeningPayload?.kbAudioUrl;
+  const narratorAudioUrl = isQuestionStage ? listeningPayload?.questionAudioUrl : listeningPayload?.narrationAudioUrl;
+  const narratorText = isQuestionStage ? listeningPayload?.questionText : listeningPayload?.narrationText;
+  const narratorAudioId = `listening_narrator_audio_${listeningPayload?.stage ?? 'initial'}`;
+  const isNarratorAudioPlaying = playingAudioId === narratorAudioId && isCurrentlyPlaying;
+  const canAdvance = isQuestionStage || hasListenedToAudio;
 
   return (
     <div className="w-full max-w-[1207px] mx-auto bg-white rounded-none md:rounded-[24px] flex flex-col font-['Outfit',sans-serif] overflow-hidden h-[100dvh] md:h-[794px] max-h-[calc(100vh-40px)] border border-gray-100 shadow-sm relative">
@@ -256,18 +265,18 @@ export default function ListeningModeTopics() {
         <div className="flex flex-col flex-1 gap-4 min-h-0 overflow-y-auto">
           
           {/* Audio Player Card */}
-          {activeAudioUrl && (
+          {topicAudioUrl && (
             <div className="flex flex-col p-4 px-5 gap-3.5 bg-white border-2 border-[#5C9DFF] rounded-xl">
               <div className="flex flex-row justify-between items-center w-full">
-                <span className="font-bold text-[14px] leading-[18px] text-[#5C9DFF]">Audio Track</span>
+                <span className="font-bold text-[14px] leading-[18px] text-[#5C9DFF]">Topic Audio</span>
               </div>
               <AudioPlayer
-                audioSrc={activeAudioUrl}
-                isPlaying={playingAudioId === 'listening_audio' && isCurrentlyPlaying}
-                isLoading={loadingAudioId === 'listening_audio'}
-                progress={playingAudioId === 'listening_audio' ? audioProgress : 0}
-                duration={playingAudioId === 'listening_audio' ? audioDuration : 0}
-                onTogglePlay={() => toggleAudio('listening_audio', activeAudioUrl, () => setHasListenedToAudio(true))}
+                audioSrc={topicAudioUrl}
+                isPlaying={playingAudioId === 'listening_topic_audio' && isCurrentlyPlaying}
+                isLoading={loadingAudioId === 'listening_topic_audio'}
+                progress={playingAudioId === 'listening_topic_audio' ? audioProgress : 0}
+                duration={playingAudioId === 'listening_topic_audio' ? audioDuration : 0}
+                onTogglePlay={() => toggleAudio('listening_topic_audio', topicAudioUrl, () => setHasListenedToAudio(true))}
                 variant="gradient"
                 className="max-w-full"
               />
@@ -275,7 +284,7 @@ export default function ListeningModeTopics() {
           )}
           
           {/* Transcript Area (if available and not quiz stage) */}
-          {activeText && listeningPayload?.stage !== 'quiz' && (
+          {narratorText && listeningPayload?.stage !== 'quiz' && (
             <div className="flex flex-col p-5 px-6 gap-2 flex-1 bg-[#F8F9FA] rounded-2xl">
               <div className="flex items-center gap-1.5 mb-1">
                 <div className="w-2 h-2 bg-[#5C9DFF] rounded-full" />
@@ -284,10 +293,20 @@ export default function ListeningModeTopics() {
               
               <div className="p-3.5 px-4 bg-white border-[1.5px] border-[#DBEAFE] shadow-[0px_2px_8px_rgba(0,0,0,0.06)] rounded-tr-xl rounded-br-xl rounded-bl-xl rounded-tl-sm w-full">
                 <p className="font-normal text-[14px] leading-[22px] text-[#0F1450]">
-                  {activeText}
+                  {narratorText}
                 </p>
-              </div>
+                {narratorAudioUrl && (
+                  <button
+                    type="button"
+                    onClick={() => toggleAudio(narratorAudioId, narratorAudioUrl)}
+                    aria-label={isNarratorAudioPlaying ? 'Pause narrator audio' : 'Play narrator audio'}
+                    className="mt-3 flex items-center text-[#0F1450] transition-colors hover:text-[#2563EB]"
+                  >
+                    {isNarratorAudioPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+                  </button>
+                )}
             </div>
+              </div>
           )}
 
           {/* MCQs Area (Figma Spec) */}
@@ -407,7 +426,7 @@ export default function ListeningModeTopics() {
             <div className="flex justify-center items-center pt-2 mt-auto">
               <button 
                 onClick={() => nextListeningStage()}
-                disabled={!hasListenedToAudio || isAccountBlocked}
+                disabled={!canAdvance || isAccountBlocked}
                 className="flex justify-center items-center w-full max-w-[200px] h-[52px] bg-[#3B82F6] hover:bg-[#2563EB] disabled:bg-[#E5E7EB] disabled:text-[#9CA3AF] transition-colors rounded-full font-bold text-[16px] leading-[20px] text-white"
               >
                 Next
