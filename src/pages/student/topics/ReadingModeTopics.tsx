@@ -19,7 +19,7 @@ export default function ReadingModeTopics() {
   const lessonId = searchParams.get('lessonId') || '';
   const refreshLearningProgress = useLearningProgressRefresh();
   
-  const { playingAudioId, isCurrentlyPlaying, loadingAudioId, toggleAudio } = useAudioPlayback();
+  const { playingAudioId, isCurrentlyPlaying, loadingAudioId, toggleAudio, stopAudio } = useAudioPlayback();
   const [inputValue, setInputValue] = useState('');
   const [currentMcqIndex, setCurrentMcqIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number | string>>({});
@@ -320,7 +320,10 @@ export default function ReadingModeTopics() {
               {step1Active && (
                 <div className="flex justify-end w-full pb-2">
                   <button
-                    onClick={() => setIsPassageExpanded(true)}
+                    onClick={() => {
+                      stopAudio();
+                      setIsPassageExpanded(true);
+                    }}
                     className="px-6 py-2.5 bg-[#3B82F6] text-white rounded-full font-['Outfit'] font-semibold text-[14px] hover:bg-[#2563EB] transition-colors shadow-sm"
                   >
                     Next
