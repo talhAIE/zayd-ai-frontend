@@ -124,12 +124,21 @@ export default function ReadingModeTopics() {
     return 0;
   };
 
-  const step1Completed = isPassageExpanded || (chatHistory && chatHistory.some(m => m.role === 'user'));
+  const initialPassComplete = Boolean(
+    isPassageExpanded ||
+    readingProgress?.isRetrying ||
+    readingProgress?.phase === 'quiz' ||
+    isCompleted,
+  );
+  const step1Completed = initialPassComplete;
   const step1Active = !step1Completed;
   const step2Completed = (mcqList && mcqList.length > 0) || isCompleted;
   const step2Active = step1Completed && !step2Completed;
   const step3Completed = isCompleted;
   const step3Active = step2Completed && !step3Completed;
+  const progressLabel = readingProgress?.isRetrying
+    ? 'Reviewing marked sentences'
+    : `${getProgressPercentage()}% Complete`;
 
   return (
     <div className="w-full max-w-[1207px] mx-auto bg-white rounded-none md:rounded-[24px] flex flex-col font-['Outfit',sans-serif] overflow-hidden h-[100dvh] md:h-[794px] max-h-[calc(100vh-40px)] border border-gray-100 shadow-sm relative">
@@ -204,7 +213,7 @@ export default function ReadingModeTopics() {
             />
           </div>
           <span className="font-['Outfit'] font-semibold text-[11px] leading-[14px] text-[#06CCB5]">
-            {getProgressPercentage()}% Complete
+            {progressLabel}
           </span>
         </div>
       </div>
