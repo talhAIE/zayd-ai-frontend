@@ -28,7 +28,9 @@ export interface ReadingProgress {
   phase: 'reading' | 'quiz' | 'completed';
   currentSentenceIndex: number;
   totalSentences: number;
+  attemptedSentenceIndexes: number[];
   acceptedSentenceIndexes: number[];
+  isRetrying: boolean;
   rejectedAttemptCount: number;
   percentComplete: number;
 }
