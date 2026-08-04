@@ -12,9 +12,7 @@ const getSupportedMimeType = () => {
   return types.find((type) => MediaRecorder.isTypeSupported(type));
 };
 
-const getBaseUrl = (url: string | undefined | null) => {
-  return url ? url.split('?')[0] : '';
-};
+
 
 export function useAudioPlayback() {
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
@@ -68,10 +66,13 @@ export function useAudioPlayback() {
 
       if (
         soundRef.current &&
-        playingAudioId === id &&
-        getBaseUrl(loadedAudioUrlRef.current) === getBaseUrl(audioUrl)
+        playingAudioId === id
       ) {
-        if (soundRef.current.playing()) {
+        const isPlayingNow = playbackIdRef.current 
+          ? soundRef.current.playing(playbackIdRef.current)
+          : soundRef.current.playing();
+          
+        if (isPlayingNow) {
           if (playbackIdRef.current) {
             soundRef.current.pause(playbackIdRef.current);
           } else {
