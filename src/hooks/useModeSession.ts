@@ -85,7 +85,11 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
     const socketUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:4000';
     const newSocket = io(socketUrl, {
       auth: { token: accessToken },
-      transports: ['websocket'],
+      transports: ['polling', 'websocket'],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
     });
 
     setSocket(newSocket);
@@ -98,6 +102,22 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
     newSocket.on('connect_error', (err) => {
       console.error('[Socket] Connect error:', err);
       toast.error('Failed to connect to the learning server');
+    });
+
+    newSocket.on('disconnect', (reason) => {
+      console.warn('[Socket] Disconnected:', reason);
+    });
+
+    newSocket.io.on('reconnect_attempt', (attempt) => {
+      console.info('[Socket] Reconnecting, attempt:', attempt);
+    });
+
+    newSocket.io.on('reconnect', (attempt) => {
+      console.info('[Socket] Reconnected after attempt:', attempt);
+    });
+
+    newSocket.io.on('reconnect_error', (error) => {
+      console.error('[Socket] Reconnect error:', error);
     });
 
     newSocket.on('mode_session_started', (session) => {
