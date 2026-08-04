@@ -15,7 +15,20 @@ export default function ListeningModeTopics() {
   const lessonModeId = searchParams.get('modeId') || '';
   const lessonId = searchParams.get('lessonId') || '';
   const refreshLearningProgress = useLearningProgressRefresh();
-  const { playingAudioId, isCurrentlyPlaying, loadingAudioId, audioProgress, audioDuration, toggleAudio } = useAudioPlayback();
+  const { 
+    isCurrentlyPlaying: isTopicPlaying, 
+    loadingAudioId: topicLoadingId, 
+    audioProgress: topicProgress, 
+    audioDuration: topicDuration, 
+    toggleAudio: toggleTopic,
+    pauseAudio: pauseTopic
+  } = useAudioPlayback();
+
+  const { 
+    isCurrentlyPlaying: isNarratorPlaying, 
+    toggleAudio: toggleNarrator,
+    pauseAudio: pauseNarrator
+  } = useAudioPlayback();
   
   const [currentMcqIndex, setCurrentMcqIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number | string>>({});
@@ -72,10 +85,10 @@ export default function ListeningModeTopics() {
   }, [listeningPayload?.stage]);
 
   useEffect(() => {
-    if (playingAudioId === 'listening_topic_audio' || loadingAudioId === 'listening_topic_audio') {
+    if (isTopicPlaying || topicLoadingId) {
       setHasStartedAudio(true);
     }
-  }, [playingAudioId, loadingAudioId]);
+  }, [isTopicPlaying, topicLoadingId]);
 
   useEffect(() => {
     if (modeSessionId) {
@@ -101,7 +114,7 @@ export default function ListeningModeTopics() {
   const narratorAudioUrl = isQuestionStage ? listeningPayload?.questionAudioUrl : listeningPayload?.narrationAudioUrl;
   const narratorText = isQuestionStage ? listeningPayload?.questionText : listeningPayload?.narrationText;
   const narratorAudioId = `listening_narrator_audio_${listeningPayload?.stage ?? 'initial'}`;
-  const isNarratorAudioPlaying = playingAudioId === narratorAudioId && isCurrentlyPlaying;
+  const isNarratorAudioPlaying = isNarratorPlaying;
   const canAdvance = isQuestionStage || hasListenedToAudio;
 
   return (
@@ -272,13 +285,14 @@ export default function ListeningModeTopics() {
               </div>
               <AudioPlayer
                 audioSrc={topicAudioUrl}
-                isPlaying={playingAudioId === 'listening_topic_audio' && isCurrentlyPlaying}
-                isLoading={loadingAudioId === 'listening_topic_audio'}
-                progress={playingAudioId === 'listening_topic_audio' ? audioProgress : 0}
-                duration={playingAudioId === 'listening_topic_audio' ? audioDuration : 0}
-                onTogglePlay={() => toggleAudio('listening_topic_audio', topicAudioUrl, () => setHasListenedToAudio(true))}
+                isPlaying={isTopicPlaying}
+                isLoading={!!topicLoadingId}
+                progress={topicProgress}
+                duration={topicDuration}
+                onTogglePlay={() => toggleTopic('listening_topic_audio', topicAudioUrl, () => setHasListenedToAudio(true), () => pauseNarrator())}
                 variant="gradient"
                 className="max-w-full"
+                showTotal={true}
               />
             </div>
           )}
@@ -298,8 +312,8 @@ export default function ListeningModeTopics() {
                 {narratorAudioUrl && (
                   <button
                     type="button"
-                    onClick={() => toggleAudio(narratorAudioId, narratorAudioUrl)}
-                    aria-label={isNarratorAudioPlaying ? 'Pause narrator audio' : 'Play narrator audio'}
+                    onClick={() => toggleNarrator(narratorAudioId, narratorAudioUrl, undefined, () => pauseTopic())}
+                    aria-label={isNarratorAudioPlaying ? 'Pause quiz audio' : 'Play quiz audio'}
                     className="mt-3 flex items-center text-[#0F1450] transition-colors hover:text-[#2563EB]"
                   >
                     {isNarratorAudioPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}

@@ -200,6 +200,17 @@ export function useAudioPlayback() {
     onEndCalledRef.current = false;
   }, [clearAudioProgress]);
 
+  const pauseAudio = useCallback(() => {
+    if (soundRef.current) {
+      if (playbackIdRef.current) {
+        soundRef.current.pause(playbackIdRef.current);
+      } else {
+        soundRef.current.pause();
+      }
+    }
+    setIsCurrentlyPlaying(false);
+  }, []);
+
   return {
     playingAudioId,
     isCurrentlyPlaying,
@@ -208,6 +219,7 @@ export function useAudioPlayback() {
     audioDuration,
     toggleAudio,
     stopAudio,
+    pauseAudio,
     clearAudioProgress,
   };
 }
