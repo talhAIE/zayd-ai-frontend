@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ChevronLeft, Mic, Send, Square, Trash2, Check, MessageCircle, Pause, Play, LoaderCircle } from 'lucide-react';
+import { ChevronLeft, Mic, Send, Square, Trash2, Check, MessageCircle, Pause, Play, LoaderCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { useModeSession } from '@/hooks/useModeSession';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import ReadingPassageCard from '@/components/ui/ReadingPassageCard';
@@ -27,6 +27,7 @@ export default function ReadingModeTopics() {
   const [isJustCompleted, setIsJustCompleted] = useState(false);
   const [activeFeedback, setActiveFeedback] = useState<string | null>(null);
   const [isPassageExpanded, setIsPassageExpanded] = useState(false);
+  const [isStepsExpanded, setIsStepsExpanded] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -222,88 +223,101 @@ export default function ReadingModeTopics() {
       <div className="flex flex-col md:flex-row px-4 md:px-8 gap-4 flex-1 min-h-0 pb-6">
         
         {/* Mode Sidebar */}
-        <div className="flex flex-col py-4 w-full md:w-[220px] bg-white border border-[#E5E7EB] rounded-[10px] flex-shrink-0">
-          <div className="px-4 pb-2.5">
+        <div className="flex flex-col py-3 md:py-4 w-full md:w-[220px] bg-white border border-[#E5E7EB] rounded-[10px] flex-shrink-0">
+          <div 
+            className="px-4 pb-2 md:pb-2.5 flex justify-between items-center cursor-pointer md:cursor-default"
+            onClick={() => window.innerWidth < 768 && setIsStepsExpanded(!isStepsExpanded)}
+          >
             <h3 className="font-semibold text-[10px] leading-[13px] tracking-[1.2px] text-[#6E748F] uppercase">
               Activity Steps
             </h3>
+            <div className="md:hidden flex items-center justify-center p-1 -mr-1 rounded-md hover:bg-gray-100">
+              {isStepsExpanded ? (
+                <ChevronUp className="w-4 h-4 text-[#6E748F]" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-[#6E748F]" />
+              )}
+            </div>
           </div>
-          <div className="w-full h-[1px] bg-[#E5E7EB]/70" />
           
-          {/* Step 1: Reading Passage */}
-          <div className={`relative flex flex-row items-center p-[14px_14px_14px_13px] gap-2.5 ${
-            step1Active ? 'bg-[#5C9DFF]/10' : ''
-          }`}>
-            {step1Active && (
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[40px] bg-[#5C9DFF] rounded-[2px]" />
-            )}
-            <div className={`flex justify-center items-center w-7 h-7 rounded-full font-bold text-[12px] ${
-              step1Completed ? 'bg-[#2DCD6B] text-white' : 'bg-[#5C9DFF] text-white'
+          <div className={`flex-col ${isStepsExpanded ? 'flex' : 'hidden'} md:flex`}>
+            <div className="w-full h-[1px] bg-[#E5E7EB]/70" />
+            
+            {/* Step 1: Reading Passage */}
+            <div className={`relative flex flex-row items-center p-[14px_14px_14px_13px] gap-2.5 ${
+              step1Active ? 'bg-[#5C9DFF]/10' : ''
             }`}>
-              1
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <span className="font-semibold text-[13px] leading-[16px] text-[#0F1450]">Reading Passage</span>
-              <span className={`text-[11px] leading-[14px] font-medium ${
-                step1Completed ? 'text-[#2DCD6B]' : 'text-[#5C9DFF]'
+              {step1Active && (
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[40px] bg-[#5C9DFF] rounded-[2px]" />
+              )}
+              <div className={`flex justify-center items-center w-7 h-7 rounded-full font-bold text-[12px] ${
+                step1Completed ? 'bg-[#2DCD6B] text-white' : 'bg-[#5C9DFF] text-white'
               }`}>
-                {step1Completed ? 'Completed' : 'In Progress'}
-              </span>
+                1
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <span className="font-semibold text-[13px] leading-[16px] text-[#0F1450]">Reading Passage</span>
+                <span className={`text-[11px] leading-[14px] font-medium ${
+                  step1Completed ? 'text-[#2DCD6B]' : 'text-[#5C9DFF]'
+                }`}>
+                  {step1Completed ? 'Completed' : 'In Progress'}
+                </span>
+              </div>
             </div>
-          </div>
-          <div className="w-full h-[1px] bg-[#E5E7EB]/70" />
+            <div className="w-full h-[1px] bg-[#E5E7EB]/70" />
 
-          {/* Step 2: Practice Reading */}
-          <div className={`relative flex flex-row items-center p-[14px_14px_14px_13px] gap-2.5 ${
-            step2Active ? 'bg-[#5C9DFF]/10' : ''
-          }`}>
-            {step2Active && (
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[40px] bg-[#5C9DFF] rounded-[2px]" />
-            )}
-            <div className={`flex justify-center items-center w-7 h-7 rounded-full font-bold text-[12px] ${
-              step2Completed
-                ? 'bg-[#2DCD6B] text-white'
-                : (step1Completed ? 'bg-[#5C9DFF] text-white' : 'bg-[#E5E7EB] text-[#6E748F]')
+            {/* Step 2: Practice Reading */}
+            <div className={`relative flex flex-row items-center p-[14px_14px_14px_13px] gap-2.5 ${
+              step2Active ? 'bg-[#5C9DFF]/10' : ''
             }`}>
-              2
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <span className="font-semibold text-[13px] leading-[16px] text-[#0F1450]">Practice Reading</span>
-              <span className={`text-[11px] leading-[14px] font-medium ${
-                step2Completed ? 'text-[#2DCD6B]' : (step1Completed ? 'text-[#5C9DFF]' : 'text-[#6E748F]')
+              {step2Active && (
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[40px] bg-[#5C9DFF] rounded-[2px]" />
+              )}
+              <div className={`flex justify-center items-center w-7 h-7 rounded-full font-bold text-[12px] ${
+                step2Completed
+                  ? 'bg-[#2DCD6B] text-white'
+                  : (step1Completed ? 'bg-[#5C9DFF] text-white' : 'bg-[#E5E7EB] text-[#6E748F]')
               }`}>
-                {step2Completed ? 'Completed' : (step1Completed ? 'In Progress' : 'Pending')}
-              </span>
+                2
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <span className="font-semibold text-[13px] leading-[16px] text-[#0F1450]">Practice Reading</span>
+                <span className={`text-[11px] leading-[14px] font-medium ${
+                  step2Completed ? 'text-[#2DCD6B]' : (step1Completed ? 'text-[#5C9DFF]' : 'text-[#6E748F]')
+                }`}>
+                  {step2Completed ? 'Completed' : (step1Completed ? 'In Progress' : 'Pending')}
+                </span>
+              </div>
             </div>
-          </div>
-          <div className="w-full h-[1px] bg-[#E5E7EB]/70" />
+            <div className="w-full h-[1px] bg-[#E5E7EB]/70" />
 
-          {/* Step 3: Knowledge Quiz */}
-          <div className={`relative flex flex-row items-center p-[14px_14px_14px_13px] gap-2.5 ${
-            step3Active ? 'bg-[#5C9DFF]/10' : ''
-          }`}>
-            {step3Active && (
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[40px] bg-[#5C9DFF] rounded-[2px]" />
-            )}
-            <div className={`flex justify-center items-center w-7 h-7 rounded-full font-bold text-[12px] ${
-              step3Completed
-                ? 'bg-[#2DCD6B] text-white'
-                : (step2Completed ? 'bg-[#5C9DFF] text-white' : 'bg-[#E5E7EB] text-[#6E748F]')
+            {/* Step 3: Knowledge Quiz */}
+            <div className={`relative flex flex-row items-center p-[14px_14px_14px_13px] gap-2.5 ${
+              step3Active ? 'bg-[#5C9DFF]/10' : ''
             }`}>
-              3
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <span className="font-semibold text-[13px] leading-[16px] text-[#0F1450]">Knowledge Quiz</span>
-              <span className={`text-[11px] leading-[14px] font-medium ${
+              {step3Active && (
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[40px] bg-[#5C9DFF] rounded-[2px]" />
+              )}
+              <div className={`flex justify-center items-center w-7 h-7 rounded-full font-bold text-[12px] ${
                 step3Completed
-                  ? 'text-[#2DCD6B]'
-                  : (step2Completed ? 'text-[#5C9DFF]' : 'text-[#6E748F]')
+                  ? 'bg-[#2DCD6B] text-white'
+                  : (step2Completed ? 'bg-[#5C9DFF] text-white' : 'bg-[#E5E7EB] text-[#6E748F]')
               }`}>
-                {step3Completed ? 'Completed' : (step2Completed ? 'In Progress' : 'Pending')}
-              </span>
+                3
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <span className="font-semibold text-[13px] leading-[16px] text-[#0F1450]">Knowledge Quiz</span>
+                <span className={`text-[11px] leading-[14px] font-medium ${
+                  step3Completed
+                    ? 'text-[#2DCD6B]'
+                    : (step2Completed ? 'text-[#5C9DFF]' : 'text-[#6E748F]')
+                }`}>
+                  {step3Completed ? 'Completed' : (step2Completed ? 'In Progress' : 'Pending')}
+                </span>
+              </div>
             </div>
+            <div className="w-full h-[1px] bg-[#E5E7EB]/70" />
           </div>
-          <div className="w-full h-[1px] bg-[#E5E7EB]/70" />
 
         </div>
 
