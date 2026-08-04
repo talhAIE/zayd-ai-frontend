@@ -101,10 +101,10 @@ export default function ListeningModeTopics() {
   const getProgressPercentage = () => {
     if (isCompleted) return 100;
     if (listeningPayload?.stage === 'quiz' && mcqList && mcqList.length > 0) {
-      const quizProgress = Math.floor(((currentMcqIndex + 1) / mcqList.length) * 25);
-      return Math.min(99, 75 + quizProgress);
+      const quizProgress = Math.floor((currentMcqIndex / mcqList.length) * 50);
+      return Math.min(99, 50 + quizProgress);
     }
-    if (listeningPayload?.stage === 'question') return 50;
+    if (listeningPayload?.stage === 'question') return 25;
     if (listeningPayload?.stage === 'initial') return hasListenedToAudio ? 25 : 0;
     return 0;
   };
