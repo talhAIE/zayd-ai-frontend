@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ChevronLeft, Clock, Check, Pause, Play } from 'lucide-react';
+import { ChevronLeft, Clock, Check, Pause, Play, ChevronDown, ChevronUp } from 'lucide-react';
 import { useModeSession } from '@/hooks/useModeSession';
 import TopicCompletionModal from '@/components/ui/TopicCompletionModal';
 import { ContentPolicyWarningModal } from '@/components/ui/ContentPolicyWarningModal';
@@ -32,6 +32,7 @@ export default function ListeningModeTopics() {
   
   const [currentMcqIndex, setCurrentMcqIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number | string>>({});
+  const [isStepsExpanded, setIsStepsExpanded] = useState(false);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [hasListenedToAudio, setHasListenedToAudio] = useState(false);
   const [hasStartedAudio, setHasStartedAudio] = useState(false);
@@ -195,13 +196,25 @@ export default function ListeningModeTopics() {
       <div className="flex flex-col md:flex-row px-4 md:px-8 gap-4 flex-1 min-h-0 pb-6">
         
         {/* Mode Sidebar */}
-        <div className="flex flex-col py-4 w-full md:w-[220px] bg-white border border-[#E5E7EB] rounded-[10px] flex-shrink-0">
-          <div className="px-4 pb-2.5">
+        <div className="flex flex-col py-3 md:py-4 w-full md:w-[220px] bg-white border border-[#E5E7EB] rounded-[10px] flex-shrink-0">
+          <div 
+            className="px-4 pb-2 md:pb-2.5 flex justify-between items-center cursor-pointer md:cursor-default"
+            onClick={() => window.innerWidth < 768 && setIsStepsExpanded(!isStepsExpanded)}
+          >
             <h3 className="font-semibold text-[10px] leading-[13px] tracking-[1.2px] text-[#6E748F] uppercase">
               Activity Steps
             </h3>
+            <div className="md:hidden flex items-center justify-center p-1 -mr-1 rounded-md hover:bg-gray-100">
+              {isStepsExpanded ? (
+                <ChevronUp className="w-4 h-4 text-[#6E748F]" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-[#6E748F]" />
+              )}
+            </div>
           </div>
-          <div className="w-full h-[1px] bg-[#E5E7EB]/70" />
+          
+          <div className={`flex-col ${isStepsExpanded ? 'flex' : 'hidden'} md:flex`}>
+            <div className="w-full h-[1px] bg-[#E5E7EB]/70" />
           
           {/* Step 1: Audio Narration */}
           <div className={`relative flex flex-row items-center p-[14px_14px_14px_13px] gap-2.5 ${
@@ -271,6 +284,7 @@ export default function ListeningModeTopics() {
             </div>
           </div>
           <div className="w-full h-[1px] bg-[#E5E7EB]/70" />
+          </div>
 
         </div>
 

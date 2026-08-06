@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ChevronLeft, Mic, Clock, MessageCircle, Send, Square, Trash2 } from 'lucide-react';
+import { ChevronLeft, Mic, Clock, MessageCircle, Send, Square, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useModeSession } from '@/hooks/useModeSession';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
@@ -14,6 +14,7 @@ export default function DebateModeTopics() {
   const lessonModeId = searchParams.get('modeId') || '';
   
   const [inputValue, setInputValue] = useState('');
+  const [isStepsExpanded, setIsStepsExpanded] = useState(false);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [isJustCompleted, setIsJustCompleted] = useState(false);
   const [activeFeedback, setActiveFeedback] = useState<string | null>(null);
@@ -180,13 +181,25 @@ export default function DebateModeTopics() {
       <div className="flex flex-col md:flex-row px-4 md:px-8 gap-4 flex-1 min-h-0 pb-6">
         
         {/* Mode Sidebar */}
-        <div className="flex flex-col py-4 w-full md:w-[220px] bg-white border border-[#E5E7EB] rounded-[10px] flex-shrink-0">
-          <div className="px-4 pb-2.5">
+        <div className="flex flex-col py-3 md:py-4 w-full md:w-[220px] bg-white border border-[#E5E7EB] rounded-[10px] flex-shrink-0">
+          <div 
+            className="px-4 pb-2 md:pb-2.5 flex justify-between items-center cursor-pointer md:cursor-default"
+            onClick={() => window.innerWidth < 768 && setIsStepsExpanded(!isStepsExpanded)}
+          >
             <h3 className="font-semibold text-[10px] leading-[13px] tracking-[1.2px] text-[#6E748F] uppercase">
               Activity Steps
             </h3>
+            <div className="md:hidden flex items-center justify-center p-1 -mr-1 rounded-md hover:bg-gray-100">
+              {isStepsExpanded ? (
+                <ChevronUp className="w-4 h-4 text-[#6E748F]" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-[#6E748F]" />
+              )}
+            </div>
           </div>
-          <div className="w-full h-[1px] bg-[#E5E7EB]/70" />
+          
+          <div className={`flex-col ${isStepsExpanded ? 'flex' : 'hidden'} md:flex`}>
+            <div className="w-full h-[1px] bg-[#E5E7EB]/70" />
           
           {/* Step 1: Debate Topic */}
           <div className="relative flex flex-row items-center p-[14px_14px_14px_13px] gap-2.5">
@@ -245,6 +258,7 @@ export default function DebateModeTopics() {
             </div>
           </div>
           <div className="w-full h-[1px] bg-[#E5E7EB]/70" />
+          </div>
 
         </div>
 
