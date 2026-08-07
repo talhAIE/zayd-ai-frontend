@@ -9,6 +9,7 @@ interface ReadingPassageCardProps {
   onExpand?: () => void;
   forceExpanded?: boolean;
   title?: string;
+  collapsibleMode?: 'see-more' | 'accordion';
 }
 
 const ReadingPassageCard: React.FC<ReadingPassageCardProps> = ({
@@ -19,8 +20,9 @@ const ReadingPassageCard: React.FC<ReadingPassageCardProps> = ({
   onExpand,
   forceExpanded = false,
   title = 'Reading Passage',
+  collapsibleMode = 'see-more',
 }) => {
-  const [isExpanded, setIsExpanded] = React.useState(false);
+  const [isExpanded, setIsExpanded] = React.useState(collapsibleMode === 'accordion' ? false : false);
   const [shouldShowExpandButton, setShouldShowExpandButton] = React.useState(false);
   const contentRef = useRef<HTMLParagraphElement>(null);
 
@@ -51,15 +53,31 @@ const ReadingPassageCard: React.FC<ReadingPassageCardProps> = ({
   };
 
   return (
-    <div className="w-full bg-white border border-[#E5E7EB] rounded-[12px] p-[16px_20px] flex flex-col gap-3 font-['Outfit',sans-serif]">
+    <div className="w-full bg-white border border-[#E5E7EB] rounded-[12px] p-[16px_20px] flex flex-col gap-3 font-['Outfit',sans-serif] min-h-0 flex-shrink overflow-hidden">
       {/* Header Row: Badge & Audio */}
-      <div className="flex flex-row justify-between items-center w-full">
-        {/* Reading Passage Badge */}
-        <div className="inline-flex flex-row items-center px-3 py-1.5 gap-[6px] bg-[#EFF6FF] border border-[#5C9DFF] rounded-[20px]">
-          <BookOpen className="w-3.5 h-3.5 text-[#5C9DFF]" />
-          <span className="font-['Outfit'] font-semibold text-[12px] leading-[15px] text-[#5C9DFF]">
-            {title}
-          </span>
+      <div 
+        className={`flex flex-row justify-between items-center w-full ${collapsibleMode === 'accordion' && !forceExpanded ? 'cursor-pointer select-none' : ''}`}
+        onClick={() => {
+          if (collapsibleMode === 'accordion' && !forceExpanded) {
+            handleToggleExpand();
+          }
+        }}
+      >
+        <div className="flex items-center gap-3">
+          {/* Reading Passage Badge */}
+          <div className="inline-flex flex-row items-center px-3 py-1.5 gap-[6px] bg-[#EFF6FF] border border-[#5C9DFF] rounded-[20px]">
+            <BookOpen className="w-3.5 h-3.5 text-[#5C9DFF]" />
+            <span className="font-['Outfit'] font-semibold text-[12px] leading-[15px] text-[#5C9DFF]">
+              {title}
+            </span>
+          </div>
+          {collapsibleMode === 'accordion' && !forceExpanded && (
+            <ChevronDown 
+              className={`w-5 h-5 text-[#6E748F] transition-transform duration-200 ${
+                isExpanded ? 'rotate-180' : ''
+              }`} 
+            />
+          )}
         </div>
 
         {audioUrl && onToggleAudio && (
@@ -78,27 +96,31 @@ const ReadingPassageCard: React.FC<ReadingPassageCardProps> = ({
       </div>
 
       {/* Content */}
-      <p
-        ref={contentRef}
-        className={`font-['Outfit'] font-normal text-[14px] leading-[22px] text-[#282828] whitespace-pre-wrap transition-all duration-200 ${
-          (!isExpanded && !forceExpanded) ? 'line-clamp-3' : 'line-clamp-none'
-        }`}
-      >
-        {content
-          .split(/(\*\*.*?\*\*)/g)
-          .map((part, i) =>
-            part.startsWith('**') && part.endsWith('**') ? (
-              <span key={i} className="font-semibold text-[#5C9DFF]">
-                {part.slice(2, -2)}
-              </span>
-            ) : (
-              part
-            )
-          )}
-      </p>
+      {!(collapsibleMode === 'accordion' && !forceExpanded && !isExpanded) && (
+        <div className={`min-h-0 flex-shrink ${collapsibleMode === 'accordion' && !forceExpanded ? 'max-h-[120px] overflow-y-auto pr-2 custom-scrollbar' : ''}`}>
+          <p
+            ref={contentRef}
+            className={`font-['Outfit'] font-normal text-[14px] leading-[22px] text-[#282828] whitespace-pre-wrap transition-all duration-200 ${
+              (collapsibleMode === 'see-more' && !isExpanded && !forceExpanded) ? 'line-clamp-3' : 'line-clamp-none'
+            }`}
+          >
+            {content
+              .split(/(\*\*.*?\*\*)/g)
+              .map((part, i) =>
+                part.startsWith('**') && part.endsWith('**') ? (
+                  <span key={i} className="font-semibold text-[#5C9DFF]">
+                    {part.slice(2, -2)}
+                  </span>
+                ) : (
+                  part
+                )
+              )}
+          </p>
+        </div>
+      )}
 
       {/* See More Row */}
-      {(shouldShowExpandButton && !forceExpanded) && (
+      {(collapsibleMode === 'see-more' && shouldShowExpandButton && !forceExpanded) && (
         <div className="flex flex-row items-center pt-1">
           <button
             onClick={handleToggleExpand}

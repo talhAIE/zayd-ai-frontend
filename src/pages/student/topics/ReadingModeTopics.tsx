@@ -141,6 +141,8 @@ export default function ReadingModeTopics() {
     ? 'Reviewing marked sentences'
     : `${getProgressPercentage()}% Complete`;
 
+  const isChatActive = !step1Active && (!mcqList || mcqList.length === 0);
+
   return (
     <div className="w-full max-w-[1207px] mx-auto bg-white rounded-none md:rounded-[24px] flex flex-col font-['Outfit',sans-serif] overflow-hidden h-[100dvh] md:h-[794px] max-h-[calc(100vh-40px)] border border-gray-100 shadow-sm relative">
       
@@ -322,11 +324,11 @@ export default function ReadingModeTopics() {
         </div>
 
         {/* Workspace Main */}
-        <div className="flex flex-col flex-1 gap-4 min-h-0 overflow-y-auto pr-1">
+        <div className={`flex flex-col flex-1 gap-4 min-h-0 pr-1 ${isChatActive ? '' : 'overflow-y-auto'}`}>
           
           {/* Reading Passage Card */}
           {contentPayload && (contentPayload.passage || contentPayload.content) && (
-            <div className="flex-shrink-0 flex flex-col gap-4">
+            <div className="flex-shrink flex flex-col gap-4 min-h-0">
               <ReadingPassageCard 
                 content={contentPayload.passage || contentPayload.content || ''}
                 audioUrl={contentPayload.contentAudioUrl || contentPayload.narrationAudioUrl || contentPayload.attachmentUrl}
@@ -339,6 +341,7 @@ export default function ReadingModeTopics() {
                 }
                 onExpand={() => setIsPassageExpanded(true)}
                 forceExpanded={step1Active}
+                collapsibleMode="accordion"
               />
               {step1Active && (
                 <div className="flex justify-end w-full pb-2">
@@ -360,7 +363,7 @@ export default function ReadingModeTopics() {
           {!step1Active && (!mcqList || mcqList.length === 0) && (
             <div 
               ref={chatContainerRef}
-              className="flex flex-col p-5 px-6 gap-3 flex-1 min-h-0 bg-[#F8F9FA] rounded-2xl overflow-y-auto"
+              className="flex flex-col p-5 px-6 gap-3 flex-1 min-h-[150px] bg-[#F8F9FA] rounded-2xl overflow-y-auto"
             >
               {chatHistory.map((msg, index) => (
                 <div 
