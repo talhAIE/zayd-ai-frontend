@@ -1,8 +1,8 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ChevronLeft, Star, ChevronRight, BookOpen } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
-import { getUnits, getLessons } from '@/redux/slices/learningSlice';
+import { getUnits } from '@/redux/slices/learningSlice';
 import { AppDispatch, RootState } from '@/redux/store';
 
 
@@ -13,7 +13,6 @@ export default function CourseUnits() {
   const scrollRef = useRef<HTMLDivElement>(null);
   
   const { units, loading, error } = useSelector((state: RootState) => state.learning);
-  const [navigatingUnitId, setNavigatingUnitId] = useState<string | null>(null);
 
   useEffect(() => {
     if (courseId) {
@@ -21,30 +20,10 @@ export default function CourseUnits() {
     }
   }, [dispatch, courseId]);
 
-  const handleUnitClick = async (e: React.MouseEvent, unitId: string, status: string) => {
+  const handleUnitClick = (e: React.MouseEvent, unitId: string, status: string) => {
     e.preventDefault();
     if (status === 'locked') return;
-
-    try {
-      setNavigatingUnitId(unitId);
-      const actionResult = await dispatch(getLessons(unitId)).unwrap();
-      
-      // Find the first lesson that is not completed
-      let targetLesson = actionResult.find((l: any) => l.status === 'in_progress' || l.status === 'not_started');
-      
-      // If all completed, just go to the first lesson anyway or the last one.
-      if (!targetLesson && actionResult.length > 0) {
-        targetLesson = actionResult[actionResult.length - 1]; // or actionResult[0]
-      }
-
-      if (targetLesson) {
-        navigate(`/student/courses/${courseId}/units/${unitId}/lessons/${targetLesson.id}`);
-      }
-    } catch (err) {
-      console.error("Failed to navigate to lesson:", err);
-    } finally {
-      setNavigatingUnitId(null);
-    }
+    navigate(`/student/courses/${courseId}/units/${unitId}`);
   };
 
   const scrollLeft = () => {
@@ -133,11 +112,6 @@ export default function CourseUnits() {
                       : 'bg-[#F9FAFB] border border-[#E5E7EB] opacity-70 cursor-not-allowed'
                   }`}
                 >
-                  {navigatingUnitId === unit.id && (
-                    <div className="absolute inset-0 bg-white/50 backdrop-blur-sm flex items-center justify-center rounded-[16px] z-10">
-                      <div className="w-6 h-6 border-2 border-[#4F8DFB] border-t-transparent rounded-full animate-spin"></div>
-                    </div>
-                  )}
                   <div className="flex justify-between items-start w-full">
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
                       unit.status === 'completed' ? 'bg-[#DCFCE7]' :

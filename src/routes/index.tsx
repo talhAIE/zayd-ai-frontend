@@ -14,6 +14,8 @@ import ChineseContactUs from "@/pages/public/chinese/ChineseContactUs";
 // Student Pages
 import StudentCourses from "@/pages/student/courses";
 import CourseUnits from "@/pages/student/course-units";
+import UnitLessons from "@/pages/student/unit-lessons";
+import UnitOverview from "@/pages/student/unit-overview";
 import Lesson from "@/pages/student/lesson";
 import StudentDashboard from "@/pages/student/dashboard";
 import DebateModeTopics from "@/pages/student/topics/DebateModeTopics";
@@ -129,6 +131,26 @@ const AppRoutes = () => {
           <StudentRoute>
             <StudentLayout>
               <CourseUnits />
+            </StudentLayout>
+          </StudentRoute>
+        }
+      />
+      <Route
+        path="/student/courses/:courseId/units/:unitId"
+        element={
+          <StudentRoute>
+            <StudentLayout>
+              <UnitLessons />
+            </StudentLayout>
+          </StudentRoute>
+        }
+      />
+      <Route
+        path="/student/courses/:courseId/units/:unitId/overview"
+        element={
+          <StudentRoute>
+            <StudentLayout>
+              <UnitOverview />
             </StudentLayout>
           </StudentRoute>
         }
