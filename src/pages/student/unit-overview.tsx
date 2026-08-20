@@ -1,16 +1,27 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ChevronLeft, ArrowRight, FileText, Lightbulb, Zap, Star } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
-import { getCourses, getUnits, getLessons } from '@/redux/slices/learningSlice';
+import { 
+  getCourses, 
+  getUnits, 
+  getLessons, 
+  getLessonModes, 
+  startLessonMode, 
+  completeLessonMode,
+  startLesson,
+  completeLesson
+} from '@/redux/slices/learningSlice';
 import { AppDispatch, RootState } from '@/redux/store';
+import { toast } from 'sonner';
 
 export default function UnitOverview() {
   const { courseId, unitId } = useParams<{ courseId: string; unitId: string }>();
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { courses, units, lessons } = useSelector((state: RootState) => state.learning);
+  const { courses, units, lessons, modes } = useSelector((state: RootState) => state.learning);
 
   useEffect(() => {
     if (courses.length === 0) {
@@ -32,14 +43,66 @@ export default function UnitOverview() {
 
   const currentCourse = courses.find((c) => c.id === courseId);
   const currentUnit = units.find((u) => u.id === unitId);
+  const overviewLesson = lessons.find((l) => l.lessonType === 'unit_overview') || lessons[0];
 
-  // Navigate to first lesson / reading mode
-  const handleContinue = () => {
-    const firstLesson = lessons[0];
-    if (firstLesson) {
-      navigate(`/student/courses/${courseId}/units/${unitId}/lessons/${firstLesson.id}`);
-    } else {
+  useEffect(() => {
+    if (overviewLesson?.id) {
+      dispatch(getLessonModes(overviewLesson.id));
+    }
+  }, [dispatch, overviewLesson?.id]);
+
+  // Complete overview mode/lesson and navigate to next unlocked lesson
+  const handleContinue = async () => {
+    setIsSubmitting(true);
+    try {
+      // 1. If an overview mode exists, complete it
+      const overviewMode = modes.find((m) => m.modeKey === 'unit-overview-mode') || modes[0];
+      if (overviewMode) {
+        try {
+          await dispatch(startLessonMode({ lessonModeId: overviewMode.id })).unwrap();
+        } catch (_) {}
+        try {
+          await dispatch(completeLessonMode({ lessonModeId: overviewMode.id })).unwrap();
+        } catch (_) {}
+      }
+
+      // 2. Also ensure lesson completion is registered if needed
+      if (overviewLesson?.id) {
+        try {
+          await dispatch(startLesson(overviewLesson.id)).unwrap();
+        } catch (_) {}
+        try {
+          await dispatch(completeLesson({ lessonId: overviewLesson.id })).unwrap();
+        } catch (_) {}
+      }
+
+      // 3. Re-fetch lessons and units so Redux receives updated isLocked & progress statuses
+      let refreshedLessons = lessons;
+      if (unitId) {
+        refreshedLessons = await dispatch(getLessons(unitId)).unwrap();
+      }
+      if (courseId) {
+        dispatch(getUnits(courseId));
+      }
+
+      // 4. Find the next unlocked lesson
+      const nextLesson = 
+        refreshedLessons.find((l) => !l.isLocked && l.status !== 'completed' && l.id !== overviewLesson?.id) ||
+        refreshedLessons.find((l) => !l.isLocked && l.id !== overviewLesson?.id) ||
+        refreshedLessons[1] ||
+        refreshedLessons[0];
+
+      if (nextLesson) {
+        navigate(`/student/courses/${courseId}/units/${unitId}/lessons/${nextLesson.id}`);
+      } else {
+        navigate(`/student/courses/${courseId}/units/${unitId}`);
+      }
+    } catch (error) {
+      console.error('Failed to complete unit overview:', error);
+      toast.error('Failed to update progress, returning to unit.');
       navigate(`/student/courses/${courseId}/units/${unitId}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -211,10 +274,17 @@ export default function UnitOverview() {
       <div className="flex justify-end pt-2">
         <button
           onClick={handleContinue}
-          className="w-full sm:w-auto bg-[#5C9DFF] hover:bg-[#4A8DEF] active:scale-[0.98] text-white px-6 py-3 rounded-[8px] font-bold text-[14px] flex items-center justify-center gap-2 transition-all shadow-sm cursor-pointer"
+          disabled={isSubmitting}
+          className={`w-full sm:w-auto bg-[#5C9DFF] hover:bg-[#4A8DEF] active:scale-[0.98] text-white px-6 py-3 rounded-[8px] font-bold text-[14px] flex items-center justify-center gap-2 transition-all shadow-sm ${
+            isSubmitting ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'
+          }`}
         >
-          <span>Continue</span>
-          <ArrowRight className="w-4 h-4" />
+          <span>{isSubmitting ? 'Completing...' : 'Continue'}</span>
+          {isSubmitting ? (
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <ArrowRight className="w-4 h-4" />
+          )}
         </button>
       </div>
 

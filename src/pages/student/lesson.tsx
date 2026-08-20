@@ -1,45 +1,140 @@
 import React, { useState, useEffect } from 'react';
-import { Target, BookOpen, Headphones, Users, ChevronRight, Play } from 'lucide-react';
+import { 
+  Target, 
+  BookOpen, 
+  Headphones, 
+  Users, 
+  ChevronRight, 
+  Play, 
+  Sparkles, 
+  BookMarked, 
+  HelpCircle, 
+  PenTool, 
+  Star, 
+  Lightbulb, 
+  Award, 
+  GraduationCap, 
+  BookCheck,
+  FileSearch,
+  MessageSquare
+} from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { getLessonModes, startLesson } from '@/redux/slices/learningSlice';
+import { getLessonModes, startLesson, startLessonMode, getUnits } from '@/redux/slices/learningSlice';
 import { AppDispatch, RootState } from '@/redux/store';
-
+import { toast } from 'sonner';
 
 export default function Lesson() {
-  const { unitId, lessonId } = useParams<{ courseId: string; unitId: string; lessonId: string }>();
+  const { courseId, unitId, lessonId } = useParams<{ courseId: string; unitId: string; lessonId: string }>();
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const { modes, loading, error, lessons, units } = useSelector((state: RootState) => state.learning);
   const [viewMode, setViewMode] = useState<'grid' | 'timeline'>('grid');
 
   useEffect(() => {
+    if (courseId && units.length === 0) {
+      dispatch(getUnits(courseId));
+    }
+  }, [dispatch, courseId, units.length]);
+
+  useEffect(() => {
     if (lessonId) {
       dispatch(getLessonModes(lessonId));
-      dispatch(startLesson(lessonId)); // Start the lesson progress
+      dispatch(startLesson(lessonId));
     }
   }, [dispatch, lessonId]);
 
-  const currentLesson = lessons.find(l => l.id === lessonId);
-  const currentUnit = units.find(u => u.id === unitId);
+  const currentLesson = lessons.find((l) => l.id === lessonId);
+  const currentUnit = units.find((u) => u.id === unitId);
+
+  // Dynamic progress stats
+  const completedModes = modes.filter((m) => m.status === 'completed');
+  const completedCount = currentLesson?.completedRequiredModeCount ?? completedModes.length;
+  const totalRequiredCount = currentLesson?.requiredModeCount ?? modes.filter((m) => m.isRequired).length;
+  const totalCount = totalRequiredCount > 0 ? totalRequiredCount : (modes.length > 0 ? modes.length : 1);
+  const lessonProgressPct = currentLesson?.progressPct !== undefined && currentLesson.progressPct !== null
+    ? Math.round(currentLesson.progressPct)
+    : (modes.length > 0 ? Math.round((completedModes.length / modes.length) * 100) : 0);
 
   const getIconForMode = (modeKey: string) => {
     switch (modeKey) {
-      case 'reading-mode': return <BookOpen className="w-6 h-6 text-sky-500" />;
-      case 'listening-mode': return <Headphones className="w-6 h-6 text-purple-500" />;
-      case 'roleplay-mode': return <Users className="w-6 h-6 text-orange-400" />;
-      default: return <Target className="w-6 h-6 text-emerald-500" />;
+      case 'objectives-introduction-mode':
+        return <Star className="w-6 h-6 text-amber-500" />;
+      case 'vocabulary-mode':
+        return <BookMarked className="w-6 h-6 text-indigo-500" />;
+      case 'first-read-mode':
+      case 'reading-mode':
+        return <BookOpen className="w-6 h-6 text-sky-500" />;
+      case 'skill-mode':
+        return <Sparkles className="w-6 h-6 text-violet-500" />;
+      case 'close-read-mode':
+        return <FileSearch className="w-6 h-6 text-teal-500" />;
+      case 'grammar-mode':
+        return <BookCheck className="w-6 h-6 text-emerald-500" />;
+      case 'speaking-mode':
+      case 'roleplay-mode':
+        return <Users className="w-6 h-6 text-orange-400" />;
+      case 'listening-mode':
+        return <Headphones className="w-6 h-6 text-purple-500" />;
+      case 'debate-mode':
+        return <MessageSquare className="w-6 h-6 text-rose-500" />;
+      case 'quiz-mode':
+      case 'check-understanding-mode':
+        return <HelpCircle className="w-6 h-6 text-blue-500" />;
+      case 'writing-mode':
+        return <PenTool className="w-6 h-6 text-pink-500" />;
+      case 'unit-overview-mode':
+        return <Lightbulb className="w-6 h-6 text-amber-500" />;
+      case 'project-mode':
+        return <Award className="w-6 h-6 text-indigo-500" />;
+      case 'assessment-mode':
+        return <GraduationCap className="w-6 h-6 text-emerald-600" />;
+      default:
+        return <Target className="w-6 h-6 text-emerald-500" />;
     }
   };
 
-  const handleModeClick = (mode: any) => {
-    if (mode.isLocked || mode.status === 'locked') return;
+  const getIconBgForMode = (modeKey: string, isCompleted: boolean, isLocked: boolean) => {
+    if (isCompleted) return 'bg-emerald-50';
+    if (isLocked) return 'bg-gray-100';
+    switch (modeKey) {
+      case 'objectives-introduction-mode': return 'bg-amber-50';
+      case 'vocabulary-mode': return 'bg-indigo-50';
+      case 'first-read-mode':
+      case 'reading-mode': return 'bg-sky-50';
+      case 'skill-mode': return 'bg-violet-50';
+      case 'close-read-mode': return 'bg-teal-50';
+      case 'grammar-mode': return 'bg-emerald-50';
+      case 'speaking-mode':
+      case 'roleplay-mode': return 'bg-orange-50';
+      case 'listening-mode': return 'bg-purple-50';
+      case 'debate-mode': return 'bg-rose-50';
+      case 'quiz-mode':
+      case 'check-understanding-mode': return 'bg-blue-50';
+      case 'writing-mode': return 'bg-pink-50';
+      default: return 'bg-blue-50';
+    }
+  };
+
+  const handleModeClick = async (mode: any) => {
+    if (mode.isLocked || mode.status === 'locked') {
+      toast.error('This mode is locked. Complete earlier required modes first.');
+      return;
+    }
+
+    try {
+      dispatch(startLessonMode({ lessonModeId: mode.id }));
+    } catch (err) {
+      console.error('Failed to start lesson mode:', err);
+    }
     
     switch (mode.modeKey) {
       case 'reading-mode':
+      case 'first-read-mode':
         navigate(`/student/courses/reading-mode?lessonId=${lessonId}&modeId=${mode.id}`);
         break;
       case 'roleplay-mode':
+      case 'speaking-mode':
         navigate(`/student/courses/roleplay-mode?lessonId=${lessonId}&modeId=${mode.id}`);
         break;
       case 'listening-mode':
@@ -48,8 +143,22 @@ export default function Lesson() {
       case 'debate-mode':
         navigate(`/student/courses/debate-mode?lessonId=${lessonId}&modeId=${mode.id}`);
         break;
+      case 'unit-overview-mode':
+        navigate(`/student/courses/${courseId}/units/${unitId}/overview`);
+        break;
+      case 'objectives-introduction-mode':
+      case 'vocabulary-mode':
+      case 'skill-mode':
+      case 'close-read-mode':
+      case 'grammar-mode':
       default:
-        navigate(`/student/courses/reading-mode?lessonId=${lessonId}&modeId=${mode.id}`);
+        if (mode.modeSource === 'component') {
+          navigate(`/student/courses/${courseId}/units/${unitId}/lessons/${lessonId}/modes/${mode.id}`);
+        } else if (mode.modeSource === 'legacy_ai') {
+          navigate(`/student/courses/reading-mode?lessonId=${lessonId}&modeId=${mode.id}`);
+        } else {
+          navigate(`/student/courses/${courseId}/units/${unitId}/lessons/${lessonId}/modes/${mode.id}`);
+        }
         break;
     }
   };
@@ -65,22 +174,38 @@ export default function Lesson() {
             <span className="text-[13px] text-[#949494] font-semibold tracking-wider uppercase">
               {currentUnit?.title || 'Course Unit'}
             </span>
-            <h2 className="text-[28px] font-bold text-[#282828] tracking-[-0.5px]">{currentLesson?.title || 'Lesson Modes'}</h2>
+            <h2 className="text-[28px] font-bold text-[#282828] tracking-[-0.5px]">
+              {currentLesson?.title || 'Lesson Modes'}
+            </h2>
           </div>
           
-          <div className="flex items-center gap-4 bg-[#F8FAFC] py-3 px-6 rounded-[12px] w-full md:w-auto">
-            <div className="relative w-[72px] h-[72px] flex items-center justify-center isolate">
+          <div className="flex items-center gap-4 bg-[#F8FAFC] py-3 px-6 rounded-[12px] w-full md:w-auto flex-shrink-0">
+            <div className="relative w-[72px] h-[72px] flex items-center justify-center isolate flex-shrink-0">
               <div className="absolute inset-1 bg-white rounded-full shadow-sm"></div>
               <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 72 72" overflow="visible">
                 <circle cx="36" cy="36" r="32" fill="none" stroke="#E5E7EB" strokeWidth="8" />
-                <circle cx="36" cy="36" r="32" fill="none" stroke="#5C9DFF" strokeWidth="8" strokeDasharray="201" strokeDashoffset="66.35" />
+                <circle 
+                  cx="36" 
+                  cy="36" 
+                  r="32" 
+                  fill="none" 
+                  stroke="#5C9DFF" 
+                  strokeWidth="8" 
+                  strokeDasharray="201" 
+                  strokeDashoffset={201 - (201 * lessonProgressPct) / 100} 
+                  strokeLinecap="round"
+                />
               </svg>
-              <span className="font-['Outfit'] font-bold text-[12px] leading-[15px] text-[#282828] z-10">67%</span>
+              <span className="font-['Outfit'] font-bold text-[13px] text-[#282828] z-10">
+                {lessonProgressPct}%
+              </span>
             </div>
             
             <div className="flex flex-col">
               <span className="text-[14px] font-semibold text-[#282828]">Lesson Mastery</span>
-              <span className="text-[13px] text-[#949494]">2 of 4 activities completed</span>
+              <span className="text-[13px] text-[#949494]">
+                {completedCount} of {totalCount} {totalCount === 1 ? 'activity' : 'activities'} completed
+              </span>
             </div>
           </div>
         </div>
@@ -91,7 +216,7 @@ export default function Lesson() {
             <div className="flex flex-col gap-1">
               <h3 className="text-[18px] font-bold text-[#282828]">Lesson Modes</h3>
               <p className="text-[14px] text-[#949494]">
-                Complete the 6 steps below to master the learning objective.
+                Complete all required modes in sequence to master this lesson.
               </p>
             </div>
             
@@ -99,7 +224,7 @@ export default function Lesson() {
             <div className="flex p-1 bg-[#F3F4F6] rounded-full">
               <button 
                 onClick={() => setViewMode('grid')}
-                className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-[13px] font-semibold transition-all ${
+                className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-[13px] font-semibold transition-all cursor-pointer ${
                   viewMode === 'grid' ? 'bg-[#4F8DFB] text-white shadow-sm' : 'text-[#6B7280] hover:text-[#282828]'
                 }`}
               >
@@ -107,7 +232,7 @@ export default function Lesson() {
               </button>
               <button 
                 onClick={() => setViewMode('timeline')}
-                className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-[13px] font-semibold transition-all ${
+                className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-[13px] font-semibold transition-all cursor-pointer ${
                   viewMode === 'timeline' ? 'bg-[#4F8DFB] text-white shadow-sm' : 'text-[#6B7280] hover:text-[#282828]'
                 }`}
               >
@@ -120,22 +245,22 @@ export default function Lesson() {
           <div className="flex flex-col gap-2 mt-2">
             <div className="flex justify-between items-center text-[13px] font-semibold">
               <span className="text-[#6B7280]">Overall Lesson Progress</span>
-              <span className="text-[12px] font-bold text-[#6B7280]">+{currentLesson?.progressPct ? Math.round(currentLesson.progressPct) : 0}% Mastery</span>
+              <span className="text-[12px] font-bold text-[#4F8DFB]">+{lessonProgressPct}% Mastery</span>
             </div>
             <div className="w-full h-2 bg-[#E5E7EB] rounded-full overflow-hidden">
               <div 
-                className="h-full bg-[#4F8DFB] rounded-full" 
-                style={{ width: `${currentLesson?.progressPct || 0}%` }}
+                className="h-full bg-[#4F8DFB] rounded-full transition-all duration-500" 
+                style={{ width: `${lessonProgressPct}%` }}
               />
             </div>
           </div>
 
           {/* Cards Content */}
           <div className={`mt-4 ${viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4' : 'flex flex-row overflow-x-auto pb-1 pt-2 px-1 gap-4 hide-scrollbar items-center'}`}>
-            {loading && <p className="text-gray-500">Loading lesson modes...</p>}
-            {error && <p className="text-red-500">{error}</p>}
+            {loading && <p className="text-gray-500 py-4">Loading lesson modes...</p>}
+            {error && <p className="text-red-500 py-4">{error}</p>}
             {!loading && !error && modes.length === 0 && (
-              <p className="text-gray-500">No lesson modes available.</p>
+              <p className="text-gray-500 py-4">No lesson modes available for this lesson.</p>
             )}
             {!loading && modes.map((mode, idx) => (
               <React.Fragment key={mode.id}>
@@ -171,8 +296,7 @@ export default function Lesson() {
 
                   <div className="flex flex-col items-center justify-center gap-3 my-auto w-full">
                     <div className={`w-14 h-14 rounded-full flex items-center justify-center ${
-                      mode.status === 'completed' ? 'bg-emerald-50' : 
-                      (mode.isLocked || mode.status === 'locked') ? 'bg-gray-50' : 'bg-blue-50'
+                      getIconBgForMode(mode.modeKey, mode.status === 'completed', mode.isLocked || mode.status === 'locked')
                     }`}>
                       {getIconForMode(mode.modeKey)}
                     </div>
@@ -180,7 +304,9 @@ export default function Lesson() {
                       <h4 className={`text-[16px] font-bold leading-tight ${
                         (mode.isLocked || mode.status === 'locked') ? 'text-[#9CA3AF]' : 'text-[#282828]'
                       }`}>{mode.title}</h4>
-                      <span className="text-[12px] text-[#949494] mt-1">{mode.description || mode.modeKey.replace('-', ' ')}</span>
+                      <span className="text-[12px] text-[#949494] mt-1 line-clamp-2">
+                        {mode.description || mode.modeKey.replace(/-/g, ' ')}
+                      </span>
                     </div>
                   </div>
 
@@ -232,3 +358,4 @@ function TimelineIcon(props: React.SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+

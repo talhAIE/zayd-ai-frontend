@@ -1,7 +1,8 @@
 import axios from "axios";
 import { clearAuthData } from "@/utils/tokenUtils";
 
-const baseURL = `${import.meta.env.VITE_API_BASE_URL}/api/v1`;
+const apiBase = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/+$/, "");
+const baseURL = `${apiBase}/api/v1`;
 
 const apiClient = axios.create({
   baseURL,

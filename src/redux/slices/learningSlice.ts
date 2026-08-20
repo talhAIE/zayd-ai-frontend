@@ -6,6 +6,8 @@ import {
   fetchSection1LessonModes,
   startSection1Lesson,
   startSection1LessonMode,
+  completeSection1LessonMode,
+  completeSection1Lesson,
   Section1Course,
   Section1Unit,
   Section1Lesson,
@@ -102,6 +104,48 @@ export const startLessonMode = createAsyncThunk(
       return { lessonModeId, ...data };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to start lesson mode');
+    }
+  }
+);
+
+export const completeLessonMode = createAsyncThunk(
+  'learning/completeLessonMode',
+  async (
+    {
+      lessonModeId,
+      payload,
+    }: {
+      lessonModeId: string;
+      payload?: { modeSessionId?: string; score?: number; timeSpentSec?: number };
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      await completeSection1LessonMode(lessonModeId, payload);
+      return { lessonModeId };
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to complete lesson mode');
+    }
+  }
+);
+
+export const completeLesson = createAsyncThunk(
+  'learning/completeLesson',
+  async (
+    {
+      lessonId,
+      payload,
+    }: {
+      lessonId: string;
+      payload?: { score?: number; timeSpentSec?: number };
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      await completeSection1Lesson(lessonId, payload);
+      return { lessonId };
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to complete lesson');
     }
   }
 );
