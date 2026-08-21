@@ -97,7 +97,7 @@ const ReadingPassageCard: React.FC<ReadingPassageCardProps> = ({
 
       {/* Content */}
       {!(collapsibleMode === 'accordion' && !forceExpanded && !isExpanded) && (
-        <div className={`min-h-0 flex-shrink ${collapsibleMode === 'accordion' && !forceExpanded ? 'max-h-[120px] overflow-y-auto pr-2 custom-scrollbar' : ''}`}>
+        <div className={`min-h-0 flex-shrink overflow-y-auto pr-2 custom-scrollbar ${collapsibleMode === 'accordion' && !forceExpanded ? 'max-h-[120px]' : ''}`}>
           <p
             ref={contentRef}
             className={`font-['Outfit'] font-normal text-[14px] leading-[22px] text-[#282828] whitespace-pre-wrap transition-all duration-200 ${

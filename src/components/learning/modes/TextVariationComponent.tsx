@@ -43,5 +43,22 @@ export default function TextVariationComponent({ component, groupedComponents }:
 
   const learningGoal = typeof content.learningGoal === 'string' ? content.learningGoal : null;
   const essentialQuestion = typeof content.essentialQuestion === 'string' ? content.essentialQuestion : null;
+
+  if (presentation === 'instruction' || (!learningGoal && !essentialQuestion && !goals.length && !standards.length)) {
+    return (
+      <div className="flex flex-col gap-3 font-['Outfit',sans-serif]">
+        <section className="flex overflow-hidden rounded-[14px] border border-[#E2E8F0] bg-white shadow-sm">
+          <div className="flex w-12 shrink-0 items-center justify-center bg-[#EAF4FF]">
+            <div className="h-5 w-4 rounded bg-[#79BFFF]" />
+          </div>
+          <div className="p-4 md:p-5">
+            {heading && <h2 className="text-sm md:text-base font-bold text-[#0F172A]">{heading}</h2>}
+            {body && <p className={`text-[13px] md:text-[14px] leading-relaxed text-[#475569] ${heading ? 'mt-1.5' : ''}`}>{body}</p>}
+          </div>
+        </section>
+      </div>
+    );
+  }
+
   return <section className="rounded-[18px] border border-[#E2E8F0] bg-white p-6 md:p-8 shadow-sm font-['Outfit',sans-serif]">{learningGoal && <div className="rounded-[14px] bg-gradient-to-r from-[#0267B5] to-[#249CFF] p-5 text-white"><div className="text-[11px] font-bold uppercase tracking-wider">Learning objective</div><p className="mt-2 text-lg font-bold">{learningGoal}</p></div>}{heading && !learningGoal && <h2 className="text-xl font-bold text-[#0F172A]">{heading}</h2>}{body && <p className="mt-4 text-sm leading-relaxed text-[#475569]">{body}</p>}{essentialQuestion && <div className="mt-4 rounded-xl border-l-4 border-[#3B82F6] bg-[#F8FAFC] p-4"><p className="text-xs font-bold uppercase tracking-wider text-[#2563EB]">Essential question</p><p className="mt-1 text-sm font-semibold text-[#0F172A]">{essentialQuestion}</p></div>}{goals.length > 0 && <div className="mt-5"><p className="text-xs font-bold uppercase tracking-wider text-[#64748B]">Key goals</p><div className="mt-2 space-y-2">{goals.map((goal) => <div key={goal} className="flex gap-2 rounded-lg bg-[#F8FAFC] p-3 text-sm text-[#334155]"><CheckCircle2 className="h-4 w-4 shrink-0 text-[#10B981]" />{goal}</div>)}</div></div>}{standards.length > 0 && <div className="mt-5 flex flex-wrap gap-2">{standards.map((standard) => <span key={standard} className="rounded bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">{standard}</span>)}</div>}</section>;
 }

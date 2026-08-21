@@ -117,12 +117,14 @@ export default function ReadingModeTopics() {
   const getProgressPercentage = () => {
     if (isCompleted) return 100;
 
+    const baseProgress = (isPassageExpanded || readingProgress?.isRetrying || readingProgress?.phase === 'quiz') ? 15 : 0;
+
     if (readingProgress) {
       if (mcqList && mcqList.length > 0) {
         const quizProgress = Math.floor(((currentMcqIndex + 1) / mcqList.length) * 20);
         return Math.min(99, 80 + quizProgress);
       }
-      return readingProgress.percentComplete;
+      return Math.min(80, baseProgress + Math.floor((readingProgress.percentComplete / 100) * 65));
     }
 
     // Fallback if no readingProgress available yet
@@ -130,7 +132,7 @@ export default function ReadingModeTopics() {
       const quizProgress = Math.floor(((currentMcqIndex + 1) / mcqList.length) * 20);
       return Math.min(99, 80 + quizProgress);
     }
-    return 0;
+    return baseProgress;
   };
 
   const initialPassComplete = Boolean(
@@ -332,13 +334,13 @@ export default function ReadingModeTopics() {
         </div>
 
         {/* Workspace Main */}
-        <div className={`flex flex-col flex-1 gap-4 min-h-0 pr-1 ${isChatActive ? '' : 'overflow-y-auto'}`}>
+        <div className={`flex flex-col flex-1 gap-4 min-h-0 pr-1 ${(isChatActive || step1Active) ? '' : 'overflow-y-auto'}`}>
           
           {/* Reading Passage Card */}
-          {contentPayload && (contentPayload.passage || contentPayload.content) && (
-            <div className="flex-shrink flex flex-col gap-4 min-h-0">
+          {contentPayload && (contentPayload.passage || contentPayload.content || (contentPayload.sentences && contentPayload.sentences.length > 0)) && (
+            <div className={`flex flex-col gap-4 min-h-0 ${step1Active ? 'flex-1' : 'flex-shrink-0'}`}>
               <ReadingPassageCard 
-                content={contentPayload.passage || contentPayload.content || ''}
+                content={contentPayload.passage || contentPayload.content || (contentPayload.sentences ? contentPayload.sentences.join('\n\n') : '')}
                 audioUrl={contentPayload.contentAudioUrl || contentPayload.narrationAudioUrl || contentPayload.attachmentUrl}
                 isPlaying={playingAudioId === 'reading-passage' && isCurrentlyPlaying}
                 onToggleAudio={() =>
@@ -352,7 +354,7 @@ export default function ReadingModeTopics() {
                 collapsibleMode="accordion"
               />
               {step1Active && (
-                <div className="flex justify-end w-full pb-2">
+                <div className="flex justify-end w-full pb-2 flex-shrink-0">
                   <button
                     onClick={() => {
                       stopAudio();
