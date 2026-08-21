@@ -18,6 +18,7 @@ import UnitLessons from "@/pages/student/unit-lessons";
 import UnitOverview from "@/pages/student/unit-overview";
 import Lesson from "@/pages/student/lesson";
 import ComponentModePlay from "@/pages/student/ComponentModePlay";
+import DirectActivityPlay from "@/pages/student/DirectActivityPlay";
 import StudentDashboard from "@/pages/student/dashboard";
 import DebateModeTopics from "@/pages/student/topics/DebateModeTopics";
 import ReadingModeTopics from "@/pages/student/topics/ReadingModeTopics";
@@ -162,6 +163,16 @@ const AppRoutes = () => {
           <StudentRoute>
             <StudentLayout>
               <Lesson />
+            </StudentLayout>
+          </StudentRoute>
+        }
+      />
+      <Route
+        path="/student/courses/:courseId/units/:unitId/lessons/:lessonId/modes/:modeId/direct"
+        element={
+          <StudentRoute>
+            <StudentLayout>
+              <DirectActivityPlay />
             </StudentLayout>
           </StudentRoute>
         }

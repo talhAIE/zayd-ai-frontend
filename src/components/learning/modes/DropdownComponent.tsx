@@ -44,7 +44,9 @@ export default function DropdownComponent({
     rawOptions.length > 0
       ? rawOptions.map((o: any) => ({
           label: o.label || o.value,
-          value: o.value || o.label,
+          // The learner API grades objective answers by option id. Labels may
+          // change between content versions, but option ids remain stable.
+          value: o.id || o.value || o.label,
         }))
       : matchingRightItems.length > 0
       ? matchingRightItems.map((item) => ({

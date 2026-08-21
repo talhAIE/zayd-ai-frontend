@@ -20,8 +20,12 @@ export const getLearningModePath = (
   const query = `lessonId=${encodeURIComponent(lessonId)}&modeId=${encodeURIComponent(mode.id)}`;
   const componentPath = `/student/courses/${courseId}/units/${unitId}/lessons/${lessonId}/modes/${mode.id}`;
 
-  // Component, quiz, and writing modes retain the canonical Section 2 player
-  // URL. Quiz/writing will receive their dedicated renderers in Phase 6.
+  // Assessment and Unit Project modes have dedicated backend contracts. They
+  // are direct launches, not a lesson-mode list rendered as normal components.
+  if (mode.modeSource === 'quiz' || mode.modeSource === 'writing') {
+    return `${componentPath}/direct`;
+  }
+
   if (mode.modeSource !== 'legacy_ai') {
     return componentPath;
   }

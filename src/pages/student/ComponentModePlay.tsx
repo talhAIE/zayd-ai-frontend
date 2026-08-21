@@ -1,27 +1,29 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { CheckCircle2, ChevronLeft, CircleAlert, Eye } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
   getLessonModes, 
   startLessonMode, 
-  completeLessonMode, 
-  getLessons 
+  completeLessonMode
 } from '@/redux/slices/learningSlice';
 import { 
   fetchLessonModeComponents, 
   submitComponentAttempt,
   saveComponentAttempt,
   startLearningComponent,
+  fetchModeResources,
   interactWithResource,
   submitReflection,
   revealApprovedAnswers,
   LearningResource,
+  ResourceInteractionType,
   LearningComponent 
 } from '@/services/learningService';
 import { AppDispatch, RootState } from '@/redux/store';
 import { toast } from 'sonner';
 import { getLearningModePath } from '@/utils/learning-navigation';
+import { useLearningProgressRefresh } from '@/hooks/useLearningProgressRefresh';
 
 import {
   DropdownComponent,
@@ -58,10 +60,37 @@ export default function ComponentModePlay() {
   const [isSubmittingMode, setIsSubmittingMode] = useState(false);
   const [, setCompletedComponentIds] = useState<Set<string>>(new Set());
   const [revealedAnswers, setRevealedAnswers] = useState<Record<string, Array<{ id: string; value: string }>>>({});
+  const refreshLearningProgress = useLearningProgressRefresh();
 
   const currentUnit = units.find((u) => u.id === unitId);
   const currentLesson = lessons.find((l) => l.id === lessonId);
   const currentMode = modes.find((m) => m.id === modeId);
+
+  const refreshModeState = useCallback(async () => {
+    if (!modeId || !lessonId) return [];
+
+    const [modeComponents, modeResources, refreshedModes] = await Promise.all([
+      fetchLessonModeComponents(modeId),
+      fetchModeResources(modeId).catch(() => [] as LearningResource[]),
+      dispatch(getLessonModes(lessonId)).unwrap(),
+    ]);
+    const resourcesByComponent = new Map<string, LearningResource[]>();
+    modeResources.forEach((resource) => {
+      if (!resource.componentId) return;
+      resourcesByComponent.set(resource.componentId, [
+        ...(resourcesByComponent.get(resource.componentId) || []),
+        resource,
+      ]);
+    });
+    const onlyResourceComponent = modeComponents.filter((component) => component.componentType === 'resource');
+    setComponents(modeComponents.sort((left, right) => left.orderIndex - right.orderIndex).map((component) => ({
+      ...component,
+      resources: resourcesByComponent.get(component.id)
+        || (onlyResourceComponent.length === 1 && component.componentType === 'resource' ? modeResources : component.resources),
+    })));
+    await refreshLearningProgress(lessonId, { unitId, courseId });
+    return refreshedModes;
+  }, [courseId, dispatch, lessonId, modeId, refreshLearningProgress, unitId]);
 
   // Load components & initialize mode session
   useEffect(() => {
@@ -78,6 +107,7 @@ export default function ComponentModePlay() {
         }
 
         const data = await fetchLessonModeComponents(modeId);
+        const resources = await fetchModeResources(modeId).catch(() => [] as LearningResource[]);
         // Start on-view components as they become visible. The backend then owns
         // acknowledgement completion instead of the UI inventing it locally.
         const initialized = await Promise.all(
@@ -94,7 +124,20 @@ export default function ComponentModePlay() {
             }
           }),
         );
-        const sorted = initialized.sort((a, b) => a.orderIndex - b.orderIndex);
+        const resourcesByComponent = new Map<string, LearningResource[]>();
+        resources.forEach((resource) => {
+          if (!resource.componentId) return;
+          resourcesByComponent.set(resource.componentId, [
+            ...(resourcesByComponent.get(resource.componentId) || []),
+            resource,
+          ]);
+        });
+        const resourceComponents = initialized.filter((component) => component.componentType === 'resource');
+        const sorted = initialized.sort((a, b) => a.orderIndex - b.orderIndex).map((component) => ({
+          ...component,
+          resources: resourcesByComponent.get(component.id)
+            || (resourceComponents.length === 1 && component.componentType === 'resource' ? resources : component.resources),
+        }));
         setComponents(sorted);
 
         // Pre-fill completed components from attempt status
@@ -173,14 +216,15 @@ export default function ComponentModePlay() {
     }
   };
 
-  const handleResourceInteraction = async (resource: LearningResource) => {
+  const handleResourceInteraction = async (resource: LearningResource, interactionType: ResourceInteractionType) => {
     try {
-      const updatedResources = await interactWithResource(resource.id, 'opened');
+      const updatedResources = await interactWithResource(resource.id, interactionType);
       setComponents((currentComponents) => currentComponents.map((component) =>
         component.resources.some((item) => item.id === resource.id)
           ? { ...component, resources: updatedResources }
           : component,
       ));
+      await refreshModeState();
     } catch {
       toast.error('Unable to record this resource interaction.');
     }
@@ -197,6 +241,7 @@ export default function ComponentModePlay() {
         if (result.isComplete) nextIds.add(componentId);
         return nextIds;
       });
+      await refreshModeState();
       toast.success('Reflection submitted.');
       return result;
     } catch (submitError: any) {
@@ -208,17 +253,17 @@ export default function ComponentModePlay() {
   // Complete the entire mode and progress to next mode or lesson roadmap
   const handleCompleteMode = async () => {
     if (!modeId || !lessonId) return;
-    if (!requiredComponentsComplete) {
+    const modeAlreadyComplete = currentMode?.status === 'completed';
+    if (!modeAlreadyComplete && !requiredComponentsComplete) {
       toast.error('Complete the required activities before moving on.');
       return;
     }
     setIsSubmittingMode(true);
     try {
-      await dispatch(completeLessonMode({ lessonModeId: modeId })).unwrap();
-      const updatedModes = await dispatch(getLessonModes(lessonId)).unwrap();
-      if (unitId) {
-        dispatch(getLessons(unitId));
-      }
+      const updatedModes = modeAlreadyComplete
+        ? await dispatch(getLessonModes(lessonId)).unwrap()
+        : await dispatch(completeLessonMode({ lessonModeId: modeId })).unwrap().then(() => dispatch(getLessonModes(lessonId)).unwrap());
+      await refreshLearningProgress(lessonId, { unitId, courseId });
 
       // Find next unlocked mode
       const nextMode = updatedModes.find(
@@ -246,6 +291,7 @@ export default function ComponentModePlay() {
   const requiredComponentsComplete = components
     .filter((component) => component.isRequired)
     .every((component) => component.isComplete || Boolean(component.attempt?.completedAt));
+  const canAdvance = currentMode?.status === 'completed' || requiredComponentsComplete;
 
   return (
     <div className="w-full max-w-[1040px] mx-auto pb-16 flex flex-col gap-6 font-['Outfit',sans-serif]">
@@ -435,10 +481,10 @@ export default function ComponentModePlay() {
             <button
               type="button"
               onClick={handleCompleteMode}
-              disabled={isSubmittingMode || !requiredComponentsComplete}
+              disabled={isSubmittingMode || !canAdvance}
               className={`
                 w-full sm:w-auto bg-[#4F8DFB] hover:bg-[#3B82F6] active:scale-[0.98] text-white px-7 py-3 rounded-full font-bold text-[14px] flex items-center justify-center gap-2 shadow-md transition-all
-                ${isSubmittingMode || !requiredComponentsComplete ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}
+                ${isSubmittingMode || !canAdvance ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}
               `}
             >
               {isSubmittingMode ? (

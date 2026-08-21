@@ -38,6 +38,9 @@ export default function MCQComponent({
   });
 
   const [selectedValue, setSelectedValue] = useState<string>(() => {
+    if (component.attempt?.response?.optionId) {
+      return String(component.attempt.response.optionId);
+    }
     if (component.attempt?.response?.selectedOption) {
       return String(component.attempt.response.selectedOption);
     }

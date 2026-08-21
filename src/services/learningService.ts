@@ -220,6 +220,30 @@ export interface QuizAnswer {
   response: JsonObject;
 }
 
+export interface QuizAttemptItem {
+  id: string;
+  componentId: string;
+  componentType: string;
+  title: string | null;
+  description: string | null;
+  orderIndex: number;
+  isRequired: boolean;
+  contentVersion: number;
+  content: JsonObject | null;
+  accessibility: JsonObject | null;
+  options: LearningComponentOption[];
+  matchingLeftItems: LearningComponentMatchingItem[];
+  matchingRightItems: LearningComponentMatchingItem[];
+  status: string;
+  response: JsonObject | null;
+  isCorrect: boolean | null;
+  score: number | null;
+  feedback: JsonObject | null;
+  writingSubmissionId: string | null;
+  savedAt: string | null;
+  submittedAt: string | null;
+}
+
 export interface QuizAttempt {
   id: string;
   lessonModeId: string;
@@ -234,7 +258,7 @@ export interface QuizAttempt {
   submittedAt: string | null;
   completedAt: string | null;
   policy: JsonObject;
-  items: JsonObject[];
+  items: QuizAttemptItem[];
 }
 
 export interface UnitProjectResponse {
@@ -246,6 +270,12 @@ export interface UnitProjectResponse {
   drafts: JsonObject[];
   canRequestReview: boolean;
   canSubmitFinal: boolean;
+  isComplete: boolean;
+}
+
+export interface UnitProjectFinalSubmissionResponse {
+  project: UnitProjectResponse;
+  finalSubmission: WritingReviewResponse;
   isComplete: boolean;
 }
 
@@ -388,8 +418,8 @@ export const reviewUnitProjectDraft = async (lessonId: string, idempotencyKey = 
   return response.data.data;
 };
 
-export const submitUnitProject = async (lessonId: string, responsePayload: JsonObject, options: { idempotencyKey?: string; timeSpentSec?: number } = {}): Promise<{ project: UnitProjectResponse; review: WritingReviewResponse }> => {
-  const response = await apiClient.post<ApiEnvelope<{ project: UnitProjectResponse; review: WritingReviewResponse }>>(`/learning/projects/${lessonId}/submit`, {
+export const submitUnitProject = async (lessonId: string, responsePayload: JsonObject, options: { idempotencyKey?: string; timeSpentSec?: number } = {}): Promise<UnitProjectFinalSubmissionResponse> => {
+  const response = await apiClient.post<ApiEnvelope<UnitProjectFinalSubmissionResponse>>(`/learning/projects/${lessonId}/submit`, {
     response: responsePayload,
     idempotencyKey: options.idempotencyKey ?? createIdempotencyKey('project-submit', lessonId),
     ...(options.timeSpentSec === undefined ? {} : { timeSpentSec: options.timeSpentSec }),

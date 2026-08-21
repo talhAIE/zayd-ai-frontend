@@ -232,7 +232,7 @@ Make the UI accurately follow the backend attempt lifecycle.
 - Show Answer calls the backend only when the returned attempt is exhausted and the returned feedback authorizes answer reveal. The UI renders only the approved values returned by that endpoint.
 - The component player restores backend attempts on page load and uses `canSubmit` to disable terminal interactions.
 
-## Phase 6 — Mode completion, specialized activities, and progress refresh
+## Phase 6 — Mode completion, specialized activities, and progress refresh — Complete
 
 ### Goal
 
@@ -253,6 +253,14 @@ Prevent completion bypasses and integrate specialized backend activity endpoints
 - Learners cannot advance from a required mode until the backend marks it complete.
 - Resource interactions and reflections produce correct backend progress.
 - Optional Project/Assessment can open and complete using their dedicated backend contracts when published.
+
+### Implemented
+
+- Resource modes now load their published resources from the dedicated endpoint, record open/download interactions, and refresh their server-confirmed mode state before the learner can continue.
+- Reflections use the dedicated reflection submit endpoint and refresh components, modes, lessons, units, and courses after the backend processes the response.
+- Added direct activity screens for Unit Projects (Writing) and Unit Assessments (Quiz). They use only the specialized project/quiz endpoints, including draft, review, final submission, individual answer saving, and final assessment submission.
+- Direct-mode navigation now sends `writing` and `quiz` sources to those dedicated screens instead of the generic component player.
+- Advancement is only enabled after the backend reports the mode completed, or after all required normal components are confirmed complete.
 
 ## Phase 7 — Reading, Listening, and configurable Speaking/Roleplay
 

@@ -28,6 +28,9 @@ export default function TrueFalseComponent({
   const falseValue = falseOption?.id || 'false';
 
   const [selectedValue, setSelectedValue] = useState<string | null>(() => {
+    if (component.attempt?.response?.optionId) {
+      return String(component.attempt.response.optionId);
+    }
     if (component.attempt?.response?.value) {
       return component.attempt.response.value as 'true' | 'false';
     }

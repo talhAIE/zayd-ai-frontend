@@ -12,7 +12,10 @@ export function useLearningProgressRefresh() {
   const { lessons, units } = useAppSelector((state) => state.learning);
 
   return useCallback(
-    async (lessonId: string): Promise<void> => {
+    async (
+      lessonId: string,
+      context: { unitId?: string; courseId?: string } = {},
+    ): Promise<void> => {
       const lesson = lessons.find((item) => item.id === lessonId);
       const unit = lesson
         ? units.find((item) => item.id === lesson.unitId)
@@ -23,12 +26,14 @@ export function useLearningProgressRefresh() {
         refreshes.push(dispatch(getLessonModes(lessonId)).unwrap());
       }
 
-      if (lesson) {
-        refreshes.push(dispatch(getLessons(lesson.unitId)).unwrap());
+      const resolvedUnitId = lesson?.unitId ?? context.unitId;
+      if (resolvedUnitId) {
+        refreshes.push(dispatch(getLessons(resolvedUnitId)).unwrap());
       }
 
-      if (unit) {
-        refreshes.push(dispatch(getUnits(unit.courseId)).unwrap());
+      const resolvedCourseId = unit?.courseId ?? context.courseId;
+      if (resolvedCourseId) {
+        refreshes.push(dispatch(getUnits(resolvedCourseId)).unwrap());
       }
 
       await Promise.allSettled(refreshes);
