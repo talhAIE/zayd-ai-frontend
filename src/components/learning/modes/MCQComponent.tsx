@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Check, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Check, X, Eye } from 'lucide-react';
 import { LearningComponent } from '@/services/learningService';
 
 interface MCQComponentProps {
@@ -50,6 +50,14 @@ export default function MCQComponent({
     return '';
   });
 
+  const attemptResponseId = String(
+    component.attempt?.response?.optionId ||
+    component.attempt?.response?.selectedOption ||
+    component.attempt?.response?.value || ''
+  );
+  
+  const locallySubmitted = isSubmitted || (component.attempt?.feedback?.submitted && attemptResponseId === selectedValue);
+
   const handleSelect = (val: string) => {
     if (disabled || isSubmitted) return;
     setSelectedValue(val);
@@ -76,7 +84,7 @@ export default function MCQComponent({
           let textStyle = 'text-[#64748B] font-medium';
 
           if (isSelected) {
-            if (isSubmitted) {
+            if (locallySubmitted) {
               if (component.attempt?.isCorrect === true) {
                 containerStyle = 'border-2 border-[#10B981] bg-[#ECFDF5] text-[#065F46] shadow-sm';
                 textStyle = 'text-[#065F46] font-bold';
@@ -107,13 +115,13 @@ export default function MCQComponent({
                 </span>
               </div>
 
-              {isSelected && isSubmitted && component.attempt?.isCorrect === true && (
+              {isSelected && locallySubmitted && component.attempt?.isCorrect === true && (
                 <div className="w-6 h-6 rounded-full bg-[#10B981] text-white flex items-center justify-center flex-shrink-0">
                   <Check className="w-4 h-4" />
                 </div>
               )}
 
-              {isSelected && isSubmitted && component.attempt?.isCorrect === false && (
+              {isSelected && locallySubmitted && component.attempt?.isCorrect === false && (
                 <div className="w-6 h-6 rounded-full bg-[#EF4444] text-white flex items-center justify-center flex-shrink-0">
                   <X className="w-4 h-4" />
                 </div>

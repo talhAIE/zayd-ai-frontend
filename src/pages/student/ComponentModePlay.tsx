@@ -60,6 +60,7 @@ export default function ComponentModePlay() {
   const [isSubmittingMode, setIsSubmittingMode] = useState(false);
   const [, setCompletedComponentIds] = useState<Set<string>>(new Set());
   const [revealedAnswers, setRevealedAnswers] = useState<Record<string, Array<{ id: string; value: string }>>>({});
+  const [currentIndex, setCurrentIndex] = useState(0);
   const refreshLearningProgress = useLearningProgressRefresh();
 
   const currentUnit = units.find((u) => u.id === unitId);
@@ -285,13 +286,26 @@ export default function ComponentModePlay() {
     }
   };
 
-  const completedCount = components.filter((component) => component.isComplete || Boolean(component.attempt?.completedAt)).length;
-  const totalCount = components.length;
+  const visibleComponents = components.filter((comp) => {
+    const isUnitOverviewVariation = comp.componentType === 'text_variation' && comp.content?.presentation === 'unit_overview';
+    const overviewVariations = components.filter((item) => item.componentType === 'text_variation' && item.content?.presentation === 'unit_overview');
+    if (isUnitOverviewVariation && overviewVariations[0]?.id !== comp.id) {
+      return false;
+    }
+    return true;
+  });
+
+  const totalCount = visibleComponents.length;
+  const currentComp = visibleComponents[currentIndex];
+  
+  const completedCount = visibleComponents.filter((component) => component.isComplete || Boolean(component.attempt?.completedAt)).length;
   const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
-  const requiredComponentsComplete = components
+  
+  const canAdvanceFromCurrent = currentComp ? (!currentComp.isRequired || currentComp.isComplete || Boolean(currentComp.attempt?.completedAt) || currentComp.attempt?.status === 'exhausted') : true;
+  const requiredComponentsComplete = visibleComponents
     .filter((component) => component.isRequired)
     .every((component) => component.isComplete || Boolean(component.attempt?.completedAt));
-  const canAdvance = currentMode?.status === 'completed' || requiredComponentsComplete;
+  const canAdvanceMode = currentMode?.status === 'completed' || requiredComponentsComplete;
 
   return (
     <div className="w-full max-w-[1040px] mx-auto pb-16 flex flex-col gap-6 font-['Outfit',sans-serif]">
@@ -312,17 +326,27 @@ export default function ComponentModePlay() {
             <h1 className="text-[20px] md:text-[24px] font-extrabold text-[#0F172A] tracking-[-0.3px]">
               {currentMode?.title || 'Learning Mode'}
             </h1>
+
             <span className="text-[13px] font-semibold text-[#64748B]">
               {currentUnit?.title || 'Unit'}
               {currentLesson ? ` • ${currentLesson.title}` : ''}
             </span>
           </div>
         </div>
-
-        <div className="self-start sm:self-auto px-4 py-1.5 bg-[#EFF6FF] text-[#2563EB] rounded-full text-[13px] font-bold">
-          {completedCount}/{totalCount > 0 ? totalCount : 1} activities completed
-        </div>
       </div>
+
+      {/* Top Progress Bar */}
+      {!loading && !error && totalCount > 0 && (
+        <div className="w-full flex flex-col gap-1.5 px-1">
+          <div className="w-full h-2.5 bg-[#E2E8F0] rounded-full overflow-hidden">
+            <div
+              className="h-full bg-[#10B981] rounded-full transition-all duration-300"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+          <span className="text-[13px] font-bold text-[#10B981]">{progressPct}% Complete</span>
+        </div>
+      )}
 
       {/* Loading & Error States */}
       {loading && (
@@ -347,15 +371,12 @@ export default function ComponentModePlay() {
 
       {!loading && !error && (
         <div className="flex flex-col gap-6">
-          {components.map((comp) => {
+          {currentComp && (() => {
+            const comp = currentComp;
             const isCompleted = comp.isComplete || Boolean(comp.attempt?.completedAt);
             const isTerminal = isCompleted || comp.attempt?.status === 'exhausted';
             const isDisabled = !comp.canSubmit || isTerminal;
-            const isUnitOverviewVariation = comp.componentType === 'text_variation' && comp.content?.presentation === 'unit_overview';
             const overviewVariations = components.filter((item) => item.componentType === 'text_variation' && item.content?.presentation === 'unit_overview');
-            if (isUnitOverviewVariation && overviewVariations[0]?.id !== comp.id) {
-              return null;
-            }
 
             switch (comp.componentType) {
               case 'dropdown':
@@ -435,7 +456,7 @@ export default function ComponentModePlay() {
                 return <TextComponent key={comp.id} component={comp} />;
 
               case 'text_variation':
-                return <TextVariationComponent key={comp.id} component={comp} groupedComponents={isUnitOverviewVariation ? overviewVariations : undefined} />;
+                return <TextVariationComponent key={comp.id} component={comp} groupedComponents={comp.content?.presentation === 'unit_overview' ? overviewVariations : undefined} />;
 
               case 'fill_in_the_blank':
                 return <FillInTheBlankComponent key={comp.id} component={comp} onAnswerChange={(response) => handleComponentChange(comp.id, response)} onSubmit={(response) => handleComponentSubmit(comp.id, response)} isSubmitted={isTerminal} />;
@@ -452,45 +473,52 @@ export default function ComponentModePlay() {
               default:
                 return <UnavailableComponent key={comp.id} component={comp} />;
             }
-          })}
+          })()}
 
           <div className="flex flex-col gap-3">
-            {components.map((component) => (
+            {currentComp && (
               <ComponentAttemptFeedback
-                key={`feedback-${component.id}`}
-                component={component}
-                answers={revealedAnswers[component.id] || []}
-                onReveal={() => handleRevealAnswer(component)}
+                key={`feedback-${currentComp.id}`}
+                component={currentComp}
+                answers={revealedAnswers[currentComp.id] || []}
+                onReveal={() => handleRevealAnswer(currentComp)}
               />
-            ))}
+            )}
           </div>
 
-          {/* Bottom Progress and Action Bar matching Figma */}
+          {/* Bottom Action Bar */}
           <div className="w-full bg-white rounded-[18px] border border-[#E2E8F0] shadow-sm p-4 md:px-6 md:py-4 flex flex-col sm:flex-row items-center justify-between gap-4 mt-2">
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <span className="text-[13px] font-bold text-[#64748B]">Progress</span>
-              <div className="w-full sm:w-[240px] h-2 bg-[#F1F5F9] rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-[#4F8DFB] rounded-full transition-all duration-300"
-                  style={{ width: `${progressPct}%` }}
-                />
-              </div>
-              <span className="text-[13px] font-bold text-[#0F172A] min-w-[32px]">{progressPct}%</span>
-            </div>
-
             <button
               type="button"
-              onClick={handleCompleteMode}
-              disabled={isSubmittingMode || !canAdvance}
+              onClick={() => setCurrentIndex((curr) => Math.max(0, curr - 1))}
+              disabled={currentIndex === 0 || isSubmittingMode}
+              className="w-full sm:w-auto bg-white border border-[#E2E8F0] text-[#64748B] hover:bg-gray-50 disabled:opacity-50 px-7 py-3 rounded-full font-bold text-[14px] transition-all cursor-pointer"
+            >
+              Previous
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (!canAdvanceFromCurrent) {
+                  toast.error('Complete this activity to continue.');
+                  return;
+                }
+                if (currentIndex < totalCount - 1) {
+                  setCurrentIndex((curr) => curr + 1);
+                } else {
+                  handleCompleteMode();
+                }
+              }}
+              disabled={isSubmittingMode || (!canAdvanceMode && currentIndex === totalCount - 1)}
               className={`
-                w-full sm:w-auto bg-[#4F8DFB] hover:bg-[#3B82F6] active:scale-[0.98] text-white px-7 py-3 rounded-full font-bold text-[14px] flex items-center justify-center gap-2 shadow-md transition-all
-                ${isSubmittingMode || !canAdvance ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}
+                w-full sm:w-auto bg-[#4F8DFB] hover:bg-[#3B82F6] active:scale-[0.98] text-white px-7 py-3 rounded-full font-bold text-[14px] flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer
+                ${isSubmittingMode ? 'opacity-70 cursor-not-allowed' : ''}
               `}
             >
               {isSubmittingMode ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : null}
-              <span>{isSubmittingMode ? 'Advancing...' : 'Next Activity →'}</span>
+              <span>{currentIndex < totalCount - 1 ? 'Next' : (isSubmittingMode ? 'Advancing...' : 'Next Activity →')}</span>
             </button>
           </div>
         </div>
@@ -533,7 +561,12 @@ function ComponentAttemptFeedback({
           {hint && <p className="mt-2 text-[#92400E]">Hint: {hint}</p>}
           {fieldResults.length > 0 && <ul className="mt-3 space-y-1">{fieldResults.map((result) => {
             const field = result as Record<string, unknown>;
-            return <li key={String(field.id)} className="text-xs text-[#475569]">{field.isCorrect === true ? 'Correct' : 'Review'}: {typeof field.feedback === 'string' ? field.feedback : typeof field.hint === 'string' ? field.hint : String(field.id)}</li>;
+            const textSuffix = typeof field.feedback === 'string' && field.feedback 
+              ? field.feedback 
+              : typeof field.hint === 'string' && field.hint 
+                ? field.hint 
+                : '';
+            return <li key={String(field.id)} className="text-xs text-[#475569]">{field.isCorrect === true ? 'Correct' : 'Review'}{textSuffix ? `: ${textSuffix}` : ''}</li>;
           })}</ul>}
           {canReveal && !answers.length && <button type="button" onClick={onReveal} className="mt-3 inline-flex items-center gap-2 rounded-lg bg-[#92400E] px-3 py-2 text-xs font-bold text-white"><Eye className="h-4 w-4" />Show Answer</button>}
           {answers.length > 0 && <div className="mt-3 rounded-lg border border-amber-200 bg-white p-3"><p className="font-bold text-amber-900">Approved answers</p>{answers.map((answer) => <p key={answer.id} className="mt-1 text-[#475569]">{answer.value}</p>)}</div>}

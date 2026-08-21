@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Check, X } from 'lucide-react';
 import { LearningComponent } from '@/services/learningService';
 
@@ -40,6 +40,9 @@ export default function TrueFalseComponent({
     return null;
   });
 
+  const attemptResponseId = component.attempt?.response?.optionId || component.attempt?.response?.value || (String(component.attempt?.response?.selectedOption).toLowerCase() === 'true' ? 'true' : 'false');
+  const locallySubmitted = isSubmitted || (component.attempt?.feedback?.submitted && attemptResponseId === selectedValue);
+  
   const handleSelect = (val: string) => {
     if (disabled || isSubmitted) return;
     setSelectedValue(val);
@@ -56,7 +59,7 @@ export default function TrueFalseComponent({
       return 'border-[#E2E8F0] bg-white text-[#64748B] hover:bg-[#F8FAFC] hover:border-[#CBD5E1]';
     }
 
-    if (isSubmitted) {
+    if (locallySubmitted) {
       if (component.attempt?.isCorrect === true) {
         return 'border-2 border-[#10B981] bg-[#ECFDF5] text-[#065F46] shadow-sm';
       } else {
@@ -86,10 +89,10 @@ export default function TrueFalseComponent({
           )}`}
         >
           <span>True</span>
-          {selectedValue === trueValue && isSubmitted && component.attempt?.isCorrect === true && (
+          {selectedValue === trueValue && locallySubmitted && component.attempt?.isCorrect === true && (
             <Check className="w-4 h-4 text-[#10B981]" />
           )}
-          {selectedValue === trueValue && isSubmitted && component.attempt?.isCorrect === false && (
+          {selectedValue === trueValue && locallySubmitted && component.attempt?.isCorrect === false && (
             <X className="w-4 h-4 text-[#EF4444]" />
           )}
         </button>
@@ -103,10 +106,10 @@ export default function TrueFalseComponent({
           )}`}
         >
           <span>False</span>
-          {selectedValue === falseValue && isSubmitted && component.attempt?.isCorrect === true && (
+          {selectedValue === falseValue && locallySubmitted && component.attempt?.isCorrect === true && (
             <Check className="w-4 h-4 text-[#10B981]" />
           )}
-          {selectedValue === falseValue && isSubmitted && component.attempt?.isCorrect === false && (
+          {selectedValue === falseValue && locallySubmitted && component.attempt?.isCorrect === false && (
             <X className="w-4 h-4 text-[#EF4444]" />
           )}
         </button>
