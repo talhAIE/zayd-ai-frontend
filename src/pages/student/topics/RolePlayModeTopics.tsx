@@ -16,6 +16,8 @@ export default function RolePlayModeTopics() {
   const [searchParams] = useSearchParams();
   const lessonModeId = searchParams.get('modeId') || '';
   const lessonId = searchParams.get('lessonId') || '';
+  const courseId = searchParams.get('courseId') || undefined;
+  const unitId = searchParams.get('unitId') || undefined;
   const refreshLearningProgress = useLearningProgressRefresh();
   const { playingAudioId, isCurrentlyPlaying, loadingAudioId, toggleAudio, stopAudio } = useAudioPlayback();
   
@@ -38,6 +40,7 @@ export default function RolePlayModeTopics() {
   const {
     chatHistory,
     contentPayload,
+    roleplayProgress,
     isTyping,
     isCompleted,
     isAccountBlocked,
@@ -51,7 +54,7 @@ export default function RolePlayModeTopics() {
   } = useModeSession({ 
     lessonModeId,
     onCompleted: async () => {
-      await refreshLearningProgress(lessonId);
+      await refreshLearningProgress(lessonId, { courseId, unitId });
       setIsJustCompleted(true);
       setShowCompletionModal(true);
     }
@@ -105,12 +108,8 @@ export default function RolePlayModeTopics() {
 
   const getProgressPercentage = () => {
     if (isCompleted) return 100;
-    const earnedTurns = chatHistory.filter(
-      (message) =>
-        message.role === 'assistant' &&
-        message.assessments?.roleplayProgressEarned === true,
-    ).length;
-    return Math.min(95, Math.floor((earnedTurns / 15) * 95));
+    if (!roleplayProgress || roleplayProgress.requiredTurns <= 0) return 0;
+    return Math.min(99, Math.round((roleplayProgress.completedTurns / roleplayProgress.requiredTurns) * 100));
   };
 
   return (
@@ -188,8 +187,15 @@ export default function RolePlayModeTopics() {
             />
           </div>
           <span className="font-['Outfit'] font-semibold text-[11px] leading-[14px] text-[#06CCB5]">
-            {getProgressPercentage()}% Complete
+            {roleplayProgress
+              ? `${roleplayProgress.completedTurns}/${roleplayProgress.requiredTurns} meaningful turns · ${roleplayProgress.remainingTurns} remaining`
+              : `${getProgressPercentage()}% Complete`}
           </span>
+          {roleplayProgress?.currentGuidedStep && (
+            <p className="text-xs font-medium text-[#475569]">
+              Current guided step: {roleplayProgress.currentGuidedStep.prompt}
+            </p>
+          )}
         </div>
       </div>
 

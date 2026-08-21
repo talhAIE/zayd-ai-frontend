@@ -262,7 +262,7 @@ Prevent completion bypasses and integrate specialized backend activity endpoints
 - Direct-mode navigation now sends `writing` and `quiz` sources to those dedicated screens instead of the generic component player.
 - Advancement is only enabled after the backend reports the mode completed, or after all required normal components are confirmed complete.
 
-## Phase 7 — Reading, Listening, and configurable Speaking/Roleplay
+## Phase 7 — Reading, Listening, and configurable Speaking/Roleplay — Complete
 
 ### Goal
 
@@ -283,6 +283,14 @@ Keep existing legacy/AI activities working while consuming the updated Section 2
 - Speaking displays the Grade 7 Unit 1 configured turn total, not 15.
 - Listening transcript retry works after a failed quiz.
 - Reading, Listening, and Roleplay session completion refreshes the correct lesson/unit sequence.
+
+### Implemented
+
+- `useModeSession` now stores server-owned Roleplay progress from session start/history, AI streaming responses, and completion events.
+- Roleplay displays the backend-provided meaningful-turn total, turns remaining, and current guided step; it no longer calculates progress against a fixed 15 turns.
+- Listening now recognizes the server-controlled `transcript` retry stage, renders its approved transcript/audio, and sends the learner back to the quiz only through the next-stage socket action.
+- Reading and Listening submit selected quiz answers to the backend without inspecting hidden correct-answer fields. Failed quiz results reset the learner-facing retry state while the server retains authority over completion.
+- Legacy activity routes now carry course and unit context, allowing Reading, Listening, and Roleplay completion to refresh the correct course, unit, lesson, and activity sequence.
 
 ## Phase 8 — QA, accessibility, cleanup, and deployment readiness
 

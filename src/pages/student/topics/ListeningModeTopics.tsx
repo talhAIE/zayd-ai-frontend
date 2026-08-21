@@ -5,7 +5,6 @@ import { useModeSession } from '@/hooks/useModeSession';
 import TopicCompletionModal from '@/components/ui/TopicCompletionModal';
 import { ContentPolicyWarningModal } from '@/components/ui/ContentPolicyWarningModal';
 import { useLearningProgressRefresh } from '@/hooks/useLearningProgressRefresh';
-import { toast } from 'sonner';
 import { useAudioPlayback } from '@/hooks/useAudioPlayback';
 import AudioPlayer from '../AudioPlayer';
 
@@ -14,6 +13,8 @@ export default function ListeningModeTopics() {
   const [searchParams] = useSearchParams();
   const lessonModeId = searchParams.get('modeId') || '';
   const lessonId = searchParams.get('lessonId') || '';
+  const courseId = searchParams.get('courseId') || undefined;
+  const unitId = searchParams.get('unitId') || undefined;
   const refreshLearningProgress = useLearningProgressRefresh();
   const { 
     isCurrentlyPlaying: isTopicPlaying, 
@@ -42,6 +43,7 @@ export default function ListeningModeTopics() {
     modeSessionId,
     listeningPayload,
     mcqList,
+    mcqResult,
     isCompleted,
     isAccountBlocked,
     sessionStatus,
@@ -55,7 +57,7 @@ export default function ListeningModeTopics() {
   } = useModeSession({ 
     lessonModeId,
     onCompleted: async () => {
-      await refreshLearningProgress(lessonId);
+      await refreshLearningProgress(lessonId, { courseId, unitId });
       setIsJustCompleted(true);
       setShowCompletionModal(true);
     }
@@ -86,6 +88,17 @@ export default function ListeningModeTopics() {
   }, [listeningPayload?.stage]);
 
   useEffect(() => {
+    setCurrentMcqIndex(0);
+    setSelectedAnswers({});
+  }, [listeningPayload?.stage, mcqList]);
+
+  useEffect(() => {
+    if (!mcqResult || mcqResult.passed) return;
+    setCurrentMcqIndex(0);
+    setSelectedAnswers({});
+  }, [mcqResult]);
+
+  useEffect(() => {
     if (isTopicPlaying || topicLoadingId) {
       setHasStartedAudio(true);
     }
@@ -106,17 +119,23 @@ export default function ListeningModeTopics() {
       return Math.min(99, 50 + quizProgress);
     }
     if (listeningPayload?.stage === 'question') return 25;
+    if (listeningPayload?.stage === 'transcript') return 75;
     if (listeningPayload?.stage === 'initial') return hasListenedToAudio ? 25 : 0;
     return 0;
   };
 
   const isQuestionStage = listeningPayload?.stage === 'question';
+  const isTranscriptStage = listeningPayload?.stage === 'transcript';
   const topicAudioUrl = listeningPayload?.kbAudioUrl;
-  const narratorAudioUrl = isQuestionStage ? listeningPayload?.questionAudioUrl : listeningPayload?.narrationAudioUrl;
-  const narratorText = isQuestionStage ? listeningPayload?.questionText : listeningPayload?.narrationText;
+  const narratorAudioUrl = isTranscriptStage
+    ? listeningPayload?.transcriptAudioUrl
+    : isQuestionStage ? listeningPayload?.questionAudioUrl : listeningPayload?.narrationAudioUrl;
+  const narratorText = isTranscriptStage
+    ? listeningPayload?.transcript
+    : isQuestionStage ? listeningPayload?.questionText : listeningPayload?.narrationText;
   const narratorAudioId = `listening_narrator_audio_${listeningPayload?.stage ?? 'initial'}`;
   const isNarratorAudioPlaying = isNarratorPlaying;
-  const canAdvance = isQuestionStage || hasListenedToAudio;
+  const canAdvance = isQuestionStage || isTranscriptStage || hasListenedToAudio;
 
   return (
     <div className="w-full max-w-[1207px] mx-auto bg-white rounded-none md:rounded-[24px] flex flex-col font-['Outfit',sans-serif] overflow-hidden h-[100dvh] md:h-[794px] max-h-[calc(100vh-40px)] border border-gray-100 shadow-sm relative">
@@ -311,12 +330,12 @@ export default function ListeningModeTopics() {
             </div>
           )}
           
-          {/* Transcript Area (if available and not quiz stage) */}
+          {/* The backend exposes a transcript only at its approved retry stage. */}
           {narratorText && listeningPayload?.stage !== 'quiz' && (
             <div className="flex flex-col p-5 px-6 gap-2 flex-1 bg-[#F8F9FA] rounded-2xl">
               <div className="flex items-center gap-1.5 mb-1">
                 <div className="w-2 h-2 bg-[#5C9DFF] rounded-full" />
-                <span className="font-semibold text-[12px] leading-[15px] text-[#6E748F]">Narrator</span>
+                <span className="font-semibold text-[12px] leading-[15px] text-[#6E748F]">{isTranscriptStage ? 'Transcript for retry' : 'Narrator'}</span>
               </div>
               
               <div className="p-3.5 px-4 bg-white border-[1.5px] border-[#DBEAFE] shadow-[0px_2px_8px_rgba(0,0,0,0.06)] rounded-tr-xl rounded-br-xl rounded-bl-xl rounded-tl-sm w-full">
@@ -412,11 +431,6 @@ export default function ListeningModeTopics() {
                       {currentMcqIndex < mcqList.length - 1 ? (
                         <button
                           onClick={() => {
-                            const isCorrect = currentAnswer === mcq.correct || currentAnswer === mcq.correctOptionId;
-                            if (!isCorrect) {
-                              toast.error('Incorrect answer! Please try again.');
-                              return;
-                            }
                             setCurrentMcqIndex(prev => prev + 1);
                           }}
                           disabled={currentAnswer === undefined || isAccountBlocked}
@@ -427,11 +441,6 @@ export default function ListeningModeTopics() {
                       ) : (
                         <button
                           onClick={() => {
-                            const isCorrect = currentAnswer === mcq.correct || currentAnswer === mcq.correctOptionId;
-                            if (!isCorrect) {
-                              toast.error('Incorrect answer! Please try again.');
-                              return;
-                            }
                             const answers = mcqList.map((_, idx) => selectedAnswers[idx] ?? -1);
                             submitMcqs(answers);
                           }}
@@ -449,15 +458,15 @@ export default function ListeningModeTopics() {
             </div>
           )}
           
-          {/* Next Button for transitioning stages (except quiz) */}
-          {listeningPayload?.stage !== 'quiz' && (
+          {/* The server decides which listening stage comes next, including retry. */}
+          {listeningPayload?.stage && listeningPayload.stage !== 'quiz' && listeningPayload.stage !== 'completed' && (
             <div className="flex justify-center items-center pt-2 mt-auto">
               <button 
                 onClick={() => nextListeningStage()}
                 disabled={!canAdvance || isAccountBlocked}
                 className="flex justify-center items-center w-full max-w-[200px] h-[52px] bg-[#3B82F6] hover:bg-[#2563EB] disabled:bg-[#E5E7EB] disabled:text-[#9CA3AF] transition-colors rounded-full font-bold text-[16px] leading-[20px] text-white"
               >
-                Next
+                {isTranscriptStage ? 'Try Quiz Again' : 'Next'}
               </button>
             </div>
           )}

@@ -17,7 +17,7 @@ export const getLearningModePath = (
   { courseId, unitId, lessonId }: LearningRouteContext,
   mode: LaunchableMode,
 ): string => {
-  const query = `lessonId=${encodeURIComponent(lessonId)}&modeId=${encodeURIComponent(mode.id)}`;
+  const query = `courseId=${encodeURIComponent(courseId)}&unitId=${encodeURIComponent(unitId)}&lessonId=${encodeURIComponent(lessonId)}&modeId=${encodeURIComponent(mode.id)}`;
   const componentPath = `/student/courses/${courseId}/units/${unitId}/lessons/${lessonId}/modes/${mode.id}`;
 
   // Assessment and Unit Project modes have dedicated backend contracts. They

@@ -10,13 +10,14 @@ import { ContentPolicyWarningModal } from '@/components/ui/ContentPolicyWarningM
 import { useLearningProgressRefresh } from '@/hooks/useLearningProgressRefresh';
 import { useAudioPlayback } from '@/hooks/useAudioPlayback';
 import ReactMarkdown from 'react-markdown';
-import { toast } from 'sonner';
 
 export default function ReadingModeTopics() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const lessonModeId = searchParams.get('modeId') || '';
   const lessonId = searchParams.get('lessonId') || '';
+  const courseId = searchParams.get('courseId') || undefined;
+  const unitId = searchParams.get('unitId') || undefined;
   const refreshLearningProgress = useLearningProgressRefresh();
   
   const { playingAudioId, isCurrentlyPlaying, loadingAudioId, toggleAudio, stopAudio } = useAudioPlayback();
@@ -42,6 +43,7 @@ export default function ReadingModeTopics() {
     chatHistory,
     contentPayload,
     mcqList,
+    mcqResult,
     readingProgress,
     isTyping,
     isCompleted,
@@ -57,7 +59,7 @@ export default function ReadingModeTopics() {
   } = useModeSession({ 
     lessonModeId,
     onCompleted: async () => {
-      await refreshLearningProgress(lessonId);
+      await refreshLearningProgress(lessonId, { courseId, unitId });
       setIsJustCompleted(true);
       setShowCompletionModal(true);
     }
@@ -68,6 +70,12 @@ export default function ReadingModeTopics() {
       setShowCompletionModal(true);
     }
   }, [isCompleted, isJustCompleted]);
+
+  useEffect(() => {
+    if (!mcqResult || mcqResult.passed) return;
+    setCurrentMcqIndex(0);
+    setSelectedAnswers({});
+  }, [mcqResult]);
 
   const [cooldown, setCooldown] = useState(false);
 
@@ -537,22 +545,6 @@ export default function ReadingModeTopics() {
                       {currentMcqIndex < mcqList.length - 1 ? (
                         <button
                           onClick={() => {
-                            const mcq = mcqList[currentMcqIndex];
-                            const currentAnswer = selectedAnswers[currentMcqIndex];
-                            
-                            let isCorrect = false;
-                            if (typeof mcq.correct === 'number') isCorrect = Number(currentAnswer) === mcq.correct;
-                            else if (typeof mcq.correct === 'string') isCorrect = String(currentAnswer) === mcq.correct;
-                            else if (mcq.correctOptionId) isCorrect = String(currentAnswer) === mcq.correctOptionId;
-                            
-                            // fallback if backend payload didn't send correct answers (shouldn't happen)
-                            if (mcq.correct === undefined && mcq.correctOptionId === undefined) isCorrect = true;
-
-                            if (!isCorrect) {
-                              toast.error('Incorrect answer! Please try again.');
-                              return;
-                            }
-
                             setCurrentMcqIndex(prev => prev + 1);
                           }}
                           disabled={currentAnswer === undefined || isAccountBlocked}
@@ -563,21 +555,6 @@ export default function ReadingModeTopics() {
                       ) : (
                         <button
                           onClick={() => {
-                            const mcq = mcqList[currentMcqIndex];
-                            const currentAnswer = selectedAnswers[currentMcqIndex];
-                            
-                            let isCorrect = false;
-                            if (typeof mcq.correct === 'number') isCorrect = Number(currentAnswer) === mcq.correct;
-                            else if (typeof mcq.correct === 'string') isCorrect = String(currentAnswer) === mcq.correct;
-                            else if (mcq.correctOptionId) isCorrect = String(currentAnswer) === mcq.correctOptionId;
-                            
-                            if (mcq.correct === undefined && mcq.correctOptionId === undefined) isCorrect = true;
-
-                            if (!isCorrect) {
-                              toast.error('Incorrect answer! Please try again.');
-                              return;
-                            }
-
                             const answers = mcqList.map((_, idx) => selectedAnswers[idx] ?? -1);
                             submitMcqs(answers);
                           }}

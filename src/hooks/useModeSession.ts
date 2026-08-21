@@ -35,6 +35,34 @@ export interface ReadingProgress {
   percentComplete: number;
 }
 
+export interface McqResult {
+  passed: boolean;
+  correctCount: number;
+  required: number;
+  message: string;
+}
+
+export interface RoleplayProgress {
+  requiredTurns: number;
+  completedTurns: number;
+  remainingTurns: number;
+  guidedSteps: Array<{ id: string; prompt: string }>;
+  currentGuidedStep: { id: string; prompt: string } | null;
+}
+
+export interface ListeningPayload {
+  stage?: 'initial' | 'question' | 'quiz' | 'transcript' | 'completed';
+  narrationText?: string;
+  narrationAudioUrl?: string;
+  narrationVideoUrl?: string;
+  kbAudioUrl?: string;
+  questionText?: string;
+  questionAudioUrl?: string;
+  transcript?: string;
+  transcriptAudioUrl?: string;
+  mcqs?: Mcq[];
+}
+
 export interface SessionStatus {
   remainingSeconds: number | null;
   message?: string;
@@ -52,11 +80,13 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
   const [chatHistory, setChatHistory] = useState<HistoryItem[]>([]);
   const [contentPayload, setContentPayload] = useState<any>(null);
   const [mcqList, setMcqList] = useState<Mcq[]>([]);
-  const [listeningPayload, setListeningPayload] = useState<any>(null);
+  const [mcqResult, setMcqResult] = useState<McqResult | null>(null);
+  const [listeningPayload, setListeningPayload] = useState<ListeningPayload | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [sessionStatus, setSessionStatus] = useState<SessionStatus>({ remainingSeconds: null });
   const [readingProgress, setReadingProgress] = useState<ReadingProgress | null>(null);
+  const [roleplayProgress, setRoleplayProgress] = useState<RoleplayProgress | null>(null);
   const [isContentFilterWarningOpen, setIsContentFilterWarningOpen] = useState(false);
   const [contentFilterWarningData, setContentFilterWarningData] = useState<ContentFilterWarningData | null>(null);
   const [isAccountBlocked, setIsAccountBlocked] = useState(false);
@@ -136,6 +166,9 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
       if (session.readingProgress) {
         setReadingProgress(session.readingProgress);
       }
+      if (session.roleplayProgress) {
+        setRoleplayProgress(session.roleplayProgress);
+      }
       setIsCompleted(session.isCompleted || false);
     });
 
@@ -143,18 +176,23 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
       setContentPayload(payload.contentPayload);
     });
 
-    newSocket.on('chat_history', (payload: { modeSessionId: string, chatHistory: HistoryItem[] }) => {
+    newSocket.on('chat_history', (payload: { modeSessionId: string, chatHistory: HistoryItem[], roleplayProgress?: RoleplayProgress }) => {
       setChatHistory(payload.chatHistory);
+      if (payload.roleplayProgress) setRoleplayProgress(payload.roleplayProgress);
     });
 
-    newSocket.on('ai_response', () => {
+    newSocket.on('ai_response', (payload: { roleplayProgress?: RoleplayProgress }) => {
       setIsTyping(true);
+      if (payload.roleplayProgress) setRoleplayProgress(payload.roleplayProgress);
     });
 
-    newSocket.on('streaming_complete', (payload: { ai_response: string, feedback: string, ai_cefr_level: string, isCompleted: boolean, ttsAudioUrl?: string, hint?: string, readingProgress?: ReadingProgress, roleplayProgressEarned?: boolean }) => {
+    newSocket.on('streaming_complete', (payload: { ai_response: string, feedback: string, ai_cefr_level: string, isCompleted: boolean, ttsAudioUrl?: string, hint?: string, readingProgress?: ReadingProgress, roleplayProgress?: RoleplayProgress, roleplayProgressEarned?: boolean }) => {
       setIsTyping(false);
       if (payload.readingProgress) {
         setReadingProgress(payload.readingProgress);
+      }
+      if (payload.roleplayProgress) {
+        setRoleplayProgress(payload.roleplayProgress);
       }
       setChatHistory(prev => [
         ...prev,
@@ -181,9 +219,11 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
 
     newSocket.on('mcq_list', (payload: { modeSessionId: string, questions: Mcq[] }) => {
       setMcqList(payload.questions);
+      setMcqResult(null);
     });
 
-    newSocket.on('mcq_result', (payload: { passed: boolean, correctCount: number, required: number, message: string }) => {
+    newSocket.on('mcq_result', (payload: McqResult) => {
+      setMcqResult(payload);
       if (!payload.passed) {
         toast.error(payload.message || `Need ${payload.required} correct to pass`);
       } else {
@@ -192,16 +232,17 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
       }
     });
 
-    newSocket.on('chat_completed', () => {
+    newSocket.on('chat_completed', (payload: { roleplayProgress?: RoleplayProgress }) => {
       if (completionHandledRef.current) return;
       completionHandledRef.current = true;
+      if (payload.roleplayProgress) setRoleplayProgress(payload.roleplayProgress);
       setIsCompleted(true);
       void Promise.resolve(onCompletedRef.current?.()).catch(() => {
         toast.error('Your lesson finished, but progress could not be refreshed.');
       });
     });
 
-    newSocket.on('listening_payload', (payload: any) => {
+    newSocket.on('listening_payload', (payload: ListeningPayload) => {
       setListeningPayload(payload);
       if (payload.mcqs && Array.isArray(payload.mcqs)) {
         setMcqList(payload.mcqs);
@@ -349,8 +390,10 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
     if (!socket || !lessonModeId || isAccountBlocked) return;
     setChatHistory([]);
     setMcqList([]);
+    setMcqResult(null);
     setListeningPayload(null);
     setReadingProgress(null);
+    setRoleplayProgress(null);
     setIsCompleted(false);
     socket.emit('restart_mode_session', { lessonModeId });
   }, [socket, lessonModeId, isAccountBlocked]);
@@ -365,8 +408,10 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
     chatHistory,
     contentPayload,
     mcqList,
+    mcqResult,
     listeningPayload,
     readingProgress,
+    roleplayProgress,
     isTyping,
     setIsTyping,
     isCompleted,
