@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Target, 
   BookOpen, 
@@ -20,9 +20,11 @@ import {
 } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { getLessonModes, startLesson, startLessonMode, getUnits } from '@/redux/slices/learningSlice';
+import { getLessonModes, startLesson, startLessonMode, getLessons, getUnits } from '@/redux/slices/learningSlice';
 import { AppDispatch, RootState } from '@/redux/store';
 import { toast } from 'sonner';
+import { LearningLessonMode } from '@/services/learningService';
+import { getLearningModePath, isLockedLearningItem } from '@/utils/learning-navigation';
 
 export default function Lesson() {
   const { courseId, unitId, lessonId } = useParams<{ courseId: string; unitId: string; lessonId: string }>();
@@ -30,12 +32,19 @@ export default function Lesson() {
   const dispatch = useDispatch<AppDispatch>();
   const { modes, loading, error, lessons, units } = useSelector((state: RootState) => state.learning);
   const [viewMode, setViewMode] = useState<'grid' | 'timeline'>('grid');
+  const directLaunchId = useRef<string | null>(null);
 
   useEffect(() => {
     if (courseId && units.length === 0) {
       dispatch(getUnits(courseId));
     }
   }, [dispatch, courseId, units.length]);
+
+  useEffect(() => {
+    if (unitId) {
+      dispatch(getLessons(unitId));
+    }
+  }, [dispatch, unitId]);
 
   useEffect(() => {
     if (lessonId) {
@@ -46,6 +55,27 @@ export default function Lesson() {
 
   const currentLesson = lessons.find((l) => l.id === lessonId);
   const currentUnit = units.find((u) => u.id === unitId);
+
+  useEffect(() => {
+    if (
+      !courseId ||
+      !unitId ||
+      !lessonId ||
+      !currentLesson ||
+      currentLesson.launchBehavior !== 'direct_mode' ||
+      !currentLesson.directLaunchMode ||
+      isLockedLearningItem(currentLesson) ||
+      directLaunchId.current === lessonId
+    ) {
+      return;
+    }
+
+    directLaunchId.current = lessonId;
+    navigate(getLearningModePath(
+      { courseId, unitId, lessonId },
+      currentLesson.directLaunchMode,
+    ), { replace: true });
+  }, [courseId, currentLesson, lessonId, navigate, unitId]);
 
   // Dynamic progress stats
   const completedModes = modes.filter((m) => m.status === 'completed');
@@ -116,52 +146,43 @@ export default function Lesson() {
     }
   };
 
-  const handleModeClick = async (mode: any) => {
-    if (mode.isLocked || mode.status === 'locked') {
+  const handleModeClick = async (mode: LearningLessonMode) => {
+    if (isLockedLearningItem(mode)) {
       toast.error('This mode is locked. Complete earlier required modes first.');
       return;
     }
 
     try {
-      dispatch(startLessonMode({ lessonModeId: mode.id }));
+      await dispatch(startLessonMode({ lessonModeId: mode.id })).unwrap();
     } catch (err) {
       console.error('Failed to start lesson mode:', err);
     }
     
-    switch (mode.modeKey) {
-      case 'reading-mode':
-      case 'first-read-mode':
-        navigate(`/student/courses/reading-mode?lessonId=${lessonId}&modeId=${mode.id}`);
-        break;
-      case 'roleplay-mode':
-      case 'speaking-mode':
-        navigate(`/student/courses/roleplay-mode?lessonId=${lessonId}&modeId=${mode.id}`);
-        break;
-      case 'listening-mode':
-        navigate(`/student/courses/listening-mode?lessonId=${lessonId}&modeId=${mode.id}`);
-        break;
-      case 'debate-mode':
-        navigate(`/student/courses/debate-mode?lessonId=${lessonId}&modeId=${mode.id}`);
-        break;
-      case 'unit-overview-mode':
-        navigate(`/student/courses/${courseId}/units/${unitId}/overview`);
-        break;
-      case 'objectives-introduction-mode':
-      case 'vocabulary-mode':
-      case 'skill-mode':
-      case 'close-read-mode':
-      case 'grammar-mode':
-      default:
-        if (mode.modeSource === 'component') {
-          navigate(`/student/courses/${courseId}/units/${unitId}/lessons/${lessonId}/modes/${mode.id}`);
-        } else if (mode.modeSource === 'legacy_ai') {
-          navigate(`/student/courses/reading-mode?lessonId=${lessonId}&modeId=${mode.id}`);
-        } else {
-          navigate(`/student/courses/${courseId}/units/${unitId}/lessons/${lessonId}/modes/${mode.id}`);
-        }
-        break;
+    if (courseId && unitId && lessonId) {
+      navigate(getLearningModePath({ courseId, unitId, lessonId }, mode));
     }
   };
+
+  if (
+    currentLesson?.launchBehavior === 'direct_mode' &&
+    currentLesson.directLaunchMode &&
+    isLockedLearningItem(currentLesson)
+  ) {
+    return (
+      <div className="w-full max-w-[1087px] mx-auto bg-white rounded-[24px] border border-gray-100 p-8 text-center font-['Outfit',sans-serif]">
+        <h1 className="text-xl font-bold text-[#282828]">This activity is locked</h1>
+        <p className="mt-2 text-[#64748B]">Complete the earlier required activity to unlock it.</p>
+      </div>
+    );
+  }
+
+  if (currentLesson?.launchBehavior === 'direct_mode' && currentLesson.directLaunchMode) {
+    return (
+      <div className="w-full max-w-[1087px] mx-auto bg-white rounded-[24px] border border-gray-100 p-8 text-center font-['Outfit',sans-serif]">
+        <p className="text-[#64748B]">Opening activity…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-[1087px] mx-auto bg-[#FAFAFA] md:bg-white rounded-none md:rounded-[24px] flex flex-col font-['Outfit',sans-serif] relative border-0 md:border md:border-gray-100 shadow-sm overflow-hidden">

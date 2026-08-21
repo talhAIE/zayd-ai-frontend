@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ChevronLeft, Star, ChevronRight, BookOpen } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
-import { getUnits } from '@/redux/slices/learningSlice';
+import { getCourses, getUnits } from '@/redux/slices/learningSlice';
 import { AppDispatch, RootState } from '@/redux/store';
 
 
@@ -12,7 +12,7 @@ export default function CourseUnits() {
   const dispatch = useDispatch<AppDispatch>();
   const scrollRef = useRef<HTMLDivElement>(null);
   
-  const { units, loading, error } = useSelector((state: RootState) => state.learning);
+  const { courses, units, loading, error } = useSelector((state: RootState) => state.learning);
 
   useEffect(() => {
     if (courseId) {
@@ -20,9 +20,19 @@ export default function CourseUnits() {
     }
   }, [dispatch, courseId]);
 
-  const handleUnitClick = (e: React.MouseEvent, unitId: string, status: string) => {
+  useEffect(() => {
+    if (courses.length === 0) {
+      dispatch(getCourses());
+    }
+  }, [courses.length, dispatch]);
+
+  const currentCourse = courses.find((course) => course.id === courseId);
+  const courseProgressPct = Math.round(currentCourse?.progressPct ?? 0);
+  const completedUnitCount = units.filter((unit) => unit.status === 'completed').length;
+
+  const handleUnitClick = (e: React.MouseEvent, unitId: string, status: string, isLocked: boolean) => {
     e.preventDefault();
-    if (status === 'locked') return;
+    if (status === 'locked' || isLocked) return;
     navigate(`/student/courses/${courseId}/units/${unitId}`);
   };
 
@@ -47,21 +57,21 @@ export default function CourseUnits() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center p-5 md:p-8 bg-white border border-[#E5E7EB] rounded-[16px] shadow-[0px_2px_8px_rgba(0,0,0,0.02)] gap-4 md:gap-0">
           <div className="flex flex-col gap-1">
             <span className="text-[13px] text-[#949494] font-medium tracking-wide uppercase">Current course</span>
-            <h2 className="text-[28px] font-bold text-[#282828] tracking-[-0.5px]">Unit Storyline</h2>
+            <h2 className="text-[28px] font-bold text-[#282828] tracking-[-0.5px]">{currentCourse?.title || 'Course units'}</h2>
           </div>
           
           <div className="flex items-center gap-4 bg-[#F8FAFC] py-3 px-4 md:px-6 rounded-[12px] w-full md:w-auto">
             <div className="relative w-[72px] h-[72px] flex items-center justify-center isolate">
               <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 72 72" overflow="visible">
                 <circle cx="36" cy="36" r="32" fill="none" stroke="#E5E7EB" strokeWidth="8" />
-                <circle cx="36" cy="36" r="32" fill="none" stroke="#5C9DFF" strokeWidth="8" strokeDasharray="201" strokeDashoffset="120.6" />
+                <circle cx="36" cy="36" r="32" fill="none" stroke="#5C9DFF" strokeWidth="8" strokeDasharray="201" strokeDashoffset={201 - (201 * courseProgressPct) / 100} />
               </svg>
-              <span className="font-['Outfit'] font-bold text-[12px] leading-[15px] text-[#282828] z-10">40%</span>
+              <span className="font-['Outfit'] font-bold text-[12px] leading-[15px] text-[#282828] z-10">{courseProgressPct}%</span>
             </div>
             
             <div className="flex flex-col">
-              <span className="text-[14px] font-semibold text-[#282828]">Unit Mastery</span>
-              <span className="text-[13px] text-[#949494]">2 of 5 modules completed</span>
+              <span className="text-[14px] font-semibold text-[#282828]">Course progress</span>
+              <span className="text-[13px] text-[#949494]">{completedUnitCount} of {units.length} available units completed</span>
             </div>
           </div>
         </div>
@@ -70,9 +80,9 @@ export default function CourseUnits() {
         <div className="flex flex-col gap-4">
           <div className="flex flex-col md:flex-row justify-center md:justify-between items-center md:items-end text-center md:text-left gap-4 md:gap-0">
             <div className="flex flex-col gap-1 items-center md:items-start">
-              <h3 className="text-[18px] font-bold text-[#282828]">Pick a lesson to study</h3>
+              <h3 className="text-[18px] font-bold text-[#282828]">Choose a unit</h3>
               <p className="text-[14px] text-[#949494]">
-                Complete all modules in sequence to unlock the final assessment. Tap any active card to begin.
+                The available units, their order, and their lock state are set by your course.
               </p>
             </div>
             <div className="hidden md:flex items-center gap-2">
@@ -103,7 +113,7 @@ export default function CourseUnits() {
             {!loading && units.map((unit) => (
               <React.Fragment key={unit.id}>
                 <div 
-                  onClick={(e) => handleUnitClick(e, unit.id, unit.status)}
+                  onClick={(e) => handleUnitClick(e, unit.id, unit.status, unit.isLocked)}
                   className={`flex-none w-full max-w-[320px] md:max-w-none md:w-[260px] h-[220px] rounded-[16px] p-5 flex flex-col justify-between relative transition-all duration-200 ${
                     unit.status === 'in_progress' || unit.status === 'not_started' 
                       ? 'bg-white border-[2px] border-[#4F8DFB] shadow-[0px_4px_16px_rgba(79,141,251,0.12)] cursor-pointer hover:-translate-y-1' 
@@ -154,7 +164,9 @@ export default function CourseUnits() {
                     <span className={`text-[13px] ${
                       (unit.status === 'locked' || unit.isLocked) ? 'text-[#9CA3AF]' : 'text-[#949494]'
                     }`}>
-                      {unit.totalLessonCount} lessons · {unit.status.replace('_', ' ')}
+                      {unit.navigation === 'unit_activity_sequence'
+                        ? `Activity sequence · ${unit.status.replace('_', ' ')}`
+                        : `${unit.totalLessonCount} available items · ${unit.status.replace('_', ' ')}`}
                     </span>
                   </div>
 

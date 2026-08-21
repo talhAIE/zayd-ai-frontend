@@ -92,7 +92,7 @@ Replace the old Section 1-shaped frontend types with accurate Section 2 contract
 - Component types include `attempt`, `canStart`, `canSubmit`, `isComplete`, `resources`, and matching item fields.
 - No answer-key field is added to learner types.
 
-## Phase 2 — Curriculum-aware navigation and optional content
+## Phase 2 — Curriculum-aware navigation and optional content — Complete
 
 ### Goal
 
@@ -113,6 +113,14 @@ Implement the backend’s American and Saudi navigation behavior, including opti
 - Saudi Grade 7 Unit 1 displays Unit Overview followed by its activity sequence, without separate lesson cards.
 - American courses display only available Overview, Project, and Assessment content.
 - A hidden/unpublished/empty backend activity never produces a frontend card.
+
+### Implemented
+
+- Saudi units now route through `activityContainerLessonId` and never expose the internal container as a separate lesson card.
+- American unit cards are rendered exactly in the backend-provided lesson order; no artificial Unit Overview is created.
+- Unit Overview, Project, and Assessment cards are present only when the backend returns their published lesson records.
+- `direct_mode` lessons route directly to `directLaunchMode`; normal lessons retain their ordered mode list.
+- Course and unit progress labels no longer use fixed completion totals.
 
 ## Phase 3 — Content-backed Unit Overview and activity launcher
 

@@ -1,0 +1,39 @@
+import { DirectLaunchMode, LearningLessonMode } from '@/services/learningService';
+
+export interface LearningRouteContext {
+  courseId: string;
+  unitId: string;
+  lessonId: string;
+}
+
+type LaunchableMode = Pick<LearningLessonMode | DirectLaunchMode, 'id' | 'modeKey' | 'modeSource'>;
+
+/**
+ * Keeps every Section 2 entry point on the same backend-owned mode route.
+ * The server decides which modes exist and whether a learner can open them;
+ * this function only selects the matching existing frontend experience.
+ */
+export const getLearningModePath = (
+  { courseId, unitId, lessonId }: LearningRouteContext,
+  mode: LaunchableMode,
+): string => {
+  const query = `lessonId=${encodeURIComponent(lessonId)}&modeId=${encodeURIComponent(mode.id)}`;
+
+  switch (mode.modeKey) {
+    case 'reading-mode':
+    case 'first-read-mode':
+      return `/student/courses/reading-mode?${query}`;
+    case 'roleplay-mode':
+    case 'speaking-mode':
+      return `/student/courses/roleplay-mode?${query}`;
+    case 'listening-mode':
+      return `/student/courses/listening-mode?${query}`;
+    case 'debate-mode':
+      return `/student/courses/debate-mode?${query}`;
+    default:
+      return `/student/courses/${courseId}/units/${unitId}/lessons/${lessonId}/modes/${mode.id}`;
+  }
+};
+
+export const isLockedLearningItem = (item: { isLocked: boolean; status: string }): boolean =>
+  item.isLocked || item.status === 'locked';
