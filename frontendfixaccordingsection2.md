@@ -122,7 +122,7 @@ Implement the backend’s American and Saudi navigation behavior, including opti
 - `direct_mode` lessons route directly to `directLaunchMode`; normal lessons retain their ordered mode list.
 - Course and unit progress labels no longer use fixed completion totals.
 
-## Phase 3 — Content-backed Unit Overview and activity launcher
+## Phase 3 — Content-backed Unit Overview and activity launcher — Complete
 
 ### Goal
 
@@ -142,6 +142,14 @@ Replace hard-coded Unit Overview curriculum content and completion shortcuts wit
 - Grade 7 Unit 1 uses its stored Saudi Unit Overview content.
 - Clicking Continue cannot skip required overview components.
 - The next activity is chosen from the refreshed backend sequence and lock state.
+
+### Implemented
+
+- The old hard-coded fraction and relative-pronoun Unit Overview page has been removed. The compatibility route now locates the published `unit_overview` lesson and opens its normal backend mode/player route.
+- No Unit Overview page action calls complete-lesson or complete-mode. Completion remains governed by the backend component and mode rules.
+- `on_view` components are started through the backend when displayed, so acknowledgement completion is recorded server-side.
+- A required component must be backend-confirmed complete before the mode Next Activity action can be used.
+- One shared route launcher now maps the mode source, mode key, and parent course/unit/lesson context. It is used by Unit Overview, lesson cards/mode cards, Saudi activity-sequence entry, and component-mode continuation.
 
 ## Phase 4 — Complete dynamic component renderer coverage
 

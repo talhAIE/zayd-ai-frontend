@@ -18,6 +18,13 @@ export const getLearningModePath = (
   mode: LaunchableMode,
 ): string => {
   const query = `lessonId=${encodeURIComponent(lessonId)}&modeId=${encodeURIComponent(mode.id)}`;
+  const componentPath = `/student/courses/${courseId}/units/${unitId}/lessons/${lessonId}/modes/${mode.id}`;
+
+  // Component, quiz, and writing modes retain the canonical Section 2 player
+  // URL. Quiz/writing will receive their dedicated renderers in Phase 6.
+  if (mode.modeSource !== 'legacy_ai') {
+    return componentPath;
+  }
 
   switch (mode.modeKey) {
     case 'reading-mode':
@@ -31,7 +38,7 @@ export const getLearningModePath = (
     case 'debate-mode':
       return `/student/courses/debate-mode?${query}`;
     default:
-      return `/student/courses/${courseId}/units/${unitId}/lessons/${lessonId}/modes/${mode.id}`;
+      return componentPath;
   }
 };
 

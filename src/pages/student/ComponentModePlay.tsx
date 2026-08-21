@@ -17,6 +17,7 @@ import {
 } from '@/services/learningService';
 import { AppDispatch, RootState } from '@/redux/store';
 import { toast } from 'sonner';
+import { getLearningModePath } from '@/utils/learning-navigation';
 
 import {
   DropdownComponent,
@@ -66,14 +67,29 @@ export default function ComponentModePlay() {
         }
 
         const data = await fetchLessonModeComponents(modeId);
-        // Sort by orderIndex
-        const sorted = [...data].sort((a, b) => a.orderIndex - b.orderIndex);
+        // Start on-view components as they become visible. The backend then owns
+        // acknowledgement completion instead of the UI inventing it locally.
+        const initialized = await Promise.all(
+          [...data].sort((a, b) => a.orderIndex - b.orderIndex).map(async (component) => {
+            if (component.completionRule !== 'on_view' || component.isComplete) {
+              return component;
+            }
+
+            try {
+              return await startLearningComponent(component.id);
+            } catch (startError) {
+              console.warn('Unable to record component view:', startError);
+              return component;
+            }
+          }),
+        );
+        const sorted = initialized.sort((a, b) => a.orderIndex - b.orderIndex);
         setComponents(sorted);
 
         // Pre-fill completed components from attempt status
         const completedIds = new Set<string>();
         sorted.forEach((c) => {
-          if (c.attempt?.status === 'completed' || c.attempt?.status === 'submitted') {
+          if (c.isComplete || c.attempt?.completedAt) {
             completedIds.add(c.id);
           }
         });
@@ -106,8 +122,19 @@ export default function ComponentModePlay() {
         finalResponse: formattedResponse,
       });
 
-      setCompletedComponentIds((prev) => new Set([...prev, componentId]));
-      toast.success('Response submitted!');
+      setComponents((currentComponents) =>
+        currentComponents.map((component) => component.id === componentId ? result : component),
+      );
+      setCompletedComponentIds((previousIds) => {
+        const nextIds = new Set(previousIds);
+        if (result.isComplete || result.attempt?.completedAt) {
+          nextIds.add(componentId);
+        } else {
+          nextIds.delete(componentId);
+        }
+        return nextIds;
+      });
+      toast.success(result.isComplete ? 'Activity completed!' : 'Response submitted.');
       return result;
     } catch (err: any) {
       console.error('Failed to submit component response:', err);
@@ -127,6 +154,10 @@ export default function ComponentModePlay() {
   // Complete the entire mode and progress to next mode or lesson roadmap
   const handleCompleteMode = async () => {
     if (!modeId || !lessonId) return;
+    if (!requiredComponentsComplete) {
+      toast.error('Complete the required activities before moving on.');
+      return;
+    }
     setIsSubmittingMode(true);
     try {
       await dispatch(completeLessonMode({ lessonModeId: modeId })).unwrap();
@@ -142,22 +173,8 @@ export default function ComponentModePlay() {
 
       toast.success('Mode completed successfully!');
 
-      if (nextMode) {
-        if (nextMode.modeSource === 'component') {
-          navigate(
-            `/student/courses/${courseId}/units/${unitId}/lessons/${lessonId}/modes/${nextMode.id}`
-          );
-        } else if (nextMode.modeKey === 'reading-mode' || nextMode.modeKey === 'first-read-mode') {
-          navigate(`/student/courses/reading-mode?lessonId=${lessonId}&modeId=${nextMode.id}`);
-        } else if (nextMode.modeKey === 'roleplay-mode' || nextMode.modeKey === 'speaking-mode') {
-          navigate(`/student/courses/roleplay-mode?lessonId=${lessonId}&modeId=${nextMode.id}`);
-        } else if (nextMode.modeKey === 'listening-mode') {
-          navigate(`/student/courses/listening-mode?lessonId=${lessonId}&modeId=${nextMode.id}`);
-        } else if (nextMode.modeKey === 'debate-mode') {
-          navigate(`/student/courses/debate-mode?lessonId=${lessonId}&modeId=${nextMode.id}`);
-        } else {
-          navigate(`/student/courses/${courseId}/units/${unitId}/lessons/${lessonId}`);
-        }
+      if (nextMode && courseId && unitId) {
+        navigate(getLearningModePath({ courseId, unitId, lessonId }, nextMode));
       } else {
         navigate(`/student/courses/${courseId}/units/${unitId}/lessons/${lessonId}`);
       }
@@ -172,6 +189,9 @@ export default function ComponentModePlay() {
   const completedCount = completedComponentIds.size;
   const totalCount = components.length;
   const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+  const requiredComponentsComplete = components
+    .filter((component) => component.isRequired)
+    .every((component) => component.isComplete || Boolean(component.attempt?.completedAt));
 
   return (
     <div className="w-full max-w-[1040px] mx-auto pb-16 flex flex-col gap-6 font-['Outfit',sans-serif]">
@@ -321,10 +341,10 @@ export default function ComponentModePlay() {
             <button
               type="button"
               onClick={handleCompleteMode}
-              disabled={isSubmittingMode}
+              disabled={isSubmittingMode || !requiredComponentsComplete}
               className={`
                 w-full sm:w-auto bg-[#4F8DFB] hover:bg-[#3B82F6] active:scale-[0.98] text-white px-7 py-3 rounded-full font-bold text-[14px] flex items-center justify-center gap-2 shadow-md transition-all
-                ${isSubmittingMode ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}
+                ${isSubmittingMode || !requiredComponentsComplete ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}
               `}
             >
               {isSubmittingMode ? (
