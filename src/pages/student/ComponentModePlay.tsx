@@ -102,30 +102,20 @@ export default function ComponentModePlay() {
       setError(null);
       try {
         // Attempt to start lesson mode (non-blocking if already in progress or server transient 500)
-        try {
-          await dispatch(startLessonMode({ lessonModeId: modeId })).unwrap();
-        } catch (startErr) {
-          console.warn('startLessonMode non-critical error:', startErr);
-        }
+        const startPromise = dispatch(startLessonMode({ lessonModeId: modeId }))
+          .unwrap()
+          .catch((startErr) => {
+            console.warn('startLessonMode non-critical error:', startErr);
+          });
 
-        const data = await fetchLessonModeComponents(modeId);
-        const resources = await fetchModeResources(modeId).catch(() => [] as LearningResource[]);
+        const [data, resources] = await Promise.all([
+          fetchLessonModeComponents(modeId),
+          fetchModeResources(modeId).catch(() => [] as LearningResource[]),
+          startPromise
+        ]);
         // Start on-view components as they become visible. The backend then owns
         // acknowledgement completion instead of the UI inventing it locally.
-        const initialized = await Promise.all(
-          [...data].sort((a, b) => a.orderIndex - b.orderIndex).map(async (component) => {
-            if (component.completionRule !== 'on_view' || component.isComplete) {
-              return component;
-            }
-
-            try {
-              return await startLearningComponent(component.id);
-            } catch (startError) {
-              console.warn('Unable to record component view:', startError);
-              return component;
-            }
-          }),
-        );
+        const initialized = [...data].sort((a, b) => a.orderIndex - b.orderIndex);
         const resourcesByComponent = new Map<string, LearningResource[]>();
         resources.forEach((resource) => {
           if (!resource.componentId) return;
@@ -164,12 +154,6 @@ export default function ComponentModePlay() {
   // Handle component answer submissions
   const handleComponentSubmit = async (componentId: string, response: any) => {
     try {
-      try {
-        await startLearningComponent(componentId);
-      } catch {
-        // A component may already be started; submit remains the source of truth.
-      }
-
       const formattedResponse =
         typeof response === 'object' && response !== null ? response : { value: response };
 
@@ -308,6 +292,25 @@ export default function ComponentModePlay() {
     .filter((component) => component.isRequired)
     .every((component) => component.isComplete || Boolean(component.attempt?.completedAt) || component.attempt?.status === 'exhausted' || (component.componentType === 'open_input' && Boolean(component.attempt?.response)));
   const canAdvanceMode = Boolean(currentMode?.status === 'completed' || requiredComponentsComplete);
+
+  useEffect(() => {
+    if (currentComp && currentComp.completionRule === 'on_view' && !currentComp.isComplete) {
+      startLearningComponent(currentComp.id)
+        .then((result) => {
+          setComponents((currentComponents) =>
+            currentComponents.map((c) => (c.id === result.id ? result : c))
+          );
+          setCompletedComponentIds((prev) => {
+            const next = new Set(prev);
+            if (result.isComplete || result.attempt?.completedAt) next.add(result.id);
+            return next;
+          });
+        })
+        .catch((err) => {
+          console.warn('Unable to start component view', err);
+        });
+    }
+  }, [currentComp?.id]);
 
   return (
     <div className="w-full max-w-[1040px] mx-auto pb-16 flex flex-col gap-6 font-['Outfit',sans-serif]">
@@ -507,6 +510,8 @@ export default function ComponentModePlay() {
             <button
               type="button"
               onClick={async () => {
+                if (isSubmittingMode) return;
+                
                 if (!canAdvanceFromCurrent && currentComp) {
                   let currentResponse = localResponses[currentComp.id] ?? currentComp.attempt?.response;
                   const isInput = ['mcq', 'dropdown', 'open_input', 'true_false', 'fill_in_the_blank', 'writing_table', 'reflection'].includes(currentComp.componentType);
