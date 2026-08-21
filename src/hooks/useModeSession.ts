@@ -36,6 +36,7 @@ export interface ReadingProgress {
 }
 
 export interface McqResult {
+  results?: boolean[];
   passed: boolean;
   correctCount: number;
   required: number;

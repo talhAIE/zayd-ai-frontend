@@ -138,6 +138,7 @@ export function useAudioPlayback() {
             const seek = playbackId ? sound.seek(playbackId) : sound.seek();
             setAudioProgress((seek || 0) as number);
             if (
+              sound.duration() > 0 &&
               ((seek || 0) as number) >= sound.duration() - 0.1 &&
               onEnd &&
               !onEndCalledRef.current

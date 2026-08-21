@@ -1,12 +1,58 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ChevronLeft, Clock, Check, Pause, Play, ChevronDown, ChevronUp } from 'lucide-react';
+import { toast } from 'sonner';
 import { useModeSession } from '@/hooks/useModeSession';
 import TopicCompletionModal from '@/components/ui/TopicCompletionModal';
 import { ContentPolicyWarningModal } from '@/components/ui/ContentPolicyWarningModal';
 import { useLearningProgressRefresh } from '@/hooks/useLearningProgressRefresh';
 import { useAudioPlayback } from '@/hooks/useAudioPlayback';
 import AudioPlayer from '../AudioPlayer';
+
+function isOptionCorrect(mcq: any, answer: number | string | undefined) {
+  if (answer === undefined || answer === null || answer === -1) {
+    return false;
+  }
+
+  if (typeof mcq.correct === 'number') {
+    return Number(answer) === mcq.correct;
+  }
+
+  if (typeof mcq.correct === 'string') {
+    if (String(answer) === mcq.correct) {
+      return true;
+    }
+    const index = Number(answer);
+    if (!isNaN(index) && Array.isArray(mcq.options) && typeof mcq.options[index] === 'string') {
+      return mcq.options[index] === mcq.correct;
+    }
+    if (!isNaN(index) && Array.isArray(mcq.options) && typeof mcq.options[index] === 'object') {
+      return (
+        mcq.options[index]?.text === mcq.correct ||
+        mcq.options[index]?.label === mcq.correct ||
+        mcq.options[index]?.id === mcq.correct
+      );
+    }
+    return false;
+  }
+
+  if (mcq.correctOptionId) {
+    return String(answer) === String(mcq.correctOptionId);
+  }
+
+  if (Array.isArray(mcq.options)) {
+    const index = Number(answer);
+    if (!isNaN(index) && mcq.options[index]?.isCorrect !== undefined) {
+      return Boolean(mcq.options[index].isCorrect);
+    }
+    const found = mcq.options.find((o: any) => o.id === answer || o.value === answer);
+    if (found?.isCorrect !== undefined) {
+      return Boolean(found.isCorrect);
+    }
+  }
+
+  return true;
+}
 
 export default function ListeningModeTopics() {
   const navigate = useNavigate();
@@ -311,7 +357,7 @@ export default function ListeningModeTopics() {
         <div className="flex flex-col flex-1 gap-4 min-h-0 overflow-y-auto">
           
           {/* Audio Player Card */}
-          {topicAudioUrl && (
+          {topicAudioUrl && listeningPayload?.stage !== 'quiz' && (
             <div className="flex flex-col p-4 px-5 gap-3.5 bg-white border-2 border-[#5C9DFF] rounded-xl">
               <div className="flex flex-row justify-between items-center w-full">
                 <span className="font-bold text-[14px] leading-[18px] text-[#5C9DFF]">Topic Audio</span>
@@ -431,21 +477,31 @@ export default function ListeningModeTopics() {
                       {currentMcqIndex < mcqList.length - 1 ? (
                         <button
                           onClick={() => {
+                            const isCorrect = isOptionCorrect(mcq, currentAnswer);
+                            if (!isCorrect) {
+                              toast.error('Incorrect answer. Please try again.');
+                              return;
+                            }
                             setCurrentMcqIndex(prev => prev + 1);
                           }}
                           disabled={currentAnswer === undefined || isAccountBlocked}
-                          className="px-6 py-2.5 bg-[#3B82F6] text-white rounded-full font-['Outfit'] font-semibold text-[14px] hover:bg-[#2563EB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          className="px-6 py-2.5 bg-[#3B82F6] text-white rounded-full font-['Outfit'] font-semibold text-[14px] hover:bg-[#2563EB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
                         >
                           Next Question
                         </button>
                       ) : (
                         <button
                           onClick={() => {
+                            const isCorrect = isOptionCorrect(mcq, currentAnswer);
+                            if (!isCorrect) {
+                              toast.error('Incorrect answer. Please try again.');
+                              return;
+                            }
                             const answers = mcqList.map((_, idx) => selectedAnswers[idx] ?? -1);
                             submitMcqs(answers);
                           }}
                           disabled={Object.keys(selectedAnswers).length < mcqList.length || isAccountBlocked}
-                          className="px-6 py-2.5 bg-[#3B82F6] text-white rounded-full font-['Outfit'] font-semibold text-[14px] hover:bg-[#2563EB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          className="px-6 py-2.5 bg-[#3B82F6] text-white rounded-full font-['Outfit'] font-semibold text-[14px] hover:bg-[#2563EB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
                         >
                           Submit Answers
                         </button>

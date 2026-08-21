@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sparkles, CheckCircle2, Copy, Star, Eye, FileText, Pen, Link, Target, Terminal } from 'lucide-react';
 import { LearningComponent } from '@/services/learningService';
 
@@ -126,6 +126,12 @@ export default function SemanticReviewComponent({
       ]
     };
   };
+
+  useEffect(() => {
+    if (isSubmitted && !feedback && !component.attempt?.feedback && component.content?.presentation === 'compiled_paragraph') {
+      setFeedback(analyzeTextLocally(text));
+    }
+  }, [isSubmitted, feedback, component.attempt?.feedback, component.content?.presentation, text]);
 
   const isReady = text.trim().length >= minimumCharacters;
 

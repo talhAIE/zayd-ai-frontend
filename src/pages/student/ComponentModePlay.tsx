@@ -306,7 +306,7 @@ export default function ComponentModePlay() {
   const canAdvanceFromCurrent = Boolean(currentComp ? (!currentComp.isRequired || currentComp.isComplete || Boolean(currentComp.attempt?.completedAt) || currentComp.attempt?.status === 'exhausted' || (currentComp.componentType === 'open_input' && Boolean(currentComp.attempt?.response))) : true);
   const requiredComponentsComplete = visibleComponents
     .filter((component) => component.isRequired)
-    .every((component) => component.isComplete || Boolean(component.attempt?.completedAt) || (component.componentType === 'open_input' && Boolean(component.attempt?.response)));
+    .every((component) => component.isComplete || Boolean(component.attempt?.completedAt) || component.attempt?.status === 'exhausted' || (component.componentType === 'open_input' && Boolean(component.attempt?.response)));
   const canAdvanceMode = Boolean(currentMode?.status === 'completed' || requiredComponentsComplete);
 
   return (
@@ -428,7 +428,8 @@ export default function ComponentModePlay() {
                     key={comp.id}
                     component={comp}
                     onAnswerChange={(val) => handleComponentChange(comp.id, comp.content?.presentation === 'compiled_paragraph' ? { paragraph: val } : { text: val })}
-                    isSubmitted={isTerminal}
+                    onSubmit={(val) => handleComponentSubmit(comp.id, comp.content?.presentation === 'compiled_paragraph' ? { paragraph: val } : { text: val })}
+                    isSubmitted={isTerminal || (comp.componentType === 'open_input' && Boolean(comp.attempt?.status === 'submitted'))}
                     disabled={isDisabled}
                     defaultText={defaultText}
                   />
