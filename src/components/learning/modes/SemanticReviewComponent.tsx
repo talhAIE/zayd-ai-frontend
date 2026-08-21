@@ -20,10 +20,11 @@ export default function SemanticReviewComponent({
   const prompt =
     component.content?.prompt ||
     component.description ||
-    'Explain how to solve a complex fraction using the Keep-Change-Flip method in your own words.';
+    component.title ||
+    '';
 
   const minimumCharacters = component.content?.minimumCharacters || 10;
-  const placeholder = component.content?.placeholder || 'Begin typing your explanation...';
+  const placeholder = component.content?.placeholder || '';
 
   const [text, setText] = useState<string>(() => {
     if (component.attempt?.response?.text) {
@@ -67,6 +68,10 @@ export default function SemanticReviewComponent({
   };
 
   const isReady = text.trim().length >= minimumCharacters;
+
+  if (!prompt) {
+    return <div className="rounded-[18px] border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">This open-input activity has no valid learner prompt.</div>;
+  }
 
   return (
     <div className="w-full bg-white rounded-[20px] border border-[#E2E8F0] shadow-[0px_4px_20px_rgba(15,23,42,0.04)] p-6 md:p-8 flex flex-col gap-5 font-['Outfit',sans-serif] transition-all">

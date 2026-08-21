@@ -23,19 +23,6 @@ export default function DropdownComponent({
   const matchingLeftItems = component.matchingLeftItems || [];
   const matchingRightItems = component.matchingRightItems || [];
   
-  // Fallback default items if not in backend payload
-  const defaultItems = [
-    { id: 'item-1', label: 'Evaporation', defaultAnswer: 'Liquid to Gas' },
-    { id: 'item-2', label: 'Melting', defaultAnswer: 'Solid to Liquid' },
-  ];
-
-  const defaultOptions = [
-    { label: 'Liquid to Gas', value: 'Liquid to Gas' },
-    { label: 'Solid to Liquid', value: 'Solid to Liquid' },
-    { label: 'Gas to Liquid', value: 'Gas to Liquid' },
-    { label: 'Solid to Gas', value: 'Solid to Gas' },
-  ];
-
   const items: Array<{ id: string; label: string; defaultAnswer?: string }> =
     rawFields.length > 0
       ? rawFields.map((f: any, idx: number) => ({
@@ -49,7 +36,9 @@ export default function DropdownComponent({
           label: p.value,
           defaultAnswer: matchingRightItems[idx]?.value,
         }))
-      : defaultItems;
+      : component.content?.prompt
+      ? [{ id: 'answer', label: String(component.content.prompt) }]
+      : [];
 
   const options: Array<{ label: string; value: string }> =
     rawOptions.length > 0
@@ -62,7 +51,7 @@ export default function DropdownComponent({
           label: item.value,
           value: item.value,
         }))
-      : defaultOptions;
+      : [];
 
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>(() => {
     if (component.attempt?.response) {
@@ -102,6 +91,10 @@ export default function DropdownComponent({
   const title = component.title || component.content?.prompt || 'Dropdown Elimination';
   const tag = component.content?.tag || 'OPTIONS EXHAUST';
   const badge = component.content?.badge || 'MATCHING EXERCISE';
+
+  if (!items.length || !options.length) {
+    return <div className="rounded-[18px] border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">This dropdown activity has no valid learner content.</div>;
+  }
 
   return (
     <div 

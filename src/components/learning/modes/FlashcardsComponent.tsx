@@ -4,14 +4,12 @@ import { LearningComponent } from '@/services/learningService';
 
 interface FlashcardsComponentProps {
   component: LearningComponent;
-  onComplete?: () => void;
+  onSubmit?: (response: { viewedCardIds: string[] }) => Promise<unknown> | void;
+  isSubmitted?: boolean;
 }
 
-export default function FlashcardsComponent({ component, onComplete }: FlashcardsComponentProps) {
-  const rawCards = component.content?.cards || [
-    { front: 'Complex Fraction', back: 'A fraction where the numerator, denominator, or both contain a fraction.' },
-    { front: 'Reciprocal', back: 'The inverted form of a fraction (e.g. 3/4 becomes 4/3).' },
-  ];
+export default function FlashcardsComponent({ component, onSubmit, isSubmitted = false }: FlashcardsComponentProps) {
+  const rawCards = Array.isArray(component.content?.cards) ? component.content.cards : [];
 
   const cards = rawCards.map((c: any, idx: number) => ({
     id: c.id || `card-${idx}`,
@@ -22,7 +20,7 @@ export default function FlashcardsComponent({ component, onComplete }: Flashcard
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
-  const [viewedCards, setViewedCards] = useState<Set<number>>(new Set([0]));
+  const [viewedCards, setViewedCards] = useState<Set<string>>(() => new Set(cards.length ? [cards[0].id] : []));
 
   const handleNext = () => {
     if (currentIndex < cards.length - 1) {
@@ -30,11 +28,8 @@ export default function FlashcardsComponent({ component, onComplete }: Flashcard
       setCurrentIndex(nextIdx);
       setIsFlipped(false);
       const newViewed = new Set(viewedCards);
-      newViewed.add(nextIdx);
+      newViewed.add(cards[nextIdx].id);
       setViewedCards(newViewed);
-      if (newViewed.size === cards.length) {
-        onComplete?.();
-      }
     }
   };
 
@@ -47,11 +42,15 @@ export default function FlashcardsComponent({ component, onComplete }: Flashcard
 
   const currentCard = cards[currentIndex] || cards[0];
 
+  if (!cards.length) {
+    return <div className="rounded-[18px] border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">This flashcard activity has no valid learner cards.</div>;
+  }
+
   return (
     <div className="w-full flex flex-col gap-4 font-['Outfit',sans-serif]">
       {/* 1. Hero Word Card */}
       <div
-        onClick={() => setIsFlipped(!isFlipped)}
+        onClick={() => !isSubmitted && setIsFlipped(!isFlipped)}
         className="w-full min-h-[160px] md:min-h-[180px] rounded-[18px] bg-gradient-to-r from-[#4F8DFB] to-[#3B82F6] p-8 flex flex-col items-center justify-center text-center cursor-pointer shadow-[0px_4px_16px_rgba(79,141,251,0.2)] hover:opacity-95 transition-all relative select-none"
       >
         <h2 className="text-[32px] md:text-[38px] font-extrabold text-white tracking-[-0.5px]">
@@ -98,6 +97,19 @@ export default function FlashcardsComponent({ component, onComplete }: Flashcard
             className="px-4 py-2 rounded-[10px] bg-[#4F8DFB] hover:bg-[#3B82F6] text-white font-semibold text-[13px] flex items-center gap-1 transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-sm"
           >
             Next Word <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {onSubmit && !isSubmitted && (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => onSubmit({ viewedCardIds: [...viewedCards] })}
+            disabled={viewedCards.size !== cards.length}
+            className="rounded-[10px] bg-[#4F8DFB] px-5 py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Complete flashcards
           </button>
         </div>
       )}

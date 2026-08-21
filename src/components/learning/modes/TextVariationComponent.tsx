@@ -1,92 +1,47 @@
-import { Star, CheckCircle, HelpCircle } from 'lucide-react';
+import { CheckCircle2, Lightbulb, Star, Table2 } from 'lucide-react';
 import { LearningComponent } from '@/services/learningService';
 
-interface TextVariationComponentProps {
-  component: LearningComponent;
-}
+interface TextVariationComponentProps { component: LearningComponent; groupedComponents?: LearningComponent[]; }
 
-export default function TextVariationComponent({ component }: TextVariationComponentProps) {
+const strings = (value: unknown): string[] => Array.isArray(value)
+  ? value.filter((item): item is string => typeof item === 'string' && Boolean(item.trim())) : [];
+const rows = (value: unknown): string[][] => Array.isArray(value)
+  ? value.filter((row): row is string[] => Array.isArray(row) && row.every((cell) => typeof cell === 'string')) : [];
+
+export default function TextVariationComponent({ component, groupedComponents }: TextVariationComponentProps) {
   const content = component.content || {};
-  const heading = content.heading || content.title || component.title;
-  const body = content.body || content.introduction;
-  const learningGoal = content.learningGoal;
-  const essentialQuestion = content.essentialQuestion;
-  const goals = content.goals || [];
-  const standards = content.standards || [];
+  const presentation = typeof content.presentation === 'string' ? content.presentation : 'instruction';
+  const heading = typeof content.heading === 'string' ? content.heading : component.title;
+  const body = typeof content.body === 'string' ? content.body : typeof content.introduction === 'string' ? content.introduction : null;
+  const goals = strings(content.goals ?? content.learningGoals);
+  const standards = strings(content.standards);
 
-  return (
-    <div className="w-full bg-white rounded-[20px] border border-[#E2E8F0] shadow-[0px_4px_20px_rgba(15,23,42,0.04)] p-6 md:p-8 flex flex-col gap-5 font-['Outfit',sans-serif]">
-      {/* Learning Goal or Main Heading */}
-      {learningGoal && (
-        <div className="rounded-[16px] bg-gradient-to-r from-[#0267B5] to-[#249CFF] p-5 md:p-6 text-white flex flex-col gap-2 shadow-sm">
-          <div className="flex items-center gap-1.5 text-white/80 text-[11px] font-bold tracking-wider uppercase">
-            <Star className="w-3.5 h-3.5 fill-white text-white" />
-            <span>LEARNING OBJECTIVE</span>
-          </div>
-          <p className="font-bold text-[16px] md:text-[18px] leading-snug">
-            {learningGoal}
-          </p>
-        </div>
-      )}
+  if (presentation === 'unit_overview') {
+    const grouped = groupedComponents || [component];
+    const sectionContent = (section: string) => grouped.find((item) => item.content?.section === section)?.content || {};
+    const welcome = sectionContent('welcome'); const groupedGoals = sectionContent('goals'); const languageFocus = sectionContent('language_focus'); const preview = sectionContent('preview');
+    const bigIdea = typeof welcome.body === 'string' ? welcome.body : typeof content.bigIdea === 'string' ? content.bigIdea : body;
+    const overviewGoals = strings(groupedGoals.goals).length ? strings(groupedGoals.goals) : goals;
+    const remember = typeof languageFocus.body === 'string' ? languageFocus.body : typeof content.remember === 'string' ? content.remember : typeof content.keyReminder === 'string' ? content.keyReminder : null;
+    const previewText = typeof preview.body === 'string' ? preview.body : null;
+    const columns = strings(content.columns);
+    const tableRows = rows(content.rows);
+    const displayColumns = columns.length ? columns : ['What you will learn'];
+    const displayRows = tableRows.length ? tableRows : overviewGoals.map((goal) => [goal]);
+    return <div className="flex flex-col gap-3 font-['Outfit',sans-serif]">
+      <section className="rounded-[14px] bg-gradient-to-r from-[#0267B5] to-[#249CFF] p-5 text-white shadow-sm"><div className="flex items-center gap-2 text-[10px] font-bold tracking-[1.5px] uppercase text-white/90"><Star className="h-3 w-3 fill-current" /> Objective</div><p className="mt-2 text-base font-bold leading-snug">{bigIdea || heading || 'Unit overview'}</p></section>
+      {(remember || body) && <section className="flex overflow-hidden rounded-[14px] border border-[#E2E8F0] bg-white shadow-sm"><div className="flex w-12 shrink-0 items-center justify-center bg-[#EAF4FF]"><div className="h-5 w-4 rounded bg-[#79BFFF]" /></div><div className="p-4"><h2 className="text-sm font-bold text-[#0F172A]">Introduction</h2><p className="mt-1 text-xs leading-relaxed text-[#475569]">{remember || body}</p></div></section>}
+      {previewText && <section className="flex overflow-hidden rounded-[14px] border border-[#FEF3C7] bg-[#FFF8E7]"><div className="flex w-12 shrink-0 items-center justify-center bg-[#FDE7B0]"><Lightbulb className="h-5 w-5 text-[#F59E0B]" /></div><div className="p-4"><h2 className="text-xs font-bold uppercase tracking-wider text-[#92400E]">Remember</h2><p className="mt-1 text-xs font-semibold leading-relaxed text-[#C2410C]">{previewText}</p></div></section>}
+      {displayRows.length > 0 && <section className="flex overflow-hidden rounded-[14px] border border-[#E2E8F0] bg-white shadow-sm"><div className="flex w-12 shrink-0 items-center justify-center bg-[#F0EEFF]"><Table2 className="h-5 w-5 text-[#7467EC]" /></div><div className="min-w-0 flex-1 p-4"><h2 className="text-sm font-bold text-[#0F172A]">What You Will Learn</h2><div className="mt-2 overflow-x-auto"><table className="w-full text-left text-[11px]"><thead className="bg-[#F8FAFC]"><tr>{displayColumns.map((column) => <th key={column} className="border-b border-[#E2E8F0] px-3 py-2 font-bold text-[#334155]">{column}</th>)}</tr></thead><tbody>{displayRows.map((row, index) => <tr key={`${row.join('-')}-${index}`} className="border-b border-[#EEF2F6] last:border-0">{row.map((cell, cellIndex) => <td key={`${cell}-${cellIndex}`} className="px-3 py-2 text-[#475569]">{cell}</td>)}</tr>)}</tbody></table></div></div></section>}
+    </div>;
+  }
 
-      {/* Heading & Body */}
-      {heading && !learningGoal && (
-        <h2 className="text-[20px] md:text-[22px] font-bold text-[#0F172A] tracking-[-0.3px]">
-          {heading}
-        </h2>
-      )}
+  if (presentation === 'reference_table') {
+    const columns = strings(content.columns); const tableRows = rows(content.rows);
+    return <section className="overflow-hidden rounded-[18px] border border-[#E2E8F0] bg-white shadow-sm font-['Outfit',sans-serif]">{heading && <h2 className="px-6 py-5 text-xl font-bold text-[#0F172A]">{heading}</h2>}<div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead className="bg-[#EEF2FF]"><tr>{columns.map((column) => <th key={column} className="px-5 py-3 font-bold text-[#3730A3]">{column}</th>)}</tr></thead><tbody>{tableRows.map((row, index) => <tr key={`${row.join('-')}-${index}`} className="border-t border-[#E2E8F0]">{row.map((cell, cellIndex) => <td key={`${cell}-${cellIndex}`} className="px-5 py-3 text-[#475569]">{cell}</td>)}</tr>)}</tbody></table></div></section>;
+  }
 
-      {body && (
-        <p className="text-[14px] md:text-[15px] text-[#475569] leading-relaxed">
-          {body}
-        </p>
-      )}
-
-      {/* Essential Question */}
-      {essentialQuestion && (
-        <div className="p-4 rounded-[12px] bg-[#F8FAFC] border-l-4 border-[#3B82F6] flex items-start gap-3">
-          <HelpCircle className="w-5 h-5 text-[#3B82F6] flex-shrink-0 mt-0.5" />
-          <div className="flex flex-col gap-0.5">
-            <span className="text-[11px] font-bold text-[#3B82F6] uppercase tracking-wider">
-              Essential Question
-            </span>
-            <p className="text-[14px] font-semibold text-[#0F172A]">
-              {essentialQuestion}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Goals / Bullet Points */}
-      {goals.length > 0 && (
-        <div className="flex flex-col gap-2.5 pt-1">
-          <span className="text-[12px] font-bold uppercase tracking-wider text-[#64748B]">
-            Key Goals
-          </span>
-          <div className="grid grid-cols-1 gap-2">
-            {goals.map((goal: string, idx: number) => (
-              <div key={idx} className="flex items-start gap-2.5 p-3 rounded-[10px] bg-[#F8FAFC] border border-[#EEF2F6]">
-                <CheckCircle className="w-4 h-4 text-[#10B981] flex-shrink-0 mt-0.5" />
-                <span className="text-[13px] md:text-[14px] text-[#334155] font-medium">{goal}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Standards */}
-      {standards.length > 0 && (
-        <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
-          <span className="text-[11px] font-bold uppercase text-[#94A3B8] self-center">
-            Standards:
-          </span>
-          {standards.map((std: string, idx: number) => (
-            <span key={idx} className="px-2.5 py-0.5 rounded-md bg-gray-100 text-[#475569] text-[11px] font-semibold">
-              {std}
-            </span>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+  const learningGoal = typeof content.learningGoal === 'string' ? content.learningGoal : null;
+  const essentialQuestion = typeof content.essentialQuestion === 'string' ? content.essentialQuestion : null;
+  return <section className="rounded-[18px] border border-[#E2E8F0] bg-white p-6 md:p-8 shadow-sm font-['Outfit',sans-serif]">{learningGoal && <div className="rounded-[14px] bg-gradient-to-r from-[#0267B5] to-[#249CFF] p-5 text-white"><div className="text-[11px] font-bold uppercase tracking-wider">Learning objective</div><p className="mt-2 text-lg font-bold">{learningGoal}</p></div>}{heading && !learningGoal && <h2 className="text-xl font-bold text-[#0F172A]">{heading}</h2>}{body && <p className="mt-4 text-sm leading-relaxed text-[#475569]">{body}</p>}{essentialQuestion && <div className="mt-4 rounded-xl border-l-4 border-[#3B82F6] bg-[#F8FAFC] p-4"><p className="text-xs font-bold uppercase tracking-wider text-[#2563EB]">Essential question</p><p className="mt-1 text-sm font-semibold text-[#0F172A]">{essentialQuestion}</p></div>}{goals.length > 0 && <div className="mt-5"><p className="text-xs font-bold uppercase tracking-wider text-[#64748B]">Key goals</p><div className="mt-2 space-y-2">{goals.map((goal) => <div key={goal} className="flex gap-2 rounded-lg bg-[#F8FAFC] p-3 text-sm text-[#334155]"><CheckCircle2 className="h-4 w-4 shrink-0 text-[#10B981]" />{goal}</div>)}</div></div>}{standards.length > 0 && <div className="mt-5 flex flex-wrap gap-2">{standards.map((standard) => <span key={standard} className="rounded bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">{standard}</span>)}</div>}</section>;
 }

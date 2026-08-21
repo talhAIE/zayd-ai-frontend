@@ -13,6 +13,9 @@ import {
   submitComponentAttempt,
   saveComponentAttempt,
   startLearningComponent,
+  interactWithResource,
+  submitReflection,
+  LearningResource,
   LearningComponent 
 } from '@/services/learningService';
 import { AppDispatch, RootState } from '@/redux/store';
@@ -28,6 +31,12 @@ import {
   TextVariationComponent,
   MediaComponent,
   FlashcardsComponent,
+  FillInTheBlankComponent,
+  ReflectionComponent,
+  ResourceComponent,
+  TextComponent,
+  UnavailableComponent,
+  WritingTableComponent,
 } from '@/components/learning/modes';
 
 export default function ComponentModePlay() {
@@ -151,6 +160,38 @@ export default function ComponentModePlay() {
     }
   };
 
+  const handleResourceInteraction = async (resource: LearningResource) => {
+    try {
+      const updatedResources = await interactWithResource(resource.id, 'opened');
+      setComponents((currentComponents) => currentComponents.map((component) =>
+        component.resources.some((item) => item.id === resource.id)
+          ? { ...component, resources: updatedResources }
+          : component,
+      ));
+    } catch {
+      toast.error('Unable to record this resource interaction.');
+    }
+  };
+
+  const handleReflectionSubmit = async (componentId: string, response: Record<string, unknown>) => {
+    try {
+      const result = await submitReflection(componentId, response);
+      setComponents((currentComponents) => currentComponents.map((component) =>
+        component.id === componentId ? { ...component, isComplete: result.isComplete } : component,
+      ));
+      setCompletedComponentIds((previousIds) => {
+        const nextIds = new Set(previousIds);
+        if (result.isComplete) nextIds.add(componentId);
+        return nextIds;
+      });
+      toast.success('Reflection submitted.');
+      return result;
+    } catch (submitError: any) {
+      toast.error(submitError.response?.data?.message || 'Unable to submit reflection.');
+      throw submitError;
+    }
+  };
+
   // Complete the entire mode and progress to next mode or lesson roadmap
   const handleCompleteMode = async () => {
     if (!modeId || !lessonId) return;
@@ -249,6 +290,11 @@ export default function ComponentModePlay() {
         <div className="flex flex-col gap-6">
           {components.map((comp) => {
             const isCompleted = completedComponentIds.has(comp.id);
+            const isUnitOverviewVariation = comp.componentType === 'text_variation' && comp.content?.presentation === 'unit_overview';
+            const overviewVariations = components.filter((item) => item.componentType === 'text_variation' && item.content?.presentation === 'unit_overview');
+            if (isUnitOverviewVariation && overviewVariations[0]?.id !== comp.id) {
+              return null;
+            }
 
             switch (comp.componentType) {
               case 'dropdown':
@@ -267,8 +313,8 @@ export default function ComponentModePlay() {
                   <MCQComponent
                     key={comp.id}
                     component={comp}
-                    onAnswerChange={(val) => handleComponentChange(comp.id, { selectedOption: val })}
-                    onSubmit={(val) => handleComponentSubmit(comp.id, { selectedOption: val })}
+                    onAnswerChange={(val) => handleComponentChange(comp.id, { optionId: val })}
+                    onSubmit={(val) => handleComponentSubmit(comp.id, { optionId: val })}
                     isSubmitted={isCompleted}
                   />
                 );
@@ -278,8 +324,8 @@ export default function ComponentModePlay() {
                   <MatchComponent
                     key={comp.id}
                     component={comp}
-                    onAnswerChange={(pairs) => handleComponentChange(comp.id, pairs)}
-                    onSubmit={(pairs) => handleComponentSubmit(comp.id, pairs)}
+                    onAnswerChange={(pairs) => handleComponentChange(comp.id, { matches: Object.entries(pairs).map(([leftValue, rightValue]) => ({ leftValue, rightValue })) })}
+                    onSubmit={(pairs) => handleComponentSubmit(comp.id, { matches: Object.entries(pairs).map(([leftValue, rightValue]) => ({ leftValue, rightValue })) })}
                     isSubmitted={isCompleted}
                   />
                 );
@@ -300,8 +346,8 @@ export default function ComponentModePlay() {
                   <TrueFalseComponent
                     key={comp.id}
                     component={comp}
-                    onAnswerChange={(val) => handleComponentChange(comp.id, { value: val })}
-                    onSubmit={(val) => handleComponentSubmit(comp.id, { value: val })}
+                    onAnswerChange={(val) => handleComponentChange(comp.id, { optionId: val })}
+                    onSubmit={(val) => handleComponentSubmit(comp.id, { optionId: val })}
                     isSubmitted={isCompleted}
                   />
                 );
@@ -311,7 +357,8 @@ export default function ComponentModePlay() {
                   <FlashcardsComponent
                     key={comp.id}
                     component={comp}
-                    onComplete={() => setCompletedComponentIds((prev) => new Set([...prev, comp.id]))}
+                    onSubmit={(response) => handleComponentSubmit(comp.id, response)}
+                    isSubmitted={isCompleted}
                   />
                 );
 
@@ -319,9 +366,25 @@ export default function ComponentModePlay() {
                 return <MediaComponent key={comp.id} component={comp} />;
 
               case 'text':
+                return <TextComponent key={comp.id} component={comp} />;
+
               case 'text_variation':
+                return <TextVariationComponent key={comp.id} component={comp} groupedComponents={isUnitOverviewVariation ? overviewVariations : undefined} />;
+
+              case 'fill_in_the_blank':
+                return <FillInTheBlankComponent key={comp.id} component={comp} onAnswerChange={(response) => handleComponentChange(comp.id, response)} onSubmit={(response) => handleComponentSubmit(comp.id, response)} isSubmitted={isCompleted} />;
+
+              case 'writing_table':
+                return <WritingTableComponent key={comp.id} component={comp} onAnswerChange={(response) => handleComponentChange(comp.id, response)} onSubmit={(response) => handleComponentSubmit(comp.id, response)} isSubmitted={isCompleted} />;
+
+              case 'resource':
+                return <ResourceComponent key={comp.id} component={comp} onInteract={handleResourceInteraction} />;
+
+              case 'reflection':
+                return <ReflectionComponent key={comp.id} component={comp} onSubmit={(response) => handleReflectionSubmit(comp.id, response)} isSubmitted={isCompleted} />;
+
               default:
-                return <TextVariationComponent key={comp.id} component={comp} />;
+                return <UnavailableComponent key={comp.id} component={comp} />;
             }
           })}
 

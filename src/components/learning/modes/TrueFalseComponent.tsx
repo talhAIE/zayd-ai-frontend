@@ -4,8 +4,8 @@ import { LearningComponent } from '@/services/learningService';
 
 interface TrueFalseComponentProps {
   component: LearningComponent;
-  onAnswerChange?: (value: 'true' | 'false') => void;
-  onSubmit?: (value: 'true' | 'false') => void;
+  onAnswerChange?: (value: string) => void;
+  onSubmit?: (value: string) => void;
   isSubmitted?: boolean;
   disabled?: boolean;
 }
@@ -20,13 +20,14 @@ export default function TrueFalseComponent({
   const prompt =
     component.content?.prompt ||
     component.title ||
-    'True or False: The nucleus is the center of an atom.';
+    '';
 
-  // Check correct option from component.options or answerKey
-  const trueOption = component.options?.find((o) => o.value === 'true' || o.label.toLowerCase() === 'true');
-  const isTrueCorrect = trueOption?.isCorrect ?? true;
+  const trueOption = component.options.find((option) => option.value === 'true' || option.label.toLowerCase() === 'true');
+  const falseOption = component.options.find((option) => option.value === 'false' || option.label.toLowerCase() === 'false');
+  const trueValue = trueOption?.id || 'true';
+  const falseValue = falseOption?.id || 'false';
 
-  const [selectedValue, setSelectedValue] = useState<'true' | 'false' | null>(() => {
+  const [selectedValue, setSelectedValue] = useState<string | null>(() => {
     if (component.attempt?.response?.value) {
       return component.attempt.response.value as 'true' | 'false';
     }
@@ -36,22 +37,24 @@ export default function TrueFalseComponent({
     return null;
   });
 
-  const handleSelect = (val: 'true' | 'false') => {
+  const handleSelect = (val: string) => {
     if (disabled || isSubmitted) return;
     setSelectedValue(val);
     onAnswerChange?.(val);
   };
 
-  const getButtonStyle = (val: 'true' | 'false') => {
-    const isSelected = selectedValue === val;
-    const isThisOptionCorrect = val === 'true' ? isTrueCorrect : !isTrueCorrect;
+  if (!prompt || !trueOption || !falseOption) {
+    return <div className="rounded-[18px] border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">This true-or-false activity has no valid learner content.</div>;
+  }
 
+  const getButtonStyle = (val: string) => {
+    const isSelected = selectedValue === val;
     if (!isSelected) {
       return 'border-[#E2E8F0] bg-white text-[#64748B] hover:bg-[#F8FAFC] hover:border-[#CBD5E1]';
     }
 
     if (isSubmitted) {
-      if (isThisOptionCorrect) {
+      if (component.attempt?.isCorrect === true) {
         return 'border-2 border-[#10B981] bg-[#ECFDF5] text-[#065F46] shadow-sm';
       } else {
         return 'border-2 border-[#EF4444] bg-[#FEF2F2] text-[#B91C1C] shadow-sm';
@@ -73,34 +76,34 @@ export default function TrueFalseComponent({
       <div className="grid grid-cols-2 gap-4">
         <button
           type="button"
-          onClick={() => handleSelect('true')}
+          onClick={() => handleSelect(trueValue)}
           disabled={disabled || isSubmitted}
           className={`w-full py-4 px-6 rounded-[12px] border text-center font-bold text-[15px] md:text-[16px] transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed ${getButtonStyle(
-            'true'
+            trueValue
           )}`}
         >
           <span>True</span>
-          {selectedValue === 'true' && isSubmitted && isTrueCorrect && (
+          {selectedValue === trueValue && isSubmitted && component.attempt?.isCorrect === true && (
             <Check className="w-4 h-4 text-[#10B981]" />
           )}
-          {selectedValue === 'true' && isSubmitted && !isTrueCorrect && (
+          {selectedValue === trueValue && isSubmitted && component.attempt?.isCorrect === false && (
             <X className="w-4 h-4 text-[#EF4444]" />
           )}
         </button>
 
         <button
           type="button"
-          onClick={() => handleSelect('false')}
+          onClick={() => handleSelect(falseValue)}
           disabled={disabled || isSubmitted}
           className={`w-full py-4 px-6 rounded-[12px] border text-center font-bold text-[15px] md:text-[16px] transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed ${getButtonStyle(
-            'false'
+            falseValue
           )}`}
         >
           <span>False</span>
-          {selectedValue === 'false' && isSubmitted && !isTrueCorrect && (
+          {selectedValue === falseValue && isSubmitted && component.attempt?.isCorrect === true && (
             <Check className="w-4 h-4 text-[#10B981]" />
           )}
-          {selectedValue === 'false' && isSubmitted && isTrueCorrect && (
+          {selectedValue === falseValue && isSubmitted && component.attempt?.isCorrect === false && (
             <X className="w-4 h-4 text-[#EF4444]" />
           )}
         </button>

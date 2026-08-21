@@ -17,13 +17,10 @@ export default function MatchComponent({
   isSubmitted = false,
   disabled = false,
 }: MatchComponentProps) {
-  const rawPairs = component.content?.matchingPairs || component.matchingLeftItems.map((left, index) => ({
+  const rawPairs = component.content?.matchingPairs?.length ? component.content.matchingPairs : component.matchingLeftItems.map((left, index) => ({
     leftValue: left.value,
     rightValue: component.matchingRightItems[index]?.value || '',
-  })) || [
-    { leftValue: 'Numerator', rightValue: 'Top Number' },
-    { leftValue: 'Denominator', rightValue: 'Bottom Number' },
-  ];
+  }));
 
   // Distinct left & right items
   const leftItems = useMemo(
@@ -55,11 +52,7 @@ export default function MatchComponent({
     if (component.attempt?.response) {
       return component.attempt.response;
     }
-    // Default matching for visual fidelity if demo
-    return {
-      Numerator: 'Top Number',
-      Denominator: 'Bottom Number',
-    };
+    return {};
   });
 
   const [selectedLeft, setSelectedLeft] = useState<string | null>(null);
@@ -152,6 +145,10 @@ export default function MatchComponent({
   const subtitle = component.content?.instruction || 'Tap a term on the left, then tap its match on the right to draw a connection.';
   const badge = component.content?.badge || 'MATCHING EXERCISE';
   const tag = component.content?.tag || 'INTERACTIVE';
+
+  if (!rawPairs.length || !rightItems.length) {
+    return <div className="rounded-[18px] border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">This matching activity has no valid learner content.</div>;
+  }
 
   return (
     <div className="w-full bg-white rounded-[20px] border border-[#E2E8F0] shadow-[0px_4px_20px_rgba(15,23,42,0.04)] p-6 md:p-8 flex flex-col gap-6 font-['Outfit',sans-serif] transition-all">

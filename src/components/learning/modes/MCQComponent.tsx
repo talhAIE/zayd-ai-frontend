@@ -17,18 +17,13 @@ export default function MCQComponent({
   isSubmitted = false,
   disabled = false,
 }: MCQComponentProps) {
-  const prompt = component.content?.prompt || component.title || 'Choose the correct answer:';
+  const prompt = component.content?.prompt || component.title || component.description || '';
   
-  const rawOptions = component.options || component.content?.options || [
-    { label: 'We add the fractions', value: 'a' },
-    { label: 'We multiply by the reciprocal', value: 'b', isCorrect: true },
-    { label: 'The fraction becomes a whole number', value: 'c' },
-  ];
+  const rawOptions = component.options || component.content?.options || [];
 
   const options = rawOptions.map((opt: any, index: number) => {
     const label = typeof opt === 'string' ? opt : opt.label || opt.text || '';
-    const value = typeof opt === 'string' ? opt : opt.value !== undefined ? String(opt.value) : label;
-    const isCorrect = typeof opt === 'object' ? opt.isCorrect : undefined;
+    const id = typeof opt === 'object' && opt.id ? String(opt.id) : typeof opt === 'string' ? opt : opt.value !== undefined ? String(opt.value) : label;
     const prefix = String.fromCharCode(65 + index); // A, B, C, D...
     
     // Remove existing "A. " or "A) " prefix if already in label
@@ -37,8 +32,8 @@ export default function MCQComponent({
     return {
       prefix,
       label: cleanedLabel,
-      value,
-      isCorrect,
+      value: id,
+      id,
     };
   });
 
@@ -58,6 +53,10 @@ export default function MCQComponent({
     onAnswerChange?.(val);
   };
 
+  if (!prompt || !options.length) {
+    return <div className="rounded-[18px] border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">This multiple-choice activity has no valid learner content.</div>;
+  }
+
   return (
     <div className="w-full bg-white rounded-[20px] border border-[#E2E8F0] shadow-[0px_4px_20px_rgba(15,23,42,0.04)] p-6 md:p-8 flex flex-col gap-6 font-['Outfit',sans-serif] transition-all">
       {/* Question Prompt */}
@@ -67,7 +66,7 @@ export default function MCQComponent({
 
       {/* Options List */}
       <div className="flex flex-col gap-3.5">
-        {options.map((opt: { prefix: string; label: string; value: string; isCorrect?: boolean }) => {
+        {options.map((opt: { prefix: string; label: string; value: string; id: string }) => {
           const isSelected = selectedValue === opt.value;
           
           let containerStyle = 'border-[#E2E8F0] bg-white text-[#64748B] hover:border-[#94A3B8] hover:bg-[#F8FAFC]';
@@ -75,10 +74,10 @@ export default function MCQComponent({
 
           if (isSelected) {
             if (isSubmitted) {
-              if (opt.isCorrect === true || component.attempt?.isCorrect === true) {
+              if (component.attempt?.isCorrect === true) {
                 containerStyle = 'border-2 border-[#10B981] bg-[#ECFDF5] text-[#065F46] shadow-sm';
                 textStyle = 'text-[#065F46] font-bold';
-              } else if (opt.isCorrect === false || component.attempt?.isCorrect === false) {
+              } else if (component.attempt?.isCorrect === false) {
                 containerStyle = 'border-2 border-[#EF4444] bg-[#FEF2F2] text-[#991B1B] shadow-sm';
                 textStyle = 'text-[#991B1B] font-bold';
               } else {
@@ -105,13 +104,13 @@ export default function MCQComponent({
                 </span>
               </div>
 
-              {isSelected && isSubmitted && opt.isCorrect === true && (
+              {isSelected && isSubmitted && component.attempt?.isCorrect === true && (
                 <div className="w-6 h-6 rounded-full bg-[#10B981] text-white flex items-center justify-center flex-shrink-0">
                   <Check className="w-4 h-4" />
                 </div>
               )}
 
-              {isSelected && isSubmitted && opt.isCorrect === false && (
+              {isSelected && isSubmitted && component.attempt?.isCorrect === false && (
                 <div className="w-6 h-6 rounded-full bg-[#EF4444] text-white flex items-center justify-center flex-shrink-0">
                   <X className="w-4 h-4" />
                 </div>

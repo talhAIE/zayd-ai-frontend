@@ -151,7 +151,7 @@ Replace hard-coded Unit Overview curriculum content and completion shortcuts wit
 - A required component must be backend-confirmed complete before the mode Next Activity action can be used.
 - One shared route launcher now maps the mode source, mode key, and parent course/unit/lesson context. It is used by Unit Overview, lesson cards/mode cards, Saudi activity-sequence entry, and component-mode continuation.
 
-## Phase 4 — Complete dynamic component renderer coverage
+## Phase 4 — Complete dynamic component renderer coverage — Complete
 
 ### Goal
 
@@ -189,6 +189,15 @@ Render all 13 supported backend component types from backend data, in any valid 
 - Every component in `FRONTEND-COMPONENT-CATALOG-001` renders using a dedicated supported renderer.
 - Grade 7 Vocabulary `fill_in_the_blank` and Close Read `writing_table` are usable.
 - Components display only API content and maintain returned `orderIndex`.
+
+### Implemented
+
+- Added explicit renderers for `text`, `text_variation`, `media`, `flashcards`, `mcq`, `dropdown`, `fill_in_the_blank`, `match_column`, `true_false`, `open_input`, `writing_table`, `resource`, and `reflection`.
+- `text_variation.presentation` now selects data-backed Unit Overview, Objectives/Introduction, instruction, and reference-table layouts. Consecutive Saudi Unit Overview sections are composed into one template rather than shown as generic cards.
+- Added grouped fill-in and writing-table submissions in the backend-required payload formats.
+- Flashcard completion now submits reviewed card IDs to the backend; fake flashcard, MCQ, dropdown, matching, true/false, and open-input fallback content has been removed.
+- Added controlled unavailable states for malformed/empty components and an explicit unsupported-component state instead of rendering invented content.
+- Added resource cards with open/download links and backend interaction recording, plus structured reflection fields submitted through the reflection endpoint.
 
 ## Phase 5 — Attempt lifecycle, feedback, retries, and answer reveal
 
