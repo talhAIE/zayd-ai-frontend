@@ -1,24 +1,24 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import {
-  fetchSection1Courses,
-  fetchSection1Units,
-  fetchSection1Lessons,
-  fetchSection1LessonModes,
-  startSection1Lesson,
-  startSection1LessonMode,
-  completeSection1LessonMode,
-  completeSection1Lesson,
-  Section1Course,
-  Section1Unit,
-  Section1Lesson,
-  Section1LessonMode,
+  completeLesson as completeLearningLesson,
+  completeLessonMode as completeLearningLessonMode,
+  fetchCourseUnits,
+  fetchCourses,
+  fetchLessonModes,
+  fetchUnitLessons,
+  LearningCourse,
+  LearningLesson,
+  LearningLessonMode,
+  LearningUnit,
+  startLesson as startLearningLesson,
+  startLessonMode as startLearningLessonMode,
 } from '@/services/learningService';
 
 interface LearningState {
-  courses: Section1Course[];
-  units: Section1Unit[];
-  lessons: Section1Lesson[];
-  modes: Section1LessonMode[];
+  courses: LearningCourse[];
+  units: LearningUnit[];
+  lessons: LearningLesson[];
+  modes: LearningLessonMode[];
   loading: boolean;
   error: string | null;
 }
@@ -37,7 +37,7 @@ export const getCourses = createAsyncThunk(
   'learning/getCourses',
   async (_, { rejectWithValue }) => {
     try {
-      const data = await fetchSection1Courses();
+      const data = await fetchCourses();
       return data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch courses');
@@ -49,7 +49,7 @@ export const getUnits = createAsyncThunk(
   'learning/getUnits',
   async (courseId: string, { rejectWithValue }) => {
     try {
-      const data = await fetchSection1Units(courseId);
+      const data = await fetchCourseUnits(courseId);
       return data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch units');
@@ -61,7 +61,7 @@ export const getLessons = createAsyncThunk(
   'learning/getLessons',
   async (unitId: string, { rejectWithValue }) => {
     try {
-      const data = await fetchSection1Lessons(unitId);
+      const data = await fetchUnitLessons(unitId);
       return data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch lessons');
@@ -73,7 +73,7 @@ export const getLessonModes = createAsyncThunk(
   'learning/getLessonModes',
   async (lessonId: string, { rejectWithValue }) => {
     try {
-      const data = await fetchSection1LessonModes(lessonId);
+      const data = await fetchLessonModes(lessonId);
       return data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch lesson modes');
@@ -85,7 +85,7 @@ export const startLesson = createAsyncThunk(
   'learning/startLesson',
   async (lessonId: string, { rejectWithValue }) => {
     try {
-      await startSection1Lesson(lessonId);
+      await startLearningLesson(lessonId);
       return lessonId;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to start lesson');
@@ -100,7 +100,7 @@ export const startLessonMode = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const data = await startSection1LessonMode(lessonModeId, resumeModeSessionId);
+      const data = await startLearningLessonMode(lessonModeId, resumeModeSessionId);
       return { lessonModeId, ...data };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to start lesson mode');
@@ -116,12 +116,18 @@ export const completeLessonMode = createAsyncThunk(
       payload,
     }: {
       lessonModeId: string;
-      payload?: { modeSessionId?: string; score?: number; timeSpentSec?: number };
+      payload?: {
+        modeSessionId?: string;
+        legacyChatId?: string;
+        score?: number;
+        timeSpentSec?: number;
+        metadataJson?: Record<string, any>;
+      };
     },
     { rejectWithValue }
   ) => {
     try {
-      await completeSection1LessonMode(lessonModeId, payload);
+      await completeLearningLessonMode(lessonModeId, payload);
       return { lessonModeId };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to complete lesson mode');
@@ -142,7 +148,7 @@ export const completeLesson = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      await completeSection1Lesson(lessonId, payload);
+      await completeLearningLesson(lessonId, payload);
       return { lessonId };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to complete lesson');
@@ -169,7 +175,7 @@ const learningSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(getCourses.fulfilled, (state, action: PayloadAction<Section1Course[]>) => {
+      .addCase(getCourses.fulfilled, (state, action: PayloadAction<LearningCourse[]>) => {
         state.loading = false;
         state.courses = action.payload;
       })
@@ -183,7 +189,7 @@ const learningSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(getUnits.fulfilled, (state, action: PayloadAction<Section1Unit[]>) => {
+      .addCase(getUnits.fulfilled, (state, action: PayloadAction<LearningUnit[]>) => {
         state.loading = false;
         state.units = action.payload;
       })
@@ -197,7 +203,7 @@ const learningSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(getLessons.fulfilled, (state, action: PayloadAction<Section1Lesson[]>) => {
+      .addCase(getLessons.fulfilled, (state, action: PayloadAction<LearningLesson[]>) => {
         state.loading = false;
         state.lessons = action.payload;
       })
@@ -211,7 +217,7 @@ const learningSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(getLessonModes.fulfilled, (state, action: PayloadAction<Section1LessonMode[]>) => {
+      .addCase(getLessonModes.fulfilled, (state, action: PayloadAction<LearningLessonMode[]>) => {
         state.loading = false;
         state.modes = action.payload;
       })

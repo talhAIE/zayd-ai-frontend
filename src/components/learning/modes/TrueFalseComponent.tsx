@@ -27,11 +27,11 @@ export default function TrueFalseComponent({
   const isTrueCorrect = trueOption?.isCorrect ?? true;
 
   const [selectedValue, setSelectedValue] = useState<'true' | 'false' | null>(() => {
-    if (component.myAttempt?.response?.value) {
-      return component.myAttempt.response.value as 'true' | 'false';
+    if (component.attempt?.response?.value) {
+      return component.attempt.response.value as 'true' | 'false';
     }
-    if (component.myAttempt?.response?.selectedOption) {
-      return String(component.myAttempt.response.selectedOption).toLowerCase() === 'true' ? 'true' : 'false';
+    if (component.attempt?.response?.selectedOption) {
+      return String(component.attempt.response.selectedOption).toLowerCase() === 'true' ? 'true' : 'false';
     }
     return null;
   });

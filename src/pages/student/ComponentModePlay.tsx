@@ -73,7 +73,7 @@ export default function ComponentModePlay() {
         // Pre-fill completed components from attempt status
         const completedIds = new Set<string>();
         sorted.forEach((c) => {
-          if (c.myAttempt?.status === 'completed' || c.myAttempt?.status === 'submitted') {
+          if (c.attempt?.status === 'completed' || c.attempt?.status === 'submitted') {
             completedIds.add(c.id);
           }
         });
@@ -94,7 +94,9 @@ export default function ComponentModePlay() {
     try {
       try {
         await startLearningComponent(componentId);
-      } catch (_) {}
+      } catch {
+        // A component may already be started; submit remains the source of truth.
+      }
 
       const formattedResponse =
         typeof response === 'object' && response !== null ? response : { value: response };
@@ -116,8 +118,10 @@ export default function ComponentModePlay() {
 
   const handleComponentChange = async (componentId: string, response: any) => {
     try {
-      await saveComponentAttempt(componentId, response);
-    } catch (_) {}
+      await saveComponentAttempt(componentId, { response });
+    } catch {
+      // Draft saving is best-effort; the final submit still validates server-side.
+    }
   };
 
   // Complete the entire mode and progress to next mode or lesson roadmap

@@ -17,7 +17,10 @@ export default function MatchComponent({
   isSubmitted = false,
   disabled = false,
 }: MatchComponentProps) {
-  const rawPairs = component.matchingPairs || component.content?.matchingPairs || [
+  const rawPairs = component.content?.matchingPairs || component.matchingLeftItems.map((left, index) => ({
+    leftValue: left.value,
+    rightValue: component.matchingRightItems[index]?.value || '',
+  })) || [
     { leftValue: 'Numerator', rightValue: 'Top Number' },
     { leftValue: 'Denominator', rightValue: 'Bottom Number' },
   ];
@@ -49,8 +52,8 @@ export default function MatchComponent({
 
   // State: mapping from left item text -> right item text
   const [connections, setConnections] = useState<Record<string, string>>(() => {
-    if (component.myAttempt?.response) {
-      return component.myAttempt.response;
+    if (component.attempt?.response) {
+      return component.attempt.response;
     }
     // Default matching for visual fidelity if demo
     return {

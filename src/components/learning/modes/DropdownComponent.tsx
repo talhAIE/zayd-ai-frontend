@@ -20,6 +20,8 @@ export default function DropdownComponent({
   // Extract items from content or options
   const rawFields = component.content?.fields || component.content?.items || [];
   const rawOptions = component.options || component.content?.options || [];
+  const matchingLeftItems = component.matchingLeftItems || [];
+  const matchingRightItems = component.matchingRightItems || [];
   
   // Fallback default items if not in backend payload
   const defaultItems = [
@@ -41,11 +43,11 @@ export default function DropdownComponent({
           label: f.sentence || f.label || f.prompt || `Item ${idx + 1}`,
           defaultAnswer: f.defaultAnswer,
         }))
-      : (component.matchingPairs && component.matchingPairs.length > 0)
-      ? component.matchingPairs.map((p, idx) => ({
+      : matchingLeftItems.length > 0
+      ? matchingLeftItems.map((p, idx) => ({
           id: `pair-${idx}`,
-          label: p.leftValue,
-          defaultAnswer: p.rightValue,
+          label: p.value,
+          defaultAnswer: matchingRightItems[idx]?.value,
         }))
       : defaultItems;
 
@@ -55,16 +57,16 @@ export default function DropdownComponent({
           label: o.label || o.value,
           value: o.value || o.label,
         }))
-      : (component.matchingPairs && component.matchingPairs.length > 0)
-      ? component.matchingPairs.map((p) => ({
-          label: p.rightValue,
-          value: p.rightValue,
+      : matchingRightItems.length > 0
+      ? matchingRightItems.map((item) => ({
+          label: item.value,
+          value: item.value,
         }))
       : defaultOptions;
 
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>(() => {
-    if (component.myAttempt?.response) {
-      return component.myAttempt.response;
+    if (component.attempt?.response) {
+      return component.attempt.response;
     }
     return {};
   });

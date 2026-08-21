@@ -26,19 +26,19 @@ export default function SemanticReviewComponent({
   const placeholder = component.content?.placeholder || 'Begin typing your explanation...';
 
   const [text, setText] = useState<string>(() => {
-    if (component.myAttempt?.response?.text) {
-      return String(component.myAttempt.response.text);
+    if (component.attempt?.response?.text) {
+      return String(component.attempt.response.text);
     }
-    if (component.myAttempt?.response?.response) {
-      return String(component.myAttempt.response.response);
+    if (component.attempt?.response?.response) {
+      return String(component.attempt.response.response);
     }
     return '';
   });
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [feedback, setFeedback] = useState<any>(() => {
-    if (component.myAttempt?.feedback) {
-      return component.myAttempt.feedback;
+    if (component.attempt?.feedback) {
+      return component.attempt.feedback;
     }
     return null;
   });
@@ -131,14 +131,14 @@ export default function SemanticReviewComponent({
       </div>
 
       {/* Feedback Card if present */}
-      {(feedback || (isSubmitted && component.myAttempt?.feedback)) && (
+      {(feedback || (isSubmitted && component.attempt?.feedback)) && (
         <div className="mt-2 p-4 rounded-[14px] bg-[#F0FDF4] border border-[#BBF7D0] flex flex-col gap-2 animate-in fade-in slide-in-from-top-2">
           <div className="flex items-center gap-2 text-[#16A34A] font-bold text-[14px]">
             <CheckCircle2 className="w-4 h-4" />
             <span>AI Review Feedback</span>
           </div>
           <p className="text-[13px] text-[#166534] leading-relaxed">
-            {typeof feedback === 'string' ? feedback : feedback?.comment || component.myAttempt?.feedback || 'Great job! Your explanation demonstrated clear understanding.'}
+            {typeof feedback === 'string' ? feedback : feedback?.comment || component.attempt?.feedback || 'Great job! Your explanation demonstrated clear understanding.'}
           </p>
         </div>
       )}

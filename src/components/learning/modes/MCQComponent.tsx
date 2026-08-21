@@ -43,11 +43,11 @@ export default function MCQComponent({
   });
 
   const [selectedValue, setSelectedValue] = useState<string>(() => {
-    if (component.myAttempt?.response?.selectedOption) {
-      return String(component.myAttempt.response.selectedOption);
+    if (component.attempt?.response?.selectedOption) {
+      return String(component.attempt.response.selectedOption);
     }
-    if (component.myAttempt?.response?.value) {
-      return String(component.myAttempt.response.value);
+    if (component.attempt?.response?.value) {
+      return String(component.attempt.response.value);
     }
     return '';
   });
@@ -75,10 +75,10 @@ export default function MCQComponent({
 
           if (isSelected) {
             if (isSubmitted) {
-              if (opt.isCorrect === true || component.myAttempt?.isCorrect === true) {
+              if (opt.isCorrect === true || component.attempt?.isCorrect === true) {
                 containerStyle = 'border-2 border-[#10B981] bg-[#ECFDF5] text-[#065F46] shadow-sm';
                 textStyle = 'text-[#065F46] font-bold';
-              } else if (opt.isCorrect === false || component.myAttempt?.isCorrect === false) {
+              } else if (opt.isCorrect === false || component.attempt?.isCorrect === false) {
                 containerStyle = 'border-2 border-[#EF4444] bg-[#FEF2F2] text-[#991B1B] shadow-sm';
                 textStyle = 'text-[#991B1B] font-bold';
               } else {
