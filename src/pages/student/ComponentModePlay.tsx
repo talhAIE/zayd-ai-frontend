@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft } from 'lucide-react';
+import { CheckCircle2, ChevronLeft, CircleAlert, Eye } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
   getLessonModes, 
@@ -15,6 +15,7 @@ import {
   startLearningComponent,
   interactWithResource,
   submitReflection,
+  revealApprovedAnswers,
   LearningResource,
   LearningComponent 
 } from '@/services/learningService';
@@ -55,7 +56,8 @@ export default function ComponentModePlay() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSubmittingMode, setIsSubmittingMode] = useState(false);
-  const [completedComponentIds, setCompletedComponentIds] = useState<Set<string>>(new Set());
+  const [, setCompletedComponentIds] = useState<Set<string>>(new Set());
+  const [revealedAnswers, setRevealedAnswers] = useState<Record<string, Array<{ id: string; value: string }>>>({});
 
   const currentUnit = units.find((u) => u.id === unitId);
   const currentLesson = lessons.find((l) => l.id === lessonId);
@@ -154,9 +156,20 @@ export default function ComponentModePlay() {
 
   const handleComponentChange = async (componentId: string, response: any) => {
     try {
-      await saveComponentAttempt(componentId, { response });
+      const result = await saveComponentAttempt(componentId, { response });
+      setComponents((currentComponents) => currentComponents.map((component) => component.id === componentId ? result : component));
     } catch {
       // Draft saving is best-effort; the final submit still validates server-side.
+    }
+  };
+
+  const handleRevealAnswer = async (component: LearningComponent) => {
+    if (component.attempt?.status !== 'exhausted' || component.attempt?.feedback?.canRevealAnswer !== true) return;
+    try {
+      const answers = await revealApprovedAnswers(component.id);
+      setRevealedAnswers((current) => ({ ...current, [component.id]: answers }));
+    } catch (revealError: any) {
+      toast.error(revealError.response?.data?.message || 'Answers are not available for this activity.');
     }
   };
 
@@ -227,7 +240,7 @@ export default function ComponentModePlay() {
     }
   };
 
-  const completedCount = completedComponentIds.size;
+  const completedCount = components.filter((component) => component.isComplete || Boolean(component.attempt?.completedAt)).length;
   const totalCount = components.length;
   const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
   const requiredComponentsComplete = components
@@ -289,7 +302,9 @@ export default function ComponentModePlay() {
       {!loading && !error && (
         <div className="flex flex-col gap-6">
           {components.map((comp) => {
-            const isCompleted = completedComponentIds.has(comp.id);
+            const isCompleted = comp.isComplete || Boolean(comp.attempt?.completedAt);
+            const isTerminal = isCompleted || comp.attempt?.status === 'exhausted';
+            const isDisabled = !comp.canSubmit || isTerminal;
             const isUnitOverviewVariation = comp.componentType === 'text_variation' && comp.content?.presentation === 'unit_overview';
             const overviewVariations = components.filter((item) => item.componentType === 'text_variation' && item.content?.presentation === 'unit_overview');
             if (isUnitOverviewVariation && overviewVariations[0]?.id !== comp.id) {
@@ -304,7 +319,8 @@ export default function ComponentModePlay() {
                     component={comp}
                     onAnswerChange={(ans) => handleComponentChange(comp.id, ans)}
                     onSubmit={(ans) => handleComponentSubmit(comp.id, ans)}
-                    isSubmitted={isCompleted}
+                    isSubmitted={isTerminal}
+                    disabled={isDisabled}
                   />
                 );
 
@@ -315,7 +331,8 @@ export default function ComponentModePlay() {
                     component={comp}
                     onAnswerChange={(val) => handleComponentChange(comp.id, { optionId: val })}
                     onSubmit={(val) => handleComponentSubmit(comp.id, { optionId: val })}
-                    isSubmitted={isCompleted}
+                    isSubmitted={isTerminal}
+                    disabled={isDisabled}
                   />
                 );
 
@@ -326,7 +343,8 @@ export default function ComponentModePlay() {
                     component={comp}
                     onAnswerChange={(pairs) => handleComponentChange(comp.id, { matches: Object.entries(pairs).map(([leftValue, rightValue]) => ({ leftValue, rightValue })) })}
                     onSubmit={(pairs) => handleComponentSubmit(comp.id, { matches: Object.entries(pairs).map(([leftValue, rightValue]) => ({ leftValue, rightValue })) })}
-                    isSubmitted={isCompleted}
+                    isSubmitted={isTerminal}
+                    disabled={isDisabled}
                   />
                 );
 
@@ -337,7 +355,8 @@ export default function ComponentModePlay() {
                     component={comp}
                     onAnswerChange={(val) => handleComponentChange(comp.id, { text: val })}
                     onSubmit={(val) => handleComponentSubmit(comp.id, { text: val })}
-                    isSubmitted={isCompleted}
+                    isSubmitted={isTerminal}
+                    disabled={isDisabled}
                   />
                 );
 
@@ -348,7 +367,8 @@ export default function ComponentModePlay() {
                     component={comp}
                     onAnswerChange={(val) => handleComponentChange(comp.id, { optionId: val })}
                     onSubmit={(val) => handleComponentSubmit(comp.id, { optionId: val })}
-                    isSubmitted={isCompleted}
+                    isSubmitted={isTerminal}
+                    disabled={isDisabled}
                   />
                 );
 
@@ -358,7 +378,7 @@ export default function ComponentModePlay() {
                     key={comp.id}
                     component={comp}
                     onSubmit={(response) => handleComponentSubmit(comp.id, response)}
-                    isSubmitted={isCompleted}
+                    isSubmitted={isTerminal}
                   />
                 );
 
@@ -372,21 +392,32 @@ export default function ComponentModePlay() {
                 return <TextVariationComponent key={comp.id} component={comp} groupedComponents={isUnitOverviewVariation ? overviewVariations : undefined} />;
 
               case 'fill_in_the_blank':
-                return <FillInTheBlankComponent key={comp.id} component={comp} onAnswerChange={(response) => handleComponentChange(comp.id, response)} onSubmit={(response) => handleComponentSubmit(comp.id, response)} isSubmitted={isCompleted} />;
+                return <FillInTheBlankComponent key={comp.id} component={comp} onAnswerChange={(response) => handleComponentChange(comp.id, response)} onSubmit={(response) => handleComponentSubmit(comp.id, response)} isSubmitted={isTerminal} />;
 
               case 'writing_table':
-                return <WritingTableComponent key={comp.id} component={comp} onAnswerChange={(response) => handleComponentChange(comp.id, response)} onSubmit={(response) => handleComponentSubmit(comp.id, response)} isSubmitted={isCompleted} />;
+                return <WritingTableComponent key={comp.id} component={comp} onAnswerChange={(response) => handleComponentChange(comp.id, response)} onSubmit={(response) => handleComponentSubmit(comp.id, response)} isSubmitted={isTerminal} />;
 
               case 'resource':
                 return <ResourceComponent key={comp.id} component={comp} onInteract={handleResourceInteraction} />;
 
               case 'reflection':
-                return <ReflectionComponent key={comp.id} component={comp} onSubmit={(response) => handleReflectionSubmit(comp.id, response)} isSubmitted={isCompleted} />;
+                return <ReflectionComponent key={comp.id} component={comp} onSubmit={(response) => handleReflectionSubmit(comp.id, response)} isSubmitted={isTerminal} />;
 
               default:
                 return <UnavailableComponent key={comp.id} component={comp} />;
             }
           })}
+
+          <div className="flex flex-col gap-3">
+            {components.map((component) => (
+              <ComponentAttemptFeedback
+                key={`feedback-${component.id}`}
+                component={component}
+                answers={revealedAnswers[component.id] || []}
+                onReveal={() => handleRevealAnswer(component)}
+              />
+            ))}
+          </div>
 
           {/* Bottom Progress and Action Bar matching Figma */}
           <div className="w-full bg-white rounded-[18px] border border-[#E2E8F0] shadow-sm p-4 md:px-6 md:py-4 flex flex-col sm:flex-row items-center justify-between gap-4 mt-2">
@@ -419,5 +450,49 @@ export default function ComponentModePlay() {
         </div>
       )}
     </div>
+  );
+}
+
+function ComponentAttemptFeedback({
+  component,
+  answers,
+  onReveal,
+}: {
+  component: LearningComponent;
+  answers: Array<{ id: string; value: string }>;
+  onReveal: () => void;
+}) {
+  const attempt = component.attempt;
+  const feedback = attempt?.feedback;
+  const fieldResults = Array.isArray(feedback?.fieldResults) ? feedback.fieldResults : [];
+  const canReveal = attempt?.status === 'exhausted' && feedback?.canRevealAnswer === true;
+  const message = typeof feedback?.message === 'string'
+    ? feedback.message
+    : typeof feedback?.scoreMessage === 'string'
+      ? feedback.scoreMessage
+      : null;
+  const hint = typeof feedback?.hint === 'string' ? feedback.hint : null;
+
+  if (!attempt || (!feedback && !answers.length)) return null;
+
+  const successful = component.isComplete || Boolean(attempt.completedAt);
+  return (
+    <section className={`rounded-[14px] border p-4 text-sm ${successful ? 'border-emerald-200 bg-emerald-50' : attempt.status === 'exhausted' ? 'border-amber-200 bg-amber-50' : 'border-blue-200 bg-blue-50'}`}>
+      <div className="flex items-start gap-2">
+        {successful ? <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" /> : <CircleAlert className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />}
+        <div className="min-w-0">
+          <p className="font-bold text-[#0F172A]">{component.title || 'Activity feedback'}</p>
+          <p className="mt-1 text-[#475569]">Attempt {attempt.attemptNumber}{component.maxAttempts ? ` of ${component.maxAttempts}` : ''} · {attempt.status.replace('_', ' ')}</p>
+          {message && <p className="mt-2 text-[#166534]">{message}</p>}
+          {hint && <p className="mt-2 text-[#92400E]">Hint: {hint}</p>}
+          {fieldResults.length > 0 && <ul className="mt-3 space-y-1">{fieldResults.map((result) => {
+            const field = result as Record<string, unknown>;
+            return <li key={String(field.id)} className="text-xs text-[#475569]">{field.isCorrect === true ? 'Correct' : 'Review'}: {typeof field.feedback === 'string' ? field.feedback : typeof field.hint === 'string' ? field.hint : String(field.id)}</li>;
+          })}</ul>}
+          {canReveal && !answers.length && <button type="button" onClick={onReveal} className="mt-3 inline-flex items-center gap-2 rounded-lg bg-[#92400E] px-3 py-2 text-xs font-bold text-white"><Eye className="h-4 w-4" />Show Answer</button>}
+          {answers.length > 0 && <div className="mt-3 rounded-lg border border-amber-200 bg-white p-3"><p className="font-bold text-amber-900">Approved answers</p>{answers.map((answer) => <p key={answer.id} className="mt-1 text-[#475569]">{answer.value}</p>)}</div>}
+        </div>
+      </div>
+    </section>
   );
 }

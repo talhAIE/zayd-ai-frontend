@@ -199,7 +199,7 @@ Render all 13 supported backend component types from backend data, in any valid 
 - Added controlled unavailable states for malformed/empty components and an explicit unsupported-component state instead of rendering invented content.
 - Added resource cards with open/download links and backend interaction recording, plus structured reflection fields submitted through the reflection endpoint.
 
-## Phase 5 — Attempt lifecycle, feedback, retries, and answer reveal
+## Phase 5 — Attempt lifecycle, feedback, retries, and answer reveal — Complete
 
 ### Goal
 
@@ -222,6 +222,15 @@ Make the UI accurately follow the backend attempt lifecycle.
 - Show Answer appears only after the second incorrect attempt where configured.
 - Correct/wrong feedback works without receiving answer keys in `options`.
 - Refreshing the page preserves submitted/completed component state.
+
+### Implemented
+
+- Component start, draft save, and final submit now replace the local component with the latest backend response, preserving the server-returned attempt, eligibility, completion, and feedback state.
+- A `submitted` attempt remains interactive when the backend returns `canSubmit: true`; only completed or exhausted attempts are locked.
+- Progress is calculated only from `component.isComplete` or `attempt.completedAt`.
+- Added sanitized feedback rendering for completion messages, hints, score bands, and grouped field results.
+- Show Answer calls the backend only when the returned attempt is exhausted and the returned feedback authorizes answer reveal. The UI renders only the approved values returned by that endpoint.
+- The component player restores backend attempts on page load and uses `canSubmit` to disable terminal interactions.
 
 ## Phase 6 — Mode completion, specialized activities, and progress refresh
 
