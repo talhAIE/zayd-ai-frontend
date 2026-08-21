@@ -301,10 +301,10 @@ export default function ComponentModePlay() {
   const completedCount = visibleComponents.filter((component) => component.isComplete || Boolean(component.attempt?.completedAt)).length;
   const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
   
-  const canAdvanceFromCurrent = currentComp ? (!currentComp.isRequired || currentComp.isComplete || Boolean(currentComp.attempt?.completedAt) || currentComp.attempt?.status === 'exhausted') : true;
+  const canAdvanceFromCurrent = currentComp ? (!currentComp.isRequired || currentComp.isComplete || Boolean(currentComp.attempt?.completedAt) || currentComp.attempt?.status === 'exhausted' || (currentComp.componentType === 'open_input' && currentComp.attempt?.response)) : true;
   const requiredComponentsComplete = visibleComponents
     .filter((component) => component.isRequired)
-    .every((component) => component.isComplete || Boolean(component.attempt?.completedAt));
+    .every((component) => component.isComplete || Boolean(component.attempt?.completedAt) || (component.componentType === 'open_input' && component.attempt?.response));
   const canAdvanceMode = currentMode?.status === 'completed' || requiredComponentsComplete;
 
   return (
@@ -415,17 +415,27 @@ export default function ComponentModePlay() {
                   />
                 );
 
-              case 'open_input':
+              case 'open_input': {
+                let defaultText = '';
+                if (comp.content?.presentation === 'compiled_paragraph') {
+                  const tableComp = components.find(c => c.componentType === 'writing_table');
+                  if (tableComp && tableComp.attempt?.response?.rows) {
+                    const rows = tableComp.attempt.response.rows as any[];
+                    defaultText = rows.map(r => String(r.sentence || '')).filter(s => s.trim().length > 0).join(' ');
+                  }
+                }
                 return (
                   <SemanticReviewComponent
                     key={comp.id}
                     component={comp}
-                    onAnswerChange={(val) => handleComponentChange(comp.id, { text: val })}
-                    onSubmit={(val) => handleComponentSubmit(comp.id, { text: val })}
+                    onAnswerChange={(val) => handleComponentChange(comp.id, comp.content?.presentation === 'compiled_paragraph' ? { paragraph: val } : { text: val })}
+                    onSubmit={(val) => handleComponentSubmit(comp.id, comp.content?.presentation === 'compiled_paragraph' ? { paragraph: val } : { text: val })}
                     isSubmitted={isTerminal}
                     disabled={isDisabled}
+                    defaultText={defaultText}
                   />
                 );
+              }
 
               case 'true_false':
                 return (

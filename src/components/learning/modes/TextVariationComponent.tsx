@@ -10,7 +10,7 @@ const rows = (value: unknown): string[][] => Array.isArray(value)
 
 export default function TextVariationComponent({ component, groupedComponents }: TextVariationComponentProps) {
   const content = component.content || {};
-  const presentation = typeof content.presentation === 'string' ? content.presentation : 'instruction';
+  const presentation = typeof content.presentation === 'string' ? content.presentation : 'default';
   const heading = typeof content.heading === 'string' ? content.heading : component.title;
   const body = typeof content.body === 'string' ? content.body : typeof content.introduction === 'string' ? content.introduction : null;
   const goals = strings(content.goals ?? content.learningGoals);
@@ -40,25 +40,96 @@ export default function TextVariationComponent({ component, groupedComponents }:
     const columns = strings(content.columns); const tableRows = rows(content.rows);
     return <section className="overflow-hidden rounded-[18px] border border-[#E2E8F0] bg-white shadow-sm font-['Outfit',sans-serif]">{heading && <h2 className="px-6 py-5 text-xl font-bold text-[#0F172A]">{heading}</h2>}<div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead className="bg-[#EEF2FF]"><tr>{columns.map((column) => <th key={column} className="px-5 py-3 font-bold text-[#3730A3]">{column}</th>)}</tr></thead><tbody>{tableRows.map((row, index) => <tr key={`${row.join('-')}-${index}`} className="border-t border-[#E2E8F0]">{row.map((cell, cellIndex) => <td key={`${cell}-${cellIndex}`} className="px-5 py-3 text-[#475569]">{cell}</td>)}</tr>)}</tbody></table></div></section>;
   }
+  if (presentation === 'writing_introduction') {
+    const activityHeading = typeof content.activityHeading === 'string' ? content.activityHeading : 'Writing Activity';
+    const activityTitle = typeof content.activityTitle === 'string' ? content.activityTitle : component.title;
+    const scenario = typeof content.scenario === 'string' ? content.scenario : '';
+    const instruction = typeof content.instruction === 'string' ? content.instruction : '';
+    const monitor = content.monitor as any;
+
+    return (
+      <section className="rounded-[18px] border border-[#E2E8F0] bg-white p-6 md:p-8 shadow-sm font-['Outfit',sans-serif]">
+        <div className="mb-6 flex flex-col gap-2 border-b border-[#E2E8F0] pb-5">
+          <span className="text-[12px] font-bold tracking-wider uppercase text-[#4F8DFB]">{activityHeading}</span>
+          <h2 className="text-2xl font-bold text-[#0F172A]">{activityTitle}</h2>
+        </div>
+        
+        <div className="flex flex-col gap-5">
+          {scenario && (
+            <div className="rounded-[14px] bg-[#F8FAFC] border border-[#E2E8F0] p-5">
+              <p className="text-[14px] leading-relaxed text-[#475569]">{scenario}</p>
+            </div>
+          )}
+          
+          {instruction && (
+            <p className="text-[15px] font-medium text-[#334155]">{instruction}</p>
+          )}
+
+          {monitor && (
+            <div className="mt-2 rounded-[14px] border border-[#BBF7D0] bg-[#F0FDF4] p-5">
+              <h3 className="mb-2 text-[15px] font-bold text-[#166534]">{monitor.heading || 'What Zayd Will Monitor'}</h3>
+              {monitor.introduction && <p className="mb-4 text-[13px] text-[#166534]">{monitor.introduction}</p>}
+              
+              {Array.isArray(monitor.skills) && monitor.skills.length > 0 && (
+                <ul className="flex flex-col gap-3">
+                  {monitor.skills.map((skill: any, idx: number) => (
+                    <li key={idx} className="flex items-start gap-2.5">
+                      <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[#16A34A]">
+                        <CheckCircle2 className="h-4 w-4" />
+                      </div>
+                      <p className="text-[13px] text-[#166534]">
+                        <strong className="font-bold">{skill.label}:</strong> {skill.description}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
+      </section>
+    );
+  }
+
+  if (presentation === 'conversation_groups') {
+    const groups = Array.isArray(content.groups) ? content.groups : [];
+    return (
+      <section className="rounded-[18px] border border-[#E2E8F0] bg-white p-6 md:p-8 shadow-sm font-['Outfit',sans-serif]">
+        {heading && <h2 className="text-xl font-bold text-[#0F172A]">{heading}</h2>}
+        {body && <p className="mt-4 text-sm leading-relaxed text-[#475569]">{body}</p>}
+        
+        <div className="mt-6 flex flex-col gap-5">
+          {groups.map((group: any, index: number) => {
+            const groupTitle = typeof group.title === 'string' ? group.title : '';
+            const lines = Array.isArray(group.lines) ? group.lines : [];
+            return (
+              <div key={index} className="rounded-[14px] border border-[#E2E8F0] bg-[#F8FAFC] p-4 md:p-5">
+                {groupTitle && <h3 className="mb-3 text-[15px] font-bold text-[#0F172A]">{groupTitle}</h3>}
+                <div className="flex flex-col gap-2.5">
+                  {lines.map((line: any, lineIdx: number) => {
+                    const lineStr = typeof line === 'string' ? line : '';
+                    const splitIdx = lineStr.indexOf(':');
+                    if (splitIdx !== -1) {
+                      return (
+                        <p key={lineIdx} className="text-[14px] text-[#475569]">
+                          <strong className="text-[#334155]">{lineStr.substring(0, splitIdx + 1)}</strong>
+                          {lineStr.substring(splitIdx + 1)}
+                        </p>
+                      );
+                    }
+                    return <p key={lineIdx} className="text-[14px] text-[#475569]">{lineStr}</p>;
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+    );
+  }
 
   const learningGoal = typeof content.learningGoal === 'string' ? content.learningGoal : null;
   const essentialQuestion = typeof content.essentialQuestion === 'string' ? content.essentialQuestion : null;
-
-  if (presentation === 'instruction' || (!learningGoal && !essentialQuestion && !goals.length && !standards.length)) {
-    return (
-      <div className="flex flex-col gap-3 font-['Outfit',sans-serif]">
-        <section className="flex overflow-hidden rounded-[14px] border border-[#E2E8F0] bg-white shadow-sm">
-          <div className="flex w-12 shrink-0 items-center justify-center bg-[#EAF4FF]">
-            <div className="h-5 w-4 rounded bg-[#79BFFF]" />
-          </div>
-          <div className="p-4 md:p-5">
-            {heading && <h2 className="text-sm md:text-base font-bold text-[#0F172A]">{heading}</h2>}
-            {body && <p className={`text-[13px] md:text-[14px] leading-relaxed text-[#475569] ${heading ? 'mt-1.5' : ''}`}>{body}</p>}
-          </div>
-        </section>
-      </div>
-    );
-  }
 
   return <section className="rounded-[18px] border border-[#E2E8F0] bg-white p-6 md:p-8 shadow-sm font-['Outfit',sans-serif]">{learningGoal && <div className="rounded-[14px] bg-gradient-to-r from-[#0267B5] to-[#249CFF] p-5 text-white"><div className="text-[11px] font-bold uppercase tracking-wider">Learning objective</div><p className="mt-2 text-lg font-bold">{learningGoal}</p></div>}{heading && !learningGoal && <h2 className="text-xl font-bold text-[#0F172A]">{heading}</h2>}{body && <p className="mt-4 text-sm leading-relaxed text-[#475569]">{body}</p>}{essentialQuestion && <div className="mt-4 rounded-xl border-l-4 border-[#3B82F6] bg-[#F8FAFC] p-4"><p className="text-xs font-bold uppercase tracking-wider text-[#2563EB]">Essential question</p><p className="mt-1 text-sm font-semibold text-[#0F172A]">{essentialQuestion}</p></div>}{goals.length > 0 && <div className="mt-5"><p className="text-xs font-bold uppercase tracking-wider text-[#64748B]">Key goals</p><div className="mt-2 space-y-2">{goals.map((goal) => <div key={goal} className="flex gap-2 rounded-lg bg-[#F8FAFC] p-3 text-sm text-[#334155]"><CheckCircle2 className="h-4 w-4 shrink-0 text-[#10B981]" />{goal}</div>)}</div></div>}{standards.length > 0 && <div className="mt-5 flex flex-wrap gap-2">{standards.map((standard) => <span key={standard} className="rounded bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">{standard}</span>)}</div>}</section>;
 }

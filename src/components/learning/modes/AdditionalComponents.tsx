@@ -9,7 +9,22 @@ export function TextComponent({ component }: { component: LearningComponent }) {
   const content = component.content || {};
   const heading = text(content.heading) || component.title || '';
   const body = text(content.body) || component.description || '';
-  return <section className="rounded-[18px] border border-[#E2E8F0] bg-white p-6 md:p-8 shadow-sm font-['Outfit',sans-serif]">{heading && <h2 className="text-xl font-bold text-[#0F172A]">{heading}</h2>}{body && <p className="mt-3 text-sm leading-relaxed text-[#475569]">{body}</p>}{!heading && !body && <UnavailableComponent component={component} />}</section>;
+  
+  if (!heading && !body) return <UnavailableComponent component={component} />;
+
+  return (
+    <div className="flex flex-col gap-3 font-['Outfit',sans-serif]">
+      <section className="flex overflow-hidden rounded-[14px] border border-[#E2E8F0] bg-white shadow-sm">
+        <div className="flex w-12 shrink-0 items-center justify-center bg-[#EAF4FF]">
+          <div className="h-5 w-4 rounded bg-[#79BFFF]" />
+        </div>
+        <div className="p-4 md:p-5">
+          {heading && <h2 className="text-sm md:text-base font-bold text-[#0F172A]">{heading}</h2>}
+          {body && <p className={`text-[13px] md:text-[14px] leading-relaxed text-[#475569] ${heading ? 'mt-1.5' : ''}`}>{body}</p>}
+        </div>
+      </section>
+    </div>
+  );
 }
 
 export function FillInTheBlankComponent({ component, onAnswerChange, onSubmit, isSubmitted }: { component: LearningComponent; onAnswerChange?: (response: Record<string, unknown>) => void; onSubmit?: Submit; isSubmitted?: boolean }) {
