@@ -58,6 +58,7 @@ export default function ComponentModePlay() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSubmittingMode, setIsSubmittingMode] = useState(false);
+  const [localResponses, setLocalResponses] = useState<Record<string, any>>({});
   const [, setCompletedComponentIds] = useState<Set<string>>(new Set());
   const [revealedAnswers, setRevealedAnswers] = useState<Record<string, Array<{ id: string; value: string }>>>({});
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -199,6 +200,7 @@ export default function ComponentModePlay() {
   };
 
   const handleComponentChange = async (componentId: string, response: any) => {
+    setLocalResponses((current) => ({ ...current, [componentId]: response }));
     try {
       const result = await saveComponentAttempt(componentId, { response });
       setComponents((currentComponents) => currentComponents.map((component) => component.id === componentId ? result : component));
@@ -254,7 +256,7 @@ export default function ComponentModePlay() {
   // Complete the entire mode and progress to next mode or lesson roadmap
   const handleCompleteMode = async () => {
     if (!modeId || !lessonId) return;
-    const modeAlreadyComplete = currentMode?.status === 'completed';
+    const modeAlreadyComplete = currentMode?.status === 'completed' || requiredComponentsComplete;
     if (!modeAlreadyComplete && !requiredComponentsComplete) {
       toast.error('Complete the required activities before moving on.');
       return;
@@ -301,11 +303,11 @@ export default function ComponentModePlay() {
   const completedCount = visibleComponents.filter((component) => component.isComplete || Boolean(component.attempt?.completedAt)).length;
   const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
   
-  const canAdvanceFromCurrent = currentComp ? (!currentComp.isRequired || currentComp.isComplete || Boolean(currentComp.attempt?.completedAt) || currentComp.attempt?.status === 'exhausted' || (currentComp.componentType === 'open_input' && currentComp.attempt?.response)) : true;
+  const canAdvanceFromCurrent = Boolean(currentComp ? (!currentComp.isRequired || currentComp.isComplete || Boolean(currentComp.attempt?.completedAt) || currentComp.attempt?.status === 'exhausted' || (currentComp.componentType === 'open_input' && Boolean(currentComp.attempt?.response))) : true);
   const requiredComponentsComplete = visibleComponents
     .filter((component) => component.isRequired)
-    .every((component) => component.isComplete || Boolean(component.attempt?.completedAt) || (component.componentType === 'open_input' && component.attempt?.response));
-  const canAdvanceMode = currentMode?.status === 'completed' || requiredComponentsComplete;
+    .every((component) => component.isComplete || Boolean(component.attempt?.completedAt) || (component.componentType === 'open_input' && Boolean(component.attempt?.response)));
+  const canAdvanceMode = Boolean(currentMode?.status === 'completed' || requiredComponentsComplete);
 
   return (
     <div className="w-full max-w-[1040px] mx-auto pb-16 flex flex-col gap-6 font-['Outfit',sans-serif]">
@@ -385,7 +387,6 @@ export default function ComponentModePlay() {
                     key={comp.id}
                     component={comp}
                     onAnswerChange={(ans) => handleComponentChange(comp.id, ans)}
-                    onSubmit={(ans) => handleComponentSubmit(comp.id, ans)}
                     isSubmitted={isTerminal}
                     disabled={isDisabled}
                   />
@@ -397,7 +398,6 @@ export default function ComponentModePlay() {
                     key={comp.id}
                     component={comp}
                     onAnswerChange={(val) => handleComponentChange(comp.id, { optionId: val })}
-                    onSubmit={(val) => handleComponentSubmit(comp.id, { optionId: val })}
                     isSubmitted={isTerminal}
                     disabled={isDisabled}
                   />
@@ -409,7 +409,6 @@ export default function ComponentModePlay() {
                     key={comp.id}
                     component={comp}
                     onAnswerChange={(pairs) => handleComponentChange(comp.id, { matches: Object.entries(pairs).map(([leftValue, rightValue]) => ({ leftValue, rightValue })) })}
-                    onSubmit={(pairs) => handleComponentSubmit(comp.id, { matches: Object.entries(pairs).map(([leftValue, rightValue]) => ({ leftValue, rightValue })) })}
                     isSubmitted={isTerminal}
                     disabled={isDisabled}
                   />
@@ -429,7 +428,6 @@ export default function ComponentModePlay() {
                     key={comp.id}
                     component={comp}
                     onAnswerChange={(val) => handleComponentChange(comp.id, comp.content?.presentation === 'compiled_paragraph' ? { paragraph: val } : { text: val })}
-                    onSubmit={(val) => handleComponentSubmit(comp.id, comp.content?.presentation === 'compiled_paragraph' ? { paragraph: val } : { text: val })}
                     isSubmitted={isTerminal}
                     disabled={isDisabled}
                     defaultText={defaultText}
@@ -443,7 +441,6 @@ export default function ComponentModePlay() {
                     key={comp.id}
                     component={comp}
                     onAnswerChange={(val) => handleComponentChange(comp.id, { optionId: val })}
-                    onSubmit={(val) => handleComponentSubmit(comp.id, { optionId: val })}
                     isSubmitted={isTerminal}
                     disabled={isDisabled}
                   />
@@ -469,10 +466,10 @@ export default function ComponentModePlay() {
                 return <TextVariationComponent key={comp.id} component={comp} groupedComponents={comp.content?.presentation === 'unit_overview' ? overviewVariations : undefined} />;
 
               case 'fill_in_the_blank':
-                return <FillInTheBlankComponent key={comp.id} component={comp} onAnswerChange={(response) => handleComponentChange(comp.id, response)} onSubmit={(response) => handleComponentSubmit(comp.id, response)} isSubmitted={isTerminal} />;
+                return <FillInTheBlankComponent key={comp.id} component={comp} onAnswerChange={(response) => handleComponentChange(comp.id, response)} isSubmitted={isTerminal} />;
 
               case 'writing_table':
-                return <WritingTableComponent key={comp.id} component={comp} onAnswerChange={(response) => handleComponentChange(comp.id, response)} onSubmit={(response) => handleComponentSubmit(comp.id, response)} isSubmitted={isTerminal} />;
+                return <WritingTableComponent key={comp.id} component={comp} onAnswerChange={(response) => handleComponentChange(comp.id, response)} isSubmitted={isTerminal} />;
 
               case 'resource':
                 return <ResourceComponent key={comp.id} component={comp} onInteract={handleResourceInteraction} />;
@@ -508,18 +505,41 @@ export default function ComponentModePlay() {
             </button>
             <button
               type="button"
-              onClick={() => {
-                if (!canAdvanceFromCurrent) {
-                  toast.error('Complete this activity to continue.');
+              onClick={async () => {
+                if (!canAdvanceFromCurrent && currentComp) {
+                  let currentResponse = localResponses[currentComp.id] ?? currentComp.attempt?.response;
+                  const isInput = ['mcq', 'dropdown', 'open_input', 'true_false', 'fill_in_the_blank', 'writing_table', 'reflection'].includes(currentComp.componentType);
+                  
+                  if (isInput) {
+                    if (!currentResponse || (typeof currentResponse === 'object' && Object.keys(currentResponse).length === 0)) {
+                      toast.error('Please answer the question before submitting.');
+                      return;
+                    }
+                  } else {
+                    currentResponse = currentResponse || {};
+                  }
+                  setIsSubmittingMode(true);
+                  try {
+                    if (currentComp.componentType === 'reflection') {
+                      await handleReflectionSubmit(currentComp.id, currentResponse);
+                    } else {
+                      await handleComponentSubmit(currentComp.id, currentResponse);
+                    }
+                  } catch {
+                    // Handled in submit helpers
+                  } finally {
+                    setIsSubmittingMode(false);
+                  }
                   return;
                 }
+
                 if (currentIndex < totalCount - 1) {
                   setCurrentIndex((curr) => curr + 1);
                 } else {
                   handleCompleteMode();
                 }
               }}
-              disabled={isSubmittingMode || (!canAdvanceMode && currentIndex === totalCount - 1)}
+              disabled={isSubmittingMode || (!canAdvanceMode && currentIndex === totalCount - 1 && canAdvanceFromCurrent)}
               className={`
                 w-full sm:w-auto bg-[#4F8DFB] hover:bg-[#3B82F6] active:scale-[0.98] text-white px-7 py-3 rounded-full font-bold text-[14px] flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer
                 ${isSubmittingMode ? 'opacity-70 cursor-not-allowed' : ''}
@@ -528,7 +548,17 @@ export default function ComponentModePlay() {
               {isSubmittingMode ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : null}
-              <span>{currentIndex < totalCount - 1 ? 'Next' : (isSubmittingMode ? 'Advancing...' : 'Next Activity →')}</span>
+              <span>
+                {!canAdvanceFromCurrent
+                  ? isSubmittingMode
+                    ? 'Submitting...'
+                    : (currentComp && !['mcq', 'dropdown', 'open_input', 'true_false', 'fill_in_the_blank', 'writing_table', 'reflection'].includes(currentComp.componentType) ? 'Continue' : 'Check Answer')
+                  : currentIndex < totalCount - 1
+                  ? 'Next'
+                  : isSubmittingMode
+                  ? 'Completing...'
+                  : 'Finish Mode →'}
+              </span>
             </button>
           </div>
         </div>

@@ -227,7 +227,7 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
       if (!payload.passed) {
         toast.error(payload.message || `Need ${payload.required} correct to pass`);
       } else {
-        toast.success(payload.message || 'Quiz passed!');
+        toast.success(payload.message || 'Quiz completed!');
         setMcqList([]);
       }
     });

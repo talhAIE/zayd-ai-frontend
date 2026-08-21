@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Check, X } from 'lucide-react';
 import { LearningComponent } from '@/services/learningService';
 
@@ -62,13 +62,15 @@ export default function TrueFalseComponent({
     if (locallySubmitted) {
       if (component.attempt?.isCorrect === true) {
         return 'border-2 border-[#10B981] bg-[#ECFDF5] text-[#065F46] shadow-sm';
-      } else {
+      } else if (component.attempt?.isCorrect === false) {
         return 'border-2 border-[#EF4444] bg-[#FEF2F2] text-[#B91C1C] shadow-sm';
+      } else {
+        return 'border-2 border-[#4F8DFB] bg-[#EFF6FF] text-[#1D4ED8] shadow-sm';
       }
     }
 
     // Selected in unsubmitted mode
-    return 'border-2 border-[#10B981] bg-[#ECFDF5] text-[#065F46] shadow-sm';
+    return 'border-2 border-[#4F8DFB] bg-[#EFF6FF] text-[#1D4ED8] shadow-sm';
   };
 
   return (

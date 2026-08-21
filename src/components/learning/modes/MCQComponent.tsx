@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Check, X, Eye } from 'lucide-react';
+import { useState } from 'react';
+import { Check, X } from 'lucide-react';
 import { LearningComponent } from '@/services/learningService';
 
 interface MCQComponentProps {
@@ -92,12 +92,12 @@ export default function MCQComponent({
                 containerStyle = 'border-2 border-[#EF4444] bg-[#FEF2F2] text-[#991B1B] shadow-sm';
                 textStyle = 'text-[#991B1B] font-bold';
               } else {
-                containerStyle = 'border-2 border-[#10B981] bg-[#ECFDF5] text-[#065F46] shadow-sm';
-                textStyle = 'text-[#065F46] font-bold';
+                containerStyle = 'border-2 border-[#4F8DFB] bg-[#EFF6FF] text-[#1D4ED8] shadow-sm';
+                textStyle = 'text-[#1D4ED8] font-bold';
               }
             } else {
-              containerStyle = 'border-2 border-[#10B981] bg-[#ECFDF5] text-[#065F46] shadow-sm';
-              textStyle = 'text-[#065F46] font-bold';
+              containerStyle = 'border-2 border-[#4F8DFB] bg-[#EFF6FF] text-[#1D4ED8] shadow-sm';
+              textStyle = 'text-[#1D4ED8] font-bold';
             }
           }
 

@@ -43,7 +43,6 @@ export default function ReadingModeTopics() {
     chatHistory,
     contentPayload,
     mcqList,
-    mcqResult,
     readingProgress,
     isTyping,
     isCompleted,
@@ -71,11 +70,6 @@ export default function ReadingModeTopics() {
     }
   }, [isCompleted, isJustCompleted]);
 
-  useEffect(() => {
-    if (!mcqResult || mcqResult.passed) return;
-    setCurrentMcqIndex(0);
-    setSelectedAnswers({});
-  }, [mcqResult]);
 
   const [cooldown, setCooldown] = useState(false);
 
@@ -375,6 +369,13 @@ export default function ReadingModeTopics() {
               ref={chatContainerRef}
               className="flex flex-col p-5 px-6 gap-3 flex-1 min-h-[150px] bg-[#F8F9FA] rounded-2xl overflow-y-auto"
             >
+              <div className="w-full bg-[#EFF6FF] border border-[#BFDBFE] rounded-xl px-4 py-3 flex items-start gap-3 text-[#1E40AF] text-[13px] leading-relaxed font-medium shadow-sm flex-shrink-0">
+                <span className="text-lg leading-none">📖</span>
+                <div>
+                  <strong className="block text-[#1E3A8A] font-semibold text-[13px]">Practice Reading</strong>
+                  Read each sentence from the passage aloud using the microphone, or type it into the text box below.
+                </div>
+              </div>
               {chatHistory.map((msg, index) => (
                 <div 
                   key={msg.id || index} 
@@ -543,25 +544,42 @@ export default function ReadingModeTopics() {
                     </div>
 
                     {/* Action Button */}
-                    <div className="flex justify-end pt-2">
+                    <div className="flex justify-between items-center pt-2">
+                      {currentMcqIndex > 0 ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCurrentMcqIndex(prev => Math.max(0, prev - 1));
+                          }}
+                          disabled={isAccountBlocked}
+                          className="px-5 py-2.5 bg-white border border-[#E5E7EB] text-[#0F1450] rounded-full font-['Outfit'] font-semibold text-[14px] hover:bg-gray-50 transition-colors cursor-pointer"
+                        >
+                          Previous Question
+                        </button>
+                      ) : (
+                        <div />
+                      )}
+
                       {currentMcqIndex < mcqList.length - 1 ? (
                         <button
+                          type="button"
                           onClick={() => {
                             setCurrentMcqIndex(prev => prev + 1);
                           }}
                           disabled={currentAnswer === undefined || isAccountBlocked}
-                          className="px-6 py-2.5 bg-[#3B82F6] text-white rounded-full font-['Outfit'] font-semibold text-[14px] hover:bg-[#2563EB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          className="px-6 py-2.5 bg-[#3B82F6] text-white rounded-full font-['Outfit'] font-semibold text-[14px] hover:bg-[#2563EB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
                         >
                           Next Question
                         </button>
                       ) : (
                         <button
+                          type="button"
                           onClick={() => {
                             const answers = mcqList.map((_, idx) => selectedAnswers[idx] ?? -1);
                             submitMcqs(answers);
                           }}
                           disabled={Object.keys(selectedAnswers).length < mcqList.length || isAccountBlocked}
-                          className="px-6 py-2.5 bg-[#3B82F6] text-white rounded-full font-['Outfit'] font-semibold text-[14px] hover:bg-[#2563EB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          className="px-6 py-2.5 bg-[#3B82F6] text-white rounded-full font-['Outfit'] font-semibold text-[14px] hover:bg-[#2563EB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
                         >
                           Submit Answers
                         </button>
@@ -606,7 +624,7 @@ export default function ReadingModeTopics() {
                 <>
                   <input 
                     type="text" 
-                    placeholder={cooldown ? "Please wait..." : "Write your message..."}
+                    placeholder={cooldown ? "Please wait..." : "Type or read the displayed sentence aloud..."}
                     value={inputValue}
                     disabled={cooldown || isTyping || isAccountBlocked}
                     onChange={(e) => setInputValue(e.target.value)}
