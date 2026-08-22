@@ -253,14 +253,15 @@ export default function ComponentModePlay() {
   // Complete the entire mode and progress to next mode or lesson roadmap
   const handleCompleteMode = async () => {
     if (!modeId || !lessonId) return;
-    const modeAlreadyComplete = currentMode?.status === 'completed' || requiredComponentsComplete;
-    if (!modeAlreadyComplete && !requiredComponentsComplete) {
+    const isModeAlreadyCompletedOnBackend = currentMode?.status === 'completed';
+    
+    if (!isModeAlreadyCompletedOnBackend && !requiredComponentsComplete) {
       toast.error('Complete the required activities before moving on.');
       return;
     }
     setIsSubmittingMode(true);
     try {
-      const updatedModes = modeAlreadyComplete
+      const updatedModes = isModeAlreadyCompletedOnBackend
         ? await dispatch(getLessonModes(lessonId)).unwrap()
         : await dispatch(completeLessonMode({ lessonModeId: modeId })).unwrap().then(() => dispatch(getLessonModes(lessonId)).unwrap());
       await refreshLearningProgress(lessonId, { unitId, courseId });
