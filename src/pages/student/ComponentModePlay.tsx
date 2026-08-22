@@ -71,9 +71,11 @@ export default function ComponentModePlay() {
   const refreshModeState = useCallback(async () => {
     if (!modeId || !lessonId) return [];
 
+    const mode = modes.find((m) => m.id === modeId);
+    
     const [modeComponents, modeResources, refreshedModes] = await Promise.all([
       fetchLessonModeComponents(modeId),
-      fetchModeResources(modeId).catch(() => [] as LearningResource[]),
+      mode?.modeKey === 'resource' ? fetchModeResources(modeId).catch(() => [] as LearningResource[]) : Promise.resolve([] as LearningResource[]),
       dispatch(getLessonModes(lessonId)).unwrap(),
     ]);
     const resourcesByComponent = new Map<string, LearningResource[]>();
@@ -108,9 +110,10 @@ export default function ComponentModePlay() {
             console.warn('startLessonMode non-critical error:', startErr);
           });
 
+        const mode = modes.find((m) => m.id === modeId);
         const [data, resources] = await Promise.all([
           fetchLessonModeComponents(modeId),
-          fetchModeResources(modeId).catch(() => [] as LearningResource[]),
+          mode?.modeKey === 'resource' ? fetchModeResources(modeId).catch(() => [] as LearningResource[]) : Promise.resolve([] as LearningResource[]),
           startPromise
         ]);
         // Start on-view components as they become visible. The backend then owns
@@ -134,12 +137,22 @@ export default function ComponentModePlay() {
 
         // Pre-fill completed components from attempt status
         const completedIds = new Set<string>();
-        sorted.forEach((c) => {
+        let firstIncomplete = -1;
+        sorted.forEach((c, index) => {
           if (c.isComplete || c.attempt?.completedAt) {
             completedIds.add(c.id);
+          } else if (firstIncomplete === -1) {
+            firstIncomplete = index;
           }
         });
         setCompletedComponentIds(completedIds);
+        
+        // Jump to first uncompleted component, or the last one if all are complete
+        if (sorted.length > 0) {
+          setCurrentIndex(firstIncomplete === -1 ? sorted.length - 1 : firstIncomplete);
+        } else {
+          setCurrentIndex(0);
+        }
       } catch (err: any) {
         console.error('Failed to load components:', err);
         setError(err.response?.data?.message || 'Failed to load lesson mode components.');

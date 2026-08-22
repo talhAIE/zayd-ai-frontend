@@ -64,11 +64,13 @@ export default function SemanticReviewComponent({
       if (onSubmit) {
         const result = await onSubmit(text);
         const newFeedback = result?.attempt?.feedback || result?.feedback;
-        if (newFeedback) {
+        if (newFeedback && (newFeedback.fieldResults || presentation !== 'compiled_paragraph')) {
           setFeedback(newFeedback);
         } else if (presentation === 'compiled_paragraph') {
-          // If backend returns null (e.g. manual_review policy), analyze the text locally for the demo
+          // If backend returns null or incomplete feedback (e.g. manual_review policy), analyze locally for the demo
           setFeedback(analyzeTextLocally(text));
+        } else if (newFeedback) {
+          setFeedback(newFeedback);
         }
       }
     } catch (err) {
@@ -128,7 +130,8 @@ export default function SemanticReviewComponent({
   };
 
   useEffect(() => {
-    if (isSubmitted && !feedback && !component.attempt?.feedback && component.content?.presentation === 'compiled_paragraph') {
+    const hasValidFeedback = feedback?.fieldResults || component.attempt?.feedback?.fieldResults;
+    if (isSubmitted && !hasValidFeedback && component.content?.presentation === 'compiled_paragraph') {
       setFeedback(analyzeTextLocally(text));
     }
   }, [isSubmitted, feedback, component.attempt?.feedback, component.content?.presentation, text]);
