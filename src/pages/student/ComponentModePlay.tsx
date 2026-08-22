@@ -265,17 +265,18 @@ export default function ComponentModePlay() {
         : await dispatch(completeLessonMode({ lessonModeId: modeId })).unwrap().then(() => dispatch(getLessonModes(lessonId)).unwrap());
       await refreshLearningProgress(lessonId, { unitId, courseId });
 
-      // Find next unlocked mode
-      const nextMode = updatedModes.find(
-        (m: any) => !m.isLocked && m.status !== 'completed' && m.id !== modeId
-      );
+      // Find next sequential mode
+      const currentModeIndex = updatedModes.findIndex((m: any) => m.id === modeId);
+      const nextMode = currentModeIndex !== -1 && currentModeIndex < updatedModes.length - 1 
+        ? updatedModes[currentModeIndex + 1] 
+        : null;
 
       toast.success('Mode completed successfully!');
 
-      if (nextMode && courseId && unitId) {
+      if (nextMode && !nextMode.isLocked && courseId && unitId) {
         navigate(getLearningModePath({ courseId, unitId, lessonId }, nextMode));
       } else {
-        navigate(`/student/courses/${courseId}/units/${unitId}/lessons/${lessonId}`);
+        navigate(`/student/courses/${courseId}/units/${unitId}`);
       }
     } catch (err: any) {
       console.error('Failed to complete mode:', err);
