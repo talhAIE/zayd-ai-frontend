@@ -147,7 +147,7 @@ export default function SemanticReviewComponent({
   if (presentation === 'compiled_paragraph') {
     const buildHeading = component.content?.buildHeading || 'Build My Paragraph';
     const buildButtonLabel = component.content?.buildButtonLabel || 'Confirm and Build My Paragraph';
-    const modelAnswerText = (typeof feedback === 'object' && feedback !== null ? feedback.modelAnswer || feedback.correctAnswer : null) || (component.answerKey as any)?.modelAnswer;
+    const modelAnswerText = (typeof feedback === 'object' && feedback !== null ? feedback.modelAnswer || feedback.correctAnswer : null) || (component as any).answerKey?.modelAnswer;
     const hasFeedback = feedback || (isSubmitted && component.attempt?.feedback);
     const currentViewState = hasFeedback ? (viewState === 'builder' ? 'evaluation' : viewState) : 'builder';
 

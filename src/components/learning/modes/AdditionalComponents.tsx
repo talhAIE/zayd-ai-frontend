@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { AlertCircle, ExternalLink, Send, Check, X } from 'lucide-react';
+import { useState } from 'react';
+import { AlertCircle, ExternalLink, Send } from 'lucide-react';
 import { LearningComponent, LearningResource } from '@/services/learningService';
 
 type Submit = (response: Record<string, unknown>) => Promise<unknown> | void;
