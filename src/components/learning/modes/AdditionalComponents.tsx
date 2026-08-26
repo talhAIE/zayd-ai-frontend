@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AlertCircle, ExternalLink, Send } from 'lucide-react';
 import { LearningComponent, LearningResource } from '@/services/learningService';
 
@@ -66,11 +66,12 @@ export function FillInTheBlankComponent({ component, onAnswerChange, onSubmit, i
   </section>;
 }
 
-export function WritingTableComponent({ component, onAnswerChange, onSubmit, isSubmitted }: { component: LearningComponent; onAnswerChange?: (response: Record<string, unknown>) => void; onSubmit?: Submit; isSubmitted?: boolean }) {
+export function WritingTableComponent({ component, onAnswerChange, onDraftSave, onSubmit, onBusyChange, isSubmitted }: { component: LearningComponent; onAnswerChange?: (response: Record<string, unknown>) => void; onDraftSave?: (response: Record<string, unknown>) => void; onSubmit?: Submit; onBusyChange?: (isBusy: boolean) => void; isSubmitted?: boolean }) {
   const content = component.content || {};
   const questions = Array.isArray(content.questions) ? content.questions.filter((question): question is Record<string, unknown> => !!question && typeof question === 'object' && !Array.isArray(question)) : [];
   const [values, setValues] = useState<Record<string, string>>(() => { const rows = component.attempt?.response?.rows; return Array.isArray(rows) ? Object.fromEntries(rows.filter((row): row is Record<string, unknown> => !!row && typeof row === 'object').map((row) => [text(row.questionId), text(row.sentence)])) : {}; });
   const [isSubmittingLocal, setIsSubmittingLocal] = useState(false);
+  const draftSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const response = (next = values) => ({ rows: questions.map((question, index) => ({ questionId: text(question.id) || `question-${index}`, sentence: next[text(question.id) || `question-${index}`] || '' })) });
   
   const attemptRows = component.attempt?.response?.rows as any[] | undefined;
@@ -79,25 +80,45 @@ export function WritingTableComponent({ component, onAnswerChange, onSubmit, isS
   const feedback = component.attempt?.feedback;
   const fieldResults = Array.isArray(feedback?.fieldResults) ? feedback.fieldResults : [];
 
+  useEffect(() => () => {
+    if (draftSaveTimer.current) clearTimeout(draftSaveTimer.current);
+  }, []);
+
+  const queueDraftSave = (next: Record<string, string>) => {
+    if (!onDraftSave) return;
+    if (draftSaveTimer.current) clearTimeout(draftSaveTimer.current);
+    const draftResponse = response(next);
+    draftSaveTimer.current = setTimeout(() => {
+      draftSaveTimer.current = null;
+      onDraftSave(draftResponse);
+    }, 700);
+  };
+
   const handleSubmit = async () => {
     if (!onSubmit) return;
+    if (draftSaveTimer.current) {
+      clearTimeout(draftSaveTimer.current);
+      draftSaveTimer.current = null;
+    }
     setIsSubmittingLocal(true);
+    onBusyChange?.(true);
     try {
       await onSubmit(response());
     } finally {
       setIsSubmittingLocal(false);
+      onBusyChange?.(false);
     }
   };
 
   if (!questions.length) return <UnavailableComponent component={component} />;
-  return <section className="rounded-[18px] border border-[#E2E8F0] bg-white p-6 md:p-8 shadow-sm font-['Outfit',sans-serif]"><h2 className="text-xl font-bold text-[#0F172A]">{component.title}</h2>{text(content.instruction) && <p className="mt-2 text-sm text-[#64748B]">{text(content.instruction)}</p>}<div className="mt-5 overflow-x-auto"><table className="w-full min-w-[540px] text-left"><thead><tr className="bg-[#F8FAFC]"><th className="p-3 text-sm">Prompt</th><th className="p-3 text-sm">My sentence</th></tr></thead><tbody>{questions.map((question, index) => { 
-    const id = text(question.id) || `question-${index}`; 
+  return <section className="rounded-[18px] border border-[#E2E8F0] bg-white p-6 md:p-8 shadow-sm font-['Outfit',sans-serif]"><h2 className="text-xl font-bold text-[#0F172A]">{component.title}</h2>{text(content.instruction) && <p className="mt-2 text-sm text-[#64748B]">{text(content.instruction)}</p>}<div className="mt-5 overflow-x-auto"><table className="w-full min-w-[540px] text-left"><thead><tr className="bg-[#F8FAFC]"><th className="p-3 text-sm">Prompt</th><th className="p-3 text-sm">My sentence</th></tr></thead><tbody>{questions.map((question, index) => {
+    const id = text(question.id) || `question-${index}`;
     const fieldRes = fieldResults.find((r: any) => r.id === id);
     let borderClass = 'border-[#CBD5E1]';
     if (locallySubmitted && fieldRes) {
       borderClass = fieldRes.isCorrect ? 'border-[#10B981] bg-[#ECFDF5] text-[#065F46]' : 'border-[#EF4444] bg-[#FEF2F2] text-[#991B1B]';
     }
-    return <tr key={id} className="border-t border-[#E2E8F0]"><td className="p-3 align-top text-sm text-[#334155]"><strong>{text(question.label)}</strong><p>{text(question.prompt)}</p>{text(question.hint) && <p className="mt-1 text-xs text-[#64748B]">Hint: {text(question.hint)}</p>}</td><td className="p-3"><textarea value={values[id] || ''} disabled={isSubmitted || isSubmittingLocal} onChange={(event) => { const next = { ...values, [id]: event.target.value }; setValues(next); onAnswerChange?.(response(next)); }} className={`min-h-24 w-full rounded-lg border p-3 text-sm outline-none focus:border-[#4F8DFB] disabled:bg-slate-50 transition-colors ${borderClass}`} /></td></tr>; 
+    return <tr key={id} className="border-t border-[#E2E8F0]"><td className="p-3 align-top text-sm text-[#334155]"><strong>{text(question.label)}</strong><p>{text(question.prompt)}</p>{text(question.hint) && <p className="mt-1 text-xs text-[#64748B]">Hint: {text(question.hint)}</p>}</td><td className="p-3"><textarea value={values[id] || ''} disabled={isSubmitted || isSubmittingLocal} onChange={(event) => { const next = { ...values, [id]: event.target.value }; setValues(next); const nextResponse = response(next); onAnswerChange?.(nextResponse); queueDraftSave(next); }} className={`min-h-24 w-full rounded-lg border p-3 text-sm outline-none focus:border-[#4F8DFB] disabled:bg-slate-50 transition-colors ${borderClass}`} /></td></tr>;
   })}</tbody></table></div>{onSubmit && !isSubmitted && <button type="button" onClick={handleSubmit} disabled={isSubmittingLocal || questions.some((question, index) => !values[text(question.id) || `question-${index}`]?.trim())} className="mt-5 rounded-lg bg-[#4F8DFB] px-5 py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50 hover:bg-[#3B82F6]">{isSubmittingLocal ? 'Saving...' : text(content.submitLabel) || 'Save my answers'}</button>}
   </section>;
 }

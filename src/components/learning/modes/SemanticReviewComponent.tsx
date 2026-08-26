@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle2, Copy, Star, Eye, FileText, Pen, Link, Target, Terminal } from 'lucide-react';
 import { LearningComponent } from '@/services/learningService';
 
@@ -9,6 +9,9 @@ interface SemanticReviewComponentProps {
   isSubmitted?: boolean;
   disabled?: boolean;
   defaultText?: string;
+  reviewFeedback?: Record<string, unknown> | null;
+  showModelAnswer?: boolean;
+  onViewModelAnswer?: () => Promise<void> | void;
 }
 
 export default function SemanticReviewComponent({
@@ -18,6 +21,9 @@ export default function SemanticReviewComponent({
   isSubmitted = false,
   disabled = false,
   defaultText = '',
+  reviewFeedback = null,
+  showModelAnswer = false,
+  onViewModelAnswer,
 }: SemanticReviewComponentProps) {
   const prompt =
     component.content?.prompt ||
@@ -27,6 +33,7 @@ export default function SemanticReviewComponent({
 
   const minimumCharacters = component.content?.minimumCharacters || 10;
   const placeholder = component.content?.placeholder || '';
+  const isCompiledParagraph = component.content?.presentation === 'compiled_paragraph';
 
   const [text, setText] = useState<string>(() => {
     if (component.attempt?.response?.paragraph) {
@@ -43,13 +50,37 @@ export default function SemanticReviewComponent({
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [feedback, setFeedback] = useState<any>(() => {
-    if (component.attempt?.feedback) {
+    if (reviewFeedback) {
+      return reviewFeedback;
+    }
+    // A compiled paragraph receives its feedback from the Writing Review API.
+    // Never render a generic component-attempt acknowledgement as fake AI
+    // feedback when an older direct launch submitted it through the wrong path.
+    if (!isCompiledParagraph && component.attempt?.feedback) {
       return component.attempt.feedback;
     }
     return null;
   });
 
   const [viewState, setViewState] = useState<'builder' | 'evaluation' | 'model_answer'>('builder');
+
+  // A writing review is returned separately from the component attempt. Keep
+  // that richer result visible after the parent refreshes lesson progress.
+  useEffect(() => {
+    if (reviewFeedback) {
+      setFeedback(reviewFeedback);
+      return;
+    }
+    if (!isCompiledParagraph && component.attempt?.feedback) {
+      setFeedback(component.attempt.feedback);
+    }
+  }, [component.attempt?.feedback, isCompiledParagraph, reviewFeedback]);
+
+  useEffect(() => {
+    if (showModelAnswer) {
+      setViewState('model_answer');
+    }
+  }, [showModelAnswer]);
 
   const handleChange = (val: string) => {
     if (disabled || isSubmitted) return;
@@ -88,7 +119,7 @@ export default function SemanticReviewComponent({
       typeof feedback === 'object' && feedback !== null
         ? feedback.modelAnswer || feedback.correctAnswer
         : null;
-    const hasFeedback = feedback || (isSubmitted && component.attempt?.feedback);
+    const hasFeedback = Boolean(feedback);
     const currentViewState = hasFeedback ? (viewState === 'builder' ? 'evaluation' : viewState) : 'builder';
 
     if (currentViewState === 'builder') {
@@ -137,7 +168,7 @@ export default function SemanticReviewComponent({
     }
 
     const isModelAnswer = currentViewState === 'model_answer';
-    const fieldResults = feedback?.fieldResults || component.attempt?.feedback?.fieldResults || component.attempt?.feedback?.rubricMetrics || [];
+    const fieldResults = feedback?.fieldResults || [];
     
     const displayMetrics: any[] = fieldResults.map((metric: any) => {
       let icon = FileText;
@@ -147,8 +178,16 @@ export default function SemanticReviewComponent({
       if (metric.key === 'vocabulary' || metric.label?.toLowerCase().includes('vocabulary')) icon = Terminal;
       return { ...metric, icon };
     });
-    const overallQuality = feedback?.score ?? 0;
-    const taskAchievedText = feedback?.comment ?? "Evaluation complete.";
+    const scoredMetrics = displayMetrics
+      .map((metric) => metric.score)
+      .filter((score): score is number => typeof score === 'number');
+    const overallQuality =
+      typeof feedback?.score === 'number'
+        ? feedback.score
+        : scoredMetrics.length > 0
+          ? Math.round(scoredMetrics.reduce((sum, score) => sum + score, 0) / scoredMetrics.length)
+          : null;
+    const taskAchievedText = feedback?.comment || 'Your writing review is ready.';
 
     return (
       <div className="w-full bg-white rounded-[20px] border border-[#E2E8F0] shadow-sm p-6 md:p-8 flex flex-col gap-6 font-['Outfit',sans-serif]">
@@ -185,7 +224,7 @@ export default function SemanticReviewComponent({
                <div className="flex flex-col items-end gap-1.5">
                  <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider">Overall Quality</span>
                  <div className="bg-[#4F8DFB] text-white font-bold text-[24px] rounded-[8px] px-4 py-1.5 shadow-sm leading-none">
-                   {overallQuality}%
+                   {overallQuality === null ? '—' : `${overallQuality}%`}
                  </div>
                </div>
             </div>
@@ -203,8 +242,9 @@ export default function SemanticReviewComponent({
             {/* Prompt Alignment Section */}
             <div className="flex flex-col gap-4">
               <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider">Prompt Alignment</span>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {displayMetrics.map((metric, idx) => {
+              {displayMetrics.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {displayMetrics.map((metric, idx) => {
                   const score = metric.score || 0;
                   const isLow = score < 80;
                   const Icon = metric.icon || FileText;
@@ -232,13 +272,19 @@ export default function SemanticReviewComponent({
                       </p>
                     </div>
                   );
-                })}
-              </div>
+                  })}
+                </div>
+              ) : (
+                <p className="rounded-[12px] border border-[#E2E8F0] bg-[#FAFAF9] p-4 text-[13px] leading-relaxed text-[#64748B]">
+                  Detailed rubric feedback is not available for this review. Your teacher can provide further guidance.
+                </p>
+              )}
             </div>
 
             {/* View System Model Answer Button */}
-            {typeof modelAnswerText === 'string' && modelAnswerText.trim() && (
+            {typeof modelAnswerText === 'string' && modelAnswerText.trim() && !onViewModelAnswer && (
               <button
+                type="button"
                 onClick={() => setViewState('model_answer')}
                 className="mt-2 w-full bg-[#4F8DFB] hover:bg-[#3B82F6] active:scale-[0.99] text-white font-bold text-[14px] py-4 rounded-full flex items-center justify-center gap-2 transition-all shadow-sm"
               >
