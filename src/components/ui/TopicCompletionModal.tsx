@@ -16,7 +16,7 @@ export const TopicCompletionModal: React.FC<TopicCompletionModalProps> = ({
 }) => {
   if (!isOpen) return null;
 
-  return ( 
+  return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
       <div 
         className="w-full max-w-[420px] bg-white rounded-[24px] p-6 sm:p-7 shadow-2xl border border-gray-100 flex flex-col items-center text-center font-['Outfit',sans-serif] gap-5"
