@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { BookOpen, ChevronLeft, ClipboardList, Lock, Play } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -25,7 +25,6 @@ export default function UnitLessons() {
   const { courseId, unitId } = useParams<{ courseId: string; unitId: string }>();
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
-  const redirectedSaudiUnitId = useRef<string | null>(null);
   const { courses, units, lessons, loading, error } = useSelector((state: RootState) => state.learning);
 
   useEffect(() => {
@@ -44,28 +43,6 @@ export default function UnitLessons() {
 
   const currentCourse = courses.find((course) => course.id === courseId);
   const currentUnit = units.find((unit) => unit.id === unitId);
-  const isSaudiActivitySequence = currentUnit?.navigation === 'unit_activity_sequence';
-
-  // Saudi units use one internal lesson solely as their ordered activity container.
-  // Learners must never see that implementation detail as a separate lesson card.
-  useEffect(() => {
-    if (
-      !courseId ||
-      !unitId ||
-      !isSaudiActivitySequence ||
-      !currentUnit?.activityContainerLessonId ||
-      redirectedSaudiUnitId.current === unitId
-    ) {
-      return;
-    }
-
-    redirectedSaudiUnitId.current = unitId;
-    navigate(
-      `/student/courses/${courseId}/units/${unitId}/lessons/${currentUnit.activityContainerLessonId}`,
-      { replace: true },
-    );
-  }, [courseId, currentUnit?.activityContainerLessonId, isSaudiActivitySequence, navigate, unitId]);
-
   const completedCount = lessons.filter((lesson) => lesson.status === 'completed').length;
   const progressPct = Math.round(currentUnit?.progressPct ?? 0);
 
@@ -73,7 +50,7 @@ export default function UnitLessons() {
     if (!courseId || !unitId) return;
 
     if (isLockedLearningItem(lesson)) {
-      toast.error('This activity is locked. Complete the earlier required activity first.');
+      toast.error('This lesson is locked. Complete the earlier required lesson first.');
       return;
     }
 
@@ -86,29 +63,12 @@ export default function UnitLessons() {
 
       navigate(`/student/courses/${courseId}/units/${unitId}/lessons/${lesson.id}`);
     } catch (startError) {
-      toast.error(typeof startError === 'string' ? startError : 'Unable to open this activity.');
+      toast.error(typeof startError === 'string' ? startError : 'Unable to open this lesson.');
     }
   };
 
-  if (isSaudiActivitySequence && currentUnit?.activityContainerLessonId) {
-    return (
-      <div className="w-full max-w-[1087px] mx-auto bg-white rounded-[24px] border border-gray-100 p-8 text-center font-['Outfit',sans-serif]">
-        <p className="text-[#64748B]">Opening the unit activity sequence…</p>
-      </div>
-    );
-  }
-
-  if (isSaudiActivitySequence && !loading && currentUnit && !currentUnit.activityContainerLessonId) {
-    return (
-      <div className="w-full max-w-[1087px] mx-auto bg-white rounded-[24px] border border-gray-100 p-8 text-center font-['Outfit',sans-serif]">
-        <h1 className="text-xl font-bold text-[#282828]">This unit is not available yet</h1>
-        <p className="mt-2 text-[#64748B]">The server has not published a learner activity sequence for this unit.</p>
-      </div>
-    );
-  }
-
-  // The backend already excludes unpublished/empty learner content and returns
-  // the only valid order. Do not manufacture or rearrange activity cards here.
+  // The backend owns the published lesson order and locking state. Saudi units
+  // now use this same lesson-first screen instead of an activity container.
   const cards = lessons;
 
   return (
@@ -130,7 +90,7 @@ export default function UnitLessons() {
       <div className="w-full bg-white rounded-[24px] border border-gray-100 p-4 md:p-8 space-y-7 shadow-sm">
         <section className="flex flex-col md:flex-row md:items-center justify-between gap-5 rounded-[16px] border border-[#E5E7EB] p-5 md:p-7">
           <div>
-            <p className="text-sm text-[#64748B]">{currentUnit?.description || 'Complete the available activities in the order set by your course.'}</p>
+            <p className="text-sm text-[#64748B]">{currentUnit?.description || 'Complete the available lessons in the order set by your course.'}</p>
             <h2 className="mt-2 text-2xl font-bold text-[#282828]">Unit progress</h2>
           </div>
           <div className="min-w-[180px]">
@@ -141,20 +101,20 @@ export default function UnitLessons() {
             <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#E5E7EB]">
               <div className="h-full rounded-full bg-[#4F8DFB] transition-all" style={{ width: `${progressPct}%` }} />
             </div>
-            <p className="mt-2 text-xs text-[#949494]">{completedCount} of {lessons.length} available items completed</p>
+            <p className="mt-2 text-xs text-[#949494]">{completedCount} of {lessons.length} available lessons completed</p>
           </div>
         </section>
 
         <section>
           <div className="mb-4">
-            <h2 className="text-xl font-bold text-[#282828]">Unit activities</h2>
+            <h2 className="text-xl font-bold text-[#282828]">Unit lessons</h2>
             <p className="mt-1 text-sm text-[#64748B]">Only content published by your teacher is shown here.</p>
           </div>
 
-          {loading && <p className="py-8 text-center text-[#64748B]">Loading unit activities…</p>}
+          {loading && <p className="py-8 text-center text-[#64748B]">Loading unit lessons…</p>}
           {error && <p className="py-8 text-center text-red-600">{error}</p>}
           {!loading && !error && cards.length === 0 && (
-            <p className="py-8 text-center text-[#64748B]">No learner activities are published for this unit.</p>
+            <p className="py-8 text-center text-[#64748B]">No learner lessons are published for this unit.</p>
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Sparkles, CheckCircle2, Copy, Star, Eye, FileText, Pen, Link, Target, Terminal } from 'lucide-react';
 import { LearningComponent } from '@/services/learningService';
 
@@ -64,14 +64,7 @@ export default function SemanticReviewComponent({
       if (onSubmit) {
         const result = await onSubmit(text);
         const newFeedback = result?.attempt?.feedback || result?.feedback;
-        if (newFeedback && (newFeedback.fieldResults || presentation !== 'compiled_paragraph')) {
-          setFeedback(newFeedback);
-        } else if (presentation === 'compiled_paragraph') {
-          // If backend returns null or incomplete feedback (e.g. manual_review policy), analyze locally for the demo
-          setFeedback(analyzeTextLocally(text));
-        } else if (newFeedback) {
-          setFeedback(newFeedback);
-        }
+        if (newFeedback) setFeedback(newFeedback);
       }
     } catch (err) {
       console.error('Semantic review error:', err);
@@ -79,62 +72,6 @@ export default function SemanticReviewComponent({
       setIsAnalyzing(false);
     }
   };
-
-  const analyzeTextLocally = (submittedText: string) => {
-    const lowerText = submittedText.toLowerCase();
-    let grammarScore = 100, punctuationScore = 100, cohesionScore = 100, coherenceScore = 100, vocabScore = 100;
-    let grammarComment = 'Excellent sentence structures and grammar.';
-    let punctuationComment = 'Great job! Your sentences end with proper punctuation.';
-    let cohesionComment = 'Good use of connecting words to link your ideas.';
-    let coherenceComment = 'Your ideas follow a very logical sequence.';
-    let vocabComment = 'Excellent use of the target vocabulary!';
-
-    const sentences = submittedText.split(/[.!?]+/).filter(s => s.trim().length > 0);
-    if (sentences.length < 3) {
-      punctuationScore = 70;
-      punctuationComment = 'Try to write more complete sentences and ensure they end with proper punctuation marks.';
-      coherenceScore = 80;
-      coherenceComment = 'Expand on your ideas to make the paragraph feel more complete and logical.';
-    } else if (!submittedText.match(/[.!?]$/)) {
-      punctuationScore = 80;
-      punctuationComment = 'Make sure your final sentence ends with a period.';
-    }
-    
-    if (sentences.some(s => s.trim().length > 0 && s.trim()[0] !== s.trim()[0].toUpperCase())) {
-      grammarScore = 85;
-      grammarComment = 'Watch your capitalization at the beginning of your sentences.';
-    }
-
-    if (!['and', 'also', 'but', 'because', 'so'].some(c => lowerText.includes(` ${c} `))) {
-      cohesionScore = 75;
-      cohesionComment = 'Try to use connecting words like "and", "but", or "because" to make your paragraph flow better.';
-    }
-
-    if (['happy', 'new', 'student', 'teacher', 'name'].filter(w => lowerText.includes(w)).length < 3) {
-      vocabScore = 80;
-      vocabComment = 'Try to include more of the target vocabulary from the hints (like happy, new student, English teacher).';
-    }
-
-    const overall = Math.round((grammarScore + punctuationScore + cohesionScore + coherenceScore + vocabScore) / 5);
-    return {
-      score: overall,
-      comment: overall >= 90 ? "Excellent work! You successfully introduced yourself." : "Good attempt! Review the feedback below to improve your paragraph.",
-      fieldResults: [
-        { key: 'grammar', label: 'Grammar & Syntax', score: grammarScore, feedback: grammarComment },
-        { key: 'punctuation', label: 'Punctuation', score: punctuationScore, feedback: punctuationComment },
-        { key: 'cohesion', label: 'Cohesion & Flow', score: cohesionScore, feedback: cohesionComment },
-        { key: 'coherence', label: 'Coherence & Logic', score: coherenceScore, feedback: coherenceComment },
-        { key: 'vocabulary', label: 'Vocabulary Depth', score: vocabScore, feedback: vocabComment },
-      ]
-    };
-  };
-
-  useEffect(() => {
-    const hasValidFeedback = feedback?.fieldResults || component.attempt?.feedback?.fieldResults;
-    if (isSubmitted && !hasValidFeedback && component.content?.presentation === 'compiled_paragraph') {
-      setFeedback(analyzeTextLocally(text));
-    }
-  }, [isSubmitted, feedback, component.attempt?.feedback, component.content?.presentation, text]);
 
   const isReady = text.trim().length >= minimumCharacters;
 
@@ -147,7 +84,10 @@ export default function SemanticReviewComponent({
   if (presentation === 'compiled_paragraph') {
     const buildHeading = component.content?.buildHeading || 'Build My Paragraph';
     const buildButtonLabel = component.content?.buildButtonLabel || 'Confirm and Build My Paragraph';
-    const modelAnswerText = (typeof feedback === 'object' && feedback !== null ? feedback.modelAnswer || feedback.correctAnswer : null) || (component as any).answerKey?.modelAnswer;
+    const modelAnswerText =
+      typeof feedback === 'object' && feedback !== null
+        ? feedback.modelAnswer || feedback.correctAnswer
+        : null;
     const hasFeedback = feedback || (isSubmitted && component.attempt?.feedback);
     const currentViewState = hasFeedback ? (viewState === 'builder' ? 'evaluation' : viewState) : 'builder';
 
@@ -297,12 +237,14 @@ export default function SemanticReviewComponent({
             </div>
 
             {/* View System Model Answer Button */}
-            <button
-              onClick={() => setViewState('model_answer')}
-              className="mt-2 w-full bg-[#4F8DFB] hover:bg-[#3B82F6] active:scale-[0.99] text-white font-bold text-[14px] py-4 rounded-full flex items-center justify-center gap-2 transition-all shadow-sm"
-            >
-              <Eye className="w-4 h-4" /> View System Model Answer
-            </button>
+            {typeof modelAnswerText === 'string' && modelAnswerText.trim() && (
+              <button
+                onClick={() => setViewState('model_answer')}
+                className="mt-2 w-full bg-[#4F8DFB] hover:bg-[#3B82F6] active:scale-[0.99] text-white font-bold text-[14px] py-4 rounded-full flex items-center justify-center gap-2 transition-all shadow-sm"
+              >
+                <Eye className="w-4 h-4" /> View System Model Answer
+              </button>
+            )}
           </div>
         ) : (
           <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -315,7 +257,7 @@ export default function SemanticReviewComponent({
                 <h3 className="text-[16px] font-bold text-[#0F172A]">Ideal Model Answer</h3>
               </div>
               <p className="text-[14px] text-[#0F172A] leading-relaxed">
-                {modelAnswerText || "My name is Ahmed. I am a new student at this school. I feel happy and excited on my first day. I am from Jeddah. My English teacher is Mr. Ali, and I am happy to join his class."}
+                {modelAnswerText}
               </p>
             </div>
 

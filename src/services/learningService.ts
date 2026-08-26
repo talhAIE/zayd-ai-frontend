@@ -215,6 +215,12 @@ export interface WritingReviewResponse {
   modelAnswer: string | null;
 }
 
+export interface WritingParagraphCompilation {
+  paragraphComponent: LearningComponent;
+  compiledParagraph: string;
+  reviewStatus: 'pending';
+}
+
 export interface QuizAnswer {
   componentId: string;
   response: JsonObject;
@@ -443,5 +449,16 @@ export const submitWriting = async (componentId: string, responsePayload: JsonOb
 
 export const fetchWritingSubmission = async (submissionId: string): Promise<WritingReviewResponse> => {
   const response = await apiClient.get<ApiEnvelope<WritingReviewResponse>>(`/learning/writing/submissions/${submissionId}`);
+  return response.data.data;
+};
+
+export const compileWritingParagraph = async (
+  lessonModeId: string,
+  idempotencyKey = createIdempotencyKey('writing-compile', lessonModeId),
+): Promise<WritingParagraphCompilation> => {
+  const response = await apiClient.post<ApiEnvelope<WritingParagraphCompilation>>(
+    `/learning/lesson-modes/${lessonModeId}/writing/compile`,
+    { idempotencyKey },
+  );
   return response.data.data;
 };

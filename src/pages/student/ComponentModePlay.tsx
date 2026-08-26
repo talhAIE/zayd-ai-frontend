@@ -16,6 +16,8 @@ import {
   interactWithResource,
   submitReflection,
   revealApprovedAnswers,
+  compileWritingParagraph,
+  submitWriting,
   LearningResource,
   ResourceInteractionType,
   LearningComponent 
@@ -250,6 +252,54 @@ export default function ComponentModePlay() {
     }
   };
 
+  const handleWritingParagraphSubmit = async (
+    component: LearningComponent,
+    paragraph: string,
+  ) => {
+    if (!modeId) throw new Error('Writing Mode is unavailable.');
+    if (!paragraph.trim()) {
+      toast.error('Build your paragraph before requesting feedback.');
+      throw new Error('Writing paragraph is empty.');
+    }
+
+    try {
+      const compilation = await compileWritingParagraph(modeId);
+      setComponents((currentComponents) =>
+        currentComponents.map((item) =>
+          item.id === compilation.paragraphComponent.id
+            ? compilation.paragraphComponent
+            : item,
+        ),
+      );
+      const review = await submitWriting(component.id, { paragraph });
+      await refreshModeState();
+      const reviewFeedback = review.review?.feedback;
+      const feedbackText =
+        typeof reviewFeedback?.feedback === 'string'
+          ? reviewFeedback.feedback
+          : 'Your writing review is ready.';
+
+      toast.success(
+        review.status === 'reviewed'
+          ? 'Writing feedback is ready.'
+          : 'Your writing has been sent for review.',
+      );
+      return {
+        feedback: {
+          comment: feedbackText,
+          fieldResults: review.review?.rubricMetrics ?? [],
+          modelAnswer: review.modelAnswer,
+        },
+      };
+    } catch (submitError: any) {
+      toast.error(
+        submitError.response?.data?.message ||
+          'Unable to build and review your paragraph.',
+      );
+      throw submitError;
+    }
+  };
+
   // Complete the entire mode and progress to next mode or lesson roadmap
   const handleCompleteMode = async () => {
     if (!modeId || !lessonId) return;
@@ -302,10 +352,21 @@ export default function ComponentModePlay() {
   const completedCount = visibleComponents.filter((component) => component.isComplete || Boolean(component.attempt?.completedAt)).length;
   const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
   
-  const canAdvanceFromCurrent = Boolean(currentComp ? (!currentComp.isRequired || currentComp.isComplete || Boolean(currentComp.attempt?.completedAt) || currentComp.attempt?.status === 'exhausted' || (currentComp.componentType === 'open_input' && Boolean(currentComp.attempt?.response))) : true);
+  const isComponentComplete = (component: LearningComponent): boolean =>
+    component.isComplete ||
+    Boolean(component.attempt?.completedAt) ||
+    component.attempt?.status === 'exhausted' ||
+    (component.componentType === 'open_input' &&
+      component.completionRule !== 'manual_review' &&
+      Boolean(component.attempt?.response));
+  const canAdvanceFromCurrent = Boolean(
+    currentComp
+      ? !currentComp.isRequired || isComponentComplete(currentComp)
+      : true,
+  );
   const requiredComponentsComplete = visibleComponents
     .filter((component) => component.isRequired)
-    .every((component) => component.isComplete || Boolean(component.attempt?.completedAt) || component.attempt?.status === 'exhausted' || (component.componentType === 'open_input' && Boolean(component.attempt?.response)));
+    .every(isComponentComplete);
   const canAdvanceMode = Boolean(currentMode?.status === 'completed' || requiredComponentsComplete);
 
   useEffect(() => {
@@ -433,6 +494,9 @@ export default function ComponentModePlay() {
                 );
 
               case 'open_input': {
+                const isWritingParagraph =
+                  currentMode?.modeKey === 'writing-mode' &&
+                  comp.content?.presentation === 'compiled_paragraph';
                 let defaultText = '';
                 if (comp.content?.presentation === 'compiled_paragraph') {
                   const tableComp = components.find(c => c.componentType === 'writing_table');
@@ -446,7 +510,16 @@ export default function ComponentModePlay() {
                     key={comp.id}
                     component={comp}
                     onAnswerChange={(val) => handleComponentChange(comp.id, comp.content?.presentation === 'compiled_paragraph' ? { paragraph: val } : { text: val })}
-                    onSubmit={(val) => handleComponentSubmit(comp.id, comp.content?.presentation === 'compiled_paragraph' ? { paragraph: val } : { text: val })}
+                    onSubmit={(val) =>
+                      isWritingParagraph
+                        ? handleWritingParagraphSubmit(comp, val)
+                        : handleComponentSubmit(
+                            comp.id,
+                            comp.content?.presentation === 'compiled_paragraph'
+                              ? { paragraph: val }
+                              : { text: val },
+                          )
+                    }
                     isSubmitted={isTerminal || (comp.componentType === 'open_input' && Boolean(comp.attempt?.status === 'submitted'))}
                     disabled={isDisabled}
                     defaultText={defaultText}
@@ -488,7 +561,7 @@ export default function ComponentModePlay() {
                 return <FillInTheBlankComponent key={comp.id} component={comp} onAnswerChange={(response) => handleComponentChange(comp.id, response)} isSubmitted={isTerminal} />;
 
               case 'writing_table':
-                return <WritingTableComponent key={comp.id} component={comp} onAnswerChange={(response) => handleComponentChange(comp.id, response)} isSubmitted={isTerminal} />;
+                return <WritingTableComponent key={comp.id} component={comp} onAnswerChange={(response) => handleComponentChange(comp.id, response)} onSubmit={(response) => handleComponentSubmit(comp.id, response)} isSubmitted={isTerminal} />;
 
               case 'resource':
                 return <ResourceComponent key={comp.id} component={comp} onInteract={handleResourceInteraction} />;
@@ -529,6 +602,29 @@ export default function ComponentModePlay() {
                 
                 if (!canAdvanceFromCurrent && currentComp) {
                   let currentResponse = localResponses[currentComp.id] ?? currentComp.attempt?.response;
+                  const isWritingParagraph =
+                    currentMode?.modeKey === 'writing-mode' &&
+                    currentComp.componentType === 'open_input' &&
+                    currentComp.content?.presentation === 'compiled_paragraph';
+                  if (isWritingParagraph) {
+                    const paragraph =
+                      typeof currentResponse?.paragraph === 'string'
+                        ? currentResponse.paragraph
+                        : '';
+                    if (!paragraph.trim()) {
+                      toast.error('Build your paragraph before requesting feedback.');
+                      return;
+                    }
+                    setIsSubmittingMode(true);
+                    try {
+                      await handleWritingParagraphSubmit(currentComp, paragraph);
+                    } catch {
+                      // The writing workflow displays its own learner-safe error.
+                    } finally {
+                      setIsSubmittingMode(false);
+                    }
+                    return;
+                  }
                   const isInput = ['mcq', 'dropdown', 'open_input', 'true_false', 'fill_in_the_blank', 'writing_table', 'reflection'].includes(currentComp.componentType);
                   
                   if (isInput) {
