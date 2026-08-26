@@ -50,6 +50,7 @@ export interface LearningUnit {
 
 export interface DirectLaunchMode {
   id: string;
+  title: string;
   modeKey: string;
   modeSource: string;
   status: ProgressStatus;
@@ -213,6 +214,12 @@ export interface WritingReviewResponse {
     reviewedAt: string;
   } | null;
   modelAnswer: string | null;
+}
+
+export interface WritingParagraphCompilation {
+  paragraphComponent: LearningComponent;
+  compiledParagraph: string;
+  reviewStatus: 'pending';
 }
 
 export interface QuizAnswer {
@@ -437,11 +444,36 @@ export const submitWriting = async (componentId: string, responsePayload: JsonOb
     response: responsePayload,
     idempotencyKey: options.idempotencyKey ?? createIdempotencyKey('writing-submit', componentId),
     ...(options.timeSpentSec === undefined ? {} : { timeSpentSec: options.timeSpentSec }),
+  }, {
+    // The backend has a shorter AI timeout. This prevents a broken network
+    // connection from leaving the learner-facing submit button loading forever.
+    timeout: 35_000,
   });
   return response.data.data;
 };
 
 export const fetchWritingSubmission = async (submissionId: string): Promise<WritingReviewResponse> => {
   const response = await apiClient.get<ApiEnvelope<WritingReviewResponse>>(`/learning/writing/submissions/${submissionId}`);
+  return response.data.data;
+};
+
+export const revealWritingModelAnswer = async (submissionId: string): Promise<WritingReviewResponse> => {
+  const response = await apiClient.post<ApiEnvelope<WritingReviewResponse>>(`/learning/writing/submissions/${submissionId}/reveal-model-answer`);
+  return response.data.data;
+};
+
+export const fetchLatestWritingSubmission = async (componentId: string): Promise<WritingReviewResponse | null> => {
+  const response = await apiClient.get<ApiEnvelope<WritingReviewResponse | null>>(`/learning/writing/${componentId}/latest-submission`);
+  return response.data.data;
+};
+
+export const compileWritingParagraph = async (
+  lessonModeId: string,
+  idempotencyKey = createIdempotencyKey('writing-compile', lessonModeId),
+): Promise<WritingParagraphCompilation> => {
+  const response = await apiClient.post<ApiEnvelope<WritingParagraphCompilation>>(
+    `/learning/lesson-modes/${lessonModeId}/writing/compile`,
+    { idempotencyKey },
+  );
   return response.data.data;
 };

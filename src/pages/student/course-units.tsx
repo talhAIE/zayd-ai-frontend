@@ -164,9 +164,7 @@ export default function CourseUnits() {
                     <span className={`text-[13px] ${
                       (unit.status === 'locked' || unit.isLocked) ? 'text-[#9CA3AF]' : 'text-[#949494]'
                     }`}>
-                      {unit.navigation === 'unit_activity_sequence'
-                        ? `Activity sequence · ${unit.status.replace('_', ' ')}`
-                        : `${unit.totalLessonCount} available items · ${unit.status.replace('_', ' ')}`}
+                      {unit.totalLessonCount} available lessons · {unit.status.replace('_', ' ')}
                     </span>
                   </div>
 
