@@ -125,9 +125,13 @@ export default function ListeningModeTopics() {
   }, [modeSessionId, listeningPayload, startListening]);
 
   useEffect(() => {
-    // The first stage requires the learner to finish the complete topic audio.
-    // Replaying that audio during the comprehension stage remains optional.
-    if (listeningPayload?.stage === 'initial') {
+    // A full topic-audio play is required at both listening stages. Entering
+    // the question stage deliberately resets this so the learner completes a
+    // second listen before the quiz can be unlocked.
+    if (
+      listeningPayload?.stage === 'initial' ||
+      listeningPayload?.stage === 'question'
+    ) {
       setHasListenedToAudio(false);
       setHasStartedAudio(false);
     }
@@ -181,7 +185,15 @@ export default function ListeningModeTopics() {
     : isQuestionStage ? listeningPayload?.questionText : listeningPayload?.narrationText;
   const narratorAudioId = `listening_narrator_audio_${listeningPayload?.stage ?? 'initial'}`;
   const isNarratorAudioPlaying = isNarratorPlaying;
-  const canAdvance = isQuestionStage || isTranscriptStage || hasListenedToAudio;
+  const isRequiredListeningStage =
+    listeningPayload?.stage === 'initial' || isQuestionStage;
+  const nextStageUnlocked = isTranscriptStage || hasListenedToAudio;
+  const listenNumber = isQuestionStage ? 2 : 1;
+  const topicAudioTitle = isQuestionStage
+    ? 'Listen Again (2 of 2)'
+    : listeningPayload?.stage === 'initial'
+      ? 'First Listen (1 of 2)'
+      : 'Topic Audio';
 
   return (
     <div className="w-full max-w-[1207px] mx-auto bg-white rounded-none md:rounded-[24px] flex flex-col font-['Outfit',sans-serif] overflow-hidden h-[100dvh] md:h-[794px] max-h-[calc(100vh-40px)] border border-gray-100 shadow-sm relative">
@@ -360,7 +372,9 @@ export default function ListeningModeTopics() {
           {topicAudioUrl && listeningPayload?.stage !== 'quiz' && (
             <div className="flex flex-col p-4 px-5 gap-3.5 bg-white border-2 border-[#5C9DFF] rounded-xl">
               <div className="flex flex-row justify-between items-center w-full">
-                <span className="font-bold text-[14px] leading-[18px] text-[#5C9DFF]">Topic Audio</span>
+                <span className="font-bold text-[14px] leading-[18px] text-[#5C9DFF]">
+                  {topicAudioTitle}
+                </span>
               </div>
               <AudioPlayer
                 audioSrc={topicAudioUrl}
@@ -373,6 +387,13 @@ export default function ListeningModeTopics() {
                 className="max-w-full"
                 showTotal={true}
               />
+              {isRequiredListeningStage && (
+                <p className="text-[12px] leading-[16px] font-medium text-[#6E748F]">
+                  {hasListenedToAudio
+                    ? `Listen ${listenNumber} of 2 complete. You can continue.`
+                    : `Finish listen ${listenNumber} of 2 to unlock the next step.`}
+                </p>
+              )}
             </div>
           )}
           
@@ -517,13 +538,19 @@ export default function ListeningModeTopics() {
           {/* The server decides which listening stage comes next, including retry. */}
           {listeningPayload?.stage && listeningPayload.stage !== 'quiz' && listeningPayload.stage !== 'completed' && (
             <div className="flex justify-center items-center pt-2 mt-auto">
-              <button 
-                onClick={() => nextListeningStage()}
-                disabled={!canAdvance || isAccountBlocked}
-                className="flex justify-center items-center w-full max-w-[200px] h-[52px] bg-[#3B82F6] hover:bg-[#2563EB] disabled:bg-[#E5E7EB] disabled:text-[#9CA3AF] transition-colors rounded-full font-bold text-[16px] leading-[20px] text-white"
-              >
-                {isTranscriptStage ? 'Try Quiz Again' : 'Next'}
-              </button>
+              {nextStageUnlocked ? (
+                <button
+                  onClick={() => nextListeningStage()}
+                  disabled={isAccountBlocked}
+                  className="flex justify-center items-center w-full max-w-[200px] h-[52px] bg-[#3B82F6] hover:bg-[#2563EB] disabled:bg-[#E5E7EB] disabled:text-[#9CA3AF] transition-colors rounded-full font-bold text-[16px] leading-[20px] text-white"
+                >
+                  {isTranscriptStage ? 'Try Quiz Again' : 'Next'}
+                </button>
+              ) : (
+                <p className="text-center text-[13px] font-semibold text-[#6E748F]">
+                  Finish the audio to continue.
+                </p>
+              )}
             </div>
           )}
 

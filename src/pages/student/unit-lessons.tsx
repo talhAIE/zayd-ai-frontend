@@ -7,6 +7,7 @@ import { getCourses, getLessons, getUnits, startLesson } from '@/redux/slices/le
 import { AppDispatch, RootState } from '@/redux/store';
 import { LearningLesson } from '@/services/learningService';
 import { getLearningModePath, isLockedLearningItem } from '@/utils/learning-navigation';
+import AskZaydAiPopup from '@/components/learning/AskZaydAiPopup';
 
 const lessonTypeLabel = (lessonType: string): string => {
   switch (lessonType) {
@@ -251,6 +252,14 @@ export default function UnitLessons() {
           )}
         </section>
       </div>
+
+      {/* Ask Zayd AI Tutor Popup & Sidebar */}
+      <AskZaydAiPopup
+        unitId={unitId}
+        unitTitle={currentUnit?.title || 'Unit Lessons'}
+        courseTitle={currentCourse?.title}
+        launcherPlacement="unit_lessons"
+      />
     </div>
   );
 }

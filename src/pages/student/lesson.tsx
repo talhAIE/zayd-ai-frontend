@@ -25,6 +25,7 @@ import { AppDispatch, RootState } from '@/redux/store';
 import { toast } from 'sonner';
 import { LearningLessonMode } from '@/services/learningService';
 import { getLearningModePath, isLockedLearningItem } from '@/utils/learning-navigation';
+import AskZaydAiPopup from '@/components/learning/AskZaydAiPopup';
 
 export default function Lesson() {
   const { courseId, unitId, lessonId } = useParams<{ courseId: string; unitId: string; lessonId: string }>();
@@ -356,6 +357,12 @@ export default function Lesson() {
         </div>
 
       </div>
+      <AskZaydAiPopup
+        unitId={unitId}
+        unitTitle={currentUnit?.title || 'Lesson Modes'}
+        launchLessonId={lessonId}
+        launcherPlacement="lesson_modes"
+      />
     </div>
   );
 }
