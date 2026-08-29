@@ -24,6 +24,7 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import ReactMarkdown from 'react-markdown';
 import { RootState } from '@/redux/store';
 import {
   AskZaydUnitContext,
@@ -49,6 +50,69 @@ interface DisplayMessage {
   decision?: AskZaydDecision | null;
   createdAt?: string;
   attachments?: AskZaydAttachment[];
+}
+
+function normalizeTutorMarkdown(message: string): string {
+  return message
+    .replace(/\r\n?/g, '\n')
+    // Older replies were saved with numbered Markdown inline in a paragraph.
+    // Restore list breaks so they remain readable after deployment.
+    .replace(/([.!?:])\s+(\d+)\.\s+(?=\*\*)/g, '$1\n\n$2. ')
+    .replace(/([.!?:])\s+[-*]\s+(?=\*\*)/g, '$1\n\n- ')
+    .trim();
+}
+
+function AskZaydFormattedMessage({ message }: { message: string }) {
+  return (
+    <div className="text-xs text-slate-700 font-medium leading-relaxed break-words">
+      <ReactMarkdown
+        components={{
+          h1: ({ children }) => (
+            <h3 className="mt-3 first:mt-0 text-sm font-bold text-slate-900">
+              {children}
+            </h3>
+          ),
+          h2: ({ children }) => (
+            <h4 className="mt-3 first:mt-0 text-[13px] font-bold text-slate-900">
+              {children}
+            </h4>
+          ),
+          h3: ({ children }) => (
+            <h5 className="mt-3 first:mt-0 text-xs font-bold text-slate-900">
+              {children}
+            </h5>
+          ),
+          p: ({ children }) => <p className="mt-2 first:mt-0">{children}</p>,
+          ul: ({ children }) => (
+            <ul className="mt-2 list-disc space-y-1 pl-5 marker:text-blue-500">
+              {children}
+            </ul>
+          ),
+          ol: ({ children }) => (
+            <ol className="mt-2 list-decimal space-y-1 pl-5 marker:font-semibold marker:text-blue-600">
+              {children}
+            </ol>
+          ),
+          li: ({ children }) => <li className="pl-0.5">{children}</li>,
+          strong: ({ children }) => (
+            <strong className="font-bold text-slate-900">{children}</strong>
+          ),
+          a: ({ children, href }) => (
+            <a
+              href={href}
+              target="_blank"
+              rel="noreferrer"
+              className="font-semibold text-blue-600 underline"
+            >
+              {children}
+            </a>
+          ),
+        }}
+      >
+        {normalizeTutorMarkdown(message)}
+      </ReactMarkdown>
+    </div>
+  );
 }
 
 export default function AskZaydAiPopup({
@@ -650,9 +714,7 @@ export default function AskZaydAiPopup({
                           </div>
                         )}
 
-                        <p className="text-xs text-slate-700 font-medium leading-relaxed whitespace-pre-wrap">
-                          {msg.content}
-                        </p>
+                        <AskZaydFormattedMessage message={msg.content} />
                       </div>
 
                       {/* Export Toolbar */}
