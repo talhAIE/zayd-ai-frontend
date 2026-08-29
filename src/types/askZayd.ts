@@ -28,18 +28,10 @@ export interface AskZaydUnitContext {
   documentSetVersion: string | null;
 }
 
-export interface AskZaydCitation {
-  chunkId: string;
-  lessonTitle: string;
-  pageNumber: number;
-  heading: string | null;
-}
-
 export interface AskZaydAnswer {
   decision: AskZaydDecision;
   message: string;
   guidanceQuestion: string | null;
-  citations: AskZaydCitation[];
 }
 
 export interface AskZaydConversationSummary {
@@ -71,7 +63,6 @@ export interface AskZaydMessage {
   inputType: 'text' | 'audio' | 'attachment' | string;
   content: string;
   decision: AskZaydDecision | null;
-  citationsJson: string | null;
   createdAt: string;
   attachments?: AskZaydAttachment[];
 }

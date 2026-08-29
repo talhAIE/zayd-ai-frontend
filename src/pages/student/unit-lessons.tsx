@@ -258,6 +258,7 @@ export default function UnitLessons() {
         unitId={unitId}
         unitTitle={currentUnit?.title || 'Unit Lessons'}
         courseTitle={currentCourse?.title}
+        launcherPlacement="unit_lessons"
       />
     </div>
   );

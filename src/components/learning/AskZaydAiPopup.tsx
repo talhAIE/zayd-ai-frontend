@@ -20,7 +20,6 @@ import {
   Send,
   Link2,
   Loader2,
-  BookOpen,
   AlertCircle,
   RotateCcw,
 } from 'lucide-react';
@@ -28,7 +27,6 @@ import { toast } from 'sonner';
 import { RootState } from '@/redux/store';
 import {
   AskZaydUnitContext,
-  AskZaydCitation,
   AskZaydDecision,
   AskZaydAttachment,
 } from '@/types/askZayd';
@@ -38,6 +36,8 @@ export interface AskZaydAiPopupProps {
   unitId?: string;
   unitTitle?: string;
   courseTitle?: string;
+  launchLessonId?: string;
+  launcherPlacement: 'unit_lessons' | 'lesson_modes';
   defaultOpen?: boolean;
 }
 
@@ -47,7 +47,6 @@ interface DisplayMessage {
   inputType?: 'text' | 'audio' | 'attachment' | string;
   content: string;
   decision?: AskZaydDecision | null;
-  citations?: AskZaydCitation[];
   createdAt?: string;
   attachments?: AskZaydAttachment[];
 }
@@ -56,6 +55,8 @@ export default function AskZaydAiPopup({
   unitId,
   unitTitle = 'Unit Lessons',
   courseTitle: _courseTitle,
+  launchLessonId,
+  launcherPlacement,
   defaultOpen = false,
 }: AskZaydAiPopupProps) {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -102,6 +103,11 @@ export default function AskZaydAiPopup({
 
   // 1. Fetch Unit Context on Mount or when unitId changes
   useEffect(() => {
+    setContext(null);
+    setConversationId(null);
+    setMessages([]);
+    setPendingAttachments([]);
+    setInitError(null);
     if (!unitId) return;
 
     let isMounted = true;
@@ -123,18 +129,28 @@ export default function AskZaydAiPopup({
     return () => {
       isMounted = false;
     };
-  }, [unitId]);
+  }, [launcherPlacement, unitId]);
 
   // 2. Initialize or Resume Conversation
   const initConversation = useCallback(async (): Promise<string | null> => {
-    if (!unitId || isInitializingRef.current) return conversationId;
+    if (
+      !unitId ||
+      !context?.available ||
+      context.launcherPlacement !== launcherPlacement ||
+      isInitializingRef.current
+    ) {
+      return conversationId;
+    }
 
     try {
       isInitializingRef.current = true;
       setIsLoadingConv(true);
       setInitError(null);
 
-      const result = await askZaydService.createOrResumeConversation(unitId);
+      const result = await askZaydService.createOrResumeConversation(
+        unitId,
+        launchLessonId,
+      );
       const convId = result.conversation.id;
       setConversationId(convId);
       if (result.context) {
@@ -144,26 +160,20 @@ export default function AskZaydAiPopup({
       if (result.resumed) {
         const detail = await askZaydService.getConversation(convId);
         if (detail.conversation.messages && detail.conversation.messages.length > 0) {
-          const parsedMsgs: DisplayMessage[] = detail.conversation.messages.map((m) => {
-            let parsedCitations: AskZaydCitation[] = [];
-            if (m.citationsJson) {
-              try {
-                parsedCitations = JSON.parse(m.citationsJson);
-              } catch {
-                parsedCitations = [];
-              }
-            }
-            return {
+          const parsedMsgs: DisplayMessage[] = detail.conversation.messages
+            // Attachment upload bookkeeping is an internal system event, not a
+            // tutor reply. Keeping it out of the transcript avoids a reload
+            // presenting it as though Ask Zayd had written it.
+            .filter((m) => m.sender !== 'system')
+            .map((m) => ({
               id: m.id,
               sender: m.sender,
               inputType: m.inputType,
               content: m.content,
               decision: m.decision,
-              citations: parsedCitations,
               createdAt: m.createdAt,
               attachments: m.attachments,
-            };
-          });
+            }));
           setMessages(parsedMsgs);
           return convId;
         }
@@ -175,7 +185,7 @@ export default function AskZaydAiPopup({
           id: `welcome-${Date.now()}`,
           sender: 'assistant',
           content: `Hi ${studentName}! I am connected to the published study materials for ${
-            context?.unit?.title || unitTitle
+            result.context.unit.title || unitTitle
           }. I can guide you through concepts, answer questions grounded in your lesson materials, or break down difficult topics. How can I help you today?`,
           createdAt: new Date().toISOString(),
         },
@@ -191,7 +201,16 @@ export default function AskZaydAiPopup({
       setIsLoadingConv(false);
       isInitializingRef.current = false;
     }
-  }, [unitId, conversationId, studentName, context?.unit?.title, unitTitle]);
+  }, [
+    unitId,
+    conversationId,
+    studentName,
+    context?.available,
+    context?.launcherPlacement,
+    launchLessonId,
+    launcherPlacement,
+    unitTitle,
+  ]);
 
   // Trigger init when popup is opened
   useEffect(() => {
@@ -213,6 +232,9 @@ export default function AskZaydAiPopup({
 
   // 3. Send Text Question
   const handleSendMessage = async (textToSend?: string) => {
+    if (isTyping || isProcessingVoice || isUploadingAttachment || isLoadingConv) {
+      return;
+    }
     const text = (textToSend || inputVal).trim();
     if (!text) return;
 
@@ -258,7 +280,6 @@ export default function AskZaydAiPopup({
         inputType: 'text',
         content: response.answer.message,
         decision: response.answer.decision,
-        citations: response.answer.citations || [],
         createdAt: new Date().toISOString(),
       };
 
@@ -298,6 +319,9 @@ export default function AskZaydAiPopup({
 
   // Upload Attachment (Image or PDF)
   const handleFileUpload = async (file: File) => {
+    if (isTyping || isProcessingVoice || isUploadingAttachment || isLoadingConv) {
+      return;
+    }
     if (!conversationId) {
       toast.error('Session not initialized yet.');
       return;
@@ -328,6 +352,9 @@ export default function AskZaydAiPopup({
 
   // Voice Recording Handling
   const handleStartVoice = async () => {
+    if (isTyping || isProcessingVoice || isUploadingAttachment || isLoadingConv) {
+      return;
+    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
@@ -380,7 +407,6 @@ export default function AskZaydAiPopup({
               inputType: 'text',
               content: res.answer.message,
               decision: res.answer.decision,
-              citations: res.answer.citations || [],
               createdAt: new Date().toISOString(),
             },
           ]);
@@ -415,7 +441,14 @@ export default function AskZaydAiPopup({
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  const canRenderLauncher =
+    !!unitId &&
+    context?.available === true &&
+    context.launcherPlacement === launcherPlacement;
 
+  if (!canRenderLauncher) {
+    return null;
+  }
 
   return (
     <>
@@ -505,28 +538,28 @@ export default function AskZaydAiPopup({
             <div className="flex overflow-x-auto gap-2 pb-1 scrollbar-hide snap-x">
               <button
                 onClick={() => handleQuickPrompt('hint')}
-                disabled={Boolean(initError) || isLoadingConv}
+                disabled={Boolean(initError) || isLoadingConv || isTyping || isProcessingVoice || isUploadingAttachment}
                 className="snap-start shrink-0 bg-white/15 hover:bg-white/25 disabled:opacity-50 border border-white/25 text-[11px] font-semibold text-white px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 cursor-pointer active:scale-95"
               >
                 <Lightbulb className="w-3.5 h-3.5 text-amber-300" /> Socratic Hint
               </button>
               <button
                 onClick={() => handleQuickPrompt('practice')}
-                disabled={Boolean(initError) || isLoadingConv}
+                disabled={Boolean(initError) || isLoadingConv || isTyping || isProcessingVoice || isUploadingAttachment}
                 className="snap-start shrink-0 bg-white/15 hover:bg-white/25 disabled:opacity-50 border border-white/25 text-[11px] font-semibold text-white px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 cursor-pointer active:scale-95"
               >
                 <Gamepad2 className="w-3.5 h-3.5 text-emerald-300" /> Practice Mode
               </button>
               <button
                 onClick={() => handleQuickPrompt('handout')}
-                disabled={Boolean(initError) || isLoadingConv}
+                disabled={Boolean(initError) || isLoadingConv || isTyping || isProcessingVoice || isUploadingAttachment}
                 className="snap-start shrink-0 bg-white/15 hover:bg-white/25 disabled:opacity-50 border border-white/25 text-[11px] font-semibold text-white px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 cursor-pointer active:scale-95"
               >
                 <FileText className="w-3.5 h-3.5 text-blue-300" /> Handouts
               </button>
               <button
                 onClick={() => handleQuickPrompt('simplify')}
-                disabled={Boolean(initError) || isLoadingConv}
+                disabled={Boolean(initError) || isLoadingConv || isTyping || isProcessingVoice || isUploadingAttachment}
                 className="snap-start shrink-0 bg-white/15 hover:bg-white/25 disabled:opacity-50 border border-white/25 text-[11px] font-semibold text-white px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 cursor-pointer active:scale-95"
               >
                 <Smile className="w-3.5 h-3.5 text-rose-300" /> Explain Simply
@@ -620,29 +653,6 @@ export default function AskZaydAiPopup({
                         <p className="text-xs text-slate-700 font-medium leading-relaxed whitespace-pre-wrap">
                           {msg.content}
                         </p>
-
-                        {/* Citations list according to section 7 */}
-                        {msg.citations && msg.citations.length > 0 && (
-                          <div className="pt-2 border-t border-slate-100 space-y-1">
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                              Sources from unit materials
-                            </p>
-                            <div className="flex flex-col gap-1">
-                              {msg.citations.map((cit, idx) => (
-                                <div
-                                  key={idx}
-                                  className="text-[11px] font-semibold text-indigo-700 bg-indigo-50/80 border border-indigo-100 rounded-lg px-2.5 py-1 flex items-center gap-1.5"
-                                >
-                                  <BookOpen className="w-3 h-3 text-indigo-500 shrink-0" />
-                                  <span>
-                                    {cit.lessonTitle} · PDF page {cit.pageNumber}
-                                    {cit.heading ? ` · ${cit.heading}` : ''}
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
                       </div>
 
                       {/* Export Toolbar */}
@@ -732,7 +742,7 @@ export default function AskZaydAiPopup({
                 onKeyDown={handleKeyDown}
                 rows={2}
                 maxLength={2000}
-                disabled={Boolean(initError) || isLoadingConv}
+                disabled={Boolean(initError) || isLoadingConv || isTyping || isProcessingVoice || isUploadingAttachment}
                 placeholder="Ask a question about this unit's lessons…"
                 className="w-full bg-transparent p-3 text-xs text-slate-800 outline-none resize-none font-medium placeholder:text-slate-400 disabled:opacity-50"
               />
@@ -743,7 +753,7 @@ export default function AskZaydAiPopup({
                   {/* Voice recording */}
                   <button
                     onClick={isRecording ? handleStopVoice : handleStartVoice}
-                    disabled={isProcessingVoice || Boolean(initError) || isLoadingConv}
+                    disabled={isTyping || isProcessingVoice || isUploadingAttachment || Boolean(initError) || isLoadingConv}
                     className={`w-7 h-7 rounded-lg transition-colors flex items-center justify-center cursor-pointer disabled:opacity-40 ${
                       isRecording
                         ? 'bg-rose-500 text-white animate-pulse'
@@ -757,7 +767,7 @@ export default function AskZaydAiPopup({
                   {/* Camera / Image Upload */}
                   <button
                     onClick={() => cameraInputRef.current?.click()}
-                    disabled={isUploadingAttachment || Boolean(initError) || isLoadingConv}
+                    disabled={isTyping || isProcessingVoice || isUploadingAttachment || Boolean(initError) || isLoadingConv}
                     className="w-7 h-7 rounded-lg hover:bg-slate-200 text-slate-500 transition-colors flex items-center justify-center cursor-pointer disabled:opacity-40"
                     title="Upload Photo of Work"
                   >
@@ -778,7 +788,7 @@ export default function AskZaydAiPopup({
                   {/* Document Attachment (PDF or Image) */}
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploadingAttachment || Boolean(initError) || isLoadingConv}
+                    disabled={isTyping || isProcessingVoice || isUploadingAttachment || Boolean(initError) || isLoadingConv}
                     className="w-7 h-7 rounded-lg hover:bg-slate-200 text-slate-500 transition-colors flex items-center justify-center cursor-pointer disabled:opacity-40"
                     title="Attach Study Document (PDF or Image)"
                   >
@@ -805,7 +815,10 @@ export default function AskZaydAiPopup({
                 <button
                   onClick={() => handleSendMessage()}
                   disabled={
-                    (!inputVal.trim() && pendingAttachments.length === 0) ||
+                    !inputVal.trim() ||
+                    isTyping ||
+                    isProcessingVoice ||
+                    isUploadingAttachment ||
                     Boolean(initError) ||
                     isLoadingConv
                   }
