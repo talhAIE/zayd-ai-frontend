@@ -251,6 +251,15 @@ export default function ComponentModePlay() {
       setComponents((currentComponents) =>
         currentComponents.map((component) => component.id === componentId ? result : component),
       );
+      if (!result.isComplete && !result.attempt?.completedAt) {
+        // An incorrect response starts a fresh learner-controlled retry. Do not
+        // let the Continue button silently submit the previous response again.
+        setLocalResponses((current) => {
+          const next = { ...current };
+          delete next[componentId];
+          return next;
+        });
+      }
       setCompletedComponentIds((previousIds) => {
         const nextIds = new Set(previousIds);
         if (result.isComplete || result.attempt?.completedAt) {
@@ -496,6 +505,12 @@ export default function ComponentModePlay() {
       typeof currentWritingReview?.modelAnswer === 'string' &&
       !isComponentComplete(currentComp),
   );
+  const needsFreshRetryResponse = Boolean(
+    currentComp &&
+      currentComp.attempt?.status === 'submitted' &&
+      !isComponentComplete(currentComp) &&
+      !localResponses[currentComp.id],
+  );
 
   useEffect(() => {
     if (currentComp && currentComp.completionRule === 'on_view' && !currentComp.isComplete) {
@@ -615,7 +630,7 @@ export default function ComponentModePlay() {
                   <MatchComponent
                     key={comp.id}
                     component={comp}
-                    onAnswerChange={(pairs) => handleComponentChange(comp.id, { matches: Object.entries(pairs).map(([leftValue, rightValue]) => ({ leftValue, rightValue })) })}
+                    onAnswerChange={(pairs) => handleLocalComponentChange(comp.id, { matches: Object.entries(pairs).map(([leftValue, rightValue]) => ({ leftValue, rightValue })) })}
                     isSubmitted={isTerminal}
                     disabled={isDisabled}
                   />
@@ -753,7 +768,9 @@ export default function ComponentModePlay() {
                 }
                 
                 if (!canAdvanceFromCurrent && currentComp) {
-                  let currentResponse = localResponses[currentComp.id] ?? currentComp.attempt?.response;
+                  let currentResponse = currentComp.componentType === 'match_column'
+                    ? localResponses[currentComp.id]
+                    : localResponses[currentComp.id] ?? currentComp.attempt?.response;
                   const isWritingParagraph =
                     currentComp.componentType === 'open_input' &&
                     currentComp.content?.presentation === 'compiled_paragraph';
@@ -776,11 +793,18 @@ export default function ComponentModePlay() {
                     }
                     return;
                   }
-                  const isInput = ['mcq', 'dropdown', 'open_input', 'true_false', 'fill_in_the_blank', 'writing_table', 'reflection'].includes(currentComp.componentType);
+                  const isInput = ['mcq', 'dropdown', 'open_input', 'true_false', 'fill_in_the_blank', 'match_column', 'writing_table', 'reflection'].includes(currentComp.componentType);
                   
                   if (isInput) {
                     if (!currentResponse || (typeof currentResponse === 'object' && Object.keys(currentResponse).length === 0)) {
                       toast.error('Please answer the question before submitting.');
+                      return;
+                    }
+                    if (
+                      currentComp.componentType === 'match_column' &&
+                      (!Array.isArray(currentResponse.matches) || currentResponse.matches.length !== currentComp.matchingLeftItems.length)
+                    ) {
+                      toast.error('Match every term before submitting.');
                       return;
                     }
                   } else {
@@ -807,7 +831,7 @@ export default function ComponentModePlay() {
                   handleCompleteMode();
                 }
               }}
-              disabled={isSubmittingMode || (!canAdvanceMode && currentIndex === totalCount - 1 && canAdvanceFromCurrent)}
+              disabled={isSubmittingMode || needsFreshRetryResponse || (!canAdvanceMode && currentIndex === totalCount - 1 && canAdvanceFromCurrent)}
               className={`
                 w-full sm:w-auto bg-[#4F8DFB] hover:bg-[#3B82F6] active:scale-[0.98] text-white px-7 py-3 rounded-full font-bold text-[14px] flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer
                 ${isSubmittingMode ? 'opacity-70 cursor-not-allowed' : ''}
@@ -820,8 +844,14 @@ export default function ComponentModePlay() {
                 {!canAdvanceFromCurrent
                   ? isSubmittingMode
                     ? 'Submitting...'
+                    : needsFreshRetryResponse
+                    ? currentComp?.componentType === 'match_column'
+                      ? 'Build New Matches'
+                      : 'Choose Another Answer'
                     : canRevealCurrentWritingModelAnswer
                     ? 'View System Model Answer'
+                    : currentComp?.componentType === 'match_column'
+                    ? 'Submit Matches'
                     : (currentComp && !['mcq', 'dropdown', 'open_input', 'true_false', 'fill_in_the_blank', 'writing_table', 'reflection'].includes(currentComp.componentType) ? 'Continue' : 'Check Answer')
                   : currentIndex < totalCount - 1
                   ? 'Next'

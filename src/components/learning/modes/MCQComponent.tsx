@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Check, X } from 'lucide-react';
 import { LearningComponent } from '@/services/learningService';
 
@@ -37,7 +37,13 @@ export default function MCQComponent({
     };
   });
 
+  const hasIncorrectSubmittedAttempt =
+    !isSubmitted &&
+    component.attempt?.status === 'submitted' &&
+    component.attempt?.isCorrect === false;
+
   const [selectedValue, setSelectedValue] = useState<string>(() => {
+    if (hasIncorrectSubmittedAttempt) return '';
     if (component.attempt?.response?.optionId) {
       return String(component.attempt.response.optionId);
     }
@@ -49,6 +55,18 @@ export default function MCQComponent({
     }
     return '';
   });
+  const submittedAtRef = useRef(component.attempt?.submittedAt ?? null);
+
+  useEffect(() => {
+    const submittedAt = component.attempt?.submittedAt ?? null;
+    const isNewIncorrectSubmission =
+      submittedAt !== null &&
+      submittedAt !== submittedAtRef.current &&
+      component.attempt?.isCorrect === false;
+
+    if (isNewIncorrectSubmission) setSelectedValue('');
+    submittedAtRef.current = submittedAt;
+  }, [component.attempt?.isCorrect, component.attempt?.submittedAt]);
 
   const attemptResponseId = String(
     component.attempt?.response?.optionId ||
@@ -130,6 +148,12 @@ export default function MCQComponent({
           );
         })}
       </div>
+
+      {hasIncorrectSubmittedAttempt && !selectedValue && (
+        <div className="rounded-[12px] border border-amber-200 bg-amber-50 px-4 py-3 text-[13px] font-semibold text-amber-900">
+          That answer was not correct. Select another option to try again.
+        </div>
+      )}
 
       {/* Optional Submit Button if needed */}
       {onSubmit && !isSubmitted && (
