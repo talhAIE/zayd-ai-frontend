@@ -5,7 +5,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { 
   getLessonModes, 
   startLessonMode, 
-  completeLessonMode
+  completeLessonMode,
+  getLessons,
+  getUnits,
 } from '@/redux/slices/learningSlice';
 import { 
   fetchLessonModeComponents, 
@@ -79,6 +81,29 @@ export default function ComponentModePlay() {
   const currentUnit = units.find((u) => u.id === unitId);
   const currentLesson = lessons.find((l) => l.id === lessonId);
   const currentMode = resolvedMode ?? modes.find((m) => m.id === modeId);
+
+  useEffect(() => {
+    if (unitId && lessons.length === 0) {
+      dispatch(getLessons(unitId));
+    }
+  }, [dispatch, unitId, lessons.length]);
+
+  useEffect(() => {
+    if (courseId && units.length === 0) {
+      dispatch(getUnits(courseId));
+    }
+  }, [dispatch, courseId, units.length]);
+
+  const handleBack = () => {
+    const isDirectLesson = currentLesson?.launchBehavior === 'direct_mode' || modes.length <= 1;
+    if (isDirectLesson && courseId && unitId) {
+      navigate(`/student/courses/${courseId}/units/${unitId}`);
+    } else if (courseId && unitId && lessonId) {
+      navigate(`/student/courses/${courseId}/units/${unitId}/lessons/${lessonId}`);
+    } else {
+      navigate(-1);
+    }
+  };
 
   const refreshModeState = useCallback(async () => {
     if (!modeId || !lessonId) return [];
@@ -538,11 +563,9 @@ export default function ComponentModePlay() {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() =>
-              navigate(`/student/courses/${courseId}/units/${unitId}/lessons/${lessonId}`)
-            }
+            onClick={handleBack}
             className="w-10 h-10 rounded-full border border-[#E2E8F0] bg-white flex items-center justify-center text-[#282828] hover:bg-gray-50 transition-all cursor-pointer shadow-sm flex-shrink-0"
-            title="Back to Lesson"
+            title={currentLesson?.launchBehavior === 'direct_mode' || modes.length <= 1 ? 'Back to Lessons' : 'Back to Lesson'}
           >
             <ChevronLeft className="w-5 h-5" />
           </button>

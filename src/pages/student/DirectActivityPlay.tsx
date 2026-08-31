@@ -237,6 +237,14 @@ export default function DirectActivityPlay() {
     }
   };
 
+  const handleBack = () => {
+    if (courseId && unitId) {
+      navigate(`/student/courses/${courseId}/units/${unitId}`);
+    } else {
+      navigate(-1);
+    }
+  };
+
   const continueFromCompletedMode = async () => {
     if (!lessonId || !modeId) return;
     try {
@@ -246,9 +254,9 @@ export default function DirectActivityPlay() {
         navigate(getLearningModePath({ courseId, unitId, lessonId }, nextMode));
         return;
       }
-      navigate(`/student/courses/${courseId}/units/${unitId}/lessons/${lessonId}`);
+      navigate(`/student/courses/${courseId}/units/${unitId}`);
     } catch {
-      navigate(`/student/courses/${courseId}/units/${unitId}/lessons/${lessonId}`);
+      navigate(`/student/courses/${courseId}/units/${unitId}`);
     }
   };
 
@@ -259,7 +267,7 @@ export default function DirectActivityPlay() {
   return (
     <div className="mx-auto flex w-full max-w-[1040px] flex-col gap-6 pb-16 font-['Outfit',sans-serif]">
       <header className="flex flex-col justify-between gap-4 rounded-[20px] border border-[#E2E8F0] bg-white p-5 shadow-sm sm:flex-row sm:items-center">
-        <div className="flex items-center gap-3"><button type="button" onClick={() => navigate(`/student/courses/${courseId}/units/${unitId}/lessons/${lessonId}`)} className="flex h-10 w-10 items-center justify-center rounded-full border border-[#E2E8F0] text-[#0F172A]"><ChevronLeft className="h-5 w-5" /></button><div><h1 className="text-xl font-extrabold text-[#0F172A]">{title}</h1><p className="mt-1 text-sm font-medium text-[#64748B]">{modeKind === 'quiz' ? 'Unit Assessment' : 'Unit Project'}</p></div></div>
+        <div className="flex items-center gap-3"><button type="button" onClick={handleBack} title="Back to Lessons" className="flex h-10 w-10 items-center justify-center rounded-full border border-[#E2E8F0] text-[#0F172A] hover:bg-gray-50 transition-all cursor-pointer"><ChevronLeft className="h-5 w-5" /></button><div><h1 className="text-xl font-extrabold text-[#0F172A]">{title}</h1><p className="mt-1 text-sm font-medium text-[#64748B]">{modeKind === 'quiz' ? 'Unit Assessment' : 'Unit Project'}</p></div></div>
         {activityComplete && <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-700"><CheckCircle2 className="h-4 w-4" />Completed</span>}
       </header>
 
