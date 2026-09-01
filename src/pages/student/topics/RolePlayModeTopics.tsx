@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ChevronLeft, Mic, Clock, MessageCircle, Send, Square, Trash2, Pause, Play, LoaderCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { BarChart3, ChevronLeft, Mic, Clock, MessageCircle, Send, Square, Trash2, Pause, Play, LoaderCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { useModeSession } from '@/hooks/useModeSession';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import TopicCompletionModal from '@/components/ui/TopicCompletionModal';
@@ -10,6 +10,7 @@ import { ContentPolicyWarningModal } from '@/components/ui/ContentPolicyWarningM
 import { useLearningProgressRefresh } from '@/hooks/useLearningProgressRefresh';
 import ReactMarkdown from 'react-markdown';
 import { useAudioPlayback } from '@/hooks/useAudioPlayback';
+import SpeechAssessmentModal, { isSpeechAssessment, SpeechAssessment } from '@/components/ui/SpeechAssessmentModal';
 
 export default function RolePlayModeTopics() {
   const navigate = useNavigate();
@@ -27,6 +28,7 @@ export default function RolePlayModeTopics() {
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [isJustCompleted, setIsJustCompleted] = useState(false);
   const [activeFeedback, setActiveFeedback] = useState<string | null>(null);
+  const [activeAssessment, setActiveAssessment] = useState<SpeechAssessment | null>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -140,6 +142,11 @@ export default function RolePlayModeTopics() {
         isOpen={!!activeFeedback}
         feedbackText={activeFeedback || ''}
         onClose={() => setActiveFeedback(null)}
+      />
+      <SpeechAssessmentModal
+        assessment={activeAssessment}
+        open={!!activeAssessment}
+        onClose={() => setActiveAssessment(null)}
       />
 
       {/* Header Progress Group */}
@@ -367,7 +374,7 @@ export default function RolePlayModeTopics() {
                     </ReactMarkdown>
                   </div>
                   {msg.role === 'user' && msg.audioUrl && (
-                    <div className="mt-3 flex items-center justify-end border-t border-[#BFDBFE] pt-2.5">
+                    <div className="mt-3 flex items-center justify-end gap-4 border-t border-[#BFDBFE] pt-2.5">
                       <button
                         type="button"
                         onClick={() => toggleAudio(msg.id, msg.audioUrl || undefined)}
@@ -382,6 +389,16 @@ export default function RolePlayModeTopics() {
                           <Play className="w-5 h-5" />
                         )}
                       </button>
+                      {isSpeechAssessment(msg.assessments) && (
+                        <button
+                          type="button"
+                          onClick={() => setActiveAssessment(msg.assessments)}
+                          className="flex items-center gap-1.5 text-[#2563EB] hover:text-[#1D4ED8] transition-colors font-semibold text-[12px] leading-[15px]"
+                        >
+                          <BarChart3 className="h-3.5 w-3.5" />
+                          <span>View Assessment</span>
+                        </button>
+                      )}
                     </div>
                   )}
                   {msg.role === 'assistant' && (msg.audioUrl || msg.feedback) && (
