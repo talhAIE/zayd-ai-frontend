@@ -579,25 +579,6 @@ export default function ComponentModePlay() {
       !localResponses[currentComp.id],
   );
 
-  useEffect(() => {
-    if (currentComp && currentComp.completionRule === 'on_view' && !currentComp.isComplete) {
-      startLearningComponent(currentComp.id)
-        .then((result) => {
-          setComponents((currentComponents) =>
-            currentComponents.map((c) => (c.id === result.id ? result : c))
-          );
-          setCompletedComponentIds((prev) => {
-            const next = new Set(prev);
-            if (result.isComplete || result.attempt?.completedAt) next.add(result.id);
-            return next;
-          });
-        })
-        .catch((err) => {
-          console.warn('Unable to start component view', err);
-        });
-    }
-  }, [currentComp?.id]);
-
   return (
     <div className="w-full max-w-[1040px] mx-auto pb-16 flex flex-col gap-6 font-['Outfit',sans-serif]">
       {/* Mode Header Card with Back and Reset Buttons */}
@@ -846,6 +827,42 @@ export default function ComponentModePlay() {
                 }
                 
                 if (!canAdvanceFromCurrent && currentComp) {
+                  if (currentComp.completionRule === 'on_view') {
+                    setIsSubmittingMode(true);
+                    try {
+                      // Reading a text is acknowledged deliberately: opening a
+                      // mode must not increase progress before the learner
+                      // chooses Next/Continue.
+                      const result = await startLearningComponent(currentComp.id);
+                      setComponents((currentComponents) =>
+                        currentComponents.map((component) =>
+                          component.id === result.id ? result : component,
+                        ),
+                      );
+                      setCompletedComponentIds((previousIds) => {
+                        const nextIds = new Set(previousIds);
+                        if (result.isComplete || result.attempt?.completedAt) {
+                          nextIds.add(result.id);
+                        }
+                        return nextIds;
+                      });
+
+                      if (currentIndex < totalCount - 1) {
+                        setCurrentIndex((index) => index + 1);
+                      } else {
+                        await handleCompleteMode();
+                      }
+                    } catch (startError: any) {
+                      toast.error(
+                        startError.response?.data?.message ||
+                          'Unable to record this activity step.',
+                      );
+                    } finally {
+                      setIsSubmittingMode(false);
+                    }
+                    return;
+                  }
+
                   let currentResponse = currentComp.componentType === 'match_column'
                     ? localResponses[currentComp.id]
                     : localResponses[currentComp.id] ?? currentComp.attempt?.response;
