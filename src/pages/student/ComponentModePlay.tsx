@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { CheckCircle2, ChevronLeft, CircleAlert, Eye } from 'lucide-react';
+import { CheckCircle2, ChevronLeft, CircleAlert, Eye, RotateCcw } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
   getLessonModes, 
   startLessonMode, 
-  completeLessonMode
+  completeLessonMode,
+  getLessons,
+  getUnits,
 } from '@/redux/slices/learningSlice';
 import { 
   fetchLessonModeComponents, 
@@ -29,6 +31,7 @@ import { AppDispatch, RootState } from '@/redux/store';
 import { toast } from 'sonner';
 import { getLearningModePath } from '@/utils/learning-navigation';
 import { useLearningProgressRefresh } from '@/hooks/useLearningProgressRefresh';
+import TopicCompletionModal from '@/components/ui/TopicCompletionModal';
 
 import {
   DropdownComponent,
@@ -79,6 +82,60 @@ export default function ComponentModePlay() {
   const currentUnit = units.find((u) => u.id === unitId);
   const currentLesson = lessons.find((l) => l.id === lessonId);
   const currentMode = resolvedMode ?? modes.find((m) => m.id === modeId);
+
+  useEffect(() => {
+    if (unitId && lessons.length === 0) {
+      dispatch(getLessons(unitId));
+    }
+  }, [dispatch, unitId, lessons.length]);
+
+  useEffect(() => {
+    if (courseId && units.length === 0) {
+      dispatch(getUnits(courseId));
+    }
+  }, [dispatch, courseId, units.length]);
+
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [isJustCompleted, setIsJustCompleted] = useState(false);
+
+  const handleBack = () => {
+    const isDirectLesson = currentLesson?.launchBehavior === 'direct_mode' || modes.length <= 1;
+    if (isDirectLesson && courseId && unitId) {
+      navigate(`/student/courses/${courseId}/units/${unitId}`);
+    } else if (courseId && unitId && lessonId) {
+      navigate(`/student/courses/${courseId}/units/${unitId}/lessons/${lessonId}`);
+    } else {
+      navigate(-1);
+    }
+  };
+
+  const handleResetMode = async () => {
+    if (!modeId) return;
+    setIsSubmittingMode(true);
+    try {
+      if (startedModeIdRef.current) startedModeIdRef.current = null;
+      await dispatch(startLessonMode({ lessonModeId: modeId })).unwrap().catch(() => {});
+      const data = await fetchLessonModeComponents(modeId);
+      const sorted = [...data].sort((a, b) => a.orderIndex - b.orderIndex);
+      
+      setComponents(sorted);
+      setLocalResponses({});
+      setWritingReviewFeedback({});
+      setRevealedAnswers({});
+      setModelAnswerComponentId(null);
+      setCompletedComponentIds(new Set());
+      setCurrentIndex(0);
+      
+      toast.success('Mode progress reset! You can now practice from the beginning.');
+    } catch (err: any) {
+      console.error('Failed to reset mode:', err);
+      toast.error('Unable to reset mode.');
+    } finally {
+      setIsSubmittingMode(false);
+      setShowCompletionModal(false);
+      setIsJustCompleted(false);
+    }
+  };
 
   const refreshModeState = useCallback(async () => {
     if (!modeId || !lessonId) return [];
@@ -225,6 +282,10 @@ export default function ComponentModePlay() {
           setCurrentIndex(firstIncomplete === -1 ? sorted.length - 1 : firstIncomplete);
         } else {
           setCurrentIndex(0);
+        }
+
+        if (mode?.status === 'completed') {
+          setShowCompletionModal(true);
         }
       } catch (err: any) {
         console.error('Failed to load components:', err);
@@ -425,6 +486,22 @@ export default function ComponentModePlay() {
     toast.success('Model answer revealed. You can now finish this activity.');
   };
 
+  const handleCompleteNavigation = (updatedModesList?: any[]) => {
+    const activeModes = updatedModesList ?? modes;
+    const currentModeIndex = activeModes.findIndex((m: any) => m.id === modeId);
+    const nextMode = currentModeIndex !== -1 && currentModeIndex < activeModes.length - 1 
+      ? activeModes[currentModeIndex + 1] 
+      : null;
+
+    if (nextMode && !nextMode.isLocked && courseId && unitId && lessonId) {
+      navigate(getLearningModePath({ courseId, unitId, lessonId }, nextMode));
+    } else if (courseId && unitId) {
+      navigate(`/student/courses/${courseId}/units/${unitId}`);
+    } else {
+      handleBack();
+    }
+  };
+
   // Complete the entire mode and progress to next mode or lesson roadmap
   const handleCompleteMode = async () => {
     if (!modeId || !lessonId) return;
@@ -438,23 +515,13 @@ export default function ComponentModePlay() {
     try {
       const updatedModes = isModeAlreadyCompletedOnBackend
         ? await dispatch(getLessonModes(lessonId)).unwrap()
-        : await dispatch(completeLessonMode({ lessonModeId: modeId })).unwrap().then(() => dispatch(getLessonModes(lessonId)).unwrap());
+        : await dispatch(completeLessonMode({ lessonModeId: modeId! })).unwrap().then(() => dispatch(getLessonModes(lessonId)).unwrap());
       setResolvedMode(updatedModes.find((candidate) => candidate.id === modeId) ?? null);
       await refreshLearningProgress(lessonId, { unitId, courseId });
 
-      // Find next sequential mode
-      const currentModeIndex = updatedModes.findIndex((m: any) => m.id === modeId);
-      const nextMode = currentModeIndex !== -1 && currentModeIndex < updatedModes.length - 1 
-        ? updatedModes[currentModeIndex + 1] 
-        : null;
-
       toast.success('Mode completed successfully!');
-
-      if (nextMode && !nextMode.isLocked && courseId && unitId) {
-        navigate(getLearningModePath({ courseId, unitId, lessonId }, nextMode));
-      } else {
-        navigate(`/student/courses/${courseId}/units/${unitId}`);
-      }
+      setIsJustCompleted(true);
+      setShowCompletionModal(true);
     } catch (err: any) {
       console.error('Failed to complete mode:', err);
       toast.error('Failed to complete mode.');
@@ -512,51 +579,43 @@ export default function ComponentModePlay() {
       !localResponses[currentComp.id],
   );
 
-  useEffect(() => {
-    if (currentComp && currentComp.completionRule === 'on_view' && !currentComp.isComplete) {
-      startLearningComponent(currentComp.id)
-        .then((result) => {
-          setComponents((currentComponents) =>
-            currentComponents.map((c) => (c.id === result.id ? result : c))
-          );
-          setCompletedComponentIds((prev) => {
-            const next = new Set(prev);
-            if (result.isComplete || result.attempt?.completedAt) next.add(result.id);
-            return next;
-          });
-        })
-        .catch((err) => {
-          console.warn('Unable to start component view', err);
-        });
-    }
-  }, [currentComp?.id]);
-
   return (
     <div className="w-full max-w-[1040px] mx-auto pb-16 flex flex-col gap-6 font-['Outfit',sans-serif]">
-      {/* Mode Header Card with Back Button */}
-      <div className="w-full bg-white rounded-none md:rounded-[20px] border border-[#E2E8F0] shadow-sm p-4 md:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
+      {/* Mode Header Card with Back and Reset Buttons */}
+      <div className="w-full bg-white rounded-none md:rounded-[20px] border border-[#E2E8F0] shadow-sm p-4 md:p-6 flex flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-3 min-w-0">
           <button
             type="button"
-            onClick={() =>
-              navigate(`/student/courses/${courseId}/units/${unitId}/lessons/${lessonId}`)
-            }
+            onClick={handleBack}
             className="w-10 h-10 rounded-full border border-[#E2E8F0] bg-white flex items-center justify-center text-[#282828] hover:bg-gray-50 transition-all cursor-pointer shadow-sm flex-shrink-0"
-            title="Back to Lesson"
+            title={currentLesson?.launchBehavior === 'direct_mode' || modes.length <= 1 ? 'Back to Lessons' : 'Back to Lesson'}
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
-          <div className="flex flex-col">
-            <h1 className="text-[20px] md:text-[24px] font-extrabold text-[#0F172A] tracking-[-0.3px]">
+          <div className="flex flex-col min-w-0">
+            <h1 className="text-[20px] md:text-[24px] font-extrabold text-[#0F172A] tracking-[-0.3px] truncate">
               {currentMode?.title || 'Learning Mode'}
             </h1>
 
-            <span className="text-[13px] font-semibold text-[#64748B]">
+            <span className="text-[13px] font-semibold text-[#64748B] truncate">
               {currentUnit?.title || 'Unit'}
               {currentLesson ? ` • ${currentLesson.title}` : ''}
             </span>
           </div>
         </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            setIsJustCompleted(false);
+            setShowCompletionModal(true);
+          }}
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 text-[13px] font-bold text-[#5C9DFF] bg-[#EFF6FF] hover:bg-[#DBEAFE] border border-[#5C9DFF]/30 rounded-full transition-colors cursor-pointer shadow-sm shrink-0"
+          title="Reset Lesson"
+        >
+          <RotateCcw className="w-4 h-4 text-[#5C9DFF]" />
+          <span className="hidden sm:inline">Reset Mode</span>
+        </button>
       </div>
 
       {/* Top Progress Bar */}
@@ -768,6 +827,42 @@ export default function ComponentModePlay() {
                 }
                 
                 if (!canAdvanceFromCurrent && currentComp) {
+                  if (currentComp.completionRule === 'on_view') {
+                    setIsSubmittingMode(true);
+                    try {
+                      // Reading a text is acknowledged deliberately: opening a
+                      // mode must not increase progress before the learner
+                      // chooses Next/Continue.
+                      const result = await startLearningComponent(currentComp.id);
+                      setComponents((currentComponents) =>
+                        currentComponents.map((component) =>
+                          component.id === result.id ? result : component,
+                        ),
+                      );
+                      setCompletedComponentIds((previousIds) => {
+                        const nextIds = new Set(previousIds);
+                        if (result.isComplete || result.attempt?.completedAt) {
+                          nextIds.add(result.id);
+                        }
+                        return nextIds;
+                      });
+
+                      if (currentIndex < totalCount - 1) {
+                        setCurrentIndex((index) => index + 1);
+                      } else {
+                        await handleCompleteMode();
+                      }
+                    } catch (startError: any) {
+                      toast.error(
+                        startError.response?.data?.message ||
+                          'Unable to record this activity step.',
+                      );
+                    } finally {
+                      setIsSubmittingMode(false);
+                    }
+                    return;
+                  }
+
                   let currentResponse = currentComp.componentType === 'match_column'
                     ? localResponses[currentComp.id]
                     : localResponses[currentComp.id] ?? currentComp.attempt?.response;
@@ -863,6 +958,20 @@ export default function ComponentModePlay() {
           </div>
         </div>
       )}
+
+      <TopicCompletionModal 
+        isOpen={showCompletionModal}
+        isJustCompleted={isJustCompleted}
+        onFinish={() => {
+          setShowCompletionModal(false);
+          handleCompleteNavigation();
+        }}
+        onRetake={() => {
+          setShowCompletionModal(false);
+          setIsJustCompleted(false);
+          handleResetMode();
+        }}
+      />
     </div>
   );
 }

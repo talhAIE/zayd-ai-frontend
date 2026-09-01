@@ -35,7 +35,7 @@ export const TopicCompletionModal: React.FC<TopicCompletionModalProps> = ({
           <p className="text-[14px] leading-[20px] text-[#6E748F] px-2">
             {isJustCompleted 
               ? "You have successfully completed this topic. Great job!" 
-              : "You have already finished this topic. Would you like to reset your chat history and start over?"}
+              : "You have already finished this topic. Would you like to reset your lesson and start over?"}
           </p>
         </div>
 

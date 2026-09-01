@@ -100,7 +100,7 @@ export default function LanguageLearningDashboard() {
   const dispatch = useAppDispatch();
   const { data, isLoading, error } = useAppSelector((state) => state.dashboard);
   const [timeFilter, setTimeFilter] = useState<"weekly" | "monthly">("weekly");
-  const [selectedSubject, setSelectedSubject] = useState<string>("English");
+  const [selectedCourseId, setSelectedCourseId] = useState<string>("");
   const [searchParams, setSearchParams] = useSearchParams();
   const [tourActive, setTourActive] = useState(searchParams.get("tour") === "true");
 
@@ -123,13 +123,18 @@ export default function LanguageLearningDashboard() {
   const usageRecords = data?.usageRecords;
   const assessmentGraphData = data?.assessmentGraphData || [];
   const courseProgress = data?.courseProgress || [];
-  const subjects = Array.from(new Set(courseProgress.map(c => c.subject || 'General')));
+  const selectedCourse = courseProgress.find(
+    (course) => course.id === selectedCourseId,
+  );
 
   useEffect(() => {
-    if (subjects.length > 0 && !subjects.includes(selectedSubject)) {
-      setSelectedSubject(subjects[0]);
+    if (
+      courseProgress.length > 0 &&
+      !courseProgress.some((course) => course.id === selectedCourseId)
+    ) {
+      setSelectedCourseId(courseProgress[0].id);
     }
-  }, [subjects, selectedSubject]);
+  }, [courseProgress, selectedCourseId]);
 
   // Show error state if there's an error
   if (error) {
@@ -557,19 +562,19 @@ export default function LanguageLearningDashboard() {
               {isLoading ? (
                 <Skeleton className="h-9 w-28 rounded-full" />
               ) : (
-                <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                <Select value={selectedCourseId} onValueChange={setSelectedCourseId}>
                   <SelectTrigger className="flex items-center justify-between gap-1.5 px-4 py-2 h-auto rounded-[72px] bg-[#F8F8F8] border-0 hover:bg-[#F0F0F0] focus:ring-0 focus:outline-none font-['Outfit'] font-bold text-[12px] leading-[15px] text-[#065FF0] w-auto shadow-none cursor-pointer [&>svg.opacity-50]:hidden">
-                    <SelectValue placeholder="Select Subject" />
+                    <SelectValue placeholder="Select Course" />
                     <ChevronDown className="w-4 h-4 text-[#065FF0] shrink-0" />
                   </SelectTrigger>
                   <SelectContent className="font-['Outfit'] rounded-xl">
-                    {subjects.length > 0 ? subjects.map((subject) => (
-                      <SelectItem key={subject} value={subject} className="font-medium text-sm cursor-pointer">
-                        {subject}
+                    {courseProgress.length > 0 ? courseProgress.map((course) => (
+                      <SelectItem key={course.id} value={course.id} className="font-medium text-sm cursor-pointer">
+                        {course.title || course.subject || 'Course'}
                       </SelectItem>
                     )) : (
-                      <SelectItem value="English" className="font-medium text-sm cursor-pointer" disabled>
-                        No subjects found
+                      <SelectItem value="no-courses" className="font-medium text-sm cursor-pointer" disabled>
+                        No courses found
                       </SelectItem>
                     )}
                   </SelectContent>
@@ -594,10 +599,7 @@ export default function LanguageLearningDashboard() {
               </div>
             ) : (
               <div className="flex flex-col gap-4 max-h-[380px] overflow-y-auto pr-1">
-                {courseProgress
-                  .filter(course => (course.subject || 'General') === selectedSubject)
-                  .flatMap(course => course.units)
-                  .map((unit) => (
+                {(selectedCourse?.units || []).map((unit) => (
                   <div
                     key={unit.id}
                     className="flex flex-col justify-center p-[16.11px] px-[24.17px] gap-[8.06px] rounded-[16.11px] border border-[#F4F4F4] bg-[linear-gradient(96.71deg,rgba(137,203,252,0.17)_0.12%,rgba(255,255,255,0.17)_100.84%)]"
@@ -618,8 +620,11 @@ export default function LanguageLearningDashboard() {
                     </div>
                   </div>
                 ))}
-                {subjects.length > 0 && courseProgress.filter(c => (c.subject || 'General') === selectedSubject).flatMap(c => c.units).length === 0 && (
-                  <p className="text-gray-500 text-sm text-center py-4">No units found for this subject.</p>
+                {selectedCourse && selectedCourse.units.length === 0 && (
+                  <p className="text-gray-500 text-sm text-center py-4">No units found for this course.</p>
+                )}
+                {!selectedCourse && courseProgress.length === 0 && (
+                  <p className="text-gray-500 text-sm text-center py-4">No courses are currently available.</p>
                 )}
               </div>
             )}
