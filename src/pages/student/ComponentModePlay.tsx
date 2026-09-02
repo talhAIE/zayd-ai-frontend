@@ -10,7 +10,8 @@ import {
   getUnits,
 } from '@/redux/slices/learningSlice';
 import { 
-  fetchLessonModeComponents, 
+  fetchLessonModeComponents,
+  resetLessonModePractice,
   submitComponentAttempt,
   saveComponentAttempt,
   startLearningComponent,
@@ -114,8 +115,7 @@ export default function ComponentModePlay() {
     setIsSubmittingMode(true);
     try {
       if (startedModeIdRef.current) startedModeIdRef.current = null;
-      await dispatch(startLessonMode({ lessonModeId: modeId })).unwrap().catch(() => {});
-      const data = await fetchLessonModeComponents(modeId);
+      const data = await resetLessonModePractice(modeId);
       const sorted = [...data].sort((a, b) => a.orderIndex - b.orderIndex);
       
       setComponents(sorted);
