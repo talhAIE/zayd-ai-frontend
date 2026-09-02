@@ -55,15 +55,30 @@ const ReadingPassageCard: React.FC<ReadingPassageCardProps> = ({
   return (
     <div className="w-full bg-white border border-[#E5E7EB] rounded-[12px] p-[16px_20px] flex flex-col gap-3 font-['Outfit',sans-serif] min-h-0 flex-shrink overflow-hidden">
       {/* Header Row: Badge & Audio */}
-      <div 
-        className={`flex flex-row justify-between items-center w-full ${collapsibleMode === 'accordion' && !forceExpanded ? 'cursor-pointer select-none' : ''}`}
-        onClick={() => {
-          if (collapsibleMode === 'accordion' && !forceExpanded) {
-            handleToggleExpand();
-          }
-        }}
-      >
-        <div className="flex items-center gap-3">
+      <div className="flex flex-row justify-between items-center w-full">
+        {collapsibleMode === 'accordion' && !forceExpanded ? (
+          <button
+            type="button"
+            onClick={handleToggleExpand}
+            className="flex items-center gap-3 cursor-pointer select-none"
+            aria-expanded={isExpanded}
+            aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${title}`}
+          >
+            {/* Reading Passage Badge */}
+            <div className="inline-flex flex-row items-center px-3 py-1.5 gap-[6px] bg-[#EFF6FF] border border-[#5C9DFF] rounded-[20px]">
+              <BookOpen className="w-3.5 h-3.5 text-[#5C9DFF]" />
+              <span className="font-['Outfit'] font-semibold text-[12px] leading-[15px] text-[#5C9DFF]">
+                {title}
+              </span>
+            </div>
+            <ChevronDown
+              className={`w-5 h-5 text-[#6E748F] transition-transform duration-200 ${
+                isExpanded ? 'rotate-180' : ''
+              }`}
+            />
+          </button>
+        ) : (
+          <div className="flex items-center gap-3">
           {/* Reading Passage Badge */}
           <div className="inline-flex flex-row items-center px-3 py-1.5 gap-[6px] bg-[#EFF6FF] border border-[#5C9DFF] rounded-[20px]">
             <BookOpen className="w-3.5 h-3.5 text-[#5C9DFF]" />
@@ -71,19 +86,17 @@ const ReadingPassageCard: React.FC<ReadingPassageCardProps> = ({
               {title}
             </span>
           </div>
-          {collapsibleMode === 'accordion' && !forceExpanded && (
-            <ChevronDown 
-              className={`w-5 h-5 text-[#6E748F] transition-transform duration-200 ${
-                isExpanded ? 'rotate-180' : ''
-              }`} 
-            />
-          )}
-        </div>
+          </div>
+        )}
 
         {audioUrl && onToggleAudio && (
           <button
-            onClick={onToggleAudio}
+            type="button"
+            onClick={() => {
+              onToggleAudio();
+            }}
             className="flex items-center gap-1.5 text-[#5C9DFF] hover:text-[#4A8BEB] transition-colors p-1"
+            aria-label={isPlaying ? 'Pause reading passage audio' : 'Play reading passage audio'}
           >
             {isPlaying ? (
               <Pause className="w-4 h-4" />

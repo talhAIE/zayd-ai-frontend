@@ -77,7 +77,9 @@ export default function ReadingModeTopics() {
   const [activeAssessment, setActiveAssessment] = useState<SpeechAssessment | null>(null);
   const [isPassageExpanded, setIsPassageExpanded] = useState(false);
   const [isStepsExpanded, setIsStepsExpanded] = useState(false);
+  const [fallbackSpeechMessageId, setFallbackSpeechMessageId] = useState<string | null>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const fallbackSpeechRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   const {
     isRecording,
@@ -155,6 +157,37 @@ export default function ReadingModeTopics() {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [chatHistory, isTyping]);
+
+  useEffect(() => () => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+  }, []);
+
+  const toggleInitialReadingPromptSpeech = (messageId: string, content: string) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      toast.error('Audio playback is not available in this browser.');
+      return;
+    }
+
+    if (fallbackSpeechMessageId === messageId) {
+      window.speechSynthesis.cancel();
+      setFallbackSpeechMessageId(null);
+      return;
+    }
+
+    stopAudio();
+    window.speechSynthesis.cancel();
+
+    // Read the sentence itself, rather than the surrounding instruction.
+    const sentence = content.match(/"([^"\n]+)"/)?.[1] || content;
+    const utterance = new SpeechSynthesisUtterance(sentence);
+    utterance.onend = () => setFallbackSpeechMessageId(null);
+    utterance.onerror = () => setFallbackSpeechMessageId(null);
+    fallbackSpeechRef.current = utterance;
+    setFallbackSpeechMessageId(messageId);
+    window.speechSynthesis.speak(utterance);
+  };
 
   const getProgressPercentage = () => {
     if (isCompleted) return 100;
@@ -430,6 +463,15 @@ export default function ReadingModeTopics() {
                 </div>
               </div>
               {chatHistory.map((msg, index) => (
+                (() => {
+                  const hasInitialReadingFallback =
+                    msg.role === 'assistant' &&
+                    !msg.audioUrl &&
+                    index === 0 &&
+                    msg.content.startsWith('Please read the following sentence aloud:');
+                  const isFallbackSpeechPlaying = fallbackSpeechMessageId === msg.id;
+
+                  return (
                 <div 
                   key={msg.id || index} 
                   className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} gap-1 w-full mt-2`}
@@ -483,18 +525,24 @@ export default function ReadingModeTopics() {
                       )}
                     </div>
                   )}
-                  {msg.role === 'assistant' && (msg.audioUrl || msg.feedback) && (
+                  {msg.role === 'assistant' && (msg.audioUrl || msg.feedback || hasInitialReadingFallback) && (
                     <div className="mt-3 flex items-center gap-4 border-t border-[#E5E7EB] pt-2.5">
-                      {msg.audioUrl && (
+                      {(msg.audioUrl || hasInitialReadingFallback) && (
                         <button
                           type="button"
-                          onClick={() => toggleAudio(msg.id, msg.audioUrl || undefined)}
+                          onClick={() => msg.audioUrl
+                            ? toggleAudio(msg.id, msg.audioUrl)
+                            : toggleInitialReadingPromptSpeech(msg.id, msg.content)}
                           className="flex items-center text-[#0F1450] hover:text-[#5C9DFF] transition-colors"
-                          aria-label={playingAudioId === msg.id && isCurrentlyPlaying ? 'Pause AI response' : 'Play AI response'}
+                          aria-label={
+                            (msg.audioUrl && playingAudioId === msg.id && isCurrentlyPlaying) || isFallbackSpeechPlaying
+                              ? 'Pause AI response'
+                              : 'Play AI response'
+                          }
                         >
                           {loadingAudioId === msg.id ? (
                             <LoaderCircle className="w-5 h-5 animate-spin" />
-                          ) : playingAudioId === msg.id && isCurrentlyPlaying ? (
+                          ) : (msg.audioUrl && playingAudioId === msg.id && isCurrentlyPlaying) || isFallbackSpeechPlaying ? (
                             <Pause className="w-5 h-5" />
                           ) : (
                             <Play className="w-5 h-5" />
@@ -520,6 +568,8 @@ export default function ReadingModeTopics() {
                     </span>
                   )}
                 </div>
+                  );
+                })()
               ))}
               
               {isTyping && (

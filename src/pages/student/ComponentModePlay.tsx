@@ -10,7 +10,8 @@ import {
   getUnits,
 } from '@/redux/slices/learningSlice';
 import { 
-  fetchLessonModeComponents, 
+  fetchLessonModeComponents,
+  resetLessonModePractice,
   submitComponentAttempt,
   saveComponentAttempt,
   startLearningComponent,
@@ -114,8 +115,7 @@ export default function ComponentModePlay() {
     setIsSubmittingMode(true);
     try {
       if (startedModeIdRef.current) startedModeIdRef.current = null;
-      await dispatch(startLessonMode({ lessonModeId: modeId })).unwrap().catch(() => {});
-      const data = await fetchLessonModeComponents(modeId);
+      const data = await resetLessonModePractice(modeId);
       const sorted = [...data].sort((a, b) => a.orderIndex - b.orderIndex);
       
       setComponents(sorted);
@@ -284,7 +284,8 @@ export default function ComponentModePlay() {
           setCurrentIndex(0);
         }
 
-        if (mode?.status === 'completed') {
+        const isAllComponentsCompleted = sorted.length > 0 && firstIncomplete === -1;
+        if (mode?.status === 'completed' && isAllComponentsCompleted) {
           setShowCompletionModal(true);
         }
       } catch (err: any) {

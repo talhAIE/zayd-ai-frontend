@@ -337,6 +337,11 @@ export const fetchLessonModeComponents = async (lessonModeId: string): Promise<L
   return response.data.data.components;
 };
 
+export const resetLessonModePractice = async (lessonModeId: string): Promise<LearningComponent[]> => {
+  const response = await apiClient.post<ApiEnvelope<{ components: LearningComponent[] }>>(`/learning/lesson-modes/${lessonModeId}/reset-practice`, {});
+  return response.data.data.components;
+};
+
 export const startLearningComponent = async (componentId: string): Promise<LearningComponent> => {
   const response = await apiClient.post<ApiEnvelope<{ component: LearningComponent }>>(`/learning/components/${componentId}/start`, {});
   return response.data.data.component;
