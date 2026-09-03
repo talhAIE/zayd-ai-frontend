@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { BarChart3, ChevronLeft, Mic, Clock, MessageCircle, Send, Square, Trash2, Pause, Play, LoaderCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { BarChart3, ChevronLeft, Mic, Clock, Lightbulb, MessageCircle, Send, Square, Trash2, Pause, Play, LoaderCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { useModeSession } from '@/hooks/useModeSession';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import TopicCompletionModal from '@/components/ui/TopicCompletionModal';
@@ -29,6 +29,7 @@ export default function RolePlayModeTopics() {
   const [isJustCompleted, setIsJustCompleted] = useState(false);
   const [activeFeedback, setActiveFeedback] = useState<string | null>(null);
   const [activeAssessment, setActiveAssessment] = useState<SpeechAssessment | null>(null);
+  const [hintOpenForMessageId, setHintOpenForMessageId] = useState<string | null>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -114,6 +115,11 @@ export default function RolePlayModeTopics() {
     return Math.min(99, Math.round((roleplayProgress.completedTurns / roleplayProgress.requiredTurns) * 100));
   };
 
+  const latestAssistantMessageIndex = chatHistory.reduce(
+    (latestIndex, message, index) => message.role === 'assistant' ? index : latestIndex,
+    -1,
+  );
+
   return (
     <div className="w-full max-w-[1207px] mx-auto bg-white rounded-none md:rounded-[24px] flex flex-col font-['Outfit',sans-serif] overflow-hidden h-[100dvh] md:h-[794px] max-h-[calc(100vh-40px)] border border-gray-100 shadow-sm relative">
       
@@ -198,11 +204,6 @@ export default function RolePlayModeTopics() {
               ? `${roleplayProgress.completedTurns}/${roleplayProgress.requiredTurns} meaningful turns · ${roleplayProgress.remainingTurns} remaining`
               : `${getProgressPercentage()}% Complete`}
           </span>
-          {roleplayProgress?.currentGuidedStep && (
-            <p className="text-xs font-medium text-[#475569]">
-              Current guided step: {roleplayProgress.currentGuidedStep.prompt}
-            </p>
-          )}
         </div>
       </div>
 
@@ -401,7 +402,7 @@ export default function RolePlayModeTopics() {
                       )}
                     </div>
                   )}
-                  {msg.role === 'assistant' && (msg.audioUrl || msg.feedback) && (
+                  {msg.role === 'assistant' && (msg.audioUrl || msg.feedback || (!isCompleted && !isTyping && index === latestAssistantMessageIndex && msg.hint)) && (
                     <div className="mt-3 flex items-center gap-4 border-t border-[#E5E7EB] pt-2.5">
                       {msg.audioUrl && (
                         <button
@@ -429,6 +430,23 @@ export default function RolePlayModeTopics() {
                           <span>View Feedback</span>
                         </button>
                       )}
+                      {!isCompleted && !isTyping && index === latestAssistantMessageIndex && msg.hint && (
+                        <button
+                          type="button"
+                          onClick={() => setHintOpenForMessageId(hintOpenForMessageId === msg.id ? null : msg.id)}
+                          className="flex items-center gap-1.5 text-[#0F766E] hover:text-[#0D9488] transition-colors font-semibold text-[12px] leading-[15px]"
+                          aria-expanded={hintOpenForMessageId === msg.id}
+                        >
+                          <Lightbulb className="w-3.5 h-3.5" />
+                          <span>Hint</span>
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  {!isCompleted && !isTyping && index === latestAssistantMessageIndex && msg.hint && hintOpenForMessageId === msg.id && (
+                    <div className="mt-3 rounded-lg bg-[#F0FDFA] px-3 py-2.5 text-[12px] leading-[17px] text-[#115E59]">
+                      <span className="font-semibold">What to say: </span>
+                      {msg.hint}
                     </div>
                   )}
                 </div>

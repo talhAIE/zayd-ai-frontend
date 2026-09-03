@@ -577,6 +577,7 @@ export default function ComponentModePlay() {
     currentComp &&
       currentComp.attempt?.status === 'submitted' &&
       !isComponentComplete(currentComp) &&
+      !canRevealCurrentWritingModelAnswer &&
       !localResponses[currentComp.id],
   );
 
@@ -787,7 +788,7 @@ export default function ComponentModePlay() {
           })()}
 
           <div className="flex flex-col gap-3">
-            {currentComp && currentComp.content?.presentation !== 'compiled_paragraph' && (
+            {currentComp && currentComp.componentType !== 'flashcards' && currentComp.content?.presentation !== 'compiled_paragraph' && (
               <ComponentAttemptFeedback
                 key={`feedback-${currentComp.id}`}
                 component={currentComp}
