@@ -47,8 +47,8 @@ export interface RoleplayProgress {
   requiredTurns: number;
   completedTurns: number;
   remainingTurns: number;
-  guidedSteps: Array<{ id: string; prompt: string }>;
-  currentGuidedStep: { id: string; prompt: string } | null;
+  guidedSteps: Array<{ id: string; prompt: string; hint?: string }>;
+  currentGuidedStep: { id: string; prompt: string; hint?: string } | null;
 }
 
 export interface ListeningPayload {

@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { BarChart3, ChevronLeft, Mic, Send, Square, Trash2, Check, MessageCircle, Pause, Play, LoaderCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { BarChart3, ChevronLeft, Mic, Square, Trash2, Check, MessageCircle, Pause, Play, LoaderCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { useModeSession } from '@/hooks/useModeSession';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
@@ -68,7 +68,6 @@ export default function ReadingModeTopics() {
   const refreshLearningProgress = useLearningProgressRefresh();
   
   const { playingAudioId, isCurrentlyPlaying, loadingAudioId, toggleAudio, stopAudio } = useAudioPlayback();
-  const [inputValue, setInputValue] = useState('');
   const [currentMcqIndex, setCurrentMcqIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number | string>>({});
   const [showCompletionModal, setShowCompletionModal] = useState(false);
@@ -101,7 +100,6 @@ export default function ReadingModeTopics() {
     isContentFilterWarningOpen,
     setIsContentFilterWarningOpen,
     contentFilterWarningData,
-    sendMessage,
     sendAudio,
     submitMcqs,
     restartSession
@@ -123,13 +121,6 @@ export default function ReadingModeTopics() {
 
   const [cooldown, setCooldown] = useState(false);
 
-  const handleSend = () => {
-    if (!inputValue.trim() || cooldown || isTyping || isAccountBlocked) return;
-    sendMessage(inputValue);
-    setInputValue('');
-    triggerCooldown();
-  };
-
   const handleStopRecording = async () => {
     if (cooldown || isTyping || isAccountBlocked) return;
     const res = await stopRecording();
@@ -144,12 +135,6 @@ export default function ReadingModeTopics() {
     setTimeout(() => {
       setCooldown(false);
     }, 2000);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleSend();
-    }
   };
 
   useEffect(() => {
@@ -745,32 +730,21 @@ export default function ReadingModeTopics() {
                 </div>
               ) : (
                 <>
-                  <input 
-                    type="text" 
-                    placeholder={cooldown ? "Please wait..." : "Type or read the displayed sentence aloud..."}
-                    value={inputValue}
-                    disabled={cooldown || isTyping || isAccountBlocked}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    className="flex-1 px-4 py-3 bg-white border border-[#E5E7EB] rounded-[10px] text-[14px] text-[#282828] placeholder-[#6E748F]/60 focus:outline-none focus:border-[#5C9DFF] focus:ring-1 focus:ring-[#5C9DFF] transition-all disabled:bg-gray-50 disabled:cursor-not-allowed"
+                  <input
+                    type="text"
+                    placeholder={cooldown ? "Please wait..." : "Record the displayed sentence aloud..."}
+                    value=""
+                    readOnly
+                    aria-label="Reading responses must be recorded with the microphone"
+                    className="flex-1 px-4 py-3 bg-white border border-[#E5E7EB] rounded-[10px] text-[14px] text-[#282828] placeholder-[#6E748F]/60 focus:outline-none focus:border-[#5C9DFF] focus:ring-1 focus:ring-[#5C9DFF] transition-all"
                   />
-                  {inputValue.trim() ? (
-                    <button 
-                      onClick={handleSend}
-                      disabled={cooldown || isTyping || isAccountBlocked}
-                      className="flex justify-center items-center w-11 h-11 bg-[#5C9DFF] rounded-full text-white hover:bg-[#4A8BEB] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Send className="w-5 h-5" />
-                    </button>
-                  ) : (
-                    <button 
-                      onClick={startRecording}
-                      disabled={cooldown || isTyping || isAccountBlocked}
-                      className="flex justify-center items-center w-11 h-11 bg-white border border-[#5C9DFF] rounded-full text-[#5C9DFF] hover:bg-[#EFF6FF] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Mic className="w-5 h-5" />
-                    </button>
-                  )}
+                  <button
+                    onClick={startRecording}
+                    disabled={cooldown || isTyping || isAccountBlocked}
+                    className="flex justify-center items-center w-11 h-11 bg-white border border-[#5C9DFF] rounded-full text-[#5C9DFF] hover:bg-[#EFF6FF] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Mic className="w-5 h-5" />
+                  </button>
                 </>
               )}
             </div>

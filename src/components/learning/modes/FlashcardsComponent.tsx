@@ -46,7 +46,7 @@ export default function FlashcardsComponent({ component, onSubmit, isSubmitted =
   return (
     <div className="flex w-full flex-col gap-4 font-['Outfit',sans-serif]">
       <div className="flex items-center justify-between px-1 text-[12px] font-semibold text-[#64748B]">
-        <span>{isFlipped ? 'Answer revealed' : 'Tap the card to reveal the answer'}</span>
+        <span>{isFlipped ? 'Card revealed' : 'Tap the card to reveal'}</span>
         <span className="rounded-full bg-[#EFF6FF] px-2.5 py-1 font-bold text-[#2563EB]">{currentIndex + 1} of {cards.length}</span>
       </div>
 
@@ -55,22 +55,20 @@ export default function FlashcardsComponent({ component, onSubmit, isSubmitted =
           type="button"
           onClick={flipCard}
           aria-pressed={isFlipped}
-          aria-label={isFlipped ? 'Show the question side of this flashcard' : 'Show the answer side of this flashcard'}
+          aria-label={isFlipped ? 'Show the other side of this flashcard' : 'Reveal this flashcard'}
           className="group block w-full rounded-[18px] text-left outline-none focus-visible:ring-4 focus-visible:ring-[#2563EB]/30"
         >
           <div className={`relative h-[230px] w-full transition-transform duration-500 [transform-style:preserve-3d] sm:h-[250px] ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}>
             <div className="absolute inset-0 flex [backface-visibility:hidden] flex-col items-center justify-center rounded-[18px] bg-gradient-to-br from-[#4F8DFB] to-[#2563EB] p-7 text-center shadow-[0px_8px_24px_rgba(37,99,235,0.22)] sm:p-9">
-              <span className="mb-3 text-[11px] font-bold uppercase tracking-[0.16em] text-white/70">Question</span>
               <h2 className="max-w-[650px] text-[21px] font-extrabold leading-snug tracking-[-0.35px] text-white sm:text-[27px]">
                 {currentCard?.front}
               </h2>
               <span className="mt-5 flex items-center gap-1.5 text-[13px] font-semibold text-white/85 transition-transform group-hover:translate-y-0.5">
-                Tap to reveal answer <ChevronRight className="h-4 w-4" />
+                Tap to reveal <ChevronRight className="h-4 w-4" />
               </span>
             </div>
 
             <div className="absolute inset-0 flex [backface-visibility:hidden] [transform:rotateY(180deg)] flex-col items-center justify-center rounded-[18px] border border-[#99F6E4] bg-[#F0FDFA] p-7 text-center shadow-[0px_8px_24px_rgba(13,148,136,0.15)] sm:p-9">
-              <span className="mb-3 text-[11px] font-bold uppercase tracking-[0.16em] text-[#0F766E]">Answer</span>
               <p className="max-w-[650px] text-[16px] font-bold leading-relaxed text-[#115E59] sm:text-[18px]">
                 {currentCard?.back}
               </p>
@@ -80,7 +78,7 @@ export default function FlashcardsComponent({ component, onSubmit, isSubmitted =
                 </p>
               )}
               <span className="mt-5 flex items-center gap-1.5 text-[13px] font-semibold text-[#0F766E]">
-                <RotateCcw className="h-3.5 w-3.5" /> Tap to see question
+                <RotateCcw className="h-3.5 w-3.5" /> Tap to flip back
               </span>
             </div>
           </div>
@@ -97,8 +95,6 @@ export default function FlashcardsComponent({ component, onSubmit, isSubmitted =
           >
             <ChevronLeft className="h-4 w-4" /> Previous
           </button>
-
-          <span className="text-[12px] font-bold text-[#64748B]">{viewedCards.size} of {cards.length} reviewed</span>
 
           <button
             type="button"
