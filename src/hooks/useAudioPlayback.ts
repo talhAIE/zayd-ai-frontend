@@ -26,6 +26,7 @@ export function useAudioPlayback() {
   const loadedAudioUrlRef = useRef<string | null>(null);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const onEndCalledRef = useRef(false);
+  const pausedPositionRef = useRef(0);
 
   // Keep a ref of the current playing ID to access inside callbacks
   const currentPlayingIdRef = useRef<string | null>(null);
@@ -73,6 +74,11 @@ export function useAudioPlayback() {
           : soundRef.current.playing();
           
         if (isPlayingNow) {
+          const pausedAt = playbackIdRef.current
+            ? soundRef.current.seek(playbackIdRef.current)
+            : soundRef.current.seek();
+          pausedPositionRef.current =
+            typeof pausedAt === 'number' ? pausedAt : 0;
           if (playbackIdRef.current) {
             soundRef.current.pause(playbackIdRef.current);
           } else {
@@ -80,10 +86,12 @@ export function useAudioPlayback() {
           }
           setIsCurrentlyPlaying(false);
         } else {
-          if (playbackIdRef.current) {
-            soundRef.current.play(playbackIdRef.current);
-          } else {
-            playbackIdRef.current = soundRef.current.play();
+          const playbackId = playbackIdRef.current
+            ? soundRef.current.play(playbackIdRef.current)
+            : soundRef.current.play();
+          playbackIdRef.current = playbackId;
+          if (pausedPositionRef.current > 0) {
+            soundRef.current.seek(pausedPositionRef.current, playbackId);
           }
           setIsCurrentlyPlaying(true);
           // if it resumes, we reset onEndCalled just in case
@@ -105,6 +113,7 @@ export function useAudioPlayback() {
       setLoadingAudioId(id);
       clearAudioProgress();
       onEndCalledRef.current = false;
+      pausedPositionRef.current = 0;
 
       const isBlob = audioUrl.startsWith('blob:');
       let format: string | undefined;
@@ -153,6 +162,11 @@ export function useAudioPlayback() {
           }, 100);
         },
         onpause: () => {
+          const pausedAt = playbackIdRef.current
+            ? sound.seek(playbackIdRef.current)
+            : sound.seek();
+          pausedPositionRef.current =
+            typeof pausedAt === 'number' ? pausedAt : pausedPositionRef.current;
           if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
           if (currentPlayingIdRef.current === id) {
             setIsCurrentlyPlaying(false);
@@ -164,6 +178,7 @@ export function useAudioPlayback() {
             setIsCurrentlyPlaying(false);
           }
           setAudioProgress(0);
+          pausedPositionRef.current = 0;
           if (onEnd && !onEndCalledRef.current) {
             onEndCalledRef.current = true;
             onEnd();
@@ -194,6 +209,7 @@ export function useAudioPlayback() {
     }
     loadedAudioUrlRef.current = null;
     playbackIdRef.current = null;
+    pausedPositionRef.current = 0;
     setPlayingAudioId(null);
     setIsCurrentlyPlaying(false);
     setLoadingAudioId(null);
