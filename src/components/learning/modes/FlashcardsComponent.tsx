@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react';
 import { LearningComponent } from '@/services/learningService';
 
@@ -20,7 +20,26 @@ export default function FlashcardsComponent({ component, onSubmit, isSubmitted =
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [viewedCards, setViewedCards] = useState<Set<string>>(new Set());
+  const hasSubmittedCompletionRef = useRef(false);
   const currentCard = cards[currentIndex] || cards[0];
+
+  useEffect(() => {
+    if (
+      !onSubmit ||
+      isSubmitted ||
+      viewedCards.size !== cards.length ||
+      hasSubmittedCompletionRef.current
+    ) {
+      return;
+    }
+
+    hasSubmittedCompletionRef.current = true;
+    void Promise.resolve(onSubmit({ viewedCardIds: [...viewedCards] })).catch(
+      () => {
+        hasSubmittedCompletionRef.current = false;
+      },
+    );
+  }, [cards.length, isSubmitted, onSubmit, viewedCards]);
 
   const flipCard = () => {
     if (!currentCard) return;
@@ -47,7 +66,7 @@ export default function FlashcardsComponent({ component, onSubmit, isSubmitted =
     <div className="flex w-full flex-col gap-4 font-['Outfit',sans-serif]">
       <div className="flex items-center justify-between px-1 text-[12px] font-semibold text-[#64748B]">
         <span>{isFlipped ? 'Card revealed' : 'Tap the card to reveal'}</span>
-        <span className="rounded-full bg-[#EFF6FF] px-2.5 py-1 font-bold text-[#2563EB]">{currentIndex + 1} of {cards.length}</span>
+        <span className="rounded-full bg-[#EFF6FF] px-2.5 py-1 font-bold text-[#2563EB]">{viewedCards.size} of {cards.length}</span>
       </div>
 
       <div className="mx-auto w-full max-w-[760px] [perspective:1200px]">
@@ -107,18 +126,6 @@ export default function FlashcardsComponent({ component, onSubmit, isSubmitted =
         </div>
       )}
 
-      {onSubmit && !isSubmitted && (
-        <div className="mx-auto flex w-full max-w-[760px] justify-end">
-          <button
-            type="button"
-            onClick={() => onSubmit({ viewedCardIds: [...viewedCards] })}
-            disabled={viewedCards.size !== cards.length}
-            className="rounded-[10px] bg-[#4F8DFB] px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#3B82F6] disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Complete flashcards
-          </button>
-        </div>
-      )}
     </div>
   );
 }
