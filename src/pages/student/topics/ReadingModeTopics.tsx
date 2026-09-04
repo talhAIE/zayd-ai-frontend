@@ -444,7 +444,7 @@ export default function ReadingModeTopics() {
                 <span className="text-lg leading-none">📖</span>
                 <div>
                   <strong className="block text-[#1E3A8A] font-semibold text-[13px]">Practice Reading</strong>
-                  Read each sentence from the passage aloud using the microphone, or type it into the text box below.
+                  Read each sentence from the passage aloud using the microphone.
                 </div>
               </div>
               {chatHistory.map((msg, index) => (
