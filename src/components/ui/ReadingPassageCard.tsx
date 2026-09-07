@@ -40,6 +40,31 @@ const inferConversationBlocks = (content: string): ReadingPassageBlock[] | null 
   return blocks.every((block) => block) ? (blocks as ReadingPassageBlock[]) : null;
 };
 
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const HighlightedReadingText: React.FC<{
+  text: string;
+  vocabularyTerms: string[];
+}> = ({ text, vocabularyTerms }) => {
+  const terms = [...new Set(vocabularyTerms.map((term) => term.trim()).filter(Boolean))]
+    .sort((left, right) => right.length - left.length);
+  if (terms.length === 0) return <>{text}</>;
+
+  const pattern = new RegExp(`(${terms.map(escapeRegExp).join('|')})`, 'gi');
+  const termSet = new Set(terms.map((term) => term.toLowerCase()));
+  return (
+    <>
+      {text.split(pattern).map((part, index) =>
+        termSet.has(part.toLowerCase()) ? (
+          <span key={index} className="font-semibold text-[#3B82F6]">{part}</span>
+        ) : (
+          part
+        ),
+      )}
+    </>
+  );
+};
+
 const ReadingPassageCard: React.FC<ReadingPassageCardProps> = ({
   content,
   audioUrl,
@@ -93,6 +118,7 @@ const ReadingPassageCard: React.FC<ReadingPassageCardProps> = ({
   const paragraphContent = suppliedBlocks.length > 0
     ? suppliedBlocks.map((block) => block.text?.trim()).filter((text): text is string => Boolean(text))
     : content.split(/\n{2,}/).map((paragraph) => paragraph.trim()).filter((text): text is string => Boolean(text));
+  const vocabularyTerms = readingPresentation?.vocabularyTerms ?? [];
 
   return (
     <div className="w-full bg-white border border-[#E5E7EB] rounded-[12px] p-[16px_20px] flex flex-col gap-3 font-['Outfit',sans-serif] min-h-0 flex-shrink overflow-hidden">
@@ -170,14 +196,16 @@ const ReadingPassageCard: React.FC<ReadingPassageCardProps> = ({
                 {blocks.map((block, index) => (
                   <p key={`${block.speaker ?? 'line'}-${index}`}>
                     {block.speaker && <strong>{block.speaker}: </strong>}
-                    {block.text}
+                    <HighlightedReadingText text={block.text ?? ''} vocabularyTerms={vocabularyTerms} />
                   </p>
                 ))}
               </div>
             ) : (
               <div className="space-y-4">
                 {paragraphContent.map((paragraph, index) => (
-                  <p key={index}>{paragraph}</p>
+                  <p key={index}>
+                    <HighlightedReadingText text={paragraph} vocabularyTerms={vocabularyTerms} />
+                  </p>
                 ))}
               </div>
             )}
