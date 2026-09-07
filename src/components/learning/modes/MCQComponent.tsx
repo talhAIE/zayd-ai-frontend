@@ -29,6 +29,14 @@ interface MCQComponentProps {
   disabled?: boolean;
 }
 
+const CONCRETE_NOUN_PROMPT = 'Which bold noun is a concrete noun?';
+const CONCRETE_NOUN_OPTION_EMPHASIS = [
+  ['flowers'],
+  ['caring'],
+  ['anger'],
+  ['friendship'],
+];
+
 export default function MCQComponent({
   component,
   onAnswerChange,
@@ -39,6 +47,15 @@ export default function MCQComponent({
   const prompt = component.content?.prompt || component.title || component.description || '';
   
   const rawOptions = component.options || component.content?.options || [];
+  // Older published American Grade 7 content predates option-level emphasis
+  // metadata. Retain this narrowly-scoped fallback until its safe content
+  // migration has been applied, while letting all future authored content use
+  // the backend-provided optionEmphasisTerms contract.
+  const optionEmphasisTerms = Array.isArray(component.content?.optionEmphasisTerms)
+    ? component.content.optionEmphasisTerms
+    : component.content?.prompt === CONCRETE_NOUN_PROMPT
+      ? CONCRETE_NOUN_OPTION_EMPHASIS
+      : [];
 
   const options = rawOptions.map((opt: any, index: number) => {
     const label = typeof opt === 'string' ? opt : opt.label || opt.text || '';
@@ -53,7 +70,7 @@ export default function MCQComponent({
       label: cleanedLabel,
       value: id,
       id,
-      emphasisTerms: component.content?.optionEmphasisTerms?.[index],
+      emphasisTerms: optionEmphasisTerms[index],
     };
   });
 
