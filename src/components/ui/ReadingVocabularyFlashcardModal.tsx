@@ -86,8 +86,7 @@ export default function ReadingVocabularyFlashcardModal({
               </div>
 
               <div className="absolute inset-0 flex [backface-visibility:hidden] [transform:rotateY(180deg)] flex-col items-center justify-center rounded-[18px] border border-[#99F6E4] bg-[#F0FDFA] p-6 text-center shadow-[0px_8px_24px_rgba(13,148,136,0.15)] sm:p-8">
-                <h3 className="text-[19px] font-extrabold text-[#115E59]">{card.word} <span className="font-semibold italic">({card.partOfSpeech})</span></h3>
-                <p className="mt-4 max-w-[500px] text-[16px] font-bold leading-relaxed text-[#115E59]">{card.definition}</p>
+                <p className="max-w-[500px] text-[16px] font-bold leading-relaxed text-[#115E59]">{card.definition}</p>
                 <p className="mt-4 max-w-[500px] rounded-[10px] border border-[#99F6E4] bg-white/80 px-4 py-2 text-[13px] font-semibold leading-relaxed text-[#0F766E]">
                   Example: {card.example.replace(/^Ex:\s*/i, '')}
                 </p>
