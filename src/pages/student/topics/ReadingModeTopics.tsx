@@ -61,15 +61,59 @@ function isOptionCorrect(mcq: any, answer: number | string | undefined) {
 
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+const GRADE7_READING_VOCABULARY: Record<string, Omit<ReadingVocabularyCard, 'word'>> = {
+  adjustments: {
+    partOfSpeech: 'noun',
+    definition: 'Changes made to get used to a new situation.',
+    example: 'Moving to a new country requires many adjustments.',
+  },
+  positive: {
+    partOfSpeech: 'adjective',
+    definition: 'Good, helpful, or favorable.',
+    example: 'Despite the challenges, his experience was positive.',
+  },
+  interview: {
+    partOfSpeech: 'noun',
+    definition: 'A meeting where someone asks questions to get information.',
+    example: 'The reporter conducted an interview with Rajeet.',
+  },
+  announced: {
+    partOfSpeech: 'verb',
+    definition: 'Made an important statement publicly or clearly.',
+    example: 'His father announced the big news at dinner.',
+  },
+  bulky: {
+    partOfSpeech: 'adjective',
+    definition: 'Large, heavy, and clumsy to handle.',
+    example: 'The winter coat felt heavy and bulky.',
+  },
+  thermometer: {
+    partOfSpeech: 'noun',
+    definition: 'An instrument used to measure temperature.',
+    example: 'He checked the thermometer to see how cold it was outside.',
+  },
+};
+
+const getText = (value: unknown): string | null =>
+  typeof value === 'string' && value.trim() ? value.trim() : null;
+
 function getVocabularyCards(value: unknown): ReadingVocabularyCard[] {
   if (!Array.isArray(value)) return [];
 
-  return value.filter((card: unknown): card is ReadingVocabularyCard => {
-    if (!card || typeof card !== 'object') return false;
+  return value.flatMap((card: unknown) => {
+    if (!card || typeof card !== 'object') return [];
+
     const vocabulary = card as Record<string, unknown>;
-    return ['word', 'partOfSpeech', 'definition', 'example'].every(
-      (key) => typeof vocabulary[key] === 'string',
-    );
+    const word = getText(vocabulary.word) ?? getText(vocabulary.term);
+    if (!word) return [];
+
+    const defaultCard = GRADE7_READING_VOCABULARY[word.toLowerCase()];
+    const partOfSpeech = getText(vocabulary.partOfSpeech) ?? defaultCard?.partOfSpeech;
+    const definition = getText(vocabulary.definition) ?? defaultCard?.definition;
+    const example = getText(vocabulary.example) ?? defaultCard?.example;
+    if (!partOfSpeech || !definition || !example) return [];
+
+    return [{ word, partOfSpeech, definition, example }];
   });
 }
 
@@ -315,6 +359,9 @@ export default function ReadingModeTopics() {
   ].filter((card, index, cards) =>
     cards.findIndex((candidate) => candidate.word.toLowerCase() === card.word.toLowerCase()) === index,
   );
+  const readingPresentation = contentPayload?.readingPresentation
+    ? { ...contentPayload.readingPresentation, vocabularyCards }
+    : undefined;
 
   return (
     <div className="w-full max-w-[1207px] mx-auto bg-white rounded-none md:rounded-[24px] flex flex-col font-['Outfit',sans-serif] overflow-hidden h-[100dvh] md:h-[794px] max-h-[calc(100vh-40px)] border border-gray-100 shadow-sm relative">
@@ -514,7 +561,7 @@ export default function ReadingModeTopics() {
               <ReadingPassageCard 
                 content={contentPayload.passage || contentPayload.content || (contentPayload.sentences ? contentPayload.sentences.join('\n\n') : '')}
                 audioUrl={contentPayload.contentAudioUrl || contentPayload.narrationAudioUrl || contentPayload.attachmentUrl}
-                readingPresentation={contentPayload.readingPresentation}
+                readingPresentation={readingPresentation}
                 onVocabularyClick={setActiveVocabularyCard}
                 showAudioControl={Boolean(readingPassageText)}
                 isPlaying={(playingAudioId === 'reading-passage' && isCurrentlyPlaying) || fallbackSpeechMessageId === 'reading-passage-fallback'}
