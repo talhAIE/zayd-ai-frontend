@@ -61,6 +61,18 @@ function isOptionCorrect(mcq: any, answer: number | string | undefined) {
 
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+function getVocabularyCards(value: unknown): ReadingVocabularyCard[] {
+  if (!Array.isArray(value)) return [];
+
+  return value.filter((card: unknown): card is ReadingVocabularyCard => {
+    if (!card || typeof card !== 'object') return false;
+    const vocabulary = card as Record<string, unknown>;
+    return ['word', 'partOfSpeech', 'definition', 'example'].every(
+      (key) => typeof vocabulary[key] === 'string',
+    );
+  });
+}
+
 function HighlightedReadingSentence({ text, vocabularyTerms, vocabularyCards, onVocabularyClick }: {
   text: string;
   vocabularyTerms: string[];
@@ -294,13 +306,15 @@ export default function ReadingModeTopics() {
   const vocabularyTerms = Array.isArray(contentPayload?.readingPresentation?.vocabularyTerms)
     ? contentPayload.readingPresentation.vocabularyTerms.filter((term: unknown): term is string => typeof term === 'string')
     : [];
-  const vocabularyCards = Array.isArray(contentPayload?.readingPresentation?.vocabularyCards)
-    ? contentPayload.readingPresentation.vocabularyCards.filter((card: unknown): card is ReadingVocabularyCard => {
-      if (!card || typeof card !== 'object') return false;
-      const value = card as Record<string, unknown>;
-      return ['word', 'partOfSpeech', 'definition', 'example'].every((key) => typeof value[key] === 'string');
-    })
-    : [];
+  // Existing Grade 7 content already stores this information in `vocabulary`.
+  // Prefer the new reading-presentation cards when available, but retain this
+  // fallback so published lessons become interactive immediately.
+  const vocabularyCards = [
+    ...getVocabularyCards(contentPayload?.readingPresentation?.vocabularyCards),
+    ...getVocabularyCards(contentPayload?.vocabulary),
+  ].filter((card, index, cards) =>
+    cards.findIndex((candidate) => candidate.word.toLowerCase() === card.word.toLowerCase()) === index,
+  );
 
   return (
     <div className="w-full max-w-[1207px] mx-auto bg-white rounded-none md:rounded-[24px] flex flex-col font-['Outfit',sans-serif] overflow-hidden h-[100dvh] md:h-[794px] max-h-[calc(100vh-40px)] border border-gray-100 shadow-sm relative">
