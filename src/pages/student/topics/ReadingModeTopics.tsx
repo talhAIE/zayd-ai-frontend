@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { useModeSession } from '@/hooks/useModeSession';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import ReadingPassageCard from '@/components/ui/ReadingPassageCard';
+import ReadingVocabularyFlashcardModal, { type ReadingVocabularyCard } from '@/components/ui/ReadingVocabularyFlashcardModal';
 import TopicCompletionModal from '@/components/ui/TopicCompletionModal';
 import FeedbackModal from '@/components/ui/FeedbackModal';
 import { ContentPolicyWarningModal } from '@/components/ui/ContentPolicyWarningModal';
@@ -60,9 +61,11 @@ function isOptionCorrect(mcq: any, answer: number | string | undefined) {
 
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-function HighlightedReadingSentence({ text, vocabularyTerms }: {
+function HighlightedReadingSentence({ text, vocabularyTerms, vocabularyCards, onVocabularyClick }: {
   text: string;
   vocabularyTerms: string[];
+  vocabularyCards: ReadingVocabularyCard[];
+  onVocabularyClick: (card: ReadingVocabularyCard) => void;
 }) {
   const terms = [...new Set(vocabularyTerms.map((term) => term.trim()).filter(Boolean))]
     .sort((left, right) => right.length - left.length);
@@ -70,9 +73,12 @@ function HighlightedReadingSentence({ text, vocabularyTerms }: {
 
   const pattern = new RegExp(`(${terms.map(escapeRegExp).join('|')})`, 'gi');
   const termSet = new Set(terms.map((term) => term.toLowerCase()));
+  const cardByTerm = new Map(vocabularyCards.map((card) => [card.word.trim().toLowerCase(), card]));
   return <>{text.split(pattern).map((part, index) =>
     termSet.has(part.toLowerCase())
-      ? <span key={index} className="font-semibold text-[#3B82F6]">{part}</span>
+      ? cardByTerm.get(part.toLowerCase())
+        ? <button key={index} type="button" onClick={() => onVocabularyClick(cardByTerm.get(part.toLowerCase())!)} className="cursor-pointer font-semibold text-[#3B82F6] underline decoration-[#93C5FD] decoration-2 underline-offset-2 transition-colors hover:text-[#2563EB] focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/40" aria-label={`Open vocabulary flashcard for ${part}`}>{part}</button>
+        : <span key={index} className="font-semibold text-[#3B82F6]">{part}</span>
       : part,
   )}</>;
 }
@@ -93,6 +99,7 @@ export default function ReadingModeTopics() {
   const [isJustCompleted, setIsJustCompleted] = useState(false);
   const [activeFeedback, setActiveFeedback] = useState<string | null>(null);
   const [activeAssessment, setActiveAssessment] = useState<SpeechAssessment | null>(null);
+  const [activeVocabularyCard, setActiveVocabularyCard] = useState<ReadingVocabularyCard | null>(null);
   const [hasStartedShadowReading, setHasStartedShadowReading] = useState(false);
   const [isStepsExpanded, setIsStepsExpanded] = useState(false);
   const [fallbackSpeechMessageId, setFallbackSpeechMessageId] = useState<string | null>(null);
@@ -287,6 +294,13 @@ export default function ReadingModeTopics() {
   const vocabularyTerms = Array.isArray(contentPayload?.readingPresentation?.vocabularyTerms)
     ? contentPayload.readingPresentation.vocabularyTerms.filter((term: unknown): term is string => typeof term === 'string')
     : [];
+  const vocabularyCards = Array.isArray(contentPayload?.readingPresentation?.vocabularyCards)
+    ? contentPayload.readingPresentation.vocabularyCards.filter((card: unknown): card is ReadingVocabularyCard => {
+      if (!card || typeof card !== 'object') return false;
+      const value = card as Record<string, unknown>;
+      return ['word', 'partOfSpeech', 'definition', 'example'].every((key) => typeof value[key] === 'string');
+    })
+    : [];
 
   return (
     <div className="w-full max-w-[1207px] mx-auto bg-white rounded-none md:rounded-[24px] flex flex-col font-['Outfit',sans-serif] overflow-hidden h-[100dvh] md:h-[794px] max-h-[calc(100vh-40px)] border border-gray-100 shadow-sm relative">
@@ -323,6 +337,10 @@ export default function ReadingModeTopics() {
         assessment={activeAssessment}
         open={!!activeAssessment}
         onClose={() => setActiveAssessment(null)}
+      />
+      <ReadingVocabularyFlashcardModal
+        card={activeVocabularyCard}
+        onClose={() => setActiveVocabularyCard(null)}
       />
 
       {/* Header Progress Group */}
@@ -483,6 +501,7 @@ export default function ReadingModeTopics() {
                 content={contentPayload.passage || contentPayload.content || (contentPayload.sentences ? contentPayload.sentences.join('\n\n') : '')}
                 audioUrl={contentPayload.contentAudioUrl || contentPayload.narrationAudioUrl || contentPayload.attachmentUrl}
                 readingPresentation={contentPayload.readingPresentation}
+                onVocabularyClick={setActiveVocabularyCard}
                 showAudioControl={Boolean(readingPassageText)}
                 isPlaying={(playingAudioId === 'reading-passage' && isCurrentlyPlaying) || fallbackSpeechMessageId === 'reading-passage-fallback'}
                 onToggleAudio={togglePassageAudio}
@@ -521,7 +540,7 @@ export default function ReadingModeTopics() {
                   <div className="px-4 py-3 max-w-[85%] text-left bg-white border border-[#E5E7EB] shadow-sm rounded-tr-xl rounded-br-xl rounded-bl-xl rounded-tl-sm">
                     <div className="text-[13px] leading-[18px] text-[#0F1450] whitespace-pre-wrap break-words">
                       <p>Please read the following sentence aloud:</p>
-                      <p className="mt-2">&quot;<HighlightedReadingSentence text={initialReadingSentence} vocabularyTerms={vocabularyTerms} />&quot;</p>
+                      <p className="mt-2">&quot;<HighlightedReadingSentence text={initialReadingSentence} vocabularyTerms={vocabularyTerms} vocabularyCards={vocabularyCards} onVocabularyClick={setActiveVocabularyCard} />&quot;</p>
                     </div>
                     <div className="mt-3 flex items-center gap-4 border-t border-[#E5E7EB] pt-2.5">
                       <button

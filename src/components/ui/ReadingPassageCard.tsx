@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { Play, Pause, ChevronDown, BookOpen } from 'lucide-react';
+import type { ReadingVocabularyCard } from './ReadingVocabularyFlashcardModal';
 
 type ReadingPassageBlock = {
   text?: string;
@@ -13,6 +14,7 @@ export type ReadingPassagePresentation = {
   author?: string;
   blocks?: ReadingPassageBlock[];
   vocabularyTerms?: string[];
+  vocabularyCards?: ReadingVocabularyCard[];
 };
 
 interface ReadingPassageCardProps {
@@ -26,6 +28,7 @@ interface ReadingPassageCardProps {
   collapsibleMode?: 'see-more' | 'accordion';
   readingPresentation?: ReadingPassagePresentation;
   showAudioControl?: boolean;
+  onVocabularyClick?: (card: ReadingVocabularyCard) => void;
 }
 
 const inferConversationBlocks = (content: string): ReadingPassageBlock[] | null => {
@@ -45,18 +48,33 @@ const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\
 const HighlightedReadingText: React.FC<{
   text: string;
   vocabularyTerms: string[];
-}> = ({ text, vocabularyTerms }) => {
+  vocabularyCards: ReadingVocabularyCard[];
+  onVocabularyClick?: (card: ReadingVocabularyCard) => void;
+}> = ({ text, vocabularyTerms, vocabularyCards, onVocabularyClick }) => {
   const terms = [...new Set(vocabularyTerms.map((term) => term.trim()).filter(Boolean))]
     .sort((left, right) => right.length - left.length);
   if (terms.length === 0) return <>{text}</>;
 
   const pattern = new RegExp(`(${terms.map(escapeRegExp).join('|')})`, 'gi');
   const termSet = new Set(terms.map((term) => term.toLowerCase()));
+  const cardByTerm = new Map(vocabularyCards.map((card) => [card.word.trim().toLowerCase(), card]));
   return (
     <>
       {text.split(pattern).map((part, index) =>
         termSet.has(part.toLowerCase()) ? (
-          <span key={index} className="font-semibold text-[#3B82F6]">{part}</span>
+          cardByTerm.get(part.toLowerCase()) ? (
+            <button
+              key={index}
+              type="button"
+              onClick={() => onVocabularyClick?.(cardByTerm.get(part.toLowerCase())!)}
+              className="cursor-pointer font-semibold text-[#3B82F6] underline decoration-[#93C5FD] decoration-2 underline-offset-2 transition-colors hover:text-[#2563EB] focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/40"
+              aria-label={`Open vocabulary flashcard for ${part}`}
+            >
+              {part}
+            </button>
+          ) : (
+            <span key={index} className="font-semibold text-[#3B82F6]">{part}</span>
+          )
         ) : (
           part
         ),
@@ -76,6 +94,7 @@ const ReadingPassageCard: React.FC<ReadingPassageCardProps> = ({
   collapsibleMode = 'see-more',
   readingPresentation,
   showAudioControl = Boolean(audioUrl),
+  onVocabularyClick,
 }) => {
   const [isExpanded, setIsExpanded] = React.useState(collapsibleMode === 'accordion' ? false : false);
   const [shouldShowExpandButton, setShouldShowExpandButton] = React.useState(false);
@@ -119,6 +138,7 @@ const ReadingPassageCard: React.FC<ReadingPassageCardProps> = ({
     ? suppliedBlocks.map((block) => block.text?.trim()).filter((text): text is string => Boolean(text))
     : content.split(/\n{2,}/).map((paragraph) => paragraph.trim()).filter((text): text is string => Boolean(text));
   const vocabularyTerms = readingPresentation?.vocabularyTerms ?? [];
+  const vocabularyCards = readingPresentation?.vocabularyCards ?? [];
 
   return (
     <div className="w-full bg-white border border-[#E5E7EB] rounded-[12px] p-[16px_20px] flex flex-col gap-3 font-['Outfit',sans-serif] min-h-0 flex-shrink overflow-hidden">
@@ -196,7 +216,7 @@ const ReadingPassageCard: React.FC<ReadingPassageCardProps> = ({
                 {blocks.map((block, index) => (
                   <p key={`${block.speaker ?? 'line'}-${index}`}>
                     {block.speaker && <strong>{block.speaker}: </strong>}
-                    <HighlightedReadingText text={block.text ?? ''} vocabularyTerms={vocabularyTerms} />
+                    <HighlightedReadingText text={block.text ?? ''} vocabularyTerms={vocabularyTerms} vocabularyCards={vocabularyCards} onVocabularyClick={onVocabularyClick} />
                   </p>
                 ))}
               </div>
@@ -204,7 +224,7 @@ const ReadingPassageCard: React.FC<ReadingPassageCardProps> = ({
               <div className="space-y-4">
                 {paragraphContent.map((paragraph, index) => (
                   <p key={index}>
-                    <HighlightedReadingText text={paragraph} vocabularyTerms={vocabularyTerms} />
+                    <HighlightedReadingText text={paragraph} vocabularyTerms={vocabularyTerms} vocabularyCards={vocabularyCards} onVocabularyClick={onVocabularyClick} />
                   </p>
                 ))}
               </div>
