@@ -1,5 +1,21 @@
 import React, { useRef, useEffect } from 'react';
 import { Play, Pause, ChevronDown, BookOpen } from 'lucide-react';
+import type { ReadingVocabularyCard } from './ReadingVocabularyFlashcardModal';
+
+type ReadingPassageBlock = {
+  text?: string;
+  speaker?: string;
+};
+
+export type ReadingPassagePresentation = {
+  format?: 'paragraph' | 'conversation';
+  heading?: string;
+  title?: string;
+  author?: string;
+  blocks?: ReadingPassageBlock[];
+  vocabularyTerms?: string[];
+  vocabularyCards?: ReadingVocabularyCard[];
+};
 
 interface ReadingPassageCardProps {
   content: string;
@@ -10,7 +26,62 @@ interface ReadingPassageCardProps {
   forceExpanded?: boolean;
   title?: string;
   collapsibleMode?: 'see-more' | 'accordion';
+  readingPresentation?: ReadingPassagePresentation;
+  showAudioControl?: boolean;
+  onVocabularyClick?: (card: ReadingVocabularyCard) => void;
 }
+
+const inferConversationBlocks = (content: string): ReadingPassageBlock[] | null => {
+  const lines = content.split(/\n+/).map((line) => line.trim()).filter(Boolean);
+  if (lines.length === 0) return null;
+
+  const blocks = lines.map((line) => {
+    const match = line.match(/^([^:]{1,40}):\s*(.+)$/);
+    return match ? { speaker: match[1].trim(), text: match[2].trim() } : null;
+  });
+
+  return blocks.every((block) => block) ? (blocks as ReadingPassageBlock[]) : null;
+};
+
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const HighlightedReadingText: React.FC<{
+  text: string;
+  vocabularyTerms: string[];
+  vocabularyCards: ReadingVocabularyCard[];
+  onVocabularyClick?: (card: ReadingVocabularyCard) => void;
+}> = ({ text, vocabularyTerms, vocabularyCards, onVocabularyClick }) => {
+  const terms = [...new Set(vocabularyTerms.map((term) => term.trim()).filter(Boolean))]
+    .sort((left, right) => right.length - left.length);
+  if (terms.length === 0) return <>{text}</>;
+
+  const pattern = new RegExp(`(${terms.map(escapeRegExp).join('|')})`, 'gi');
+  const termSet = new Set(terms.map((term) => term.toLowerCase()));
+  const cardByTerm = new Map(vocabularyCards.map((card) => [card.word.trim().toLowerCase(), card]));
+  return (
+    <>
+      {text.split(pattern).map((part, index) =>
+        termSet.has(part.toLowerCase()) ? (
+          cardByTerm.get(part.toLowerCase()) ? (
+            <button
+              key={index}
+              type="button"
+              onClick={() => onVocabularyClick?.(cardByTerm.get(part.toLowerCase())!)}
+              className="cursor-pointer font-semibold text-[#3B82F6] underline decoration-[#93C5FD] decoration-2 underline-offset-2 transition-colors hover:text-[#2563EB] focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/40"
+              aria-label={`Open vocabulary flashcard for ${part}`}
+            >
+              {part}
+            </button>
+          ) : (
+            <span key={index} className="font-semibold text-[#3B82F6]">{part}</span>
+          )
+        ) : (
+          part
+        ),
+      )}
+    </>
+  );
+};
 
 const ReadingPassageCard: React.FC<ReadingPassageCardProps> = ({
   content,
@@ -21,10 +92,13 @@ const ReadingPassageCard: React.FC<ReadingPassageCardProps> = ({
   forceExpanded = false,
   title = 'Reading Passage',
   collapsibleMode = 'see-more',
+  readingPresentation,
+  showAudioControl = Boolean(audioUrl),
+  onVocabularyClick,
 }) => {
   const [isExpanded, setIsExpanded] = React.useState(collapsibleMode === 'accordion' ? false : false);
   const [shouldShowExpandButton, setShouldShowExpandButton] = React.useState(false);
-  const contentRef = useRef<HTMLParagraphElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   // Check if content needs expansion button
   useEffect(() => {
@@ -51,6 +125,20 @@ const ReadingPassageCard: React.FC<ReadingPassageCardProps> = ({
       onExpand();
     }
   };
+
+  const suppliedBlocks = readingPresentation?.blocks?.filter((block) => block.text?.trim()) ?? [];
+  const inferredConversation = suppliedBlocks.length === 0
+    ? inferConversationBlocks(content)
+    : null;
+  const blocks = suppliedBlocks.length > 0 ? suppliedBlocks : inferredConversation ?? [];
+  const isConversation = readingPresentation?.format === 'conversation'
+    ? blocks.length > 0
+    : Boolean(inferredConversation);
+  const paragraphContent = suppliedBlocks.length > 0
+    ? suppliedBlocks.map((block) => block.text?.trim()).filter((text): text is string => Boolean(text))
+    : content.split(/\n{2,}/).map((paragraph) => paragraph.trim()).filter((text): text is string => Boolean(text));
+  const vocabularyTerms = readingPresentation?.vocabularyTerms ?? [];
+  const vocabularyCards = readingPresentation?.vocabularyCards ?? [];
 
   return (
     <div className="w-full bg-white border border-[#E5E7EB] rounded-[12px] p-[16px_20px] flex flex-col gap-3 font-['Outfit',sans-serif] min-h-0 flex-shrink overflow-hidden">
@@ -89,7 +177,7 @@ const ReadingPassageCard: React.FC<ReadingPassageCardProps> = ({
           </div>
         )}
 
-        {audioUrl && onToggleAudio && (
+        {showAudioControl && onToggleAudio && (
           <button
             type="button"
             onClick={() => {
@@ -111,24 +199,37 @@ const ReadingPassageCard: React.FC<ReadingPassageCardProps> = ({
       {/* Content */}
       {!(collapsibleMode === 'accordion' && !forceExpanded && !isExpanded) && (
         <div className={`min-h-0 flex-shrink overflow-y-auto pr-2 custom-scrollbar ${collapsibleMode === 'accordion' && !forceExpanded ? 'max-h-[120px]' : ''}`}>
-          <p
+          <div
             ref={contentRef}
-            className={`font-['Outfit'] font-normal text-[14px] leading-[22px] text-[#282828] whitespace-pre-wrap transition-all duration-200 ${
+            className={`font-['Outfit'] font-normal text-[14px] leading-[22px] text-[#282828] transition-all duration-200 ${
               (collapsibleMode === 'see-more' && !isExpanded && !forceExpanded) ? 'line-clamp-3' : 'line-clamp-none'
             }`}
           >
-            {content
-              .split(/(\*\*.*?\*\*)/g)
-              .map((part, i) =>
-                part.startsWith('**') && part.endsWith('**') ? (
-                  <span key={i} className="font-semibold text-[#5C9DFF]">
-                    {part.slice(2, -2)}
-                  </span>
-                ) : (
-                  part
-                )
-              )}
-          </p>
+            {readingPresentation?.title && (
+              <h3 className="mb-0.5 text-[16px] font-bold leading-6">{readingPresentation.title}</h3>
+            )}
+            {readingPresentation?.author && (
+              <p className="mb-3 italic">{readingPresentation.author}</p>
+            )}
+            {isConversation ? (
+              <div className="space-y-1">
+                {blocks.map((block, index) => (
+                  <p key={`${block.speaker ?? 'line'}-${index}`}>
+                    {block.speaker && <strong>{block.speaker}: </strong>}
+                    <HighlightedReadingText text={block.text ?? ''} vocabularyTerms={vocabularyTerms} vocabularyCards={vocabularyCards} onVocabularyClick={onVocabularyClick} />
+                  </p>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {paragraphContent.map((paragraph, index) => (
+                  <p key={index}>
+                    <HighlightedReadingText text={paragraph} vocabularyTerms={vocabularyTerms} vocabularyCards={vocabularyCards} onVocabularyClick={onVocabularyClick} />
+                  </p>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 

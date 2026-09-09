@@ -25,6 +25,7 @@ export interface Mcq {
 }
 
 export interface ReadingProgress {
+  hasListenedToPassage: boolean;
   phase: 'reading' | 'quiz' | 'completed';
   currentSentenceIndex: number;
   totalSentences: number;
@@ -98,6 +99,7 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
   const onCompletedRef = useRef(onCompleted);
   const onBadgeUnlockedRef = useRef(onBadgeUnlocked);
   const pendingAudioMessageIdRef = useRef<string | null>(null);
+  const modeRequestInFlightRef = useRef(false);
 
   useEffect(() => {
     onCompletedRef.current = onCompleted;
@@ -106,6 +108,22 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
 
   useEffect(() => {
     if (!lessonModeId) return;
+
+    // A mode can change without unmounting this hook. Never let its socket
+    // handlers send a message to the previous lesson's session.
+    modeSessionIdRef.current = null;
+    pendingAudioMessageIdRef.current = null;
+    modeRequestInFlightRef.current = false;
+    completionHandledRef.current = false;
+    setModeSessionId(null);
+    setChatHistory([]);
+    setContentPayload(null);
+    setMcqList([]);
+    setMcqResult(null);
+    setListeningPayload(null);
+    setReadingProgress(null);
+    setRoleplayProgress(null);
+    setIsCompleted(false);
 
     const accessToken = localStorage.getItem('accessToken');
     if (!accessToken) {
@@ -153,6 +171,10 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
 
     newSocket.on('mode_session_started', (session) => {
       console.log('[Socket] Mode session started:', session);
+      if (session.lessonModeId !== lessonModeId) {
+        console.warn('[Socket] Ignoring a session for a different lesson mode.');
+        return;
+      }
       if (modeSessionIdRef.current !== session.modeSessionId) {
         completionHandledRef.current = false;
       }
@@ -188,6 +210,7 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
     });
 
     newSocket.on('streaming_complete', (payload: { ai_response: string, feedback: string, ai_cefr_level: string, isCompleted: boolean, ttsAudioUrl?: string, hint?: string, readingProgress?: ReadingProgress, roleplayProgress?: RoleplayProgress, roleplayProgressEarned?: boolean }) => {
+      modeRequestInFlightRef.current = false;
       setIsTyping(false);
       if (payload.readingProgress) {
         setReadingProgress(payload.readingProgress);
@@ -298,11 +321,13 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
         remainingWarnings: payload.remainingWarnings,
       });
       setIsContentFilterWarningOpen(true);
+      modeRequestInFlightRef.current = false;
       setIsTyping(false);
     });
 
     newSocket.on('account_blocked', (payload: { message: string }) => {
       setIsAccountBlocked(true);
+      modeRequestInFlightRef.current = false;
       setIsTyping(false);
       toast.error(payload.message || 'Your account has been blocked.');
       newSocket.disconnect();
@@ -313,6 +338,7 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
 
     newSocket.on('error', (payload: { message: string }) => {
       toast.error(payload.message);
+      modeRequestInFlightRef.current = false;
       setIsTyping(false);
     });
 
@@ -323,11 +349,18 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
 
     return () => {
       newSocket.disconnect();
+      setSocket((currentSocket) => currentSocket === newSocket ? null : currentSocket);
     };
   }, [lessonModeId]);
 
   const sendMessage = useCallback((text: string) => {
-    if (!socket || !modeSessionIdRef.current || isAccountBlocked) return;
+    if (
+      !socket ||
+      !modeSessionIdRef.current ||
+      isAccountBlocked ||
+      modeRequestInFlightRef.current
+    ) return;
+    modeRequestInFlightRef.current = true;
     setIsTyping(true);
     setChatHistory(prev => [
       ...prev,
@@ -347,7 +380,13 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
   }, [socket, isAccountBlocked]);
 
   const sendAudio = useCallback((base64Audio: string, format: string = 'wav', localAudioUrl?: string) => {
-    if (!socket || !modeSessionIdRef.current || isAccountBlocked) return;
+    if (
+      !socket ||
+      !modeSessionIdRef.current ||
+      isAccountBlocked ||
+      modeRequestInFlightRef.current
+    ) return;
+    modeRequestInFlightRef.current = true;
 
     if (localAudioUrl) {
       const id = `audio-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -385,6 +424,13 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
   const nextListeningStage = useCallback(() => {
     if (!socket || !modeSessionIdRef.current || isAccountBlocked) return;
     socket.emit('next_listening_stage', { modeSessionId: modeSessionIdRef.current });
+  }, [socket, isAccountBlocked]);
+
+  const markReadingPassageListened = useCallback(() => {
+    if (!socket || !modeSessionIdRef.current || isAccountBlocked) return;
+    socket.emit('reading_passage_listened', {
+      modeSessionId: modeSessionIdRef.current,
+    });
   }, [socket, isAccountBlocked]);
 
   const restartSession = useCallback(() => {
@@ -427,6 +473,7 @@ export function useModeSession({ lessonModeId, onCompleted, onBadgeUnlocked }: U
     submitMcqs,
     startListening,
     nextListeningStage,
+    markReadingPassageListened,
     restartSession
   };
 }

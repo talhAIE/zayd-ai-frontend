@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { CheckCircle2, ChevronLeft, CircleAlert, Eye, RotateCcw } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
-import { 
+import {
   getLessonModes, 
   startLessonMode, 
   completeLessonMode,
@@ -50,6 +50,19 @@ import {
   UnavailableComponent,
   WritingTableComponent,
 } from '@/components/learning/modes';
+
+// Only these activities ask the learner to change and re-submit an answer.
+// Review/view activities (such as flashcards) complete through their own
+// interaction and must never be presented as an answer retry.
+const RETRYABLE_COMPONENT_TYPES = new Set([
+  'mcq',
+  'dropdown',
+  'true_false',
+  'fill_in_the_blank',
+  'match_column',
+  'open_input',
+  'writing_table',
+]);
 
 export default function ComponentModePlay() {
   const { courseId, unitId, lessonId, modeId } = useParams<{
@@ -571,10 +584,14 @@ export default function ComponentModePlay() {
       currentComp.content?.presentation === 'compiled_paragraph' &&
       typeof currentWritingReview?.submissionId === 'string' &&
       typeof currentWritingReview?.modelAnswer === 'string' &&
-      !isComponentComplete(currentComp),
+      modelAnswerComponentId !== currentComp.id,
+  );
+  const currentComponentSupportsRetry = Boolean(
+    currentComp && RETRYABLE_COMPONENT_TYPES.has(currentComp.componentType),
   );
   const needsFreshRetryResponse = Boolean(
     currentComp &&
+      currentComponentSupportsRetry &&
       currentComp.attempt?.status === 'submitted' &&
       !isComponentComplete(currentComp) &&
       !canRevealCurrentWritingModelAnswer &&
@@ -728,7 +745,6 @@ export default function ComponentModePlay() {
                     }
                     reviewFeedback={writingReviewFeedback[comp.id]}
                     showModelAnswer={modelAnswerComponentId === comp.id}
-                    onViewModelAnswer={() => handleWritingModelAnswerReveal(comp)}
                     isSubmitted={
                       isWritingParagraph
                         ? isTerminal || Boolean(writingReviewFeedback[comp.id])
@@ -829,6 +845,15 @@ export default function ComponentModePlay() {
                 }
                 
                 if (!canAdvanceFromCurrent && currentComp) {
+                  // Flashcards submit their completion automatically once all
+                  // cards have been revealed. They are review activities, not
+                  // answer attempts, so a generic retry action is both
+                  // misleading and unable to do anything useful.
+                  if (currentComp.componentType === 'flashcards') {
+                    toast.info('Reveal every flashcard to continue.');
+                    return;
+                  }
+
                   if (currentComp.completionRule === 'on_view') {
                     setIsSubmittingMode(true);
                     try {
@@ -938,15 +963,17 @@ export default function ComponentModePlay() {
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : null}
               <span>
-                {!canAdvanceFromCurrent
+                {canRevealCurrentWritingModelAnswer
+                  ? isSubmittingMode
+                    ? 'Opening Model Answer...'
+                    : 'View System Model Answer'
+                  : !canAdvanceFromCurrent
                   ? isSubmittingMode
                     ? 'Submitting...'
                     : needsFreshRetryResponse
                     ? currentComp?.componentType === 'match_column'
                       ? 'Build New Matches'
                       : 'Choose Another Answer'
-                    : canRevealCurrentWritingModelAnswer
-                    ? 'View System Model Answer'
                     : currentComp?.componentType === 'match_column'
                     ? 'Submit Matches'
                     : (currentComp && !['mcq', 'dropdown', 'open_input', 'true_false', 'fill_in_the_blank', 'writing_table', 'reflection'].includes(currentComp.componentType) ? 'Continue' : 'Check Answer')

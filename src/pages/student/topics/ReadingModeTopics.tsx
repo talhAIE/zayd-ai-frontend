@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { useModeSession } from '@/hooks/useModeSession';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import ReadingPassageCard from '@/components/ui/ReadingPassageCard';
+import ReadingVocabularyFlashcardModal, { type ReadingVocabularyCard } from '@/components/ui/ReadingVocabularyFlashcardModal';
 import TopicCompletionModal from '@/components/ui/TopicCompletionModal';
 import FeedbackModal from '@/components/ui/FeedbackModal';
 import { ContentPolicyWarningModal } from '@/components/ui/ContentPolicyWarningModal';
@@ -58,6 +59,86 @@ function isOptionCorrect(mcq: any, answer: number | string | undefined) {
   return true;
 }
 
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const GRADE7_READING_VOCABULARY: Record<string, Omit<ReadingVocabularyCard, 'word'>> = {
+  adjustments: {
+    partOfSpeech: 'noun',
+    definition: 'Changes made to get used to a new situation.',
+    example: 'Moving to a new country requires many adjustments.',
+  },
+  positive: {
+    partOfSpeech: 'adjective',
+    definition: 'Good, helpful, or favorable.',
+    example: 'Despite the challenges, his experience was positive.',
+  },
+  interview: {
+    partOfSpeech: 'noun',
+    definition: 'A meeting where someone asks questions to get information.',
+    example: 'The reporter conducted an interview with Rajeet.',
+  },
+  announced: {
+    partOfSpeech: 'verb',
+    definition: 'Made an important statement publicly or clearly.',
+    example: 'His father announced the big news at dinner.',
+  },
+  bulky: {
+    partOfSpeech: 'adjective',
+    definition: 'Large, heavy, and clumsy to handle.',
+    example: 'The winter coat felt heavy and bulky.',
+  },
+  thermometer: {
+    partOfSpeech: 'noun',
+    definition: 'An instrument used to measure temperature.',
+    example: 'He checked the thermometer to see how cold it was outside.',
+  },
+};
+
+const getText = (value: unknown): string | null =>
+  typeof value === 'string' && value.trim() ? value.trim() : null;
+
+function getVocabularyCards(value: unknown): ReadingVocabularyCard[] {
+  if (!Array.isArray(value)) return [];
+
+  return value.flatMap((card: unknown) => {
+    if (!card || typeof card !== 'object') return [];
+
+    const vocabulary = card as Record<string, unknown>;
+    const word = getText(vocabulary.word) ?? getText(vocabulary.term);
+    if (!word) return [];
+
+    const defaultCard = GRADE7_READING_VOCABULARY[word.toLowerCase()];
+    const partOfSpeech = getText(vocabulary.partOfSpeech) ?? defaultCard?.partOfSpeech;
+    const definition = getText(vocabulary.definition) ?? defaultCard?.definition;
+    const example = getText(vocabulary.example) ?? defaultCard?.example;
+    if (!partOfSpeech || !definition || !example) return [];
+
+    return [{ word, partOfSpeech, definition, example }];
+  });
+}
+
+function HighlightedReadingSentence({ text, vocabularyTerms, vocabularyCards, onVocabularyClick }: {
+  text: string;
+  vocabularyTerms: string[];
+  vocabularyCards: ReadingVocabularyCard[];
+  onVocabularyClick: (card: ReadingVocabularyCard) => void;
+}) {
+  const terms = [...new Set(vocabularyTerms.map((term) => term.trim()).filter(Boolean))]
+    .sort((left, right) => right.length - left.length);
+  if (terms.length === 0) return <>{text}</>;
+
+  const pattern = new RegExp(`(${terms.map(escapeRegExp).join('|')})`, 'gi');
+  const termSet = new Set(terms.map((term) => term.toLowerCase()));
+  const cardByTerm = new Map(vocabularyCards.map((card) => [card.word.trim().toLowerCase(), card]));
+  return <>{text.split(pattern).map((part, index) =>
+    termSet.has(part.toLowerCase())
+      ? cardByTerm.get(part.toLowerCase())
+        ? <button key={index} type="button" onClick={() => onVocabularyClick(cardByTerm.get(part.toLowerCase())!)} className="cursor-pointer font-semibold text-[#3B82F6] underline decoration-[#93C5FD] decoration-2 underline-offset-2 transition-colors hover:text-[#2563EB] focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/40" aria-label={`Open vocabulary flashcard for ${part}`}>{part}</button>
+        : <span key={index} className="font-semibold text-[#3B82F6]">{part}</span>
+      : part,
+  )}</>;
+}
+
 export default function ReadingModeTopics() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -74,12 +155,12 @@ export default function ReadingModeTopics() {
   const [isJustCompleted, setIsJustCompleted] = useState(false);
   const [activeFeedback, setActiveFeedback] = useState<string | null>(null);
   const [activeAssessment, setActiveAssessment] = useState<SpeechAssessment | null>(null);
-  const [isPassageExpanded, setIsPassageExpanded] = useState(false);
+  const [activeVocabularyCard, setActiveVocabularyCard] = useState<ReadingVocabularyCard | null>(null);
+  const [hasStartedShadowReading, setHasStartedShadowReading] = useState(false);
   const [isStepsExpanded, setIsStepsExpanded] = useState(false);
   const [fallbackSpeechMessageId, setFallbackSpeechMessageId] = useState<string | null>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const fallbackSpeechRef = useRef<SpeechSynthesisUtterance | null>(null);
-
   const {
     isRecording,
     recordTime,
@@ -102,6 +183,7 @@ export default function ReadingModeTopics() {
     contentFilterWarningData,
     sendAudio,
     submitMcqs,
+    markReadingPassageListened,
     restartSession
   } = useModeSession({ 
     lessonModeId,
@@ -117,6 +199,10 @@ export default function ReadingModeTopics() {
       setShowCompletionModal(true);
     }
   }, [isCompleted, isJustCompleted]);
+
+  useEffect(() => {
+    setHasStartedShadowReading(false);
+  }, [lessonModeId]);
 
 
   const [cooldown, setCooldown] = useState(false);
@@ -149,7 +235,11 @@ export default function ReadingModeTopics() {
     }
   }, []);
 
-  const toggleInitialReadingPromptSpeech = (messageId: string, content: string) => {
+  const toggleInitialReadingPromptSpeech = (
+    messageId: string,
+    content: string,
+    onComplete?: () => void,
+  ) => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
       toast.error('Audio playback is not available in this browser.');
       return;
@@ -167,7 +257,10 @@ export default function ReadingModeTopics() {
     // Read the sentence itself, rather than the surrounding instruction.
     const sentence = content.match(/"([^"\n]+)"/)?.[1] || content;
     const utterance = new SpeechSynthesisUtterance(sentence);
-    utterance.onend = () => setFallbackSpeechMessageId(null);
+    utterance.onend = () => {
+      setFallbackSpeechMessageId(null);
+      onComplete?.();
+    };
     utterance.onerror = () => setFallbackSpeechMessageId(null);
     fallbackSpeechRef.current = utterance;
     setFallbackSpeechMessageId(messageId);
@@ -177,7 +270,7 @@ export default function ReadingModeTopics() {
   const getProgressPercentage = () => {
     if (isCompleted) return 100;
 
-    const baseProgress = (isPassageExpanded || readingProgress?.isRetrying || readingProgress?.phase === 'quiz') ? 15 : 0;
+    const baseProgress = ((readingProgress?.hasListenedToPassage && hasStartedShadowReading) || readingProgress?.isRetrying || readingProgress?.phase === 'quiz') ? 15 : 0;
 
     if (readingProgress) {
       if (mcqList && mcqList.length > 0) {
@@ -196,7 +289,7 @@ export default function ReadingModeTopics() {
   };
 
   const initialPassComplete = Boolean(
-    isPassageExpanded ||
+    (readingProgress?.hasListenedToPassage && hasStartedShadowReading) ||
     readingProgress?.isRetrying ||
     readingProgress?.phase === 'quiz' ||
     isCompleted,
@@ -212,6 +305,63 @@ export default function ReadingModeTopics() {
     : `${getProgressPercentage()}% Complete`;
 
   const isChatActive = !step1Active && (!mcqList || mcqList.length === 0);
+  const readingPassageText = (() => {
+    const blocks = contentPayload?.readingPresentation?.blocks;
+    if (Array.isArray(blocks) && blocks.length > 0) {
+      return blocks
+        .map((block: { speaker?: string; text?: string }) =>
+          block.text ? `${block.speaker ? `${block.speaker}: ` : ''}${block.text}` : '',
+        )
+        .filter(Boolean)
+        .join('\n');
+    }
+
+    if (typeof contentPayload?.passage === 'string') return contentPayload.passage;
+    if (typeof contentPayload?.content === 'string') return contentPayload.content;
+    if (Array.isArray(contentPayload?.sentences)) return contentPayload.sentences.join('\n');
+    return '';
+  })();
+
+  const togglePassageAudio = () => {
+    const audioUrl = contentPayload?.contentAudioUrl || contentPayload?.narrationAudioUrl || contentPayload?.attachmentUrl;
+    if (audioUrl) {
+      if (fallbackSpeechMessageId === 'reading-passage-fallback') {
+        window.speechSynthesis.cancel();
+        setFallbackSpeechMessageId(null);
+      }
+      toggleAudio('reading-passage', audioUrl, markReadingPassageListened);
+      return;
+    }
+
+    toggleInitialReadingPromptSpeech(
+      'reading-passage-fallback',
+      readingPassageText,
+      markReadingPassageListened,
+    );
+  };
+
+  const initialReadingSentence =
+    !step1Active &&
+    chatHistory.length === 0 &&
+    readingProgress?.phase === 'reading' &&
+    Array.isArray(contentPayload?.sentences)
+      ? contentPayload.sentences[readingProgress.currentSentenceIndex] ?? null
+      : null;
+  const vocabularyTerms = Array.isArray(contentPayload?.readingPresentation?.vocabularyTerms)
+    ? contentPayload.readingPresentation.vocabularyTerms.filter((term: unknown): term is string => typeof term === 'string')
+    : [];
+  // Existing Grade 7 content already stores this information in `vocabulary`.
+  // Prefer the new reading-presentation cards when available, but retain this
+  // fallback so published lessons become interactive immediately.
+  const vocabularyCards = [
+    ...getVocabularyCards(contentPayload?.readingPresentation?.vocabularyCards),
+    ...getVocabularyCards(contentPayload?.vocabulary),
+  ].filter((card, index, cards) =>
+    cards.findIndex((candidate) => candidate.word.toLowerCase() === card.word.toLowerCase()) === index,
+  );
+  const readingPresentation = contentPayload?.readingPresentation
+    ? { ...contentPayload.readingPresentation, vocabularyCards }
+    : undefined;
 
   return (
     <div className="w-full max-w-[1207px] mx-auto bg-white rounded-none md:rounded-[24px] flex flex-col font-['Outfit',sans-serif] overflow-hidden h-[100dvh] md:h-[794px] max-h-[calc(100vh-40px)] border border-gray-100 shadow-sm relative">
@@ -227,7 +377,7 @@ export default function ReadingModeTopics() {
           setShowCompletionModal(false);
           setCurrentMcqIndex(0);
           setSelectedAnswers({});
-          setIsPassageExpanded(false);
+          setHasStartedShadowReading(false);
           setIsJustCompleted(false);
           restartSession();
         }}
@@ -248,6 +398,10 @@ export default function ReadingModeTopics() {
         assessment={activeAssessment}
         open={!!activeAssessment}
         onClose={() => setActiveAssessment(null)}
+      />
+      <ReadingVocabularyFlashcardModal
+        card={activeVocabularyCard}
+        onClose={() => setActiveVocabularyCard(null)}
       />
 
       {/* Header Progress Group */}
@@ -407,27 +561,22 @@ export default function ReadingModeTopics() {
               <ReadingPassageCard 
                 content={contentPayload.passage || contentPayload.content || (contentPayload.sentences ? contentPayload.sentences.join('\n\n') : '')}
                 audioUrl={contentPayload.contentAudioUrl || contentPayload.narrationAudioUrl || contentPayload.attachmentUrl}
-                isPlaying={playingAudioId === 'reading-passage' && isCurrentlyPlaying}
-                onToggleAudio={() =>
-                  toggleAudio(
-                    'reading-passage',
-                    contentPayload.contentAudioUrl || contentPayload.narrationAudioUrl || contentPayload.attachmentUrl,
-                  )
-                }
-                onExpand={() => setIsPassageExpanded(true)}
+                readingPresentation={readingPresentation}
+                onVocabularyClick={setActiveVocabularyCard}
+                showAudioControl={Boolean(readingPassageText)}
+                isPlaying={(playingAudioId === 'reading-passage' && isCurrentlyPlaying) || fallbackSpeechMessageId === 'reading-passage-fallback'}
+                onToggleAudio={togglePassageAudio}
                 forceExpanded={step1Active}
                 collapsibleMode="accordion"
               />
               {step1Active && (
                 <div className="flex justify-end w-full pb-2 flex-shrink-0">
                   <button
-                    onClick={() => {
-                      stopAudio();
-                      setIsPassageExpanded(true);
-                    }}
-                    className="px-6 py-2.5 bg-[#3B82F6] text-white rounded-full font-['Outfit'] font-semibold text-[14px] hover:bg-[#2563EB] transition-colors shadow-sm"
+                    onClick={() => setHasStartedShadowReading(true)}
+                    disabled={!readingProgress?.hasListenedToPassage}
+                    className="px-6 py-2.5 bg-[#3B82F6] text-white rounded-full font-['Outfit'] font-semibold text-[14px] hover:bg-[#2563EB] transition-colors shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    Next
+                    {readingProgress?.hasListenedToPassage ? 'Next' : 'Listen to continue'}
                   </button>
                 </div>
               )}
@@ -447,6 +596,30 @@ export default function ReadingModeTopics() {
                   Read each sentence from the passage aloud using the microphone.
                 </div>
               </div>
+              {initialReadingSentence && (
+                <div className="flex flex-col items-start gap-2 w-full mt-2">
+                  <div className="px-4 py-3 max-w-[85%] text-left bg-white border border-[#E5E7EB] shadow-sm rounded-tr-xl rounded-br-xl rounded-bl-xl rounded-tl-sm">
+                    <div className="text-[13px] leading-[18px] text-[#0F1450] whitespace-pre-wrap break-words">
+                      <p>Please read the following sentence aloud:</p>
+                      <p className="mt-2">&quot;<HighlightedReadingSentence text={initialReadingSentence} vocabularyTerms={vocabularyTerms} vocabularyCards={vocabularyCards} onVocabularyClick={setActiveVocabularyCard} />&quot;</p>
+                    </div>
+                    <div className="mt-3 flex items-center gap-4 border-t border-[#E5E7EB] pt-2.5">
+                      <button
+                        type="button"
+                        onClick={() => toggleInitialReadingPromptSpeech('reading-initial-prompt', initialReadingSentence)}
+                        className="flex items-center text-[#0F1450] hover:text-[#5C9DFF] transition-colors"
+                        aria-label={fallbackSpeechMessageId === 'reading-initial-prompt' ? 'Pause initial reading prompt' : 'Play initial reading prompt'}
+                      >
+                        {fallbackSpeechMessageId === 'reading-initial-prompt' ? (
+                          <Pause className="w-5 h-5" />
+                        ) : (
+                          <Play className="w-5 h-5" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
               {chatHistory.map((msg, index) => (
                 (() => {
                   const hasInitialReadingFallback =
